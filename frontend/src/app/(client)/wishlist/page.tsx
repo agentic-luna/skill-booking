@@ -1,0 +1,151 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Heart, Star, Clock, MapPin, Trash2, ArrowLeft, Ticket } from "lucide-react";
+
+import { useAuthStore } from "@/features/auth/store/authStore";
+import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { MOCK_PROGRAMS, Program } from "@/constants/mockData";
+
+export default function WishlistPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  
+  // Set default wishlisted programs (e.g., marc's sourdough, street photography)
+  const [wishlist, setWishlist] = useState<Program[]>(
+    MOCK_PROGRAMS.filter((p) => ["prog_2", "prog_4"].includes(p.id))
+  );
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center p-4">
+        <div className="animate-pulse flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 bg-primary/20 rounded-full" />
+          <div className="h-4 w-32 bg-muted rounded-md" />
+        </div>
+      </div>
+    );
+  }
+
+  const handleRemoveFromWishlist = (programId: string) => {
+    setWishlist((prev) => prev.filter((p) => p.id !== programId));
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+
+      <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
+          
+          <div className="space-y-1">
+            <Link href="/home" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
+              <ArrowLeft className="h-3 w-3" /> Back to feed
+            </Link>
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+              <Heart className="h-6 w-6 text-red-500 fill-red-500" /> My Saved Skills
+            </h1>
+            <p className="text-sm text-muted-foreground">Keep track of the classes you want to attend next.</p>
+          </div>
+
+          {wishlist.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {wishlist.map((prog) => (
+                <div
+                  key={prog.id}
+                  className="group flex flex-col border border-border/40 bg-card rounded-2xl overflow-hidden hover:border-primary/20 animate-hover relative"
+                >
+                  {/* Remove Button overlay */}
+                  <button
+                    onClick={() => handleRemoveFromWishlist(prog.id)}
+                    className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white p-2 rounded-full z-15 active:scale-90 transition-transform"
+                    title="Remove from saved list"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+
+                  <div className="relative aspect-video w-full bg-muted">
+                    <img
+                      src={prog.imageUrl}
+                      alt={prog.title}
+                      className="object-cover w-full h-full group-hover:scale-103 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-md font-semibold capitalize">
+                      {prog.category}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col flex-1 p-5 space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src={prog.instructorAvatar}
+                        alt={prog.instructorName}
+                        className="h-5 w-5 rounded-full object-cover"
+                      />
+                      <span className="text-[10px] text-muted-foreground">{prog.instructorName}</span>
+                    </div>
+
+                    <h3 className="font-bold text-sm text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                      {prog.title}
+                    </h3>
+
+                    <div className="flex items-center space-x-2 text-[10px] text-muted-foreground">
+                      <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {prog.duration}</span>
+                      <span>•</span>
+                      <span className="flex items-center"><MapPin className="h-3 w-3 mr-1" /> {prog.location.split(",")[0]}</span>
+                    </div>
+
+                    <div className="flex items-center space-x-1.5">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      <span className="text-xs font-semibold text-foreground">{prog.rating}</span>
+                      <span className="text-[10px] text-muted-foreground">({prog.reviewsCount} reviews)</span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-border/40 mt-auto">
+                      <div>
+                        <span className="text-[10px] text-muted-foreground">Fee</span>
+                        <div className="text-base font-extrabold text-foreground">${prog.price}</div>
+                      </div>
+                      <Link href={`/programs/${prog.id}`}>
+                        <Button size="sm" className="rounded-lg h-8 text-xs">Book Seat</Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-12 border bg-card border-dashed border-border/60 rounded-2xl space-y-4">
+              <div className="p-4 bg-muted/60 dark:bg-muted/30 rounded-full text-muted-foreground w-fit mx-auto">
+                <Heart className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-base text-foreground">Wishlist is empty</h3>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  You haven&apos;t saved any courses yet. Save them while exploring to keep track here.
+                </p>
+              </div>
+              <Link href="/programs">
+                <Button className="rounded-xl text-xs h-9">Explore Classes</Button>
+              </Link>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

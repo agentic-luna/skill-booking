@@ -1,0 +1,458 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { 
+  Star, Clock, MapPin, Calendar, Heart, Share2, ShieldCheck, 
+  CheckCircle2, CreditCard, ChevronLeft, Ticket, Loader2 
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Dialog, DialogContent, DialogDescription, DialogFooter, 
+  DialogHeader, DialogTitle 
+} from "@/components/ui/dialog";
+import { Program, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
+import { useAuthStore } from "@/features/auth/store/authStore";
+
+// Zod schema for card payment validation
+const checkoutSchema = z.object({
+  cardholderName: z.string().min(3, "Cardholder name must be at least 3 characters"),
+  cardNumber: z.string().regex(/^\d{16}$/, "Card number must be exactly 16 digits"),
+  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Expiry format must be MM/YY"),
+  cvv: z.string().regex(/^\d{3}$/, "CVV must be exactly 3 digits"),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
+
+interface ProgramDetailsProps {
+  programId: string;
+  initialProgram: Program | undefined;
+}
+
+export default function ProgramDetailsContent({ programId, initialProgram }: ProgramDetailsProps) {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
+  const [program, setProgram] = useState<Program | undefined>(initialProgram);
+
+  // States
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [spotsCount, setSpotsCount] = useState(1);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      cardholderName: "",
+      cardNumber: "",
+      expiryDate: "",
+      cvv: "",
+    },
+  });
+
+  if (!program) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <h3 className="text-xl font-bold text-foreground">Program Not Found</h3>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          We couldn&apos;t load the skill training details. It may have been removed or rejected.
+        </p>
+        <Link href="/programs">
+          <Button>Back to Marketplace</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const handleBookClick = () => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/programs/${programId}`);
+      return;
+    }
+    setCheckoutOpen(true);
+  };
+
+  const handleWishlistToggle = () => {
+    setIsWishlisted(!isWishlisted);
+    alert(isWishlisted ? "Removed from Wishlist!" : "Added to Wishlist!");
+  };
+
+  const onCheckoutSubmit = async (data: CheckoutFormValues) => {
+    setPaymentLoading(true);
+    // Simulate payment authorization
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setPaymentLoading(false);
+    
+    // Add to mock bookings roster
+    const newBooking: Booking = {
+      id: `bk_${Math.random().toString(36).substr(2, 9)}`,
+      programId: program.id,
+      programTitle: program.title,
+      programImage: program.imageUrl,
+      bookingDate: new Date().toISOString().split("T")[0],
+      amountPaid: program.price * spotsCount,
+      status: "confirmed",
+      spotsBooked: spotsCount,
+      date: program.date,
+      time: program.time,
+      location: program.location,
+      hostName: program.instructorName,
+    };
+
+    MOCK_BOOKINGS.unshift(newBooking);
+
+    // Update remaining spots count locally
+    setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
+
+    setPaymentSuccess(true);
+  };
+
+  const handleShareClick = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert("Class link copied to clipboard!");
+  };
+
+  return (
+    <main className="flex-1 py-8 bg-muted/10 dark:bg-card/5">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+        
+        {/* Back Link */}
+        <Link href="/programs" className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground gap-1 transition-colors">
+          <ChevronLeft className="h-4 w-4" /> Back to explore
+        </Link>
+
+        {/* Dynamic Detail layout columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Left Column (Details) */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Header info */}
+            <div className="space-y-4">
+              <span className="inline-block text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full capitalize">
+                {program.category}
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
+                {program.title}
+              </h1>
+              
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center space-x-1.5">
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <span className="font-bold text-foreground">{program.rating}</span>
+                  <span>({program.reviewsCount} verified reviews)</span>
+                </div>
+                <span>•</span>
+                <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1" /> {program.location}</span>
+              </div>
+            </div>
+
+            {/* Core Banner Image */}
+            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-muted border">
+              <img
+                src={program.imageUrl}
+                alt={program.title}
+                className="object-cover w-full h-full"
+              />
+            </div>
+
+            {/* Syllabus Description */}
+            <div className="space-y-3">
+              <h2 className="text-lg font-bold text-foreground">Workshop Details</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                {program.description}
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Instructor Details */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-foreground">Meet Your Instructor</h2>
+              <Card className="rounded-xl border-border/40 overflow-hidden bg-card/50">
+                <CardContent className="p-6 flex items-start space-x-4">
+                  <img
+                    src={program.instructorAvatar}
+                    alt={program.instructorName}
+                    className="h-14 w-14 rounded-full object-cover ring-2 ring-primary/20 shrink-0"
+                  />
+                  <div className="space-y-2">
+                    <div>
+                      <h3 className="font-bold text-sm text-foreground">{program.instructorName}</h3>
+                      <span className="text-[10px] text-muted-foreground">Certified Masterclass Coach</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Sarah is a seasoned educational director with over 10 years of experience launching immersive programs. She focuses on hands-on practical teaching setups.
+                    </p>
+                    <div className="flex items-center space-x-3 text-xs text-primary font-semibold">
+                      <span>4.9★ Coach Rating</span>
+                      <span>•</span>
+                      <span>500+ Students Taught</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+          </div>
+
+          {/* Right Column (Ticket Registration Box) */}
+          <div className="col-span-1">
+            <div className="sticky top-24 bg-card border border-border/40 rounded-2xl p-6 shadow-md space-y-6">
+              
+              <div className="flex justify-between items-end border-b pb-4">
+                <div>
+                  <span className="text-xs text-muted-foreground">Registration Fee</span>
+                  <div className="text-2xl font-extrabold text-foreground">${program.price}</div>
+                </div>
+                <div className="text-right">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
+                    program.spotsLeft <= 5 ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-600"
+                  }`}>
+                    {program.spotsLeft === 0 ? "Fully Booked" : `${program.spotsLeft} spots left`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Booking Info Grid */}
+              <div className="space-y-4 text-xs text-muted-foreground">
+                <div className="flex items-center">
+                  <Calendar className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <div>
+                    <div className="font-bold text-foreground">Date</div>
+                    <div>{program.date}</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Clock className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <div>
+                    <div className="font-bold text-foreground">Schedule Time</div>
+                    <div>{program.time}</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <MapPin className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <div>
+                    <div className="font-bold text-foreground">Location Mode</div>
+                    <div className="line-clamp-1">{program.location}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <Button 
+                  className="w-full rounded-xl py-6 text-sm font-semibold shadow-md shadow-primary/10"
+                  disabled={program.spotsLeft === 0}
+                  onClick={handleBookClick}
+                >
+                  {program.spotsLeft === 0 ? "Registration Closed" : "Book Spot Now"}
+                </Button>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="rounded-xl h-10 text-xs" onClick={handleWishlistToggle}>
+                    <Heart className={`mr-1.5 h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} /> 
+                    {isWishlisted ? "Wishlisted" : "Wishlist"}
+                  </Button>
+                  <Button variant="outline" className="rounded-xl h-10 text-xs" onClick={handleShareClick}>
+                    <Share2 className="mr-1.5 h-4 w-4" /> Share Event
+                  </Button>
+                </div>
+              </div>
+
+              {/* Trust badges */}
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground pt-2 text-center">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <span>100% Secure Checkout & Refund Guarantee</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* CHECKOUT MODAL DIALOG */}
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle>Register for Workshop</DialogTitle>
+            <DialogDescription>
+              Complete registration for: <span className="font-bold text-foreground">{program.title}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          {paymentSuccess ? (
+            /* PAYMENT SUCCESS SCREEN */
+            <div className="py-6 text-center space-y-4">
+              <div className="mx-auto w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-foreground">Payment Successful!</h3>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  Your ticket has been confirmed. You can access the meeting details on your bookings dashboard.
+                </p>
+              </div>
+              
+              <div className="bg-muted/50 p-4 rounded-xl text-left border text-xs space-y-2 max-w-sm mx-auto">
+                <div className="flex justify-between"><span className="text-muted-foreground">Class:</span> <span className="font-semibold text-foreground line-clamp-1">{program.title}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Seats:</span> <span className="font-semibold text-foreground">{spotsCount} Spot(s)</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Amount Paid:</span> <span className="font-bold text-foreground">${program.price * spotsCount}</span></div>
+              </div>
+
+              <div className="pt-4 flex gap-2">
+                <Button variant="outline" className="w-full text-xs rounded-xl" onClick={() => {
+                  setCheckoutOpen(false);
+                  setPaymentSuccess(false);
+                }}>
+                  Close
+                </Button>
+                <Button className="w-full text-xs rounded-xl" onClick={() => {
+                  setCheckoutOpen(false);
+                  router.push("/bookings");
+                }}>
+                  Go to My Bookings
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* PAYMENT CHECKOUT FORM */
+            <form onSubmit={handleSubmit(onCheckoutSubmit)} className="space-y-4 pt-2">
+              
+              {/* Ticket Spot Count selector */}
+              <div className="flex items-center justify-between bg-muted/30 p-3 rounded-xl border">
+                <div className="flex items-center space-x-2.5">
+                  <Ticket className="h-5 w-5 text-primary" />
+                  <div className="text-xs">
+                    <div className="font-bold text-foreground">Select Spots</div>
+                    <div className="text-muted-foreground">${program.price} per ticket</div>
+                  </div>
+                </div>
+                
+                {/* Spot counter controls */}
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setSpotsCount(prev => Math.max(1, prev - 1))}
+                    className="w-7 h-7 bg-card rounded-md border flex items-center justify-center font-bold text-sm text-foreground active:scale-95 transition-transform"
+                    disabled={spotsCount === 1}
+                  >
+                    -
+                  </button>
+                  <span className="font-bold text-sm text-foreground w-4 text-center">{spotsCount}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSpotsCount(prev => Math.min(program.spotsLeft, prev + 1))}
+                    className="w-7 h-7 bg-card rounded-md border flex items-center justify-center font-bold text-sm text-foreground active:scale-95 transition-transform"
+                    disabled={spotsCount === program.spotsLeft}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Subtotal calculation */}
+              <div className="flex justify-between items-center text-xs font-semibold px-1">
+                <span className="text-muted-foreground">Subtotal ({spotsCount} tickets)</span>
+                <span className="text-foreground text-sm font-extrabold">${program.price * spotsCount}</span>
+              </div>
+
+              <div className="h-[1px] bg-border/40" />
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="cardholderName" className="text-xs">Cardholder Name</Label>
+                  <Input
+                    id="cardholderName"
+                    placeholder="John Doe"
+                    className="h-9 text-xs"
+                    {...register("cardholderName")}
+                    disabled={paymentLoading}
+                  />
+                  {errors.cardholderName && <p className="text-[10px] text-destructive">{errors.cardholderName.message}</p>}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="cardNumber" className="text-xs">Card Number</Label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="cardNumber"
+                      placeholder="4111 2222 3333 4444"
+                      className="pl-9 h-9 text-xs"
+                      maxLength={16}
+                      {...register("cardNumber")}
+                      disabled={paymentLoading}
+                    />
+                  </div>
+                  {errors.cardNumber && <p className="text-[10px] text-destructive">{errors.cardNumber.message}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="expiryDate" className="text-xs">Expiry Date</Label>
+                    <Input
+                      id="expiryDate"
+                      placeholder="MM/YY"
+                      className="h-9 text-xs"
+                      maxLength={5}
+                      {...register("expiryDate")}
+                      disabled={paymentLoading}
+                    />
+                    {errors.expiryDate && <p className="text-[10px] text-destructive">{errors.expiryDate.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="cvv" className="text-xs">CVV Code</Label>
+                    <Input
+                      id="cvv"
+                      placeholder="123"
+                      type="password"
+                      className="h-9 text-xs"
+                      maxLength={3}
+                      {...register("cvv")}
+                      disabled={paymentLoading}
+                    />
+                    {errors.cvv && <p className="text-[10px] text-destructive">{errors.cvv.message}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="pt-2">
+                <Button variant="outline" type="button" className="text-xs h-9 rounded-lg" onClick={() => setCheckoutOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="text-xs h-9 rounded-lg px-6" disabled={paymentLoading}>
+                  {paymentLoading ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Authorizing...
+                    </>
+                  ) : (
+                    `Pay $${program.price * spotsCount}`
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+
+        </DialogContent>
+      </Dialog>
+
+    </main>
+  );
+}
