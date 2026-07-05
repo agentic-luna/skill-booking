@@ -1,0 +1,283 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  SUPERADMIN
+  HOST
+  CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AccountType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum IntegrationService {
+  RAZORPAY
+  TWILIO
+  SENDGRID
+  META_WA
+}
+
+enum IntegrationEnvironment {
+  TEST
+  LIVE
+}
+
+enum DeliveryChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  IN_APP
+}
+
+enum TriggerEvent {
+  BOOKING_CONFIRMED
+  EVENT_APPROVED
+  KYC_REJECTED
+}
+
+enum EventMode {
+  ONLINE
+  OFFLINE
+}
+
+enum EventStatus {
+  PENDING
+  APPROVED
+  CANCELED
+}
+
+enum CommissionType {
+  FIXED
+  PERCENTAGE
+}
+
+enum BookingStatus {
+  INITIATED
+  CONFIRMED
+  CANCELED
+  REFUNDED
+}
+
+enum LedgerTxnType {
+  PAYMENT_CAPTURE
+  ESCROW_RELEASE
+  REFUND
+}
+
+enum LedgerStatus {
+  HELD
+  RELEASED_TO_HOST
+  REFUNDED_TO_CLIENT
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  role         UserRole   @default(CLIENT)
+  firstName    String
+  lastName     String
+  email        String     @unique
+  phone        String     @unique
+  passwordHash String
+  status       UserStatus @default(ACTIVE)
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  hostProfile   HostProfile?
+  reviews       Review[]
+  bookings      Booking[]
+  notifications NotificationLog[]
+
+  @@map("users")
+}
+
+model HostProfile {
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String      @unique @db.Uuid
+  accountType AccountType @default(INDIVIDUAL)
+  govIdUrl    String
+  gstNumber   String?
+  kycStatus   KycStatus   @default(PENDING)
+  bio         String?     @db.Text
+  updatedAt   DateTime    @updatedAt
+
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankDetail HostBankDetail?
+  events     Event[]
+
+  @@map("host_profiles")
+}
+
+model HostBankDetail {
+  id                String   @id @default(uuid()) @db.Uuid
+  hostProfileId     String   @unique @db.Uuid
+  accountHolderName String   // Encrypted at rest in service layer
+  accountNumber     String   // Encrypted at rest in service layer
+  ifscCode          String   // Encrypted at rest in service layer
+  bankName          String
+  upiId             String?  // Encrypted at rest in service layer
+  updatedAt         DateTime @updatedAt
+
+  hostProfile HostProfile @relation(fields: [hostProfileId], references: [id], onDelete: Cascade)
+
+  @@map("host_bank_details")
+}
+
+model IntegrationConfig {
+  id           String                 @id @default(uuid()) @db.Uuid
+  serviceName  IntegrationService     @unique
+  environment  IntegrationEnvironment @default(TEST)
+  credentials  Json                   // Encrypted at rest
+  isActive     Boolean                @default(false)
+  updatedBy    String                 @db.Uuid
+  updatedAt    DateTime               @updatedAt
+
+  @@map("integration_configs")
+}
+
+model MessageTemplate {
+  id            String          @id @default(uuid()) @db.Uuid
+  channel       DeliveryChannel
+  triggerEvent  TriggerEvent
+  subject       String?
+  bodyContent   String          @db.Text
+  variables     Json
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("message_templates")
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+model Event {
+  id             String      @id @default(uuid()) @db.Uuid
+  hostId         String      @db.Uuid
+  title          String
+  posterUrl      String
+  mode           EventMode   @default(ONLINE)
+  venueDetails   Json?
+  startTime      DateTime
+  totalSeats     Int
+  availableSeats Int
+  status         EventStatus @default(PENDING)
+  version        Int         @default(1) // Optimistic concurrency lock
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  host       HostProfile      @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  commission EventCommission?
+  reviews    Review[]
+  bookings   Booking[]
+
+  @@map("events")
+}
+
+model EventCommission {
+  id             String         @id @default(uuid()) @db.Uuid
+  eventId        String         @unique @db.Uuid
+  commissionType CommissionType @default(PERCENTAGE)
+  platformValue  Decimal        @db.Decimal(10, 2)
+  assignedAt     DateTime       @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_commissions")
+}
+
+model Review {
+  id        String   @id @default(uuid()) @db.Uuid
+  clientId  String   @db.Uuid
+  eventId   String   @db.Uuid
+  rating    Float
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  client User  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, eventId])
+  @@map("reviews")
+}
+
+model Booking {
+  id          String        @id @default(uuid()) @db.Uuid
+  bookingRef  String        @unique
+  clientId    String        @db.Uuid
+  eventId     String        @db.Uuid
+  seatCount   Int
+  totalAmount Decimal       @db.Decimal(10, 2)
+  status      BookingStatus @default(INITIATED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  client            User                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  event             Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  transactionLedger TransactionLedger[]
+
+  @@map("bookings")
+}
+
+model TransactionLedger {
+  id               String        @id @default(uuid()) @db.Uuid
+  bookingId        String        @db.Uuid
+  gatewayTxnId     String        @unique
+  type             LedgerTxnType
+  amountCaptured   Decimal       @db.Decimal(10, 2)
+  platformRevenue  Decimal       @db.Decimal(10, 2)
+  hostLiability    Decimal       @db.Decimal(10, 2)
+  status           LedgerStatus  @default(HELD)
+  createdAt        DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("transaction_ledgers")
+}
+
+model NotificationLog {
+  id           String             @id @default(uuid()) @db.Uuid
+  userId       String             @db.Uuid
+  channel      DeliveryChannel
+  triggerEvent String
+  recipient    String
+  content      String             @db.Text
+  status       NotificationStatus @default(PENDING)
+  errorMessage String?            @db.Text
+  sentAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_logs")
+}
