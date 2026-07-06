@@ -4,48 +4,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 262.1 83.3% 57.8%; /* Modern Indigo/Violet */
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262.1 83.3% 57.8%;
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 224 71.4% 4.1%; /* Deep Navy Slate */
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 7%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 7%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 263.4 70% 50.4%; /* Rich Violet */
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 263.4 70% 50.4%;
+    --color-linen-canvas: #fcf9f7;
+    --color-bone-white: #ffffff;
+    --color-graphite-ink: #000000;
+    --color-nightshade-black: #05060b;
+    --color-deep-harbor: #030f1c;
+    --color-charcoal-slate: #1d1d1d;
+    --color-iron-grey: #262628;
+    --color-obsidian: #111112;
+    --color-stone-grey: #575757;
+    --color-ash: #717171;
+    --color-pebble: #989695;
+    --color-concrete: #a5a5a5;
+    --color-dove: #bababa;
+    --color-clay-shadow: #d1cfcd;
+    --color-haze: #ecedef;
+    --color-spotlight-gradient: #a89c8a;
+    
+    --radius: 12px;
   }
 }
 
@@ -54,31 +30,32 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply bg-background text-foreground antialiased selection:bg-charcoal-slate selection:text-bone-white;
+    font-feature-settings: "blwf", "cv03", "cv04", "cv09", "cv11";
   }
 }
 
 /* Custom Premium Utility Classes */
 @layer utilities {
   .glass-card {
-    @apply bg-white/70 dark:bg-card/75 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-xl shadow-slate-100/10 dark:shadow-black/20;
+    @apply bg-bone-white border border-clay-shadow shadow-sm;
   }
 
   .glass-nav {
-    @apply bg-white/75 dark:bg-background/80 backdrop-blur-md border-b border-border/40 dark:border-border/10 sticky top-0 z-50;
+    @apply sticky top-0 z-50;
+    background-color: transparent;
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 dark:from-violet-400 dark:via-indigo-400 dark:to-purple-400;
+    @apply text-graphite-ink;
   }
 
   .gradient-bg {
-    @apply bg-gradient-to-tr from-violet-500/10 via-indigo-500/5 to-purple-500/10 dark:from-violet-950/20 dark:via-indigo-950/10 dark:to-purple-950/20;
+    @apply bg-linen-canvas;
   }
 
   .animate-hover {
-    @apply transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0;
+    @apply transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0;
   }
 
   /* Custom Scrollbars */
@@ -92,6 +69,7 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/35 transition-colors;
+    @apply bg-stone-grey rounded-full hover:bg-charcoal-slate transition-colors;
+    opacity: 0.3;
   }
 }

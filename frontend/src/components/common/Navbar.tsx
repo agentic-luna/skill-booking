@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Menu, X, Sun, Moon, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { useTheme } from "@/components/providers/theme-provider";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +21,6 @@ import {
 export default function Navbar() {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { theme, setTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,33 +36,16 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="glass-nav border-b border-border/40">
+    <nav className="glass-nav">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2.5 hover:opacity-90">
-              <div className="bg-primary p-2 rounded-xl text-white">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-foreground">
-                BookMy<span className="text-primary">Skill</span>
+            <Link href="/" className="flex items-center hover:opacity-90">
+              <span className="text-lg font-bold tracking-tight text-graphite-ink">
+                BookMy<span className="text-nightshade-black">Skill</span>
               </span>
             </Link>
-          </div>
-
-          {/* Quick Search - Desktop */}
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search skill training, events..."
-              className="pl-10 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
 
           {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center space-x-4">
@@ -71,15 +53,7 @@ export default function Navbar() {
               Explore Skills
             </Link>
 
-            {/* Dark Mode Switcher */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
-            >
-              {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-            </Button>
+
 
             {isAuthenticated && user ? (
               <>
@@ -92,9 +66,9 @@ export default function Navbar() {
 
                 {/* Notifications Panel Trigger */}
                 <Link href="/notifications">
-                  <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground relative">
+                  <Button variant="ghost" size="icon" className="rounded-full text-stone-grey hover:text-graphite-ink relative">
                     <Bell className="h-4.5 w-4.5" />
-                    <span className="absolute top-2.5 right-2.5 bg-primary w-2 h-2 rounded-full" />
+                    <span className="absolute top-2.5 right-2.5 bg-nightshade-black w-2 h-2 rounded-full" />
                   </Button>
                 </Link>
 
@@ -166,14 +140,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
-            >
-              {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-            </Button>
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="rounded-lg p-2 text-muted-foreground hover:bg-muted focus:outline-none"
@@ -188,16 +155,6 @@ export default function Navbar() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border/40 bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
-          <form onSubmit={handleSearchSubmit} className="relative w-full">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search skill training..."
-              className="pl-10 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
 
           <div className="flex flex-col space-y-3">
             <Link

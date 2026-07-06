@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 
-const inter = Inter({
+const hanken = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -25,7 +25,10 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
-      <body className={`${inter.variable} font-sans min-h-screen bg-background text-foreground antialiased`}>
+      <body 
+        className={`${hanken.variable} font-sans min-h-screen text-foreground antialiased`}
+        style={{ background: "radial-gradient(50% 95% at 50% 108.6%, var(--color-linen-canvas) 0%, var(--color-spotlight-gradient) 100%)", backgroundAttachment: "fixed" }}
+      >
         <QueryProvider>
           <ThemeProvider defaultTheme="system" storageKey="bookmyskill-theme">
             <div className="relative flex min-h-screen flex-col">

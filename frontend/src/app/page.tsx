@@ -26,12 +26,12 @@ export default function LandingPage() {
   };
 
   const categories = [
-    { name: "Technology", slug: "technology", icon: Code, count: 18, color: "text-blue-500 bg-blue-50 dark:bg-blue-950/30" },
-    { name: "Culinary Arts", slug: "culinary", icon: UtensilsCrossed, count: 12, color: "text-amber-500 bg-amber-50 dark:bg-amber-950/30" },
-    { name: "Photography", slug: "photography", icon: Camera, count: 8, color: "text-purple-500 bg-purple-50 dark:bg-purple-950/30" },
-    { name: "Fitness & Wellness", slug: "fitness", icon: Dumbbell, count: 14, color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30" },
-    { name: "Business", slug: "business", icon: Briefcase, count: 9, color: "text-rose-500 bg-rose-50 dark:bg-rose-950/30" },
-    { name: "Design & Arts", slug: "design", icon: Palette, count: 15, color: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30" },
+    { name: "Technology", slug: "technology", icon: Code, count: 18, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
+    { name: "Culinary Arts", slug: "culinary", icon: UtensilsCrossed, count: 12, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
+    { name: "Photography", slug: "photography", icon: Camera, count: 8, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
+    { name: "Fitness & Wellness", slug: "fitness", icon: Dumbbell, count: 14, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
+    { name: "Business", slug: "business", icon: Briefcase, count: 9, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
+    { name: "Design & Arts", slug: "design", icon: Palette, count: 15, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
   ];
 
   const featuredPrograms = MOCK_PROGRAMS.filter(p => p.featured && p.status === "approved");
@@ -41,24 +41,22 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32 gradient-bg">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden py-24 lg:py-32">
         
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">
-              <span>Introducing BookMySkill Live Workshops</span>
+            <div className="inline-flex items-center space-x-2 bg-bone-white text-iron-grey px-4 py-2 rounded-[100px] text-[12px] font-medium border border-clay-shadow shadow-sm tracking-[0.444em] uppercase">
+              <span>Introducing BookMySkill</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-              Master New Skills in <span className="gradient-text">Live Interactive</span> Sessions.
+            <h1 className="text-5xl sm:text-6xl lg:text-[52px] font-semibold tracking-tight text-graphite-ink leading-[1.1]">
+              Master New Skills in Live Interactive Sessions.
             </h1>
-            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+            <p className="text-charcoal-slate text-base sm:text-[18px] leading-relaxed max-w-2xl mx-auto">
               Skip static videos. Book live masterclasses, interactive bootcamps, and certification training led by top-rated industry instructors.
             </p>
 
             {/* Search Input Box */}
-            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto bg-white dark:bg-card/90 p-2 rounded-2xl shadow-xl shadow-slate-100/30 dark:shadow-none border border-border/40">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto bg-bone-white p-2 rounded-[25px] shadow-sm border border-clay-shadow">
               <div className="relative flex-1">
                 <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-muted-foreground" />
                 <Input
@@ -84,7 +82,7 @@ export default function LandingPage() {
                     setSearchQuery(item);
                     router.push(`/programs?search=${encodeURIComponent(item)}`);
                   }}
-                  className="bg-muted hover:bg-muted/80 text-foreground px-2.5 py-1 rounded-md transition-colors"
+                  className="bg-haze hover:bg-clay-shadow text-graphite-ink px-3 py-1.5 rounded-[12px] transition-colors"
                 >
                   {item}
                 </button>
@@ -94,55 +92,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Category Grid Section */}
-      <section className="py-20 bg-background border-t border-border/40">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Browse by Skill Category
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Discover verified instructors teaching highly demanded technical and life skills.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat) => {
-              const IconComp = cat.icon;
-              return (
-                <Link
-                  key={cat.name}
-                  href={`/programs?category=${cat.slug}`}
-                  className="group flex flex-col items-center justify-center p-6 rounded-2xl border border-border/40 bg-card hover:border-primary/20 animate-hover text-center"
-                >
-                  <div className={`p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform ${cat.color}`}>
-                    <IconComp className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-semibold text-sm text-foreground mb-1 group-hover:text-primary transition-colors">
-                    {cat.name}
-                  </h3>
-                  <span className="text-xs text-muted-foreground">{cat.count} Workshops</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* Featured Programs Section */}
-      <section className="py-20 bg-muted/20 dark:bg-card/5 border-t border-border/40">
+      <section className="py-20 border-t border-clay-shadow">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              <h2 className="text-3xl font-bold tracking-tight text-graphite-ink">
                 Featured Skill Masterclasses
               </h2>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-stone-grey text-sm">
                 Reserve your spot in high-demand workshops starting this week.
               </p>
             </div>
             <Link href="/programs">
-              <Button variant="outline" className="group rounded-xl">
+              <Button variant="outline" className="group rounded-[12px] border-clay-shadow text-graphite-ink">
                 Explore All Classes <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
@@ -153,15 +116,15 @@ export default function LandingPage() {
             {featuredPrograms.map((prog) => (
               <div
                 key={prog.id}
-                className="group flex flex-col border border-border/40 rounded-2xl overflow-hidden bg-card hover:border-primary/20 animate-hover"
+                className="group flex flex-col border border-clay-shadow rounded-[25px] overflow-hidden bg-bone-white hover:border-nightshade-black animate-hover"
               >
-                <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                <div className="relative aspect-video w-full overflow-hidden bg-haze">
                   <img
                     src={prog.imageUrl}
                     alt={prog.title}
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-xs text-white text-xs px-2.5 py-1 rounded-md font-semibold capitalize">
+                  <div className="absolute top-3 left-3 bg-nightshade-black/60 backdrop-blur-md text-bone-white text-xs px-2.5 py-1 rounded-[8px] font-semibold capitalize">
                     {prog.category}
                   </div>
                 </div>
@@ -173,31 +136,31 @@ export default function LandingPage() {
                       alt={prog.instructorName}
                       className="h-6 w-6 rounded-full object-cover"
                     />
-                    <span className="text-xs text-muted-foreground">{prog.instructorName}</span>
+                    <span className="text-xs text-stone-grey">{prog.instructorName}</span>
                   </div>
 
-                  <h3 className="font-bold text-base text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                  <h3 className="font-bold text-base text-graphite-ink line-clamp-2 leading-tight group-hover:text-nightshade-black transition-colors">
                     {prog.title}
                   </h3>
 
-                  <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+                  <div className="flex items-center space-x-3 text-xs text-stone-grey">
                     <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {prog.duration}</span>
                     <span className="flex items-center"><MapPin className="h-3 w-3 mr-1" /> {prog.location.split(",")[0]}</span>
                   </div>
 
                   <div className="flex items-center space-x-1.5 pt-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span className="text-xs font-bold text-foreground">{prog.rating}</span>
-                    <span className="text-xs text-muted-foreground">({prog.reviewsCount} reviews)</span>
+                    <Star className="h-4 w-4 fill-iron-grey text-iron-grey" />
+                    <span className="text-xs font-bold text-graphite-ink">{prog.rating}</span>
+                    <span className="text-xs text-stone-grey">({prog.reviewsCount} reviews)</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-border/40 mt-auto">
+                  <div className="flex items-center justify-between pt-4 border-t border-clay-shadow mt-auto">
                     <div>
-                      <span className="text-xs text-muted-foreground">Registration Fee</span>
-                      <div className="text-lg font-extrabold text-foreground">${prog.price}</div>
+                      <span className="text-xs text-stone-grey">Registration Fee</span>
+                      <div className="text-lg font-extrabold text-graphite-ink">${prog.price}</div>
                     </div>
                     <Link href={`/programs/${prog.id}`}>
-                      <Button size="sm" className="rounded-lg">Book Spot</Button>
+                      <Button size="sm" className="rounded-[12px]">Book Spot</Button>
                     </Link>
                   </div>
                 </div>
@@ -207,8 +170,43 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Category Grid Section */}
+      <section className="py-20 border-t border-clay-shadow">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight text-graphite-ink">
+              Browse by Skill Category
+            </h2>
+            <p className="text-stone-grey text-sm">
+              Discover verified instructors teaching highly demanded technical and life skills.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map((cat) => {
+              const IconComp = cat.icon;
+              return (
+                <Link
+                  key={cat.name}
+                  href={`/programs?category=${cat.slug}`}
+                  className="group flex flex-col items-center justify-center p-6 rounded-[25px] border border-clay-shadow bg-bone-white hover:border-nightshade-black animate-hover text-center"
+                >
+                  <div className={`p-4 rounded-[16px] mb-4 group-hover:scale-110 transition-transform ${cat.color}`}>
+                    <IconComp className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-graphite-ink mb-1 group-hover:text-nightshade-black transition-colors">
+                    {cat.name}
+                  </h3>
+                  <span className="text-xs text-stone-grey">{cat.count} Workshops</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* How it Works Section */}
-      <section className="py-20 bg-background border-t border-border/40">
+      <section className="py-20 bg-transparent border-t border-border/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-xl mx-auto space-y-2">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -249,7 +247,7 @@ export default function LandingPage() {
             {activeTab === "learner" ? (
               <>
                 <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-primary/10 text-primary p-4 rounded-full">
+                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
                     <Search className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground">1. Find Your Skill</h3>
@@ -258,7 +256,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-primary/10 text-primary p-4 rounded-full">
+                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
                     <Calendar className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground">2. Instantly Register</h3>
@@ -267,7 +265,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-primary/10 text-primary p-4 rounded-full">
+                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
                     <CheckCircle className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground">3. Level Up Live</h3>
@@ -279,7 +277,7 @@ export default function LandingPage() {
             ) : (
               <>
                 <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-primary/10 text-primary p-4 rounded-full">
+                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground">1. Create Program</h3>
@@ -288,7 +286,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-primary/10 text-primary p-4 rounded-full">
+                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
                     <Users className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground">2. Manage Registrations</h3>
@@ -297,7 +295,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-primary/10 text-primary p-4 rounded-full">
+                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
                     <Star className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground">3. Get Paid Automatically</h3>
@@ -312,7 +310,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 bg-muted/20 dark:bg-card/5 border-t border-border/40">
+      <section className="py-20 bg-transparent border-t border-clay-shadow">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-xl mx-auto space-y-2">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -347,8 +345,8 @@ export default function LandingPage() {
                 avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100",
               }
             ].map((t, idx) => (
-              <div key={idx} className="bg-card p-6 rounded-2xl border border-border/40 flex flex-col justify-between">
-                <p className="text-muted-foreground text-xs leading-relaxed italic mb-6">
+              <div key={idx} className="bg-bone-white p-6 rounded-[25px] border border-clay-shadow flex flex-col justify-between shadow-sm">
+                <p className="text-stone-grey text-xs leading-relaxed italic mb-6">
                   &ldquo;{t.text}&rdquo;
                 </p>
                 <div className="flex items-center space-x-3">
@@ -359,7 +357,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center ml-auto">
                     {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="h-3.5 w-3.5 fill-iron-grey text-iron-grey" />
                     ))}
                   </div>
                 </div>
@@ -370,24 +368,24 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 relative bg-primary overflow-hidden">
+      <section className="py-20 relative bg-nightshade-black overflow-hidden">
         {/* Abstract grids */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,_rgba(255,255,255,0.15),transparent)] pointer-events-none" />
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-white relative z-10 space-y-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,_rgba(255,255,255,0.05),transparent)] pointer-events-none" />
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-bone-white relative z-10 space-y-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
             Ready to Accelerate Your Learning Curve?
           </h2>
-          <p className="text-primary-foreground/80 text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-bone-white/60 text-base max-w-xl mx-auto leading-relaxed">
             Create an account to explore thousands of live workshops, book secure spots, and start certified learning programs today.
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Link href="/register">
-              <Button variant="glass" size="lg" className="bg-white text-primary hover:bg-white/95 font-semibold rounded-xl">
+              <Button variant="secondary" size="lg" className="rounded-xl">
                 Get Started Now
               </Button>
             </Link>
             <Link href="/register?role=host">
-              <Button variant="outline" size="lg" className="text-white border-white/40 hover:bg-white/10 font-semibold rounded-xl">
+              <Button variant="outline" size="lg" className="text-bone-white border-bone-white/40 hover:bg-bone-white/10 rounded-xl">
                 Teach on BookMySkill
               </Button>
             </Link>
