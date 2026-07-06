@@ -27,7 +27,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans min-h-screen bg-background text-foreground antialiased`}>
         <QueryProvider>
-          <ThemeProvider defaultTheme="system" storageKey="bookmyskill-theme">
+          <ThemeProvider>
             <div className="relative flex min-h-screen flex-col">
               {children}
             </div>

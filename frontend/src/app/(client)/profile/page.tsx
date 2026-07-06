@@ -13,7 +13,6 @@ import {
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import Navbar from "@/components/common/Navbar";
-import Footer from "@/components/common/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -384,8 +383,6 @@ export default function ProfilePage() {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
