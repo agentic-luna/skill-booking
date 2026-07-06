@@ -19,43 +19,19 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undef
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
-  storageKey = "bookmyskill-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
-  const [mounted, setMounted] = useState(false);
+  const [theme] = useState<Theme>("light");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem(storageKey) as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    setMounted(true);
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!mounted) return;
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-  }, [theme, mounted]);
+    root.classList.remove("dark");
+    root.classList.add("light");
+  }, []);
 
   const value = {
-    theme,
-    setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme);
-      setTheme(newTheme);
-    },
+    theme: "light" as Theme,
+    setTheme: () => {},
   };
 
   return (

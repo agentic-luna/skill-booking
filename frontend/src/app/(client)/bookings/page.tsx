@@ -14,6 +14,12 @@ import Footer from "@/components/common/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle
+} from "@/components/ui/dialog";
+import AlertBox from "@/components/ui/alert-box";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 
 export default function BookingsPage() {
@@ -38,18 +44,35 @@ export default function BookingsPage() {
     );
   }
 
-  const handleCancelBooking = (bookingId: string) => {
-    const confirmCancel = window.confirm("Are you sure you want to cancel this booking? You will receive a 100% automatic refund.");
-    if (!confirmCancel) return;
+  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
+  const showAlert = useAlertStore((s) => s.showAlert);
+
+  const handleConfirmCancel = () => {
+    if (!cancellingBookingId) return;
 
     setBookings((prev) =>
       prev.map((bk) =>
-        bk.id === bookingId
+        bk.id === cancellingBookingId
           ? { ...bk, status: "cancelled" as const }
           : bk
       )
     );
-    alert("Reservation successfully cancelled and refund initiated.");
+
+    // Sync status change in master bookings database
+    const idx = MOCK_BOOKINGS.findIndex((b) => b.id === cancellingBookingId);
+    if (idx !== -1) {
+      MOCK_BOOKINGS[idx] = {
+        ...MOCK_BOOKINGS[idx],
+        status: "cancelled" as const,
+      };
+    }
+
+    setCancellingBookingId(null);
+    showAlert(
+      "Booking Cancelled",
+      "Your reservation has been successfully cancelled. A 100% automatic refund has been initiated to your original payment method.",
+      "success"
+    );
   };
 
   const activeBookings = bookings.filter((b) => b.status === "confirmed");
@@ -100,7 +123,7 @@ export default function BookingsPage() {
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-lg"
-                onClick={() => alert(`Receipt downloaded for transaction reference: TXN_${booking.id}`)}
+                onClick={() => showAlert("Receipt Downloaded", `Invoice successfully downloaded for transaction reference: TXN_${booking.id}`, "success")}
               >
                 <FileText className="h-3.5 w-3.5 mr-1" /> Invoice
               </Button>
@@ -111,14 +134,14 @@ export default function BookingsPage() {
                     variant="destructive" 
                     size="sm" 
                     className="h-8 text-xs rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive border-transparent"
-                    onClick={() => handleCancelBooking(booking.id)}
+                    onClick={() => setCancellingBookingId(booking.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" /> Cancel
                   </Button>
                   <Button 
                     size="sm" 
                     className="h-8 text-xs rounded-lg"
-                    onClick={() => alert("Launching live workshop room...")}
+                    onClick={() => showAlert("Room Launching", "Launching your live workshop room. Please allow your browser popup windows access.", "info")}
                   >
                     <PlayCircle className="h-3.5 w-3.5 mr-1" /> Launch Class
                   </Button>
@@ -187,6 +210,50 @@ export default function BookingsPage() {
 
         </div>
       </main>
+
+      {/* CANCELLATION DIALOG MODAL */}
+      <Dialog open={cancellingBookingId !== null} onOpenChange={() => setCancellingBookingId(null)}>
+        <DialogContent className="max-w-md p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <span>Cancel Reservation?</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Review cancellation parameters before finalizing.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Are you sure you want to cancel this booking? This will remove your reservation, and you will receive a 100% automatic refund to your original payment method.
+            </p>
+
+            <AlertBox
+              variant="warning"
+              description="Cancellations are permanent. If you change your mind, you will need to re-book and pay for the ticket again (subject to seat availability)."
+            />
+          </div>
+
+          <DialogFooter className="pt-2 gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              type="button"
+              className="text-xs h-9 rounded-xl"
+              onClick={() => setCancellingBookingId(null)}
+            >
+              No, Keep Ticket
+            </Button>
+            <Button
+              variant="destructive"
+              className="text-xs h-9 rounded-xl font-semibold"
+              onClick={handleConfirmCancel}
+            >
+              Yes, Cancel Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

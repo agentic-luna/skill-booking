@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import GlobalAlert from "@/components/common/GlobalAlert";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,10 +28,11 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans min-h-screen bg-background text-foreground antialiased`}>
         <QueryProvider>
-          <ThemeProvider defaultTheme="system" storageKey="bookmyskill-theme">
+          <ThemeProvider>
             <div className="relative flex min-h-screen flex-col">
               {children}
             </div>
+            <GlobalAlert />
           </ThemeProvider>
         </QueryProvider>
       </body>

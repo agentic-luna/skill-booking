@@ -13,7 +13,7 @@ import {
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import Navbar from "@/components/common/Navbar";
-import Footer from "@/components/common/Footer";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function ProfilePage() {
   const router = useRouter();
+  const showAlert = useAlertStore((s) => s.showAlert);
   const { user, isAuthenticated, updateProfile } = useAuthStore();
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -101,7 +102,7 @@ export default function ProfilePage() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     updateProfile({ name: data.name, email: data.email });
     setProfileSaving(false);
-    alert("Profile details successfully updated!");
+    showAlert("Profile Updated", "Profile details successfully updated!", "success");
   };
 
   const onPasswordSave = async (data: PasswordFormValues) => {
@@ -109,7 +110,7 @@ export default function ProfilePage() {
     await new Promise((resolve) => setTimeout(resolve, 1200));
     setPasswordSaving(false);
     resetPassword();
-    alert("Password successfully changed!");
+    showAlert("Password Changed", "Your password has been successfully updated!", "success");
   };
 
   const handleApplyHost = async (e: React.FormEvent) => {
@@ -384,8 +385,6 @@ export default function ProfilePage() {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { MOCK_PROGRAMS } from "@/constants/mockData";
-import ProgramCard from "./_components/ProgramCard";
+import ProgramCard from "@/components/ui/program-card";
 
 export default function HostProgramsPage() {
   const programsList = MOCK_PROGRAMS;

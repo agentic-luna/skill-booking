@@ -6,9 +6,11 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 export default function VerifyPage() {
   const router = useRouter();
+  const showAlert = useAlertStore((s) => s.showAlert);
   const { verifyOtp, isVerifying, pendingUser, isLoading, error, clearError } = useAuthStore();
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
 
@@ -119,7 +121,7 @@ export default function VerifyPage() {
         Didn&apos;t receive the code?{" "}
         <button
           type="button"
-          onClick={() => alert("Mock OTP code resent to email.")}
+          onClick={() => showAlert("Code Sent", "Mock OTP code has been successfully resent to your email address.", "success")}
           className="font-semibold text-primary hover:underline"
         >
           Resend code
