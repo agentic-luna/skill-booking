@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,33 +36,16 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="glass-nav border-b border-border/40">
+    <nav className="glass-nav">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2.5 hover:opacity-90">
-              <div className="bg-primary p-2 rounded-xl text-white">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-foreground">
-                BookMy<span className="text-primary">Skill</span>
+            <Link href="/" className="flex items-center hover:opacity-90">
+              <span className="text-lg font-bold tracking-tight text-graphite-ink">
+                BookMy<span className="text-nightshade-black">Skill</span>
               </span>
             </Link>
-          </div>
-
-          {/* Quick Search - Desktop */}
-          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-md relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search skill training, events..."
-              className="pl-10 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
 
           {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center space-x-4">
@@ -69,7 +53,6 @@ export default function Navbar() {
               Explore Skills
             </Link>
 
-            {/* Dark Mode Switcher */}
 
 
             {isAuthenticated && user ? (
@@ -166,16 +149,6 @@ export default function Navbar() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border/40 bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
-          <form onSubmit={handleSearchSubmit} className="relative w-full">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search skill training..."
-              className="pl-10 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
 
           <div className="flex flex-col space-y-3">
             <Link

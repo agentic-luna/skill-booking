@@ -58,12 +58,9 @@ export default function AdminLayout({
       <div className="space-y-8">
         
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2.5 hover:opacity-90 transition-opacity">
-          <div className="bg-primary p-2.5 rounded-xl text-white">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            BookMy<span className="text-primary font-extrabold">Skill</span>
+        <Link href="/" className="flex items-center hover:opacity-90 transition-opacity">
+          <span className="text-lg font-bold tracking-tight text-graphite-ink">
+            BookMy<span className="text-nightshade-black">Skill</span>
           </span>
         </Link>
 
