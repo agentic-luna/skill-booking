@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Program, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 // Zod schema for card payment validation
 const checkoutSchema = z.object({
@@ -79,6 +80,8 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     );
   }
 
+  const showAlert = useAlertStore((s) => s.showAlert);
+
   const handleBookClick = () => {
     if (!isAuthenticated) {
       router.push(`/login?redirect=/programs/${programId}`);
@@ -89,7 +92,11 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleWishlistToggle = () => {
     setIsWishlisted(!isWishlisted);
-    alert(isWishlisted ? "Removed from Wishlist!" : "Added to Wishlist!");
+    showAlert(
+      isWishlisted ? "Removed from Wishlist" : "Added to Wishlist",
+      isWishlisted ? "The workshop has been removed from your saved list." : "The workshop has been added to your saved list successfully.",
+      isWishlisted ? "info" : "success"
+    );
   };
 
   const onCheckoutSubmit = async (data: CheckoutFormValues) => {
@@ -124,7 +131,11 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleShareClick = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert("Class link copied to clipboard!");
+    showAlert(
+      "Link Copied",
+      "Class link has been successfully copied to your clipboard. Send it to your friends!",
+      "success"
+    );
   };
 
   return (

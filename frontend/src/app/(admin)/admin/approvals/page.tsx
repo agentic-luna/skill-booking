@@ -14,6 +14,7 @@ import {
   DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
 import { MOCK_PROGRAMS, Program } from "@/constants/mockData";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 export default function AdminApprovalsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +22,7 @@ export default function AdminApprovalsPage() {
   const [approvalsList, setApprovalsList] = useState<Program[]>(
     MOCK_PROGRAMS.filter((p) => p.status === "pending")
   );
+  const showAlert = useAlertStore((s) => s.showAlert);
 
   const handleStatusChange = (progId: string, newStatus: "approved" | "rejected") => {
     // Close modal if open
@@ -35,7 +37,11 @@ export default function AdminApprovalsPage() {
       MOCK_PROGRAMS[idx].status = newStatus;
     }
     
-    alert(`Workshop listing status set to: ${newStatus.toUpperCase()}`);
+    showAlert(
+      newStatus === "approved" ? "Listing Approved" : "Listing Declined",
+      `Workshop listing status has been successfully set to: ${newStatus.toUpperCase()}`,
+      newStatus === "approved" ? "success" : "destructive"
+    );
   };
 
   const filteredApprovals = approvalsList.filter((prog) => {

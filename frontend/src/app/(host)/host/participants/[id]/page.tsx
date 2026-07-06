@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MOCK_PROGRAMS, MOCK_BOOKINGS, Booking, Program } from "@/constants/mockData";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 interface StudentRosterItem {
   id: string;
@@ -112,13 +113,14 @@ export default function ParticipantDetailPage() {
   );
 
   const enrolledSeats = activeStudents.reduce((sum, s) => sum + s.spots, 0);
+  const showAlert = useAlertStore((s) => s.showAlert);
 
   const handleVerifyTicket = (bookingId: string) => {
-    alert(`Check-in ticket successfully verified for check-in: CONFIRM_${bookingId}`);
+    showAlert("Ticket Verified", `Check-in ticket successfully verified for check-in: CONFIRM_${bookingId}`, "success");
   };
 
   const handleMessageStudent = (studentName: string) => {
-    alert(`Chat console opened for communications with: ${studentName}`);
+    showAlert("Chat Console", `Chat console opened for communications with: ${studentName}`, "info");
   };
 
   return (
