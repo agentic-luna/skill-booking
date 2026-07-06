@@ -51,7 +51,7 @@ export default function HostDashboard() {
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Host Control Center</h1>
           <p className="text-sm text-muted-foreground">Monitor class bookings, track revenue metrics, and publish new programs.</p>
         </div>
-        <Link href="/host/programs?create=true">
+        <Link href="/host/programs/create">
           <Button className="rounded-xl h-10 text-xs font-semibold">
             <Plus className="mr-1.5 h-4 w-4" /> Create Workshop
           </Button>
