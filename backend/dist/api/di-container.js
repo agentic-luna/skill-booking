@@ -46,6 +46,8 @@ const create_event_1 = require("../application/use-cases/events/create-event");
 const approve_event_1 = require("../application/use-cases/events/approve-event");
 const checkout_1 = require("../application/use-cases/bookings/checkout");
 const cancel_booking_1 = require("../application/use-cases/bookings/cancel-booking");
+const get_my_bookings_1 = require("../application/use-cases/bookings/get-my-bookings");
+const confirm_booking_payment_1 = require("../application/use-cases/bookings/confirm-booking-payment");
 const handle_payment_webhook_1 = require("../application/use-cases/webhooks/handle-payment-webhook");
 const get_configs_1 = require("../application/use-cases/admin/get-configs");
 const update_config_1 = require("../application/use-cases/admin/update-config");
@@ -139,6 +141,8 @@ mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommand
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new checkout_1.CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
 mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider));
+mediator.register('GetMyBookingsQuery', new get_my_bookings_1.GetMyBookingsQueryHandler(bookingRepo));
+mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 // 9. Register Admin handlers

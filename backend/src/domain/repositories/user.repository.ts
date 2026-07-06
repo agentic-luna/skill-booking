@@ -19,8 +19,8 @@ export interface IUserRepository {
   upsertHostProfile(
     userId: string,
     data: {
-      accountType: AccountType;
-      govIdUrl: string;
+      accountType?: AccountType;
+      govIdUrl?: string;
       gstNumber?: string;
       kycStatus?: KycStatus;
       bio?: string;
@@ -56,4 +56,7 @@ export interface IUserRepository {
     status?: UserStatus;
     deletedAt?: Date | null;
   }): Promise<User[]>;
+  findPendingKycHosts(): Promise<any[]>;
+  findAllHosts(filters?: { kycStatus?: KycStatus }): Promise<any[]>;
+  updateKycStatus(hostProfileId: string, status: KycStatus, rejectionReason?: string): Promise<HostProfile>;
 }

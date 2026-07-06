@@ -62,8 +62,8 @@ export class PrismaUserRepository implements IUserRepository {
   async upsertHostProfile(
     userId: string,
     data: {
-      accountType: AccountType;
-      govIdUrl: string;
+      accountType?: AccountType;
+      govIdUrl?: string;
       gstNumber?: string;
       kycStatus?: KycStatus;
       bio?: string;
@@ -76,7 +76,7 @@ export class PrismaUserRepository implements IUserRepository {
         userId,
         ...data,
       },
-    });
+    }) as any;
   }
 
   async findClientProfileByUserId(userId: string): Promise<any> {
@@ -157,5 +157,103 @@ export class PrismaUserRepository implements IUserRepository {
     deletedAt?: Date | null;
   }): Promise<User[]> {
     return prisma.user.findMany({ where: filters });
+  }
+
+  async findPendingKycHosts(): Promise<any[]> {
+    // Use a direct join-style approach via prisma.user.findMany to avoid include bugs
+    const users = await prisma.user.findMany({
+      where: {
+        role: 'HOST',
+        hostProfile: { kycStatus: 'PENDING' },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        status: true,
+        createdAt: true,
+        hostProfile: {
+          select: {
+            id: true,
+            userId: true,
+            accountType: true,
+            govIdUrl: true,
+            gstNumber: true,
+            kycStatus: true,
+            bio: true,
+            updatedAt: true,
+            bankDetail: true,
+          },
+        },
+      },
+      orderBy: { hostProfile: { updatedAt: 'asc' } },
+    });
+    return users;
+  }
+
+  async findAllHosts(filters?: { kycStatus?: KycStatus }): Promise<any[]> {
+    const users = await prisma.user.findMany({
+      where: {
+        role: 'HOST',
+        deletedAt: null,
+        ...(filters?.kycStatus
+          ? { hostProfile: { kycStatus: filters.kycStatus } }
+          : {}),
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        hostProfile: {
+          select: {
+            id: true,
+            accountType: true,
+            govIdUrl: true,
+            gstNumber: true,
+            kycStatus: true,
+            bio: true,
+            updatedAt: true,
+            bankDetail: {
+              select: {
+                id: true,
+                accountHolderName: true,
+                bankName: true,
+                ifscCode: true,
+                upiId: true,
+                updatedAt: true,
+              },
+            },
+            events: {
+              select: {
+                id: true,
+                title: true,
+                status: true,
+                startTime: true,
+                totalSeats: true,
+                availableSeats: true,
+              },
+              orderBy: { startTime: 'desc' },
+              take: 5,
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return users;
+  }
+
+  async updateKycStatus(hostProfileId: string, status: KycStatus, _rejectionReason?: string): Promise<any> {
+    return prisma.hostProfile.update({
+      where: { id: hostProfileId },
+      data: { kycStatus: status },
+    });
   }
 }

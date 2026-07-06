@@ -290,6 +290,11 @@ All API responses follow a unified response structure.
 }
 ```
 
+### 5. Get Client Bookings (My Bookings - Latest on top)
+`GET /api/v1/bookings/my-bookings` (or `/api/v1/bookings/mybookings`) *(Requires Bearer Header - CLIENT)*
+
+Returns all ticket bookings made by the authenticated client, ordered by creation date descending (latest bookings first).
+
 ### 5. Cancel Booking & Calculate Refund Matrix
 `POST /api/v1/bookings/:bookingId/cancel` *(Requires Bearer Header)*
 

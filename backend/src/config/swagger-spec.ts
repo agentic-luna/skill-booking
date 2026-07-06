@@ -703,6 +703,26 @@ export const swaggerSpec = {
         },
       },
     },
+    '/bookings/my-bookings': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Fetch all bookings belonging to current client (Latest bookings on top)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Returns list of client bookings ordered by creation date descending' },
+        },
+      },
+    },
+    '/bookings/mybookings': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Alias route to fetch current client bookings (Latest bookings on top)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Returns list of client bookings ordered by creation date descending' },
+        },
+      },
+    },
     '/bookings/checkout': {
       post: {
         tags: ['Client & Booking Workflows'],
@@ -726,6 +746,29 @@ export const swaggerSpec = {
         },
         responses: {
           200: { description: 'Returns checkout booking and Razorpay order payload' },
+        },
+      },
+    },
+    '/bookings/{bookingId}/confirm': {
+      post: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Directly confirm booking payment without external payment gateway redirect',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'bookingId', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  paymentMethod: { type: 'string', example: 'DIRECT_PAYMENT' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Booking payment confirmed, escrow ledger entry created, and notification enqueued' },
         },
       },
     },
@@ -1027,6 +1070,65 @@ export const swaggerSpec = {
         parameters: [{ name: 'hostId', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           200: { description: 'Escrow released successfully' },
+        },
+      },
+    },
+    '/admin/hosts': {
+      get: {
+        tags: ['Admin KYC Review'],
+        summary: 'List all hosts on the platform with full profile details (profile, bank detail, recent events)',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'kycStatus',
+            in: 'query',
+            required: false,
+            schema: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'] },
+            description: 'Optional filter by KYC status. Omit to get all hosts regardless of KYC status.',
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Returns list of all hosts with hostProfile (govIdUrl, kycStatus, gstNumber, bankDetail, last 5 events)',
+          },
+        },
+      },
+    },
+    '/admin/hosts/kyc/pending': {
+      get: {
+        tags: ['Admin KYC Review'],
+        summary: 'List all hosts with pending KYC verification submissions (oldest first)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Returns array of pending host KYC profiles with user details' },
+        },
+      },
+    },
+    '/admin/hosts/{hostProfileId}/kyc': {
+      put: {
+        tags: ['Admin KYC Review'],
+        summary: 'Approve or reject a host KYC submission',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'hostProfileId', in: 'path', required: true, schema: { type: 'string' }, description: 'Host Profile ID (not user ID)' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['decision'],
+                properties: {
+                  decision: { type: 'string', enum: ['APPROVED', 'REJECTED'], example: 'APPROVED' },
+                  rejectionReason: { type: 'string', example: 'Government ID document is blurry and unreadable', description: 'Required when decision is REJECTED' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'KYC decision recorded, host profile updated with new kycStatus' },
+          400: { description: 'Missing rejection reason or invalid decision value' },
+          404: { description: 'Host profile not found' },
         },
       },
     },

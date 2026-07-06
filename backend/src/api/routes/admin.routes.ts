@@ -40,4 +40,9 @@ router.put('/events/:eventId/approve', requirePermission(SystemPermissions.ADMIN
 router.get('/finance/ledger', requirePermission(SystemPermissions.ADMIN_LEDGER_READ) as any, AdminController.getFinanceLedger);
 router.put('/finance/payouts/:hostId', requirePermission(SystemPermissions.ADMIN_PAYOUT_RELEASE) as any, AdminController.payoutHost);
 
+// KYC Review
+router.get('/hosts', requirePermission(SystemPermissions.ADMIN_KYC_REVIEW) as any, AdminController.getAllHosts);
+router.get('/hosts/kyc/pending', requirePermission(SystemPermissions.ADMIN_KYC_REVIEW) as any, AdminController.getPendingKycHosts);
+router.put('/hosts/:hostProfileId/kyc', requirePermission(SystemPermissions.ADMIN_KYC_REVIEW) as any, AdminController.reviewKyc as any);
+
 export default router;

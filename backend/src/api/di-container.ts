@@ -52,6 +52,8 @@ import { ApproveEventCommandHandler } from '../application/use-cases/events/appr
 
 import { CheckoutCommandHandler } from '../application/use-cases/bookings/checkout';
 import { CancelBookingCommandHandler } from '../application/use-cases/bookings/cancel-booking';
+import { GetMyBookingsQueryHandler } from '../application/use-cases/bookings/get-my-bookings';
+import { ConfirmBookingPaymentCommandHandler } from '../application/use-cases/bookings/confirm-booking-payment';
 
 import { HandlePaymentWebhookCommandHandler } from '../application/use-cases/webhooks/handle-payment-webhook';
 
@@ -63,6 +65,7 @@ import { BroadcastNotificationCommandHandler } from '../application/use-cases/ad
 import { GetLedgerQueryHandler } from '../application/use-cases/admin/get-ledger';
 import { PayoutHostCommandHandler } from '../application/use-cases/admin/payout-host';
 import { AdminLoginCommandHandler } from '../application/use-cases/admin/admin-login';
+import { GetPendingKycHostsQueryHandler, GetAllHostsQueryHandler, ReviewKycCommandHandler } from '../application/use-cases/admin/review-kyc';
 
 import { GetUserNotificationsQueryHandler } from '../application/use-cases/notifications/get-user-notifications';
 import { MarkNotificationReadCommandHandler } from '../application/use-cases/notifications/mark-notification-read';
@@ -144,12 +147,17 @@ mediator.register('ApproveEventCommand', new ApproveEventCommandHandler(eventRep
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
 mediator.register('CancelBookingCommand', new CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider));
+mediator.register('GetMyBookingsQuery', new GetMyBookingsQueryHandler(bookingRepo));
+mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new AdminLoginCommandHandler(userRepo, cacheService));
+mediator.register('GetPendingKycHostsQuery', new GetPendingKycHostsQueryHandler(userRepo));
+mediator.register('GetAllHostsQuery', new GetAllHostsQueryHandler(userRepo));
+mediator.register('ReviewKycCommand', new ReviewKycCommandHandler(userRepo));
 mediator.register('GetConfigsQuery', new GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('GetTemplatesQuery', new GetTemplatesQueryHandler(configRepo));

@@ -9,6 +9,7 @@ import { GetLedgerQuery } from '../../application/use-cases/admin/get-ledger';
 import { PayoutHostCommand } from '../../application/use-cases/admin/payout-host';
 import { AdminLoginCommand } from '../../application/use-cases/admin/admin-login';
 import { ApproveEventCommand } from '../../application/use-cases/events/approve-event';
+import { GetPendingKycHostsQuery, GetAllHostsQuery, ReviewKycCommand } from '../../application/use-cases/admin/review-kyc';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { getIO } from '../../config/socket';
 import { ApiResponse } from '../common/api-response';
@@ -192,6 +193,40 @@ export class AdminController {
     try {
       const { hostId } = req.params;
       const result = await mediator.send(new PayoutHostCommand(hostId));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getPendingKycHosts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await mediator.send(new GetPendingKycHostsQuery());
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllHosts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { kycStatus } = req.query as { kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' };
+      const result = await mediator.send(new GetAllHostsQuery(kycStatus));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async reviewKyc(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { hostProfileId } = req.params;
+      const { decision, rejectionReason } = req.body;
+      const result = await mediator.send(new ReviewKycCommand(
+        hostProfileId,
+        decision,
+        rejectionReason
+      ));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
