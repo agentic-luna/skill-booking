@@ -9,6 +9,8 @@ import { PrismaConfigRepository } from '../infrastructure/database/repositories/
 import { PrismaNotificationRepository } from '../infrastructure/database/repositories/notification.repository';
 import { PrismaEventReviewRepository } from '../infrastructure/database/repositories/event-review.repository';
 import { PrismaBoostedEventRepository } from '../infrastructure/database/repositories/boosted-event.repository';
+import { PrismaWishlistRepository } from '../infrastructure/database/repositories/wishlist.repository';
+import { PrismaEventLikeRepository } from '../infrastructure/database/repositories/event-like.repository';
 
 // Services & Providers
 import { WinstonLoggerService } from '../infrastructure/logger/winston.logger';
@@ -60,12 +62,16 @@ import { UpdateTemplateCommandHandler } from '../application/use-cases/admin/upd
 import { BroadcastNotificationCommandHandler } from '../application/use-cases/admin/broadcast-notification';
 import { GetLedgerQueryHandler } from '../application/use-cases/admin/get-ledger';
 import { PayoutHostCommandHandler } from '../application/use-cases/admin/payout-host';
+import { AdminLoginCommandHandler } from '../application/use-cases/admin/admin-login';
 
 import { GetUserNotificationsQueryHandler } from '../application/use-cases/notifications/get-user-notifications';
 import { MarkNotificationReadCommandHandler } from '../application/use-cases/notifications/mark-notification-read';
 
 import { CreateEventReviewCommandHandler } from '../application/use-cases/reviews/create-review';
 import { GetEventReviewsQueryHandler } from '../application/use-cases/reviews/get-reviews';
+
+import { AddToWishlistCommandHandler, RemoveFromWishlistCommandHandler, GetUserWishlistQueryHandler } from '../application/use-cases/wishlist/manage-wishlist';
+import { ToggleEventLikeCommandHandler, GetUserLikedEventsQueryHandler } from '../application/use-cases/likes/manage-event-likes';
 
 import { BoostEventCommandHandler } from '../application/use-cases/boosted-events/boost-event';
 import { GetBoostedEventsQueryHandler } from '../application/use-cases/boosted-events/get-boosted-events';
@@ -84,6 +90,8 @@ const configRepo = new PrismaConfigRepository();
 const notificationRepo = new PrismaNotificationRepository();
 const reviewRepo = new PrismaEventReviewRepository();
 const boostedRepo = new PrismaBoostedEventRepository();
+const wishlistRepo = new PrismaWishlistRepository();
+const eventLikeRepo = new PrismaEventLikeRepository();
 
 // 2. Initialize infrastructure services & provider abstractions
 const cacheService = new RedisCacheService();
@@ -141,6 +149,7 @@ mediator.register('CancelBookingCommand', new CancelBookingCommandHandler(bookin
 mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 
 // 9. Register Admin handlers
+mediator.register('AdminLoginCommand', new AdminLoginCommandHandler(userRepo, cacheService));
 mediator.register('GetConfigsQuery', new GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('GetTemplatesQuery', new GetTemplatesQueryHandler(configRepo));
@@ -156,6 +165,13 @@ mediator.register('MarkNotificationReadCommand', new MarkNotificationReadCommand
 // 11. Register Review handlers
 mediator.register('CreateEventReviewCommand', new CreateEventReviewCommandHandler(reviewRepo, bookingRepo, eventRepo, userRepo));
 mediator.register('GetEventReviewsQuery', new GetEventReviewsQueryHandler(reviewRepo));
+
+// 12. Register Wishlist & Likes handlers
+mediator.register('AddToWishlistCommand', new AddToWishlistCommandHandler(wishlistRepo, eventRepo));
+mediator.register('RemoveFromWishlistCommand', new RemoveFromWishlistCommandHandler(wishlistRepo));
+mediator.register('GetUserWishlistQuery', new GetUserWishlistQueryHandler(wishlistRepo));
+mediator.register('ToggleEventLikeCommand', new ToggleEventLikeCommandHandler(eventLikeRepo, eventRepo));
+mediator.register('GetUserLikedEventsQuery', new GetUserLikedEventsQueryHandler(eventLikeRepo));
 
 // 12. Register Boosted Event handlers
 mediator.register('BoostEventCommand', new BoostEventCommandHandler(boostedRepo, eventRepo));
@@ -177,6 +193,8 @@ export {
   notificationRepo,
   reviewRepo,
   boostedRepo,
+  wishlistRepo,
+  eventLikeRepo,
   cacheService,
   queueService,
   cryptoService,

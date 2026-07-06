@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const wishlist_controller_1 = require("../controllers/wishlist.controller");
+const auth_1 = require("../middleware/auth");
+const authorize_1 = require("../middleware/authorize");
+const system_permissions_1 = require("../../security/system.permissions");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.use((0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_WISHLIST_MANAGE));
+router.get('/', wishlist_controller_1.WishlistController.getWishlist);
+router.post('/', wishlist_controller_1.WishlistController.addToWishlist);
+router.delete('/:eventId', wishlist_controller_1.WishlistController.removeFromWishlist);
+exports.default = router;

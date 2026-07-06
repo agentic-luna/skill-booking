@@ -27,3 +27,7 @@ __exportStar(require("./integration-config.entity"), exports);
 __exportStar(require("./message-template.entity"), exports);
 __exportStar(require("./platform-setting.entity"), exports);
 __exportStar(require("./notification-log.entity"), exports);
+__exportStar(require("./wishlist.entity"), exports);
+__exportStar(require("./event-like.entity"), exports);
+__exportStar(require("./client-profile.entity"), exports);
+__exportStar(require("./admin-profile.entity"), exports);

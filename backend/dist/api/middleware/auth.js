@@ -8,6 +8,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_1 = require("@prisma/client");
 const environment_1 = require("../../config/environment");
 const prisma_1 = require("../../config/prisma");
+const system_roles_1 = require("../../security/system.roles");
 const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -28,11 +29,15 @@ const authenticate = async (req, res, next) => {
                 error: { message: 'Invalid, suspended, or deleted user account.' },
             });
         }
+        const permissions = decoded.permissions && decoded.permissions.length > 0
+            ? decoded.permissions
+            : (0, system_roles_1.getPermissionsForRole)(user.role);
         req.user = {
             id: user.id,
             email: user.email,
             role: user.role,
             status: user.status,
+            permissions,
         };
         next();
     }

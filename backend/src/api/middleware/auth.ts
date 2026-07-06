@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserRole, UserStatus } from '@prisma/client';
 import { env } from '../../config/environment';
 import { prisma } from '../../config/prisma';
+import { getPermissionsForRole } from '../../security/system.roles';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -10,6 +11,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     role: UserRole;
     status: UserStatus;
+    permissions: string[];
   };
 }
 
@@ -32,6 +34,7 @@ export const authenticate = async (
       id: string;
       email: string;
       role: UserRole;
+      permissions?: string[];
     };
 
     const user = await prisma.user.findUnique({
@@ -45,11 +48,16 @@ export const authenticate = async (
       });
     }
 
+    const permissions = decoded.permissions && decoded.permissions.length > 0
+      ? decoded.permissions
+      : getPermissionsForRole(user.role);
+
     req.user = {
       id: user.id,
       email: user.email,
       role: user.role,
       status: user.status,
+      permissions,
     };
 
     next();

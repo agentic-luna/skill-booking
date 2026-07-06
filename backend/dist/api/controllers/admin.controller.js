@@ -9,11 +9,23 @@ const update_template_1 = require("../../application/use-cases/admin/update-temp
 const broadcast_notification_1 = require("../../application/use-cases/admin/broadcast-notification");
 const get_ledger_1 = require("../../application/use-cases/admin/get-ledger");
 const payout_host_1 = require("../../application/use-cases/admin/payout-host");
+const admin_login_1 = require("../../application/use-cases/admin/admin-login");
 const approve_event_1 = require("../../application/use-cases/events/approve-event");
 const socket_1 = require("../../config/socket");
 const api_response_1 = require("../common/api-response");
 const errors_1 = require("../common/errors");
 class AdminController {
+    static async adminLogin(req, res, next) {
+        try {
+            const { identifier, email, username, password } = req.body;
+            const adminIdentifier = identifier || email || username;
+            const result = await di_container_1.mediator.send(new admin_login_1.AdminLoginCommand(adminIdentifier, password, req.ip));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async getIntegrationConfigs(req, res, next) {
         try {
             const configs = await di_container_1.mediator.send(new get_configs_1.GetConfigsQuery());

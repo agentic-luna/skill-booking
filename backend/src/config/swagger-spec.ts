@@ -73,6 +73,59 @@ export const swaggerSpec = {
           bio: { type: 'string', nullable: true },
         },
       },
+      Wishlist: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          clientId: { type: 'string', format: 'uuid' },
+          eventId: { type: 'string', format: 'uuid' },
+          createdAt: { type: 'string', format: 'date-time' },
+          event: { $ref: '#/components/schemas/Event' },
+        },
+      },
+      EventLike: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          clientId: { type: 'string', format: 'uuid' },
+          eventId: { type: 'string', format: 'uuid' },
+          createdAt: { type: 'string', format: 'date-time' },
+          event: { $ref: '#/components/schemas/Event' },
+        },
+      },
+      ClientProfile: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          userId: { type: 'string', format: 'uuid' },
+          avatarUrl: { type: 'string', nullable: true },
+          bio: { type: 'string', nullable: true },
+          city: { type: 'string', nullable: true },
+          country: { type: 'string', nullable: true },
+        },
+      },
+      AdminProfile: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          userId: { type: 'string', format: 'uuid' },
+          department: { type: 'string', nullable: true },
+          adminLevel: { type: 'integer' },
+          lastLoginIp: { type: 'string', nullable: true },
+        },
+      },
+      Review: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          eventId: { type: 'string', format: 'uuid' },
+          clientId: { type: 'string', format: 'uuid' },
+          bookingId: { type: 'string', format: 'uuid' },
+          rating: { type: 'integer', minimum: 1, maximum: 5 },
+          comment: { type: 'string', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
     },
   },
   paths: {
@@ -261,16 +314,18 @@ export const swaggerSpec = {
     '/auth/login': {
       post: {
         tags: ['Authentication'],
-        summary: 'Authenticate and generate JWT access token',
+        summary: 'Authenticate user using Email or Mobile Phone Number',
         requestBody: {
           required: true,
           content: {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['email', 'password'],
+                required: ['password'],
                 properties: {
-                  email: { type: 'string', example: 'client@luna.com' },
+                  identifier: { type: 'string', description: 'Registered Email or Mobile Phone Number', example: 'client@luna.com or +15550201' },
+                  email: { type: 'string', format: 'email', example: 'client@luna.com' },
+                  phone: { type: 'string', example: '+15550201' },
                   password: { type: 'string', example: 'password123' },
                 },
               },
@@ -279,7 +334,98 @@ export const swaggerSpec = {
         },
         responses: {
           200: {
-            description: 'Login successful, returns token and profile data',
+            description: 'Login successful, returns JWT tokens and user profile',
+          },
+          400: {
+            description: 'Invalid credentials or missing required fields',
+          },
+        },
+      },
+    },
+    '/auth/forgot-password/send-otp': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Request OTP verification code for Forgot Password',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  identifier: { type: 'string', description: 'Registered Email or Mobile Phone', example: 'client@luna.com' },
+                  email: { type: 'string', format: 'email', example: 'client@luna.com' },
+                  phone: { type: 'string', example: '+15550201' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OTP sent successfully to registered email',
+          },
+          404: {
+            description: 'No registered account found',
+          },
+        },
+      },
+    },
+    '/auth/forgot-password/verify-otp': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Verify OTP code for Forgot Password and obtain resetToken',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['otp'],
+                properties: {
+                  identifier: { type: 'string', example: 'client@luna.com' },
+                  email: { type: 'string', format: 'email', example: 'client@luna.com' },
+                  otp: { type: 'string', example: '123456' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OTP verified successfully, returns 15-minute resetToken',
+          },
+          400: {
+            description: 'Invalid or expired OTP',
+          },
+        },
+      },
+    },
+    '/auth/forgot-password/reset': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Reset password using verified resetToken',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['resetToken', 'newPassword'],
+                properties: {
+                  resetToken: { type: 'string', example: 'a1b2c3d4e5f6...' },
+                  newPassword: { type: 'string', example: 'newPassword123' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Password reset successfully',
+          },
+          400: {
+            description: 'Invalid or expired reset token',
           },
         },
       },
@@ -493,6 +639,70 @@ export const swaggerSpec = {
         },
       },
     },
+    '/events/liked': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Get all events liked by the authenticated client',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Returns array of liked events' },
+        },
+      },
+    },
+    '/events/{id}/like': {
+      post: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Toggle like / unlike status for an event',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Returns toggled like state and updated like count' },
+        },
+      },
+    },
+    '/wishlist': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Get client wishlist items',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Returns client wishlisted events' },
+        },
+      },
+      post: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Add an event to client wishlist',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['eventId'],
+                properties: {
+                  eventId: { type: 'string', format: 'uuid' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Event added to wishlist' },
+        },
+      },
+    },
+    '/wishlist/{eventId}': {
+      delete: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Remove an event from client wishlist',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'eventId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Event removed from wishlist' },
+        },
+      },
+    },
     '/bookings/checkout': {
       post: {
         tags: ['Client & Booking Workflows'],
@@ -530,6 +740,43 @@ export const swaggerSpec = {
         },
       },
     },
+    '/reviews': {
+      post: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Submit a review and 1-5 star rating for an attended event',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['eventId', 'bookingId', 'rating'],
+                properties: {
+                  eventId: { type: 'string', format: 'uuid' },
+                  bookingId: { type: 'string', format: 'uuid' },
+                  rating: { type: 'integer', minimum: 1, maximum: 5, example: 5 },
+                  comment: { type: 'string', example: 'Outstanding NestJS Masterclass!' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Review submitted successfully' },
+        },
+      },
+    },
+    '/reviews/event/{eventId}': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Fetch all reviews and rating statistics for an event',
+        parameters: [{ name: 'eventId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Returns reviews array and average rating statistics' },
+        },
+      },
+    },
     '/notifications': {
       get: {
         tags: ['Notification Log Center'],
@@ -548,6 +795,31 @@ export const swaggerSpec = {
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           200: { description: 'Read state acknowledged' },
+        },
+      },
+    },
+    '/admin/login': {
+      post: {
+        tags: ['Admin Config & Controls'],
+        summary: 'Dedicated Platform Superadmin Login Portal',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['identifier', 'password'],
+                properties: {
+                  identifier: { type: 'string', example: 'admin@luna.com' },
+                  password: { type: 'string', example: 'admin123' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Superadmin authenticated, returns tokens and AdminProfile' },
+          403: { description: 'Access denied - restricted to Superadmin role' },
         },
       },
     },

@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+process.env.NODE_ENV = 'test';
 const http_1 = __importDefault(require("http"));
 const client_1 = require("@prisma/client");
 const app_1 = __importDefault(require("../app"));
@@ -71,31 +72,75 @@ async function runTests() {
         });
         assert(hostSignupRes.success, 'Host signup failed');
         console.log('✔ Host registered successfully with direct OTP payload');
-        // Login Client
+        // Login Client with Email
         const clientLoginRes = await post('/auth/login', {
             email: 'client@luna.com',
             password: 'password123',
         });
-        assert(clientLoginRes.success, 'Client login failed');
+        assert(clientLoginRes.success, 'Client email login failed');
         let clientToken = clientLoginRes.data.accessToken;
         const clientRefreshToken = clientLoginRes.data.refreshToken;
-        console.log('✔ Client login successful');
-        // Login Host
+        console.log('✔ Client email login successful');
+        // Login Host with Mobile Phone Number
+        const hostPhoneLoginRes = await post('/auth/login', {
+            identifier: '+15550202',
+            password: 'password123',
+        });
+        assert(hostPhoneLoginRes.success, 'Host mobile phone login failed');
+        console.log('✔ Host mobile phone login successful');
+        // Login Host with Email
         const hostLoginRes = await post('/auth/login', {
             email: 'host@luna.com',
             password: 'password123',
         });
-        assert(hostLoginRes.success, 'Host login failed');
+        assert(hostLoginRes.success, 'Host email login failed');
         const hostToken = hostLoginRes.data.accessToken;
-        console.log('✔ Host login successful');
-        // Login Superadmin
-        const adminLoginRes = await post('/auth/login', {
+        console.log('✔ Host email login successful');
+        // Standard login attempt with Superadmin credentials -> Should fail and direct to /admin/login
+        const standardAdminLoginRes = await post('/auth/login', {
             email: 'admin@luna.com',
             password: 'admin123',
         });
-        assert(adminLoginRes.success, 'Superadmin login failed');
+        assert(!standardAdminLoginRes.success && standardAdminLoginRes.error?.message?.includes('/admin/login'), 'Standard login failed to direct admin to admin portal');
+        console.log('✔ Security Isolation Assertion: Superadmin blocked from standard /auth/login portal');
+        // Dedicated admin portal attempt with Client credentials -> Should fail with 403
+        const clientAdminLoginRes = await post('/admin/login', {
+            identifier: 'client@luna.com',
+            password: 'password123',
+        });
+        assert(!clientAdminLoginRes.success && clientAdminLoginRes.error?.message?.includes('Superadmins'), 'Admin portal failed to block non-superadmin client');
+        console.log('✔ Security Isolation Assertion: Client blocked from dedicated /admin/login portal');
+        // Dedicated admin login with Superadmin credentials -> Should succeed
+        const adminLoginRes = await post('/admin/login', {
+            identifier: 'admin@luna.com',
+            password: 'admin123',
+        });
+        assert(adminLoginRes.success && adminLoginRes.data.user.adminProfile !== undefined, 'Dedicated Superadmin login failed');
         const adminToken = adminLoginRes.data.accessToken;
-        console.log('✔ Superadmin login successful');
+        console.log('✔ Dedicated Superadmin portal login successful (AdminProfile verified)');
+        // --- Testing Forgot Password Workflow ---
+        console.log('\n--- Testing Forgot Password OTP Workflow ---');
+        const forgotSendRes = await post('/auth/forgot-password/send-otp', { identifier: 'client@luna.com' });
+        assert(forgotSendRes.success, 'Forgot password send OTP failed');
+        const resetOtp = forgotSendRes.data.devOtp;
+        console.log('✔ Forgot password OTP requested successfully');
+        const forgotVerifyRes = await post('/auth/forgot-password/verify-otp', { identifier: 'client@luna.com', otp: resetOtp });
+        assert(forgotVerifyRes.success && forgotVerifyRes.data.resetToken, 'Forgot password verify OTP failed');
+        const resetToken = forgotVerifyRes.data.resetToken;
+        console.log('✔ Forgot password OTP verified successfully (Reset Token issued)');
+        const resetPassRes = await post('/auth/forgot-password/reset', { resetToken, newPassword: 'newpassword123' });
+        assert(resetPassRes.success, 'Reset password failed');
+        console.log('✔ Password reset successfully to new password');
+        // Login with new password
+        const newLoginRes = await post('/auth/login', { identifier: 'client@luna.com', password: 'newpassword123' });
+        if (!newLoginRes.success)
+            console.log('DEBUG newLoginRes:', newLoginRes);
+        assert(newLoginRes.success, 'Login with new password failed');
+        console.log('✔ Login with newly reset password successful');
+        // Reset password back to original password123 for remaining test workflow continuity
+        const forgotSendRes2 = await post('/auth/forgot-password/send-otp', { identifier: 'client@luna.com' });
+        const forgotVerifyRes2 = await post('/auth/forgot-password/verify-otp', { identifier: 'client@luna.com', otp: forgotSendRes2.data.devOtp });
+        await post('/auth/forgot-password/reset', { resetToken: forgotVerifyRes2.data.resetToken, newPassword: 'password123' });
         // Token refresh rotation verification
         const refreshRes = await post('/auth/refresh', {
             refreshToken: clientRefreshToken,
@@ -327,9 +372,84 @@ async function runTests() {
         assert(refundLedger, 'Refund ledger transaction missing');
         assert(Number(refundLedger.amountCaptured) === -500.00, 'Refund amount captured mismatch');
         assert(refundLedger.status === 'REFUNDED_TO_CLIENT', 'Refund ledger status mismatch');
-        console.log('✔ Refund Ledger Entry created: Amount: ' + refundLedger.amountCaptured + ' INR, Status: ' + refundLedger.status);
+        // 11. Event Reviews & Ratings
+        console.log('\n--- 10. Testing Event Reviews & Ratings ---');
+        const reviewRes = await post('/reviews', {
+            eventId,
+            bookingId,
+            rating: 5,
+            comment: 'Outstanding NestJS Masterclass! Highly recommended.',
+        }, clientToken);
+        if (!reviewRes.success)
+            console.log('DEBUG reviewRes:', reviewRes);
+        assert(reviewRes.success && reviewRes.data.review.rating === 5, 'Event review creation failed');
+        console.log('✔ Event review submitted successfully (Rating: 5/5)');
+        const getReviewsRes = await get(`/reviews/event/${eventId}`);
+        assert(getReviewsRes.success && getReviewsRes.data.reviews.length > 0, 'Fetch event reviews failed');
+        console.log('✔ Event reviews fetched successfully (Total reviews: ' + getReviewsRes.data.reviews.length + ')');
+        // 12. User Notifications Inbox
+        console.log('\n--- 11. Testing User Notifications Inbox ---');
+        const notifsRes = await get('/notifications', clientToken);
+        assert(notifsRes.success, 'Fetch user notifications failed');
+        console.log('✔ User notifications inbox fetched successfully');
+        if (notifsRes.data.length > 0) {
+            const notifId = notifsRes.data[0].id;
+            const readRes = await put(`/notifications/${notifId}/read`, {}, clientToken);
+            assert(readRes.success, 'Mark notification as read failed');
+            console.log('✔ Notification marked as READ successfully');
+        }
+        // 13. Admin Boosted Events
+        console.log('\n--- 12. Testing Boosted Events ---');
+        const boostRes = await post('/boosted-events', {
+            eventId,
+            priority: 1,
+        }, adminToken);
+        assert(boostRes.success, 'Boost event failed');
+        console.log('✔ Event boosted successfully by admin (Priority: 1)');
+        const getBoostedRes = await get('/boosted-events');
+        assert(getBoostedRes.success && getBoostedRes.data.length > 0, 'Fetch boosted events failed');
+        console.log('✔ Active boosted events retrieved successfully');
+        // 14. Wishlist & Event Likes
+        console.log('\n--- 13. Testing Wishlist & Event Likes ---');
+        const addWishlistRes = await post('/wishlist', { eventId }, clientToken);
+        assert(addWishlistRes.success, 'Add to wishlist failed');
+        console.log('✔ Event added to client wishlist successfully');
+        const getWishlistRes = await get('/wishlist', clientToken);
+        assert(getWishlistRes.success && getWishlistRes.data.count > 0, 'Fetch wishlist failed');
+        console.log('✔ Client wishlist fetched successfully (Total items: ' + getWishlistRes.data.count + ')');
+        const toggleLikeRes = await post(`/events/${eventId}/like`, {}, clientToken);
+        assert(toggleLikeRes.success && toggleLikeRes.data.liked === true, 'Toggle event like failed');
+        console.log('✔ Event liked successfully (Liked: true, Total Likes: ' + toggleLikeRes.data.totalLikes + ')');
+        const getLikedRes = await get('/events/liked', clientToken);
+        assert(getLikedRes.success && getLikedRes.data.count > 0, 'Fetch liked events failed');
+        console.log('✔ Client liked events fetched successfully (Total liked: ' + getLikedRes.data.count + ')');
+        // 15. Policy & PBAC Security Assertion (403 Forbidden)
+        console.log('\n--- 14. Testing Policy Authorization Security (403 Forbidden) ---');
+        const forbiddenRes = await get('/admin/events/queue', clientToken);
+        assert(!forbiddenRes.success && (forbiddenRes.error?.code === 'Forbidden' || forbiddenRes.error?.message?.includes('Access denied')), 'Policy guard failed to block unauthorized client');
+        console.log('✔ Policy Enforcement Assertion: Client blocked from Admin endpoint with 403 Forbidden');
+        // 16. Provider Integration Setup
+        console.log('\n--- 15. Testing Integration Provider Setup ---');
+        const twilioSetupRes = await post('/integrations/twilio', {
+            environment: 'TEST',
+            accountSid: 'ACtest_account_sid_12345',
+            authToken: 'test_auth_token_secret',
+            fromNumber: '+15005550006',
+            isActive: true,
+        }, adminToken);
+        assert(twilioSetupRes.success, 'Twilio integration setup failed');
+        console.log('✔ Twilio SMS integration configured successfully');
+        const sendgridSetupRes = await post('/integrations/sendgrid', {
+            environment: 'TEST',
+            apiKey: 'SG.test_sendgrid_api_key_secret',
+            fromEmail: 'noreply@luna.com',
+            fromName: 'Luna Team',
+            isActive: true,
+        }, adminToken);
+        assert(sendgridSetupRes.success, 'SendGrid integration setup failed');
+        console.log('✔ SendGrid Email integration configured successfully');
         console.log('\n==================================================');
-        console.log('   ALL INTEGRATION TEST SCENARIOS PASSED (10/10)  ');
+        console.log('   ALL INTEGRATION TEST SCENARIOS PASSED (16/16)  ');
         console.log('==================================================\n');
     }
     catch (error) {

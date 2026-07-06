@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commsService = exports.whatsappService = exports.smsService = exports.emailService = exports.paymentGatewayProvider = exports.metaWaProvider = exports.twilioProvider = exports.sendGridProvider = exports.cryptoService = exports.queueService = exports.cacheService = exports.boostedRepo = exports.reviewRepo = exports.notificationRepo = exports.configRepo = exports.ledgerRepo = exports.bookingRepo = exports.eventRepo = exports.userRepo = exports.logger = exports.mediator = void 0;
+exports.commsService = exports.whatsappService = exports.smsService = exports.emailService = exports.paymentGatewayProvider = exports.metaWaProvider = exports.twilioProvider = exports.sendGridProvider = exports.cryptoService = exports.queueService = exports.cacheService = exports.eventLikeRepo = exports.wishlistRepo = exports.boostedRepo = exports.reviewRepo = exports.notificationRepo = exports.configRepo = exports.ledgerRepo = exports.bookingRepo = exports.eventRepo = exports.userRepo = exports.logger = exports.mediator = void 0;
 const mediator_1 = require("../application/common/mediator");
 // Repositories
 const user_repository_1 = require("../infrastructure/database/repositories/user.repository");
@@ -11,6 +11,8 @@ const config_repository_1 = require("../infrastructure/database/repositories/con
 const notification_repository_1 = require("../infrastructure/database/repositories/notification.repository");
 const event_review_repository_1 = require("../infrastructure/database/repositories/event-review.repository");
 const boosted_event_repository_1 = require("../infrastructure/database/repositories/boosted-event.repository");
+const wishlist_repository_1 = require("../infrastructure/database/repositories/wishlist.repository");
+const event_like_repository_1 = require("../infrastructure/database/repositories/event-like.repository");
 // Services & Providers
 const winston_logger_1 = require("../infrastructure/logger/winston.logger");
 const redis_cache_1 = require("../infrastructure/cache/redis.cache");
@@ -52,10 +54,13 @@ const update_template_1 = require("../application/use-cases/admin/update-templat
 const broadcast_notification_1 = require("../application/use-cases/admin/broadcast-notification");
 const get_ledger_1 = require("../application/use-cases/admin/get-ledger");
 const payout_host_1 = require("../application/use-cases/admin/payout-host");
+const admin_login_1 = require("../application/use-cases/admin/admin-login");
 const get_user_notifications_1 = require("../application/use-cases/notifications/get-user-notifications");
 const mark_notification_read_1 = require("../application/use-cases/notifications/mark-notification-read");
 const create_review_1 = require("../application/use-cases/reviews/create-review");
 const get_reviews_1 = require("../application/use-cases/reviews/get-reviews");
+const manage_wishlist_1 = require("../application/use-cases/wishlist/manage-wishlist");
+const manage_event_likes_1 = require("../application/use-cases/likes/manage-event-likes");
 const boost_event_1 = require("../application/use-cases/boosted-events/boost-event");
 const get_boosted_events_1 = require("../application/use-cases/boosted-events/get-boosted-events");
 const setup_twilio_1 = require("../application/use-cases/integrations/setup-twilio");
@@ -81,6 +86,10 @@ const reviewRepo = new event_review_repository_1.PrismaEventReviewRepository();
 exports.reviewRepo = reviewRepo;
 const boostedRepo = new boosted_event_repository_1.PrismaBoostedEventRepository();
 exports.boostedRepo = boostedRepo;
+const wishlistRepo = new wishlist_repository_1.PrismaWishlistRepository();
+exports.wishlistRepo = wishlistRepo;
+const eventLikeRepo = new event_like_repository_1.PrismaEventLikeRepository();
+exports.eventLikeRepo = eventLikeRepo;
 // 2. Initialize infrastructure services & provider abstractions
 const cacheService = new redis_cache_1.RedisCacheService();
 exports.cacheService = cacheService;
@@ -133,6 +142,7 @@ mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingComm
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 // 9. Register Admin handlers
+mediator.register('AdminLoginCommand', new admin_login_1.AdminLoginCommandHandler(userRepo, cacheService));
 mediator.register('GetConfigsQuery', new get_configs_1.GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new update_config_1.UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('GetTemplatesQuery', new get_templates_1.GetTemplatesQueryHandler(configRepo));
@@ -146,6 +156,12 @@ mediator.register('MarkNotificationReadCommand', new mark_notification_read_1.Ma
 // 11. Register Review handlers
 mediator.register('CreateEventReviewCommand', new create_review_1.CreateEventReviewCommandHandler(reviewRepo, bookingRepo, eventRepo, userRepo));
 mediator.register('GetEventReviewsQuery', new get_reviews_1.GetEventReviewsQueryHandler(reviewRepo));
+// 12. Register Wishlist & Likes handlers
+mediator.register('AddToWishlistCommand', new manage_wishlist_1.AddToWishlistCommandHandler(wishlistRepo, eventRepo));
+mediator.register('RemoveFromWishlistCommand', new manage_wishlist_1.RemoveFromWishlistCommandHandler(wishlistRepo));
+mediator.register('GetUserWishlistQuery', new manage_wishlist_1.GetUserWishlistQueryHandler(wishlistRepo));
+mediator.register('ToggleEventLikeCommand', new manage_event_likes_1.ToggleEventLikeCommandHandler(eventLikeRepo, eventRepo));
+mediator.register('GetUserLikedEventsQuery', new manage_event_likes_1.GetUserLikedEventsQueryHandler(eventLikeRepo));
 // 12. Register Boosted Event handlers
 mediator.register('BoostEventCommand', new boost_event_1.BoostEventCommandHandler(boostedRepo, eventRepo));
 mediator.register('GetBoostedEventsQuery', new get_boosted_events_1.GetBoostedEventsQueryHandler(boostedRepo));

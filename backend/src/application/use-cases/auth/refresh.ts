@@ -4,6 +4,7 @@ import { ICacheService } from '../../services/cache.service';
 import { env } from '../../../config/environment';
 import { UnauthorizedError } from '../../common/errors';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { getPermissionsForRole } from '../../../security/system.roles';
 
 export class RefreshTokenCommand implements IRequest<any> {
   readonly __tag = 'RefreshTokenCommand';
@@ -37,8 +38,10 @@ export class RefreshTokenCommandHandler implements IRequestHandler<RefreshTokenC
       // Revoke the old token
       await this.cacheService.del(cacheKey);
 
+      const permissions = getPermissionsForRole(user.role);
+
       const accessToken = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
+        { id: user.id, email: user.email, role: user.role, permissions },
         env.JWT_SECRET,
         { expiresIn: '15m' }
       );

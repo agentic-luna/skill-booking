@@ -7,6 +7,7 @@ exports.RefreshTokenCommandHandler = exports.RefreshTokenCommand = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../../config/environment");
 const errors_1 = require("../../common/errors");
+const system_roles_1 = require("../../../security/system.roles");
 class RefreshTokenCommand {
     oldRefreshToken;
     __tag = 'RefreshTokenCommand';
@@ -37,7 +38,8 @@ class RefreshTokenCommandHandler {
             }
             // Revoke the old token
             await this.cacheService.del(cacheKey);
-            const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, environment_1.env.JWT_SECRET, { expiresIn: '15m' });
+            const permissions = (0, system_roles_1.getPermissionsForRole)(user.role);
+            const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role, permissions }, environment_1.env.JWT_SECRET, { expiresIn: '15m' });
             const newRefreshToken = jsonwebtoken_1.default.sign({ id: user.id }, environment_1.env.JWT_SECRET, { expiresIn: '7d' });
             const newCacheKey = `auth:refresh_tokens:${user.id}:${newRefreshToken}`;
             await this.cacheService.set(newCacheKey, '1', 7 * 24 * 60 * 60);

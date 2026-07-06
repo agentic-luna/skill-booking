@@ -5,6 +5,7 @@ const di_container_1 = require("../di-container");
 const search_events_1 = require("../../application/use-cases/events/search-events");
 const get_event_details_1 = require("../../application/use-cases/events/get-event-details");
 const create_event_1 = require("../../application/use-cases/events/create-event");
+const manage_event_likes_1 = require("../../application/use-cases/likes/manage-event-likes");
 const api_response_1 = require("../common/api-response");
 class EventsController {
     static async getEvents(req, res, next) {
@@ -44,6 +45,25 @@ class EventsController {
                 totalSeats: Number(totalSeats),
             }));
             return api_response_1.ApiResponse.created(res, event);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async toggleLike(req, res, next) {
+        try {
+            const { id } = req.params;
+            const result = await di_container_1.mediator.send(new manage_event_likes_1.ToggleEventLikeCommand(req.user.id, id));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getLikedEvents(req, res, next) {
+        try {
+            const result = await di_container_1.mediator.send(new manage_event_likes_1.GetUserLikedEventsQuery(req.user.id));
+            return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
             next(error);

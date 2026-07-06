@@ -7,6 +7,7 @@ exports.LoginCommandHandler = exports.LoginCommand = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../../config/environment");
+const system_roles_1 = require("../../../security/system.roles");
 const errors_1 = require("../../common/errors");
 class LoginCommand {
     identifier;
@@ -37,6 +38,9 @@ class LoginCommandHandler {
         if (!user || user.deletedAt) {
             throw new errors_1.BadRequestError('Invalid email/mobile number or password');
         }
+        if (user.role === 'SUPERADMIN') {
+            throw new errors_1.ForbiddenError('Platform Superadmins must authenticate via the dedicated admin login portal (/api/v1/admin/login).');
+        }
         if (user.status === 'SUSPENDED') {
             throw new errors_1.ForbiddenError('Your account is suspended. Please contact support.');
         }
@@ -44,7 +48,8 @@ class LoginCommandHandler {
         if (!isMatch) {
             throw new errors_1.BadRequestError('Invalid email or password');
         }
-        const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, environment_1.env.JWT_SECRET, { expiresIn: '15m' });
+        const permissions = (0, system_roles_1.getPermissionsForRole)(user.role);
+        const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role, permissions }, environment_1.env.JWT_SECRET, { expiresIn: '15m' });
         const refreshToken = jsonwebtoken_1.default.sign({ id: user.id }, environment_1.env.JWT_SECRET, { expiresIn: '7d' });
         const cacheKey = `auth:refresh_tokens:${user.id}:${refreshToken}`;
         await this.cacheService.set(cacheKey, '1', 7 * 24 * 60 * 60);

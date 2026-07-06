@@ -11,7 +11,8 @@ const commonMessage = (msg: string) => ({
 // Tight limit on auth endpoints (login, signup, refresh) to prevent brute force
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15,
+  max: 30,
+  skip: () => process.env.NODE_ENV === 'test',
   standardHeaders: true,
   legacyHeaders: false,
   message: commonMessage('Too many authentication attempts. Please try again after 15 minutes.'),
@@ -21,6 +22,7 @@ export const authLimiter = rateLimit({
 export const checkoutLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 30,
+  skip: () => process.env.NODE_ENV === 'test',
   standardHeaders: true,
   legacyHeaders: false,
   message: commonMessage('Too many booking checkout attempts. Please wait a few minutes before trying again.'),
@@ -30,6 +32,7 @@ export const checkoutLimiter = rateLimit({
 export const webhookLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 150,
+  skip: () => process.env.NODE_ENV === 'test',
   standardHeaders: true,
   legacyHeaders: false,
   message: commonMessage('Webhook rate limit exceeded.'),
@@ -39,6 +42,7 @@ export const webhookLimiter = rateLimit({
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 300,
+  skip: () => process.env.NODE_ENV === 'test',
   standardHeaders: true,
   legacyHeaders: false,
   message: commonMessage('Too many requests from this IP, please try again later.'),

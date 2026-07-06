@@ -7,6 +7,7 @@ import { UpdateTemplateCommand } from '../../application/use-cases/admin/update-
 import { BroadcastNotificationCommand } from '../../application/use-cases/admin/broadcast-notification';
 import { GetLedgerQuery } from '../../application/use-cases/admin/get-ledger';
 import { PayoutHostCommand } from '../../application/use-cases/admin/payout-host';
+import { AdminLoginCommand } from '../../application/use-cases/admin/admin-login';
 import { ApproveEventCommand } from '../../application/use-cases/events/approve-event';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { getIO } from '../../config/socket';
@@ -14,6 +15,16 @@ import { ApiResponse } from '../common/api-response';
 import { BadRequestError } from '../common/errors';
 
 export class AdminController {
+  static async adminLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { identifier, email, username, password } = req.body;
+      const adminIdentifier = identifier || email || username;
+      const result = await mediator.send(new AdminLoginCommand(adminIdentifier, password, req.ip));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
   static async getIntegrationConfigs(req: Request, res: Response, next: NextFunction) {
     try {
       const configs = await mediator.send(new GetConfigsQuery());

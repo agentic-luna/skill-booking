@@ -2,7 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const events_controller_1 = require("../controllers/events.controller");
+const auth_1 = require("../middleware/auth");
+const authorize_1 = require("../middleware/authorize");
+const system_permissions_1 = require("../../security/system.permissions");
 const router = (0, express_1.Router)();
 router.get('/', events_controller_1.EventsController.getEvents);
+router.get('/liked', auth_1.authenticate, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_LIKES_MANAGE), events_controller_1.EventsController.getLikedEvents);
 router.get('/:id', events_controller_1.EventsController.getEventDetails);
+router.post('/:id/like', auth_1.authenticate, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_LIKES_MANAGE), events_controller_1.EventsController.toggleLike);
 exports.default = router;

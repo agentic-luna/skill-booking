@@ -109,9 +109,13 @@ model User {
   updatedAt    DateTime   @updatedAt
 
   hostProfile   HostProfile?
+  clientProfile ClientProfile?
+  adminProfile  AdminProfile?
   reviews       Review[]
   bookings      Booking[]
   notifications NotificationLog[]
+  wishlists     Wishlist[]
+  eventLikes    EventLike[]
 
   @@map("users")
 }
@@ -131,6 +135,37 @@ model HostProfile {
   events     Event[]
 
   @@map("host_profiles")
+}
+
+model ClientProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @db.Uuid
+  avatarUrl   String?
+  bio         String?  @db.Text
+  city        String?
+  country     String?
+  preferences Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wishlists Wishlist[]
+
+  @@map("client_profiles")
+}
+
+model AdminProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @db.Uuid
+  department  String?  @default("Platform Management")
+  adminLevel  Int      @default(1)
+  lastLoginIp String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
 }
 
 model HostBankDetail {
@@ -207,6 +242,8 @@ model Event {
   reviews      Review[]
   bookings     Booking[]
   boostedEvent BoostedEvent?
+  wishlistedBy Wishlist[]
+  likes        EventLike[]
 
   @@map("events")
 }
@@ -302,4 +339,32 @@ model NotificationLog {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_logs")
+}
+
+model Wishlist {
+  id              String   @id @default(uuid()) @db.Uuid
+  clientId        String   @db.Uuid
+  clientProfileId String?  @db.Uuid
+  eventId         String   @db.Uuid
+  createdAt       DateTime @default(now())
+
+  client        User           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientProfile ClientProfile? @relation(fields: [clientProfileId], references: [id], onDelete: Cascade)
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, eventId])
+  @@map("wishlists")
+}
+
+model EventLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  clientId  String   @db.Uuid
+  eventId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  client User  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, eventId])
+  @@map("event_likes")
 }

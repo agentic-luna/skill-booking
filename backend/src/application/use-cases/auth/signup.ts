@@ -5,6 +5,7 @@ import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ICacheService } from '../../services/cache.service';
 import { env } from '../../../config/environment';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { getPermissionsForRole } from '../../../security/system.roles';
 import { BadRequestError } from '../../common/errors';
 
 export class SignupCommand implements IRequest<any> {
@@ -83,17 +84,24 @@ export class SignupCommandHandler implements IRequestHandler<SignupCommand, any>
     await this.cacheService.del(`otp:verified:PHONE:${data.phone}`);
 
     const hashedPassword = await bcrypt.hash(data.passwordText, 10);
+    const userRole = data.role || UserRole.CLIENT;
     const user = await this.userRepo.create({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
       phone: data.phone,
       passwordHash: hashedPassword,
-      role: data.role || UserRole.CLIENT,
+      role: userRole,
     });
 
+    if (userRole === UserRole.CLIENT) {
+      await this.userRepo.upsertClientProfile(user.id);
+    }
+
+    const permissions = getPermissionsForRole(user.role);
+
     const accessToken = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, email: user.email, role: user.role, permissions },
       env.JWT_SECRET,
       { expiresIn: '15m' }
     );

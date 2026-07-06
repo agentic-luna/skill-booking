@@ -4,26 +4,31 @@ const express_1 = require("express");
 const client_1 = require("@prisma/client");
 const admin_controller_1 = require("../controllers/admin.controller");
 const auth_1 = require("../middleware/auth");
+const authorize_1 = require("../middleware/authorize");
+const system_permissions_1 = require("../../security/system.permissions");
+const rate_limiter_1 = require("../middleware/rate-limiter");
 const router = (0, express_1.Router)();
-// Secure all admin routes to SUPERADMIN
+// Public Admin Portal Authentication Endpoint
+router.post('/login', rate_limiter_1.authLimiter, admin_controller_1.AdminController.adminLogin);
+// Secure all subsequent admin routes to SUPERADMIN
 router.use(auth_1.authenticate);
-router.use((0, auth_1.authorize)([client_1.UserRole.SUPERADMIN]));
+router.use((0, authorize_1.requireRole)(client_1.UserRole.SUPERADMIN));
 // Integration configs
-router.get('/configs/integrations', admin_controller_1.AdminController.getIntegrationConfigs);
-router.put('/configs/integrations/:serviceName', admin_controller_1.AdminController.updateIntegrationConfig);
+router.get('/configs/integrations', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.getIntegrationConfigs);
+router.put('/configs/integrations/:serviceName', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.updateIntegrationConfig);
 // Message Templates
-router.get('/configs/templates', admin_controller_1.AdminController.getMessageTemplates);
-router.put('/configs/templates/:templateId', admin_controller_1.AdminController.updateMessageTemplate);
+router.get('/configs/templates', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_TEMPLATES_MANAGE), admin_controller_1.AdminController.getMessageTemplates);
+router.put('/configs/templates/:templateId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_TEMPLATES_MANAGE), admin_controller_1.AdminController.updateMessageTemplate);
 // Global settings
-router.get('/configs/platform', admin_controller_1.AdminController.getPlatformSettings);
-router.post('/configs/platform', admin_controller_1.AdminController.updatePlatformSetting);
+router.get('/configs/platform', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.getPlatformSettings);
+router.post('/configs/platform', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.updatePlatformSetting);
 // Audits & Broadcasts
-router.get('/logs/notifications', admin_controller_1.AdminController.getNotificationLogs);
-router.post('/notifications/broadcast', admin_controller_1.AdminController.broadcastNotification);
+router.get('/logs/notifications', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_NOTIFICATIONS_BROADCAST), admin_controller_1.AdminController.getNotificationLogs);
+router.post('/notifications/broadcast', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_NOTIFICATIONS_BROADCAST), admin_controller_1.AdminController.broadcastNotification);
 // Moderation
-router.get('/events/queue', admin_controller_1.AdminController.getEventQueue);
-router.put('/events/:eventId/approve', admin_controller_1.AdminController.approveEvent);
+router.get('/events/queue', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_MODERATE), admin_controller_1.AdminController.getEventQueue);
+router.put('/events/:eventId/approve', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.approveEvent);
 // Escrows & Ledger
-router.get('/finance/ledger', admin_controller_1.AdminController.getFinanceLedger);
-router.put('/finance/payouts/:hostId', admin_controller_1.AdminController.payoutHost);
+router.get('/finance/ledger', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getFinanceLedger);
+router.put('/finance/payouts/:hostId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.payoutHost);
 exports.default = router;

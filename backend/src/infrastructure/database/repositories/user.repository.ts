@@ -79,6 +79,38 @@ export class PrismaUserRepository implements IUserRepository {
     });
   }
 
+  async findClientProfileByUserId(userId: string): Promise<any> {
+    return prisma.clientProfile.findUnique({ where: { userId } });
+  }
+
+  async upsertClientProfile(userId: string, data?: any): Promise<any> {
+    const profileData = data || {};
+    return prisma.clientProfile.upsert({
+      where: { userId },
+      update: profileData,
+      create: {
+        userId,
+        ...profileData,
+      },
+    });
+  }
+
+  async findAdminProfileByUserId(userId: string): Promise<any> {
+    return prisma.adminProfile.findUnique({ where: { userId } });
+  }
+
+  async upsertAdminProfile(userId: string, data?: any): Promise<any> {
+    const profileData = data || {};
+    return prisma.adminProfile.upsert({
+      where: { userId },
+      update: profileData,
+      create: {
+        userId,
+        ...profileData,
+      },
+    });
+  }
+
   async findHostBankDetail(hostProfileId: string): Promise<HostBankDetail | null> {
     return prisma.hostBankDetail.findUnique({ where: { hostProfileId } });
   }

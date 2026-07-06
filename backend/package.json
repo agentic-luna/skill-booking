@@ -7,6 +7,8 @@
     "dev": "nodemon src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "test": "ts-node src/utils/test-api.ts",
+    "test:api": "ts-node src/utils/test-api.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },

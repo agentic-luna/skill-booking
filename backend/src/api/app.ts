@@ -40,6 +40,7 @@ import webhooksRouter from './routes/webhooks.routes';
 import reviewsRouter from './routes/reviews.routes';
 import boostedEventsRouter from './routes/boosted-events.routes';
 import integrationsRouter from './routes/integrations.routes';
+import wishlistRouter from './routes/wishlist.routes';
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/admin', adminRouter);
@@ -51,6 +52,7 @@ app.use('/api/v1/webhooks', webhooksRouter);
 app.use('/api/v1/reviews', reviewsRouter);
 app.use('/api/v1/boosted-events', boostedEventsRouter);
 app.use('/api/v1/integrations', integrationsRouter);
+app.use('/api/v1/wishlist', wishlistRouter);
 
 // Catch-all route for undefined endpoints
 app.use((req, res, next) => {

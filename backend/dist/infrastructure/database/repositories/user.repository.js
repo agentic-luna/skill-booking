@@ -54,6 +54,34 @@ class PrismaUserRepository {
             },
         });
     }
+    async findClientProfileByUserId(userId) {
+        return prisma_1.prisma.clientProfile.findUnique({ where: { userId } });
+    }
+    async upsertClientProfile(userId, data) {
+        const profileData = data || {};
+        return prisma_1.prisma.clientProfile.upsert({
+            where: { userId },
+            update: profileData,
+            create: {
+                userId,
+                ...profileData,
+            },
+        });
+    }
+    async findAdminProfileByUserId(userId) {
+        return prisma_1.prisma.adminProfile.findUnique({ where: { userId } });
+    }
+    async upsertAdminProfile(userId, data) {
+        const profileData = data || {};
+        return prisma_1.prisma.adminProfile.upsert({
+            where: { userId },
+            update: profileData,
+            create: {
+                userId,
+                ...profileData,
+            },
+        });
+    }
     async findHostBankDetail(hostProfileId) {
         return prisma_1.prisma.hostBankDetail.findUnique({ where: { hostProfileId } });
     }

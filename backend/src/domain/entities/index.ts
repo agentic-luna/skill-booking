@@ -11,3 +11,7 @@ export * from './integration-config.entity';
 export * from './message-template.entity';
 export * from './platform-setting.entity';
 export * from './notification-log.entity';
+export * from './wishlist.entity';
+export * from './event-like.entity';
+export * from './client-profile.entity';
+export * from './admin-profile.entity';

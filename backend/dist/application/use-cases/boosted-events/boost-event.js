@@ -31,11 +31,13 @@ class BoostEventCommandHandler {
         if (!event) {
             throw new errors_1.NotFoundError('Event not found');
         }
+        const start = startDate ? new Date(startDate) : new Date();
+        const end = endDate ? new Date(endDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         return this.boostedRepo.upsert(eventId, {
-            priority: Number(priority),
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
-            isActive,
+            priority: Number(priority || 1),
+            startDate: start,
+            endDate: end,
+            isActive: isActive !== undefined ? isActive : true,
         });
     }
 }
