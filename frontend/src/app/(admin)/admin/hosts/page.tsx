@@ -6,8 +6,10 @@ import { UserCheck, ShieldAlert, Award, FileText, Check, X, Search, Mail } from 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 export default function HostVerificationPage() {
+  const showAlert = useAlertStore((s) => s.showAlert);
   const [searchTerm, setSearchTerm] = useState("");
   const [hostsList, setHostsList] = useState([
     {
@@ -34,7 +36,11 @@ export default function HostVerificationPage() {
     setHostsList((prev) =>
       prev.map((app) => (app.id === appId ? { ...app, status: newStatus } : app))
     );
-    alert(`Instructor application status set to: ${newStatus.toUpperCase()}`);
+    showAlert(
+      newStatus === "approved" ? "Application Approved" : "Application Declined",
+      `Instructor application status has been successfully set to: ${newStatus.toUpperCase()}`,
+      newStatus === "approved" ? "success" : "destructive"
+    );
   };
 
   const filteredHosts = hostsList.filter((host) => {

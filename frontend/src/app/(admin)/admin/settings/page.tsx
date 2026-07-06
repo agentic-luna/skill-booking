@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 export default function AdminSettingsPage() {
+  const showAlert = useAlertStore((s) => s.showAlert);
   const [saving, setSaving] = useState(false);
   
   // Financial Configuration states
@@ -31,7 +33,7 @@ export default function AdminSettingsPage() {
     setSaving(true);
     await new Promise((resolve) => setTimeout(resolve, 1200));
     setSaving(false);
-    alert("Platform configuration parameters successfully applied globally!");
+    showAlert("Settings Applied", "Platform configuration parameters successfully applied globally!", "success");
   };
 
   return (
@@ -152,7 +154,7 @@ export default function AdminSettingsPage() {
                           type="button"
                           className="w-8 h-8 rounded-full border-2 transition-transform active:scale-90"
                           style={{ backgroundColor: color, borderColor: color === "#7c3aed" ? "white" : "transparent" }}
-                          onClick={() => alert(`Theme color set to: ${color}`)}
+                          onClick={() => showAlert("Theme Tint Selected", `Primary theme tint has been set to: ${color}`, "info")}
                         />
                       ))}
                     </div>

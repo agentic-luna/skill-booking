@@ -327,9 +327,13 @@ async function runTests() {
         const dashRes2 = await get('/hosts/dashboard', hostToken);
         assert(dashRes2.success && dashRes2.data.heldEscrow === 0 && dashRes2.data.totalEarnings === 850, 'Host dashboard balance mismatch');
         console.log('✔ Host Dashboard updated: Held Escrow: ' + dashRes2.data.heldEscrow + ' INR, Total Paid Earnings: ' + dashRes2.data.totalEarnings + ' INR');
-        // 10. Refund Matrix cancellation verification
-        console.log('\n--- 9. Testing Booking Cancellation & Refund Matrix ---');
-        // Create new booking to cancel
+        // 9b. Fetch Client My Bookings (Latest on top)
+        const myBookingsRes = await get('/bookings/my-bookings', clientToken);
+        assert(myBookingsRes.success && myBookingsRes.data.count > 0, 'Fetch my bookings failed');
+        assert(myBookingsRes.data.bookings[0].id === bookingId, 'My Bookings ordering mismatch - latest booking should be first');
+        console.log('✔ Client my-bookings fetched successfully (Total bookings: ' + myBookingsRes.data.count + ', Latest on top verified)');
+        // 10. Direct Payment Confirmation (Without External Gateway)
+        console.log('\n--- 9. Testing Direct Payment Confirmation (Without External Gateway) ---');
         const checkoutRes2 = await post('/bookings/checkout', {
             eventId,
             seatCount: 1,
@@ -337,25 +341,14 @@ async function runTests() {
         }, clientToken);
         assert(checkoutRes2.success, 'Secondary checkout failed');
         const bookingId2 = checkoutRes2.data.booking.id;
-        const bookingRef2 = checkoutRes2.data.booking.bookingRef;
-        // Confirm booking
-        await post('/webhooks/razorpay', {
-            event: 'payment.captured',
-            payload: {
-                payment: {
-                    entity: {
-                        id: 'pay_test_transaction_100',
-                        amount: 50000,
-                        currency: 'INR',
-                        order_id: bookingRef2,
-                        notes: { bookingRef: bookingRef2 },
-                    },
-                },
-            },
-        });
+        // Directly confirm payment without calling external gateway webhook
+        const directConfirmRes = await post(`/bookings/${bookingId2}/confirm`, {
+            paymentMethod: 'DIRECT_TEST_CARD',
+        }, clientToken);
+        assert(directConfirmRes.success && directConfirmRes.data.booking.status === client_1.BookingStatus.CONFIRMED, 'Direct payment confirmation failed');
+        console.log('✔ Direct Payment Confirmed successfully without external gateway redirect (Status: CONFIRMED)');
         const eventBeforeCancel = await prisma_1.prisma.event.findUnique({ where: { id: eventId } });
         const seatsBeforeCancel = eventBeforeCancel.availableSeats;
-        // Cancel booking (3 days before start time -> >48 hours -> 100% refund)
         const cancelRes = await post(`/bookings/${bookingId2}/cancel`, {}, clientToken);
         assert(cancelRes.success, 'Cancellation request failed');
         assert(cancelRes.data.refundPercentage === 100, 'Refund matrix calculation mismatch: ' + cancelRes.data.refundPercentage + '%');

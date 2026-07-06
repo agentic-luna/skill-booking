@@ -57,7 +57,7 @@ class AdminLoginCommandHandler {
             lastLoginIp: ipAddress || '127.0.0.1',
         });
         const permissions = (0, system_roles_1.getPermissionsForRole)(client_1.UserRole.SUPERADMIN);
-        const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role, permissions }, environment_1.env.JWT_SECRET, { expiresIn: '15m' });
+        const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role, permissions }, environment_1.env.JWT_SECRET, { expiresIn: '5d' });
         const refreshToken = jsonwebtoken_1.default.sign({ id: user.id }, environment_1.env.JWT_SECRET, { expiresIn: '7d' });
         const cacheKey = `auth:refresh_tokens:${user.id}:${refreshToken}`;
         await this.cacheService.set(cacheKey, '1', 7 * 24 * 60 * 60);

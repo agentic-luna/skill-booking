@@ -22,6 +22,7 @@ export const SystemPermissions = {
   ADMIN_EVENTS_MODERATE: 'admin:events_moderate',
   ADMIN_EVENTS_APPROVE: 'admin:events_approve',
   ADMIN_EVENTS_BOOST: 'admin:events_boost',
+  ADMIN_KYC_REVIEW: 'admin:kyc_review',
   ADMIN_LEDGER_READ: 'admin:ledger_read',
   ADMIN_PAYOUT_RELEASE: 'admin:payout_release',
   ADMIN_CONFIGS_MANAGE: 'admin:configs_manage',

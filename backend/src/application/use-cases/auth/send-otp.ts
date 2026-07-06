@@ -30,14 +30,18 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
     }
 
     const normalizedType = type === DeliveryChannel.EMAIL ? DeliveryChannel.EMAIL : DeliveryChannel.SMS;
+    // Normalize target: lowercase for email, trim for phone
+    const normalizedTarget = normalizedType === DeliveryChannel.EMAIL
+      ? target.toLowerCase().trim()
+      : target.trim();
 
     if (normalizedType === DeliveryChannel.EMAIL) {
-      const existing = await this.userRepo.findByEmail(target);
+      const existing = await this.userRepo.findByEmail(normalizedTarget);
       if (existing) {
         throw new BadRequestError('Email is already registered');
       }
     } else {
-      const existing = await this.userRepo.findByPhone(target);
+      const existing = await this.userRepo.findByPhone(normalizedTarget);
       if (existing) {
         throw new BadRequestError('Phone number is already registered');
       }
@@ -48,24 +52,24 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
 
     // Cache in Redis for 10 minutes (600s)
     const typeKey = normalizedType === DeliveryChannel.EMAIL ? 'EMAIL' : 'PHONE';
-    const cacheKey = `otp:${typeKey}:${target}`;
+    const cacheKey = `otp:${typeKey}:${normalizedTarget}`;
     await this.cacheService.set(cacheKey, otp, 600);
 
     // Send via provider
     if (normalizedType === DeliveryChannel.EMAIL) {
       await this.commsService.sendEmail(
-        target,
+        normalizedTarget,
         'Your Registration Verification OTP',
         `Your OTP for registration verification is: ${otp}. It is valid for 10 minutes.`
       );
     } else {
       await this.commsService.sendSMS(
-        target,
+        normalizedTarget,
         `Your registration OTP is: ${otp}. Valid for 10 minutes.`
       );
     }
 
-    this.logger.info(`[SendOtp] Sent OTP for ${normalizedType} to ${target}`);
+    this.logger.info(`[SendOtp] Sent OTP for ${normalizedType} to ${normalizedTarget}`);
 
     return {
       success: true,

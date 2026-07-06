@@ -28,9 +28,26 @@ export class LoginCommandHandler implements IRequestHandler<LoginCommand, any> {
       throw new BadRequestError('Email or mobile number and password are required');
     }
 
-    let user = await this.userRepo.findByEmail(identifier);
+    let user = await this.userRepo.findByEmail(identifier.toLowerCase().trim());
+
     if (!user) {
-      user = await this.userRepo.findByPhone(identifier);
+      // Try case-sensitive email as fallback
+      user = await this.userRepo.findByEmail(identifier.trim());
+    }
+
+    if (!user) {
+      // Try exact phone match
+      user = await this.userRepo.findByPhone(identifier.trim());
+    }
+
+    if (!user && !identifier.startsWith('+')) {
+      // Try with leading + (e.g. user types "919947811507" but stored as "+919947811507")
+      user = await this.userRepo.findByPhone('+' + identifier.trim());
+    }
+
+    if (!user && identifier.startsWith('+')) {
+      // Try without leading + as fallback
+      user = await this.userRepo.findByPhone(identifier.trim().slice(1));
     }
 
     if (!user || user.deletedAt) {
@@ -55,7 +72,7 @@ export class LoginCommandHandler implements IRequestHandler<LoginCommand, any> {
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role, permissions },
       env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '5d' }
     );
 
     const refreshToken = jwt.sign(

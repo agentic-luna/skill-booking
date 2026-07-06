@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UserRole } from '@prisma/client';
+import { UserRole, KycStatus } from '@prisma/client';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ICacheService } from '../../services/cache.service';
 import { env } from '../../../config/environment';
@@ -37,26 +37,29 @@ export class SignupCommandHandler implements IRequestHandler<SignupCommand, any>
       throw new BadRequestError('First name, last name, email, phone, and password are required');
     }
 
-    const existingEmail = await this.userRepo.findByEmail(data.email);
+    const normalizedEmail = data.email.toLowerCase().trim();
+    const normalizedPhone = data.phone.trim();
+
+    const existingEmail = await this.userRepo.findByEmail(normalizedEmail);
     if (existingEmail) {
       throw new BadRequestError('Email is already registered');
     }
 
-    const existingPhone = await this.userRepo.findByPhone(data.phone);
+    const existingPhone = await this.userRepo.findByPhone(normalizedPhone);
     if (existingPhone) {
       throw new BadRequestError('Phone number is already registered');
     }
 
     // 1. Verify Email OTP
     if (data.emailOtp) {
-      const emailOtpKey = `otp:EMAIL:${data.email}`;
+      const emailOtpKey = `otp:EMAIL:${normalizedEmail}`;
       const cachedOtp = await this.cacheService.get<string>(emailOtpKey);
       if (!cachedOtp || cachedOtp !== data.emailOtp) {
         throw new BadRequestError('Invalid or expired Email OTP');
       }
       await this.cacheService.del(emailOtpKey);
     } else {
-      const emailVerifiedKey = `otp:verified:EMAIL:${data.email}`;
+      const emailVerifiedKey = `otp:verified:EMAIL:${normalizedEmail}`;
       const isEmailVerified = await this.cacheService.get<string>(emailVerifiedKey);
       if (!isEmailVerified) {
         throw new BadRequestError('Email OTP verification is required before completing signup');
@@ -65,14 +68,14 @@ export class SignupCommandHandler implements IRequestHandler<SignupCommand, any>
 
     // 2. Verify Phone OTP
     if (data.phoneOtp) {
-      const phoneOtpKey = `otp:PHONE:${data.phone}`;
+      const phoneOtpKey = `otp:PHONE:${normalizedPhone}`;
       const cachedOtp = await this.cacheService.get<string>(phoneOtpKey);
       if (!cachedOtp || cachedOtp !== data.phoneOtp) {
         throw new BadRequestError('Invalid or expired Phone OTP');
       }
       await this.cacheService.del(phoneOtpKey);
     } else {
-      const phoneVerifiedKey = `otp:verified:PHONE:${data.phone}`;
+      const phoneVerifiedKey = `otp:verified:PHONE:${normalizedPhone}`;
       const isPhoneVerified = await this.cacheService.get<string>(phoneVerifiedKey);
       if (!isPhoneVerified) {
         throw new BadRequestError('Phone OTP verification is required before completing signup');
@@ -80,22 +83,29 @@ export class SignupCommandHandler implements IRequestHandler<SignupCommand, any>
     }
 
     // Clean up Redis verification flags
-    await this.cacheService.del(`otp:verified:EMAIL:${data.email}`);
-    await this.cacheService.del(`otp:verified:PHONE:${data.phone}`);
+    await this.cacheService.del(`otp:verified:EMAIL:${normalizedEmail}`);
+    await this.cacheService.del(`otp:verified:PHONE:${normalizedPhone}`);
 
     const hashedPassword = await bcrypt.hash(data.passwordText, 10);
     const userRole = data.role || UserRole.CLIENT;
     const user = await this.userRepo.create({
       firstName: data.firstName,
       lastName: data.lastName,
-      email: data.email,
-      phone: data.phone,
+      email: normalizedEmail,
+      phone: normalizedPhone,
       passwordHash: hashedPassword,
       role: userRole,
     });
 
+    // Auto-create the appropriate profile based on role (1-1 relation)
     if (userRole === UserRole.CLIENT) {
       await this.userRepo.upsertClientProfile(user.id);
+    } else if (userRole === UserRole.HOST) {
+      // Create a stub HostProfile immediately so the 1-1 relation exists.
+      // The host will later submit KYC details via POST /hosts/kyc which updates this record.
+      await this.userRepo.upsertHostProfile(user.id, {
+        kycStatus: KycStatus.PENDING,
+      });
     }
 
     const permissions = getPermissionsForRole(user.role);
@@ -103,7 +113,7 @@ export class SignupCommandHandler implements IRequestHandler<SignupCommand, any>
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role, permissions },
       env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '5d' }
     );
 
     const refreshToken = jwt.sign(

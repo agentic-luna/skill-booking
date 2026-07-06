@@ -63,7 +63,7 @@ export class AdminLoginCommandHandler implements IRequestHandler<AdminLoginComma
     const accessToken = jwt.sign(
       { id: user.id, email: user.email, role: user.role, permissions },
       env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '5d' }
     );
 
     const refreshToken = jwt.sign(

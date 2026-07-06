@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { 
   Sparkles, LayoutDashboard, Calendar, Users, DollarSign, Settings, 
-  Menu, X, LogOut, ArrowLeftRight, UserCheck, Bell 
+  Menu, X, LogOut, UserCheck 
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -103,13 +103,7 @@ export default function HostLayout({
 
       {/* Sidebar Footer buttons */}
       <div className="space-y-3 pt-6 border-t border-border/40">
-        <Link
-          href="/home"
-          className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-        >
-          <ArrowLeftRight className="h-4.5 w-4.5 text-primary" />
-          <span>Switch Learner View</span>
-        </Link>
+
         <Link
           href="/profile"
           className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"

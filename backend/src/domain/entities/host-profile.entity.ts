@@ -5,7 +5,7 @@ export interface HostProfile {
   id: string;
   userId: string;
   accountType: AccountType;
-  govIdUrl: string;
+  govIdUrl: string | null;  // null until host submits KYC details
   gstNumber: string | null;
   kycStatus: KycStatus;
   bio: string | null;

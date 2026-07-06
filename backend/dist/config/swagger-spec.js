@@ -705,6 +705,26 @@ exports.swaggerSpec = {
                 },
             },
         },
+        '/bookings/my-bookings': {
+            get: {
+                tags: ['Client & Booking Workflows'],
+                summary: 'Fetch all bookings belonging to current client (Latest bookings on top)',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: 'Returns list of client bookings ordered by creation date descending' },
+                },
+            },
+        },
+        '/bookings/mybookings': {
+            get: {
+                tags: ['Client & Booking Workflows'],
+                summary: 'Alias route to fetch current client bookings (Latest bookings on top)',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: 'Returns list of client bookings ordered by creation date descending' },
+                },
+            },
+        },
         '/bookings/checkout': {
             post: {
                 tags: ['Client & Booking Workflows'],
@@ -728,6 +748,29 @@ exports.swaggerSpec = {
                 },
                 responses: {
                     200: { description: 'Returns checkout booking and Razorpay order payload' },
+                },
+            },
+        },
+        '/bookings/{bookingId}/confirm': {
+            post: {
+                tags: ['Client & Booking Workflows'],
+                summary: 'Directly confirm booking payment without external payment gateway redirect',
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: 'bookingId', in: 'path', required: true, schema: { type: 'string' } }],
+                requestBody: {
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    paymentMethod: { type: 'string', example: 'DIRECT_PAYMENT' },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: { description: 'Booking payment confirmed, escrow ledger entry created, and notification enqueued' },
                 },
             },
         },

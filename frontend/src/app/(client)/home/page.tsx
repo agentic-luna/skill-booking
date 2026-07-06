@@ -10,12 +10,14 @@ import {
 import { useAuthStore } from "@/features/auth/store/authStore";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_PROGRAMS, MOCK_BOOKINGS } from "@/constants/mockData";
 
 export default function ClientHomePage() {
   const router = useRouter();
+  const showAlert = useAlertStore((s) => s.showAlert);
   const { user, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
@@ -165,7 +167,7 @@ export default function ClientHomePage() {
 
                           <div className="flex items-center justify-between border-t border-border/40 pt-4 mt-2">
                             <span className="text-xs text-muted-foreground">Hosted by <span className="font-medium text-foreground">{booking.hostName}</span></span>
-                            <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs" onClick={() => alert("Launching workshop video frame...")}>
+                            <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs" onClick={() => showAlert("Room Launching", "Launching your live workshop room. Please allow your browser popup windows access.", "info")}>
                               <PlayCircle className="mr-1.5 h-4 w-4" /> Start Class
                             </Button>
                           </div>

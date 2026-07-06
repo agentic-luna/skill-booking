@@ -32,11 +32,15 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
 
     const hostProfile = await this.userRepo.findHostProfileByUserId(userId);
     if (!hostProfile) {
-      throw new BadRequestError('Host Profile not found. Please complete KYC registration first.');
+      throw new BadRequestError('Host profile not found. Please contact support.');
+    }
+
+    if (!hostProfile.govIdUrl) {
+      throw new ForbiddenError('Cannot create events. Please submit your KYC documents first via the /hosts/kyc endpoint.');
     }
 
     if (hostProfile.kycStatus !== KycStatus.APPROVED) {
-      throw new ForbiddenError('Cannot create events. Your KYC verification status is not APPROVED.');
+      throw new ForbiddenError('Cannot create events. Your KYC verification is ' + hostProfile.kycStatus + '. Please wait for admin approval.');
     }
 
     const event = await this.eventRepo.create({

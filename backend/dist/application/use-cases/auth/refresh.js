@@ -39,7 +39,7 @@ class RefreshTokenCommandHandler {
             // Revoke the old token
             await this.cacheService.del(cacheKey);
             const permissions = (0, system_roles_1.getPermissionsForRole)(user.role);
-            const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role, permissions }, environment_1.env.JWT_SECRET, { expiresIn: '15m' });
+            const accessToken = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role, permissions }, environment_1.env.JWT_SECRET, { expiresIn: '5d' });
             const newRefreshToken = jsonwebtoken_1.default.sign({ id: user.id }, environment_1.env.JWT_SECRET, { expiresIn: '7d' });
             const newCacheKey = `auth:refresh_tokens:${user.id}:${newRefreshToken}`;
             await this.cacheService.set(newCacheKey, '1', 7 * 24 * 60 * 60);

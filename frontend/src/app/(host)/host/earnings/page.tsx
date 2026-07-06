@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MOCK_BOOKINGS } from "@/constants/mockData";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 export default function HostEarningsPage() {
+  const showAlert = useAlertStore((s) => s.showAlert);
   const [withdrawing, setWithdrawing] = useState(false);
   const [bankAccount, setBankAccount] = useState("");
   const [withdrawalHistory, setWithdrawalHistory] = useState([
@@ -34,7 +36,7 @@ export default function HostEarningsPage() {
   const handleRequestWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (availableBalance <= 0) {
-      alert("Withdrawable balance is $0.00");
+      showAlert("Zero Balance", "Withdrawable balance is $0.00. You must accumulate cleared bookings first.", "destructive");
       return;
     }
     
@@ -52,7 +54,7 @@ export default function HostEarningsPage() {
 
     setWithdrawalHistory((prev) => [newWithdrawal, ...prev]);
     setBankAccount("");
-    alert("Withdrawal request submitted! Funds will arrive in your bank account within 2-3 business days.");
+    showAlert("Withdrawal Requested", "Withdrawal request submitted successfully! Funds will arrive in your bank account within 2-3 business days.", "success");
   };
 
   return (

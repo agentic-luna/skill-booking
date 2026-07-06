@@ -149,10 +149,10 @@ export default function HostDashboard() {
       </div>
 
       {/* Roster Quick-look */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="w-full">
         
         {/* Recent Bookings List Table */}
-        <Card className="lg:col-span-2 border-border/40 rounded-2xl bg-card">
+        <Card className="border-border/40 rounded-2xl bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-sm font-bold">Recent Roster Activity</CardTitle>
@@ -189,31 +189,6 @@ export default function HostDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Notifications / Alerts Board */}
-        <Card className="border-border/40 rounded-2xl bg-card">
-          <CardHeader>
-            <CardTitle className="text-sm font-bold">Activity Alerts</CardTitle>
-            <CardDescription className="text-xs">Important instructor announcements.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start space-x-3 text-xs bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 text-amber-600 dark:text-amber-500">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-              <div>
-                <div className="font-bold">Next.js Workshop Filling Fast</div>
-                <p className="text-[10px] opacity-90 mt-0.5">Only 5 spots left. Send class prep reminders to confirmed students.</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3 text-xs bg-primary/10 p-3 rounded-xl border border-primary/20 text-primary">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-              <div>
-                <div className="font-bold">Host Verification Completed</div>
-                <p className="text-[10px] opacity-90 mt-0.5">Profile approved. You can now request revenue payouts directly to bank.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
       </div>
 
     </div>
