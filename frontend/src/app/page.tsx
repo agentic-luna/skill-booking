@@ -10,6 +10,7 @@ import {
 
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
+import ProgramCard from "@/components/common/ProgramCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MOCK_PROGRAMS } from "@/constants/mockData";
@@ -75,6 +76,86 @@ const hostSteps: StepItem[] = [
     title: "Get Paid Automatically",
     icon: Star,
     description: "Collect payments and withdraw earnings directly to your bank account. Build reviews to boost class sizes.",
+  },
+];
+
+interface CategoryItem {
+  name: string;
+  slug: string;
+  icon: React.ComponentType<{ className?: string }>;
+  count: number;
+  color: string;
+}
+
+const CategoryCard = ({ cat }: { cat: CategoryItem }) => {
+  const Icon = cat.icon;
+  return (
+    <Link
+      href={`/programs?category=${cat.slug}`}
+      className="group flex flex-col items-center justify-center p-6 rounded-[25px] border border-clay-shadow bg-bone-white hover:border-nightshade-black animate-hover text-center"
+    >
+      <div className={`p-4 rounded-[16px] mb-4 group-hover:scale-110 transition-transform ${cat.color}`}>
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="font-semibold text-sm text-graphite-ink mb-1 group-hover:text-nightshade-black transition-colors">
+        {cat.name}
+      </h3>
+      <span className="text-xs text-stone-grey">{cat.count} Workshops</span>
+    </Link>
+  );
+};
+
+interface TestimonialItem {
+  text: string;
+  name: string;
+  role: string;
+  rating: number;
+  avatar: string;
+}
+
+const TestimonialCard = ({ testimonial }: { testimonial: TestimonialItem }) => {
+  return (
+    <div className="bg-bone-white p-6 rounded-[25px] border border-clay-shadow flex flex-col justify-between shadow-sm">
+      <p className="text-stone-grey text-xs leading-relaxed italic mb-6">
+        &ldquo;{testimonial.text}&rdquo;
+      </p>
+      <div className="flex items-center space-x-3">
+        <img src={testimonial.avatar} alt={testimonial.name} className="h-10 w-10 rounded-full object-cover" />
+        <div>
+          <h4 className="font-bold text-sm text-foreground">{testimonial.name}</h4>
+          <span className="text-[10px] text-muted-foreground">{testimonial.role}</span>
+        </div>
+        <div className="flex items-center ml-auto">
+          {Array.from({ length: testimonial.rating }).map((_, i) => (
+            <Star key={i} className="h-3.5 w-3.5 fill-iron-grey text-iron-grey" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const testimonialsList: TestimonialItem[] = [
+  {
+    text: "The Next.js workshop by Sarah was game-changing. Having a live expert answer layout routing questions was 10x better than pre-recorded guides.",
+    name: "Liam O'Connor",
+    role: "Frontend Developer",
+    rating: 5,
+    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100",
+  },
+  {
+    text: "Chef Marc's sourdough class got me baking fresh loaves immediately. The hydration formula breakdown solved my dense-bread issues.",
+    name: "Sophia Martinez",
+    role: "Hobbyist Baker",
+    rating: 5,
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100",
+  },
+  {
+    text: "Being able to verify student tickets and manage my photography class slots through the host tools is extremely seamless. Payment is lightning fast.",
+    name: "Elena Rostova",
+    role: "Photographer / Host",
+    rating: 5,
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100",
   },
 ];
 
@@ -178,57 +259,7 @@ export default function LandingPage() {
           {/* Program Cards Grid */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {featuredPrograms.map((prog) => (
-              <div
-                key={prog.id}
-                className="group flex flex-col border border-clay-shadow rounded-[25px] overflow-hidden bg-bone-white hover:border-nightshade-black animate-hover"
-              >
-                <div className="relative aspect-video w-full overflow-hidden bg-haze">
-                  <img
-                    src={prog.imageUrl}
-                    alt={prog.title}
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 bg-nightshade-black/60 backdrop-blur-md text-bone-white text-xs px-2.5 py-1 rounded-[8px] font-semibold capitalize">
-                    {prog.category}
-                  </div>
-                </div>
-
-                <div className="flex flex-col flex-1 p-5 space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <img
-                      src={prog.instructorAvatar}
-                      alt={prog.instructorName}
-                      className="h-6 w-6 rounded-full object-cover"
-                    />
-                    <span className="text-xs text-stone-grey">{prog.instructorName}</span>
-                  </div>
-
-                  <h3 className="font-bold text-base text-graphite-ink line-clamp-2 leading-tight group-hover:text-nightshade-black transition-colors">
-                    {prog.title}
-                  </h3>
-
-                  <div className="flex items-center space-x-3 text-xs text-stone-grey">
-                    <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {prog.duration}</span>
-                    <span className="flex items-center"><MapPin className="h-3 w-3 mr-1" /> {prog.location.split(",")[0]}</span>
-                  </div>
-
-                  <div className="flex items-center space-x-1.5 pt-1">
-                    <Star className="h-4 w-4 fill-iron-grey text-iron-grey" />
-                    <span className="text-xs font-bold text-graphite-ink">{prog.rating}</span>
-                    <span className="text-xs text-stone-grey">({prog.reviewsCount} reviews)</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-clay-shadow mt-auto">
-                    <div>
-                      <span className="text-xs text-stone-grey">Registration Fee</span>
-                      <div className="text-lg font-extrabold text-graphite-ink">${prog.price}</div>
-                    </div>
-                    <Link href={`/programs/${prog.id}`}>
-                      <Button size="sm" className="rounded-[12px]">Book Spot</Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              <ProgramCard key={prog.id} program={prog} />
             ))}
           </div>
         </div>
@@ -247,24 +278,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat) => {
-              const IconComp = cat.icon;
-              return (
-                <Link
-                  key={cat.name}
-                  href={`/programs?category=${cat.slug}`}
-                  className="group flex flex-col items-center justify-center p-6 rounded-[25px] border border-clay-shadow bg-bone-white hover:border-nightshade-black animate-hover text-center"
-                >
-                  <div className={`p-4 rounded-[16px] mb-4 group-hover:scale-110 transition-transform ${cat.color}`}>
-                    <IconComp className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-semibold text-sm text-graphite-ink mb-1 group-hover:text-nightshade-black transition-colors">
-                    {cat.name}
-                  </h3>
-                  <span className="text-xs text-stone-grey">{cat.count} Workshops</span>
-                </Link>
-              );
-            })}
+            {categories.map((cat) => (
+              <CategoryCard key={cat.name} cat={cat} />
+            ))}
           </div>
         </div>
       </section>
@@ -328,46 +344,8 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                text: "The Next.js workshop by Sarah was game-changing. Having a live expert answer layout routing questions was 10x better than pre-recorded guides.",
-                name: "Liam O'Connor",
-                role: "Frontend Developer",
-                rating: 5,
-                avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100",
-              },
-              {
-                text: "Chef Marc's sourdough class got me baking fresh loaves immediately. The hydration formula breakdown solved my dense-bread issues.",
-                name: "Sophia Martinez",
-                role: "Hobbyist Baker",
-                rating: 5,
-                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100",
-              },
-              {
-                text: "Being able to verify student tickets and manage my photography class slots through the host tools is extremely seamless. Payment is lightning fast.",
-                name: "Elena Rostova",
-                role: "Photographer / Host",
-                rating: 5,
-                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100",
-              }
-            ].map((t, idx) => (
-              <div key={idx} className="bg-bone-white p-6 rounded-[25px] border border-clay-shadow flex flex-col justify-between shadow-sm">
-                <p className="text-stone-grey text-xs leading-relaxed italic mb-6">
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center space-x-3">
-                  <img src={t.avatar} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
-                  <div>
-                    <h4 className="font-bold text-sm text-foreground">{t.name}</h4>
-                    <span className="text-[10px] text-muted-foreground">{t.role}</span>
-                  </div>
-                  <div className="flex items-center ml-auto">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-iron-grey text-iron-grey" />
-                    ))}
-                  </div>
-                </div>
-              </div>
+            {testimonialsList.map((t, idx) => (
+              <TestimonialCard key={idx} testimonial={t} />
             ))}
           </div>
         </div>
