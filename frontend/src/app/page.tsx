@@ -14,6 +14,70 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MOCK_PROGRAMS } from "@/constants/mockData";
 
+interface StepItem {
+  number: number;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const StepCard = ({ step }: { step: StepItem }) => {
+  const Icon = step.icon;
+  return (
+    <div className="flex flex-col items-center text-center p-6 space-y-4">
+      <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="font-bold text-lg text-foreground">{step.number}. {step.title}</h3>
+      <p className="text-muted-foreground text-sm leading-relaxed">
+        {step.description}
+      </p>
+    </div>
+  );
+};
+
+const learnerSteps: StepItem[] = [
+  {
+    number: 1,
+    title: "Find Your Skill",
+    icon: Search,
+    description: "Filter by date, pricing, level, and location. Read real feedback and verify host certifications.",
+  },
+  {
+    number: 2,
+    title: "Instantly Register",
+    icon: Calendar,
+    description: "Reserve your spots using our secure multi-channel booking portal. Get calendars integration immediately.",
+  },
+  {
+    number: 3,
+    title: "Level Up Live",
+    icon: CheckCircle,
+    description: "Attend interactive live streams or offline classes. Ask questions, receive work reviews, and get certified.",
+  },
+];
+
+const hostSteps: StepItem[] = [
+  {
+    number: 1,
+    title: "Create Program",
+    icon: BookOpen,
+    description: "Publish your event syllabus, configure session times, pricing plans, and attendance limits in our host center.",
+  },
+  {
+    number: 2,
+    title: "Manage Registrations",
+    icon: Users,
+    description: "Track rosters, monitor participant check-ins, send email alerts, and communicate questions on the board.",
+  },
+  {
+    number: 3,
+    title: "Get Paid Automatically",
+    icon: Star,
+    description: "Collect payments and withdraw earnings directly to your bank account. Build reviews to boost class sizes.",
+  },
+];
+
 export default function LandingPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -244,67 +308,9 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-            {activeTab === "learner" ? (
-              <>
-                <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
-                    <Search className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground">1. Find Your Skill</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Filter by date, pricing, level, and location. Read real feedback and verify host certifications.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
-                    <Calendar className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground">2. Instantly Register</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Reserve your spots using our secure multi-channel booking portal. Get calendars integration immediately.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
-                    <CheckCircle className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground">3. Level Up Live</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Attend interactive live streams or offline classes. Ask questions, receive work reviews, and get certified.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
-                    <BookOpen className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground">1. Create Program</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Publish your event syllabus, configure session times, pricing plans, and attendance limits in our host center.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground">2. Manage Registrations</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Track rosters, monitor participant check-ins, send email alerts, and communicate questions on the board.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="bg-bone-white border border-clay-shadow text-iron-grey p-4 rounded-[25px]">
-                    <Star className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground">3. Get Paid Automatically</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Collect payments and withdraw earnings directly to your bank account. Build reviews to boost class sizes.
-                  </p>
-                </div>
-              </>
-            )}
+            {(activeTab === "learner" ? learnerSteps : hostSteps).map((step) => (
+              <StepCard key={step.number} step={step} />
+            ))}
           </div>
         </div>
       </section>
@@ -368,24 +374,24 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 relative bg-nightshade-black overflow-hidden">
-        {/* Abstract grids */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,_rgba(255,255,255,0.05),transparent)] pointer-events-none" />
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-bone-white relative z-10 space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+      <section className="py-20 relative bg-linen-canvas/80 border-t border-clay-shadow/40 overflow-hidden">
+        {/* Abstract light glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,_rgba(168,156,138,0.15),transparent)] pointer-events-none" />
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-foreground relative z-10 space-y-6">
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-graphite-ink">
             Ready to Accelerate Your Learning Curve?
           </h2>
-          <p className="text-bone-white/60 text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-stone-grey text-base max-w-xl mx-auto leading-relaxed">
             Create an account to explore thousands of live workshops, book secure spots, and start certified learning programs today.
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Link href="/register">
-              <Button variant="secondary" size="lg" className="rounded-xl">
+              <Button size="lg" className="rounded-xl">
                 Get Started Now
               </Button>
             </Link>
             <Link href="/register?role=host">
-              <Button variant="outline" size="lg" className="text-bone-white border-bone-white/40 hover:bg-bone-white/10 rounded-xl">
+              <Button variant="outline" size="lg" className="border-clay-shadow text-graphite-ink bg-bone-white hover:bg-haze rounded-xl">
                 Teach on BookMySkill
               </Button>
             </Link>

@@ -20,7 +20,7 @@
     --color-clay-shadow: #d1cfcd;
     --color-haze: #ecedef;
     --color-spotlight-gradient: #a89c8a;
-    
+
     --radius: 12px;
   }
 }
@@ -29,6 +29,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-charcoal-slate selection:text-bone-white;
     font-feature-settings: "blwf", "cv03", "cv04", "cv09", "cv11";
@@ -42,8 +43,9 @@
   }
 
   .glass-nav {
-    @apply sticky top-0 z-50;
-    background-color: transparent;
+    @apply sticky top-0 z-50 border-b border-clay-shadow backdrop-blur-md;
+    border-bottom-color: rgba(200, 202, 213, 0.2);
+    background-color: rgba(255, 255, 255, 0.7);
   }
 
   .gradient-text {
