@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { 
   Dialog, DialogContent, DialogDescription, DialogFooter, 
   DialogHeader, DialogTitle 
@@ -142,23 +143,13 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
           <div className="lg:col-span-2 space-y-8">
             
             {/* Header info */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <span className="inline-block text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full capitalize">
                 {program.category}
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
                 {program.title}
               </h1>
-              
-              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center space-x-1.5">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  <span className="font-bold text-foreground">{program.rating}</span>
-                  <span>({program.reviewsCount} verified reviews)</span>
-                </div>
-                <span>•</span>
-                <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1" /> {program.location}</span>
-              </div>
             </div>
 
             {/* Core Banner Image */}
@@ -166,7 +157,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               <img
                 src={program.imageUrl}
                 alt={program.title}
-                className="object-cover w-full h-full"
+                className="object-cover w-full h-full animate-in fade-in duration-300"
               />
             </div>
 
@@ -176,6 +167,42 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
                 {program.description}
               </p>
+            </div>
+
+            {/* Large Highlighted Key Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+              {/* Rating Spec */}
+              <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">
+                <CardContent className="p-5 flex items-center space-x-4">
+                  <div className="bg-amber-500/10 text-amber-500 p-3.5 rounded-xl shrink-0">
+                    <Star className="h-6 w-6 fill-amber-500 text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-foreground leading-none flex items-baseline space-x-1">
+                      <span>{program.rating}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground">/ 5.0</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wide">
+                      {program.reviewsCount} Verified Roster Reviews
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Location Spec */}
+              <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">
+                <CardContent className="p-5 flex items-center space-x-4">
+                  <div className="bg-primary/10 text-primary p-3.5 rounded-xl shrink-0">
+                    <MapPin className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Class Venue</div>
+                    <div className="text-xs font-extrabold text-foreground mt-1 leading-snug break-words line-clamp-2" title={program.location}>
+                      {program.location}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             <Separator />
@@ -240,15 +267,22 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                 <div className="flex items-center">
                   <Clock className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
                   <div>
-                    <div className="font-bold text-foreground">Schedule Time</div>
-                    <div>{program.time}</div>
+                    <div className="font-bold text-foreground">Schedule Time & Duration</div>
+                    <div>{program.time} • <span className="font-semibold text-foreground">{program.duration}</span></div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <Ticket className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <div>
+                    <div className="font-bold text-foreground">Total Capacity</div>
+                    <div>{program.maxSpots} seats cap ({program.spotsLeft} available)</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
                   <div>
-                    <div className="font-bold text-foreground">Location Mode</div>
-                    <div className="line-clamp-1">{program.location}</div>
+                    <div className="font-bold text-foreground">Location Venue</div>
+                    <div className="text-foreground leading-relaxed break-words">{program.location}</div>
                   </div>
                 </div>
               </div>
