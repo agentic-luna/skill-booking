@@ -34,6 +34,9 @@ import { LogoutCommandHandler } from '../application/use-cases/auth/logout';
 import { GetProfileQueryHandler } from '../application/use-cases/auth/get-profile';
 import { SendOtpCommandHandler } from '../application/use-cases/auth/send-otp';
 import { VerifyOtpCommandHandler } from '../application/use-cases/auth/verify-otp';
+import { SendForgotPasswordOtpCommandHandler } from '../application/use-cases/auth/send-forgot-password-otp';
+import { VerifyForgotPasswordOtpCommandHandler } from '../application/use-cases/auth/verify-forgot-password-otp';
+import { ResetPasswordCommandHandler } from '../application/use-cases/auth/reset-password';
 
 
 import { SubmitKycCommandHandler } from '../application/use-cases/hosts/submit-kyc';
@@ -114,6 +117,9 @@ mediator.register('LogoutCommand', new LogoutCommandHandler(cacheService));
 mediator.register('GetProfileQuery', new GetProfileQueryHandler(userRepo));
 mediator.register('SendOtpCommand', new SendOtpCommandHandler(cacheService, commsService, userRepo, logger));
 mediator.register('VerifyOtpCommand', new VerifyOtpCommandHandler(cacheService, logger));
+mediator.register('SendForgotPasswordOtpCommand', new SendForgotPasswordOtpCommandHandler(userRepo, cacheService, commsService, logger));
+mediator.register('VerifyForgotPasswordOtpCommand', new VerifyForgotPasswordOtpCommandHandler(userRepo, cacheService, logger));
+mediator.register('ResetPasswordCommand', new ResetPasswordCommandHandler(userRepo, cacheService, logger));
 
 
 // 5. Register Host handlers

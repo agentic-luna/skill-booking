@@ -9,6 +9,9 @@ const logout_1 = require("../../application/use-cases/auth/logout");
 const get_profile_1 = require("../../application/use-cases/auth/get-profile");
 const send_otp_1 = require("../../application/use-cases/auth/send-otp");
 const verify_otp_1 = require("../../application/use-cases/auth/verify-otp");
+const send_forgot_password_otp_1 = require("../../application/use-cases/auth/send-forgot-password-otp");
+const verify_forgot_password_otp_1 = require("../../application/use-cases/auth/verify-forgot-password-otp");
+const reset_password_1 = require("../../application/use-cases/auth/reset-password");
 const api_response_1 = require("../common/api-response");
 class AuthController {
     static async sendOtp(req, res, next) {
@@ -52,8 +55,42 @@ class AuthController {
     }
     static async login(req, res, next) {
         try {
-            const { email, password } = req.body;
-            const result = await di_container_1.mediator.send(new login_1.LoginCommand(email, password));
+            const { identifier, email, phone, password } = req.body;
+            const loginIdentifier = identifier || email || phone;
+            const result = await di_container_1.mediator.send(new login_1.LoginCommand(loginIdentifier, password));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async forgotPasswordSendOtp(req, res, next) {
+        try {
+            const { identifier, email, phone } = req.body;
+            const targetIdentifier = identifier || email || phone;
+            const result = await di_container_1.mediator.send(new send_forgot_password_otp_1.SendForgotPasswordOtpCommand(targetIdentifier));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async forgotPasswordVerifyOtp(req, res, next) {
+        try {
+            const { identifier, email, phone, otp } = req.body;
+            const targetIdentifier = identifier || email || phone;
+            const result = await di_container_1.mediator.send(new verify_forgot_password_otp_1.VerifyForgotPasswordOtpCommand(targetIdentifier, otp));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async resetPassword(req, res, next) {
+        try {
+            const { resetToken, newPassword, password } = req.body;
+            const passwordToSet = newPassword || password;
+            const result = await di_container_1.mediator.send(new reset_password_1.ResetPasswordCommand(resetToken, passwordToSet));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

@@ -27,6 +27,13 @@ export class PrismaUserRepository implements IUserRepository {
     return prisma.user.create({ data });
   }
 
+  async updatePassword(id: string, passwordHash: string): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: { passwordHash },
+    });
+  }
+
   async findProfile(id: string): Promise<any> {
     return prisma.user.findUnique({
       where: { id },

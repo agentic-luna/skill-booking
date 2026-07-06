@@ -9,11 +9,11 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../../config/environment");
 const errors_1 = require("../../common/errors");
 class LoginCommand {
-    email;
+    identifier;
     passwordText;
     __tag = 'LoginCommand';
-    constructor(email, passwordText) {
-        this.email = email;
+    constructor(identifier, passwordText) {
+        this.identifier = identifier;
         this.passwordText = passwordText;
     }
 }
@@ -26,10 +26,16 @@ class LoginCommandHandler {
         this.cacheService = cacheService;
     }
     async handle(command) {
-        const { email, passwordText } = command;
-        const user = await this.userRepo.findByEmail(email);
+        const { identifier, passwordText } = command;
+        if (!identifier || !passwordText) {
+            throw new errors_1.BadRequestError('Email or mobile number and password are required');
+        }
+        let user = await this.userRepo.findByEmail(identifier);
+        if (!user) {
+            user = await this.userRepo.findByPhone(identifier);
+        }
         if (!user || user.deletedAt) {
-            throw new errors_1.BadRequestError('Invalid email or password');
+            throw new errors_1.BadRequestError('Invalid email/mobile number or password');
         }
         if (user.status === 'SUSPENDED') {
             throw new errors_1.ForbiddenError('Your account is suspended. Please contact support.');

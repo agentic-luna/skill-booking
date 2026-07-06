@@ -9,6 +9,10 @@ router.post('/otp/send', rate_limiter_1.authLimiter, auth_controller_1.AuthContr
 router.post('/otp/verify', rate_limiter_1.authLimiter, auth_controller_1.AuthController.verifyOtp);
 router.post('/signup', rate_limiter_1.authLimiter, auth_controller_1.AuthController.signup);
 router.post('/login', rate_limiter_1.authLimiter, auth_controller_1.AuthController.login);
+// Forgot Password Flow
+router.post('/forgot-password/send-otp', rate_limiter_1.authLimiter, auth_controller_1.AuthController.forgotPasswordSendOtp);
+router.post('/forgot-password/verify-otp', rate_limiter_1.authLimiter, auth_controller_1.AuthController.forgotPasswordVerifyOtp);
+router.post('/forgot-password/reset', rate_limiter_1.authLimiter, auth_controller_1.AuthController.resetPassword);
 router.post('/refresh', rate_limiter_1.authLimiter, auth_controller_1.AuthController.refresh);
 router.post('/logout', auth_controller_1.AuthController.logout);
 router.get('/me', auth_1.authenticate, auth_controller_1.AuthController.me);
