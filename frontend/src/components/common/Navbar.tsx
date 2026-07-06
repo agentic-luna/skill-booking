@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Menu, X, Sun, Moon, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell } from "lucide-react";
+import { Sparkles, Menu, X, Sun, Moon, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useTheme } from "@/components/providers/theme-provider";
@@ -90,13 +90,7 @@ export default function Navbar() {
                   </Button>
                 </Link>
 
-                {/* Notifications Panel Trigger */}
-                <Link href="/notifications">
-                  <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground relative">
-                    <Bell className="h-4.5 w-4.5" />
-                    <span className="absolute top-2.5 right-2.5 bg-primary w-2 h-2 rounded-full" />
-                  </Button>
-                </Link>
+
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
