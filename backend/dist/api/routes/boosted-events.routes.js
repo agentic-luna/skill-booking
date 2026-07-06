@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const client_1 = require("@prisma/client");
+const boosted_events_controller_1 = require("../controllers/boosted-events.controller");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.get('/', boosted_events_controller_1.BoostedEventsController.getActiveBoostedEvents);
+router.post('/', auth_1.authenticate, (0, auth_1.authorize)([client_1.UserRole.SUPERADMIN]), boosted_events_controller_1.BoostedEventsController.boostEvent);
+exports.default = router;

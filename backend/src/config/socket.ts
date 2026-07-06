@@ -1,5 +1,6 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { logger } from '../api/di-container';
 
 let io: SocketIOServer | null = null;
 
@@ -12,15 +13,15 @@ export const initSocket = (server: HTTPServer): SocketIOServer => {
   });
 
   io.on('connection', (socket) => {
-    console.log(`[Socket] Client connected: ${socket.id}`);
+    logger.info(`[Socket] Client connected: ${socket.id}`);
 
     socket.on('join_room', (roomId: string) => {
       socket.join(roomId);
-      console.log(`[Socket] Client ${socket.id} joined room: ${roomId}`);
+      logger.info(`[Socket] Client ${socket.id} joined room: ${roomId}`);
     });
 
     socket.on('disconnect', () => {
-      console.log(`[Socket] Client disconnected: ${socket.id}`);
+      logger.info(`[Socket] Client disconnected: ${socket.id}`);
     });
   });
 

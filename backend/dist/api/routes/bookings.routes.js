@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const bookings_controller_1 = require("../controllers/bookings.controller");
+const auth_1 = require("../middleware/auth");
+const rate_limiter_1 = require("../middleware/rate-limiter");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/checkout', rate_limiter_1.checkoutLimiter, bookings_controller_1.BookingsController.checkout);
+router.post('/:bookingId/cancel', bookings_controller_1.BookingsController.cancel);
+exports.default = router;

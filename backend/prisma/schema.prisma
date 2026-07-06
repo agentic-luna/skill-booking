@@ -186,6 +186,11 @@ model Event {
   id             String      @id @default(uuid()) @db.Uuid
   hostId         String      @db.Uuid
   title          String
+  description    String?     @db.Text
+  images         String[]    @default([])
+  trainerName    String?
+  trainerInfo    String?     @db.Text
+  trainerBio     String?     @db.Text
   posterUrl      String
   mode           EventMode   @default(ONLINE)
   venueDetails   Json?
@@ -197,10 +202,11 @@ model Event {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  host       HostProfile      @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  commission EventCommission?
-  reviews    Review[]
-  bookings   Booking[]
+  host         HostProfile   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  commission   EventCommission?
+  reviews      Review[]
+  bookings     Booking[]
+  boostedEvent BoostedEvent?
 
   @@map("events")
 }
@@ -217,8 +223,24 @@ model EventCommission {
   @@map("event_commissions")
 }
 
+model BoostedEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @unique @db.Uuid
+  priority  Int      @default(1)
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("boosted_events")
+}
+
 model Review {
   id        String   @id @default(uuid()) @db.Uuid
+  bookingId String?  @db.Uuid
   clientId  String   @db.Uuid
   eventId   String   @db.Uuid
   rating    Float

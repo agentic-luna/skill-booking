@@ -1,0 +1,82 @@
+import { EventStatus, BookingStatus } from '@prisma/client';
+import { IEventRepository } from '../../../domain/repositories/event.repository';
+import { IBookingRepository } from '../../../domain/repositories/booking.repository';
+import { ICacheService } from '../../services/cache.service';
+import { ICommunicationService } from '../../services/communication.service';
+import { BadRequestError, NotFoundError, ConflictError } from '../../common/errors';
+import { IRequest, IRequestHandler } from '../../common/mediator';
+
+export class CheckoutCommand implements IRequest<any> {
+  readonly __tag = 'CheckoutCommand';
+  constructor(
+    public readonly clientId: string,
+    public readonly eventId: string,
+    public readonly seatCount: number,
+    public readonly customAmount?: number
+  ) {}
+}
+
+export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, any> {
+  constructor(
+    private eventRepo: IEventRepository,
+    private bookingRepo: IBookingRepository,
+    private cacheService: ICacheService,
+    private commsService: ICommunicationService
+  ) {}
+
+  async handle(command: CheckoutCommand): Promise<any> {
+    const { clientId, eventId, seatCount, customAmount } = command;
+
+    if (seatCount <= 0) {
+      throw new BadRequestError('Seat count must be greater than zero.');
+    }
+
+    const event = await this.eventRepo.findById(eventId);
+    if (!event) {
+      throw new NotFoundError('Event not found');
+    }
+
+    if (event.status !== EventStatus.APPROVED) {
+      throw new BadRequestError('Event booking is not open');
+    }
+
+    if (event.availableSeats < seatCount) {
+      throw new BadRequestError(`Insufficient seats available. Only ${event.availableSeats} seats remaining.`);
+    }
+
+    // Decrement seats using optimistic locking
+    const success = await this.eventRepo.decrementSeats(eventId, seatCount, event.version);
+    if (!success) {
+      throw new ConflictError('Booking failed due to temporary ticket race conditions. Please retry.');
+    }
+
+    const ticketPrice = 500;
+    const totalAmount = customAmount || seatCount * ticketPrice;
+    const bookingRef = `BK-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+    const booking = await this.bookingRepo.create({
+      bookingRef,
+      clientId,
+      eventId,
+      seatCount,
+      totalAmount,
+      status: BookingStatus.INITIATED,
+    });
+
+    // Invalidate event search caches
+    await this.cacheService.delPattern('events:search:*');
+
+    // Create checkout order on payment gateway
+    const razorpayOrder = await this.commsService.createRazorpayOrder(
+      totalAmount,
+      'INR',
+      bookingRef
+    );
+
+    return {
+      booking,
+      eventTitle: event.title,
+      razorpayOrder,
+    };
+  }
+}

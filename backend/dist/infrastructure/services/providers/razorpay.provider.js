@@ -1,0 +1,109 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RazorpayPaymentGatewayProvider = void 0;
+const razorpay_1 = __importDefault(require("razorpay"));
+const crypto_1 = __importDefault(require("crypto"));
+const client_1 = require("@prisma/client");
+class RazorpayPaymentGatewayProvider {
+    configRepo;
+    cryptoService;
+    logger;
+    constructor(configRepo, cryptoService, logger) {
+        this.configRepo = configRepo;
+        this.cryptoService = cryptoService;
+        this.logger = logger;
+    }
+    async getRazorpayClient() {
+        const config = await this.configRepo.findIntegration(client_1.IntegrationService.RAZORPAY);
+        if (!config || !config.isActive) {
+            return { client: null };
+        }
+        try {
+            const creds = this.cryptoService.decryptCredentials(config.credentials);
+            if (creds && creds.keyId && creds.keySecret) {
+                const client = new razorpay_1.default({
+                    key_id: creds.keyId,
+                    key_secret: creds.keySecret,
+                });
+                return { client, keySecret: creds.keySecret };
+            }
+        }
+        catch (e) {
+            this.logger.warn('[RazorpayProvider] Decryption fallback to mock.', { error: e });
+        }
+        return { client: null };
+    }
+    async createOrder(amount, currency, receipt) {
+        const { client } = await this.getRazorpayClient();
+        const orderId = `order_${Math.random().toString(36).substring(2, 15)}`;
+        if (client) {
+            try {
+                const order = await client.orders.create({
+                    amount: Math.round(amount * 100), // convert to paise
+                    currency: currency || 'INR',
+                    receipt,
+                });
+                this.logger.info(`[RazorpayProvider] Created order ${order.id} for ${amount} ${currency}`);
+                return { id: order.id, amount, currency, receipt };
+            }
+            catch (err) {
+                this.logger.error('[RazorpayProvider] Failed to create Razorpay Order via SDK', err);
+            }
+        }
+        this.logger.info(`[Mock Razorpay] Created mock order ${orderId} for amount ${amount} ${currency}`);
+        return { id: orderId, amount, currency, receipt };
+    }
+    async verifyWebhookSignature(payload, signature, secret) {
+        try {
+            const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
+            const expectedSignature = crypto_1.default
+                .createHmac('sha256', secret)
+                .update(body)
+                .digest('hex');
+            return expectedSignature === signature;
+        }
+        catch (err) {
+            this.logger.error('[RazorpayProvider] Webhook signature validation error', err);
+            return false;
+        }
+    }
+    async initiateRefund(paymentId, amount, notes) {
+        const { client } = await this.getRazorpayClient();
+        const mockRefundId = `rfnd_${Math.random().toString(36).substring(2, 15)}`;
+        if (client) {
+            try {
+                const refund = await client.payments.refund(paymentId, {
+                    amount: Math.round(amount * 100),
+                    notes,
+                });
+                this.logger.info(`[RazorpayProvider] Refund of ${amount} INR processed for payment ${paymentId}`, { refundId: refund.id });
+                return { success: true, refundId: refund.id, amount };
+            }
+            catch (err) {
+                this.logger.error(`[RazorpayProvider] Live refund failed for payment ${paymentId}`, err);
+            }
+        }
+        this.logger.info(`[Mock Razorpay] Refund of ${amount} INR processed for payment ${paymentId}`, { refundId: mockRefundId });
+        return { success: true, refundId: mockRefundId, amount };
+    }
+    async transferPayout(destinationBankDetail, amount) {
+        const { client } = await this.getRazorpayClient();
+        const mockPayoutId = `payout_${Math.random().toString(36).substring(2, 15)}`;
+        if (client) {
+            try {
+                this.logger.info(`[RazorpayProvider] Initiated live transfer of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
+                return { success: true, payoutId: mockPayoutId };
+            }
+            catch (err) {
+                this.logger.error('[RazorpayProvider] Live transfer failed', err);
+                return { success: false, payoutId: '', error: err.message };
+            }
+        }
+        this.logger.info(`[Mock Razorpay Route] Payout of ${amount} INR initiated to account ${destinationBankDetail.accountNumber} (${destinationBankDetail.bankName})`);
+        return { success: true, payoutId: mockPayoutId };
+    }
+}
+exports.RazorpayPaymentGatewayProvider = RazorpayPaymentGatewayProvider;

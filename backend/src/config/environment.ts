@@ -10,6 +10,7 @@ export const env = {
   DATABASE_URL: process.env.DATABASE_URL || '',
   JWT_SECRET: process.env.JWT_SECRET || 'super_secret_jwt_key',
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
 };
 
 // Simple sanity check for critical environment variables
