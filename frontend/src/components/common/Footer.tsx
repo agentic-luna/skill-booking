@@ -5,10 +5,14 @@ import { Sparkles, Mail, Github, Twitter, Linkedin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { useAlertStore } from "@/features/alerts/store/alertStore";
+
 export default function Footer() {
+  const showAlert = useAlertStore((s) => s.showAlert);
+
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Mock newsletter subscription successful!");
+    showAlert("Subscription Confirmed", "Mock newsletter subscription successful! You'll now receive our monthly skill updates.", "success");
   };
 
   return (
