@@ -15,6 +15,12 @@ class PrismaUserRepository {
     async create(data) {
         return prisma_1.prisma.user.create({ data });
     }
+    async updatePassword(id, passwordHash) {
+        return prisma_1.prisma.user.update({
+            where: { id },
+            data: { passwordHash },
+        });
+    }
     async findProfile(id) {
         return prisma_1.prisma.user.findUnique({
             where: { id },

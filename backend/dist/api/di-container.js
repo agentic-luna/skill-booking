@@ -32,6 +32,9 @@ const logout_1 = require("../application/use-cases/auth/logout");
 const get_profile_1 = require("../application/use-cases/auth/get-profile");
 const send_otp_1 = require("../application/use-cases/auth/send-otp");
 const verify_otp_1 = require("../application/use-cases/auth/verify-otp");
+const send_forgot_password_otp_1 = require("../application/use-cases/auth/send-forgot-password-otp");
+const verify_forgot_password_otp_1 = require("../application/use-cases/auth/verify-forgot-password-otp");
+const reset_password_1 = require("../application/use-cases/auth/reset-password");
 const submit_kyc_1 = require("../application/use-cases/hosts/submit-kyc");
 const submit_bank_details_1 = require("../application/use-cases/hosts/submit-bank-details");
 const get_dashboard_1 = require("../application/use-cases/hosts/get-dashboard");
@@ -112,6 +115,9 @@ mediator.register('LogoutCommand', new logout_1.LogoutCommandHandler(cacheServic
 mediator.register('GetProfileQuery', new get_profile_1.GetProfileQueryHandler(userRepo));
 mediator.register('SendOtpCommand', new send_otp_1.SendOtpCommandHandler(cacheService, commsService, userRepo, logger));
 mediator.register('VerifyOtpCommand', new verify_otp_1.VerifyOtpCommandHandler(cacheService, logger));
+mediator.register('SendForgotPasswordOtpCommand', new send_forgot_password_otp_1.SendForgotPasswordOtpCommandHandler(userRepo, cacheService, commsService, logger));
+mediator.register('VerifyForgotPasswordOtpCommand', new verify_forgot_password_otp_1.VerifyForgotPasswordOtpCommandHandler(userRepo, cacheService, logger));
+mediator.register('ResetPasswordCommand', new reset_password_1.ResetPasswordCommandHandler(userRepo, cacheService, logger));
 // 5. Register Host handlers
 mediator.register('SubmitKycCommand', new submit_kyc_1.SubmitKycCommandHandler(userRepo));
 mediator.register('SubmitBankDetailsCommand', new submit_bank_details_1.SubmitBankDetailsCommandHandler(userRepo, cryptoService));

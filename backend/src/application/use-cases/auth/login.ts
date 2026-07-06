@@ -10,7 +10,7 @@ import { BadRequestError, ForbiddenError } from '../../common/errors';
 export class LoginCommand implements IRequest<any> {
   readonly __tag = 'LoginCommand';
   constructor(
-    public readonly email: string,
+    public readonly identifier: string,
     public readonly passwordText: string
   ) {}
 }
@@ -22,12 +22,19 @@ export class LoginCommandHandler implements IRequestHandler<LoginCommand, any> {
   ) {}
 
   async handle(command: LoginCommand): Promise<any> {
-    const { email, passwordText } = command;
+    const { identifier, passwordText } = command;
 
-    const user = await this.userRepo.findByEmail(email);
+    if (!identifier || !passwordText) {
+      throw new BadRequestError('Email or mobile number and password are required');
+    }
+
+    let user = await this.userRepo.findByEmail(identifier);
+    if (!user) {
+      user = await this.userRepo.findByPhone(identifier);
+    }
 
     if (!user || user.deletedAt) {
-      throw new BadRequestError('Invalid email or password');
+      throw new BadRequestError('Invalid email/mobile number or password');
     }
 
     if (user.status === 'SUSPENDED') {

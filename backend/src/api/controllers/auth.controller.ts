@@ -7,9 +7,11 @@ import { LogoutCommand } from '../../application/use-cases/auth/logout';
 import { GetProfileQuery } from '../../application/use-cases/auth/get-profile';
 import { SendOtpCommand } from '../../application/use-cases/auth/send-otp';
 import { VerifyOtpCommand } from '../../application/use-cases/auth/verify-otp';
+import { SendForgotPasswordOtpCommand } from '../../application/use-cases/auth/send-forgot-password-otp';
+import { VerifyForgotPasswordOtpCommand } from '../../application/use-cases/auth/verify-forgot-password-otp';
+import { ResetPasswordCommand } from '../../application/use-cases/auth/reset-password';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { ApiResponse } from '../common/api-response';
-
 
 export class AuthController {
   static async sendOtp(req: Request, res: Response, next: NextFunction) {
@@ -51,11 +53,44 @@ export class AuthController {
     }
   }
 
-
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
-      const result = await mediator.send(new LoginCommand(email, password));
+      const { identifier, email, phone, password } = req.body;
+      const loginIdentifier = identifier || email || phone;
+      const result = await mediator.send(new LoginCommand(loginIdentifier, password));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async forgotPasswordSendOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { identifier, email, phone } = req.body;
+      const targetIdentifier = identifier || email || phone;
+      const result = await mediator.send(new SendForgotPasswordOtpCommand(targetIdentifier));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async forgotPasswordVerifyOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { identifier, email, phone, otp } = req.body;
+      const targetIdentifier = identifier || email || phone;
+      const result = await mediator.send(new VerifyForgotPasswordOtpCommand(targetIdentifier, otp));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { resetToken, newPassword, password } = req.body;
+      const passwordToSet = newPassword || password;
+      const result = await mediator.send(new ResetPasswordCommand(resetToken, passwordToSet));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);

@@ -13,6 +13,7 @@ export interface IUserRepository {
     passwordHash: string;
     role?: UserRole;
   }): Promise<User>;
+  updatePassword(id: string, passwordHash: string): Promise<User>;
   findProfile(id: string): Promise<any>;
   findHostProfileByUserId(userId: string): Promise<HostProfile | null>;
   upsertHostProfile(
