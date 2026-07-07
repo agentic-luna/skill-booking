@@ -129,6 +129,88 @@ export const swaggerSpec = {
     },
   },
   paths: {
+    '/health': {
+      get: {
+        tags: ['System'],
+        summary: 'Comprehensive system health check',
+        description: 'Returns detailed health information including database connectivity, process memory, system resources, and server uptime.',
+        responses: {
+          200: {
+            description: 'All systems operational',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', enum: ['UP', 'DEGRADED'], example: 'UP' },
+                    timestamp: { type: 'string', format: 'date-time' },
+                    responseTimeMs: { type: 'integer', example: 12 },
+                    server: {
+                      type: 'object',
+                      properties: {
+                        uptime: { type: 'number', example: 3600.5 },
+                        uptimeFormatted: { type: 'string', example: '1h 0m 0s' },
+                        nodeVersion: { type: 'string', example: 'v20.11.0' },
+                        pid: { type: 'integer', example: 12345 },
+                        environment: { type: 'string', example: 'development' },
+                      },
+                    },
+                    database: {
+                      type: 'object',
+                      properties: {
+                        status: { type: 'string', enum: ['UP', 'DOWN'], example: 'UP' },
+                        latencyMs: { type: 'integer', nullable: true, example: 5 },
+                        error: { type: 'string', nullable: true },
+                      },
+                    },
+                    memory: {
+                      type: 'object',
+                      properties: {
+                        process: {
+                          type: 'object',
+                          properties: {
+                            rss: { type: 'string', example: '128.50 MB' },
+                            heapTotal: { type: 'string', example: '64.00 MB' },
+                            heapUsed: { type: 'string', example: '45.30 MB' },
+                            external: { type: 'string', example: '2.10 MB' },
+                          },
+                        },
+                        system: {
+                          type: 'object',
+                          properties: {
+                            total: { type: 'string', example: '16.00 GB' },
+                            free: { type: 'string', example: '4.50 GB' },
+                            used: { type: 'string', example: '11.50 GB' },
+                            usagePercent: { type: 'string', example: '71.9%' },
+                          },
+                        },
+                      },
+                    },
+                    system: {
+                      type: 'object',
+                      properties: {
+                        platform: { type: 'string', example: 'linux' },
+                        arch: { type: 'string', example: 'x64' },
+                        hostname: { type: 'string', example: 'prod-server-01' },
+                        cpuCores: { type: 'integer', example: 4 },
+                        loadAverage: {
+                          type: 'array',
+                          items: { type: 'string' },
+                          example: ['1.25', '1.10', '0.95'],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          503: {
+            description: 'System degraded — one or more subsystems are down',
+          },
+        },
+      },
+    },
     '/integrations/twilio': {
       post: {
         tags: ['Admin Config & Controls'],

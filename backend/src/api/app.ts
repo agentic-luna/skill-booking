@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import os from 'os';
 import { globalLimiter } from './middleware/rate-limiter';
 import { errorHandler } from './middleware/error.middleware';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from '../config/swagger-spec';
+import { prisma } from '../config/prisma';
 
 const app = express();
 
@@ -20,14 +22,97 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Apply rate limiting
 app.use(globalLimiter);
 
-// Health Check Endpoint
-app.get('/api/v1/health', (req, res) => {
-  res.status(200).json({
-    status: 'UP',
+// Comprehensive Health Check Endpoint
+app.get('/api/v1/health', async (_req, res) => {
+  const startTime = Date.now();
+
+  // --- Database Health ---
+  let dbStatus: 'UP' | 'DOWN' = 'DOWN';
+  let dbLatencyMs: number | null = null;
+  let dbError: string | null = null;
+
+  try {
+    const dbStart = Date.now();
+    await prisma.$queryRaw`SELECT 1`;
+    dbLatencyMs = Date.now() - dbStart;
+    dbStatus = 'UP';
+  } catch (err: any) {
+    dbError = err.message || 'Unknown database error';
+  }
+
+  // --- Memory / RAM ---
+  const memUsage = process.memoryUsage();
+  const totalSystemMemory = os.totalmem();
+  const freeSystemMemory = os.freemem();
+
+  // --- Overall status ---
+  const overallStatus = dbStatus === 'UP' ? 'UP' : 'DEGRADED';
+
+  res.status(overallStatus === 'UP' ? 200 : 503).json({
+    status: overallStatus,
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
+    responseTimeMs: Date.now() - startTime,
+
+    server: {
+      uptime: process.uptime(),
+      uptimeFormatted: formatUptime(process.uptime()),
+      nodeVersion: process.version,
+      pid: process.pid,
+      environment: process.env.NODE_ENV || 'development',
+    },
+
+    database: {
+      status: dbStatus,
+      latencyMs: dbLatencyMs,
+      ...(dbError && { error: dbError }),
+    },
+
+    memory: {
+      process: {
+        rss: formatBytes(memUsage.rss),
+        heapTotal: formatBytes(memUsage.heapTotal),
+        heapUsed: formatBytes(memUsage.heapUsed),
+        external: formatBytes(memUsage.external),
+      },
+      system: {
+        total: formatBytes(totalSystemMemory),
+        free: formatBytes(freeSystemMemory),
+        used: formatBytes(totalSystemMemory - freeSystemMemory),
+        usagePercent: ((1 - freeSystemMemory / totalSystemMemory) * 100).toFixed(1) + '%',
+      },
+    },
+
+    system: {
+      platform: os.platform(),
+      arch: os.arch(),
+      hostname: os.hostname(),
+      cpuCores: os.cpus().length,
+      loadAverage: os.loadavg().map((l) => l.toFixed(2)),
+    },
   });
 });
+
+/** Format bytes into a human-readable string (e.g. 128.50 MB) */
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
+}
+
+/** Format seconds into a human-readable uptime string */
+function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const parts: string[] = [];
+  if (d > 0) parts.push(`${d}d`);
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  parts.push(`${s}s`);
+  return parts.join(' ');
+}
 
 // Routing configurations
 import authRouter from './routes/auth.routes';
