@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Code, Dumbbell, Camera, UtensilsCrossed, Briefcase, Palette, 
-  Search, Star, BookOpen, Users, CheckCircle, Calendar, ArrowRight, Clock, MapPin 
+  Search, Star, BookOpen, Users, CheckCircle, Calendar, ArrowRight, Clock, MapPin, ChevronDown 
 } from "lucide-react";
 
 import Navbar from "@/components/common/Navbar";
@@ -171,6 +171,10 @@ export default function LandingPage() {
     router.push(`/programs?search=${encodeURIComponent(searchQuery)}`);
   };
 
+  const handleScrollToFeatures = () => {
+    document.getElementById('featured-programs')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const categories = [
     { name: "Technology", slug: "technology", icon: Code, count: 18, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
     { name: "Culinary Arts", slug: "culinary", icon: UtensilsCrossed, count: 12, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
@@ -180,7 +184,7 @@ export default function LandingPage() {
     { name: "Design & Arts", slug: "design", icon: Palette, count: 15, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
   ];
 
-  const featuredPrograms = MOCK_PROGRAMS.filter(p => p.featured && p.status === "approved");
+  const featuredPrograms = MOCK_PROGRAMS.filter(p => p.status === "approved").slice(0, 8);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -189,23 +193,23 @@ export default function LandingPage() {
       {/* Hero Section */}
       <HeroGeometric
         title1="Master New Skills."
-        description="Skip static videos. Book live masterclasses, interactive bootcamps, and certification training led by top-rated industry instructors."
+        description="Upskill with confidence. Book live, interactive training sessions and get hands-on guidance from proven industry experts."
       >
         <div className="w-full flex flex-col items-center space-y-6">
           {/* Search Input Box */}
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2 w-full max-w-xl mx-auto bg-bone-white p-2 rounded shadow-lg border border-clay-shadow/50 relative z-20 group transition-all duration-300 ease-out hover:shadow-xl focus-within:shadow-xl focus-within:-translate-y-1 hover:-translate-y-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2 w-full max-w-2xl mx-auto bg-bone-white p-2 rounded-md shadow-lg border border-clay-shadow/50 relative z-20 group transition-all duration-300 ease-out hover:shadow-xl focus-within:shadow-xl focus-within:-translate-y-1 hover:-translate-y-1">
+            <div className="relative flex-1 flex items-center">
+              <Search className="absolute left-4 h-5 w-5 text-muted-foreground group-focus-within:text-foreground transition-colors" />
               <Input
                 type="text"
                 placeholder="What skill do you want to learn today?"
-                className="pl-11 h-11 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-foreground"
+                className="pl-12 h-14 w-full text-base bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-foreground"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button type="submit" size="lg" className="h-11 rounded-sm shadow-sm transition-transform active:scale-95">
-              Find Classes
+            <Button type="submit" size="lg" className="h-14 px-8 text-base rounded-md shadow-sm transition-transform active:scale-95">
+              Search
             </Button>
           </form>
 
@@ -225,11 +229,24 @@ export default function LandingPage() {
               </button>
             ))}
           </div>
-        </div>
+            
+            {/* Scroll Indicator */}
+            <div className="pt-12 md:pt-20 flex justify-center w-full relative z-20">
+              <button 
+                onClick={handleScrollToFeatures}
+                className="flex flex-col items-center justify-center text-graphite-ink/60 hover:text-nightshade-black transition-colors cursor-pointer"
+                aria-label="Scroll to featured classes"
+              >
+                <div className="p-2.5 rounded-full bg-bone-white/50 backdrop-blur-md border border-clay-shadow/30 animate-bounce shadow-sm">
+                  <ChevronDown className="h-5 w-5" />
+                </div>
+              </button>
+            </div>
+          </div>
       </HeroGeometric>
 
       {/* Featured Programs Section */}
-      <section className="py-20">
+      <section id="featured-programs" className="py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
             <div className="space-y-2">
@@ -240,18 +257,25 @@ export default function LandingPage() {
                 Reserve your spot in high-demand workshops starting this week.
               </p>
             </div>
-            <Link href="/programs">
-              <Button variant="outline" className="group rounded-[12px] border-clay-shadow text-graphite-ink">
-                Explore All Classes <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+
           </div>
 
           {/* Program Cards Grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredPrograms.map((prog) => (
-              <ProgramCard key={prog.id} program={prog} />
-            ))}
+          <div className="relative w-full">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 max-h-[580px] overflow-hidden">
+              {featuredPrograms.map((prog) => (
+                <ProgramCard key={prog.id} program={prog} />
+              ))}
+            </div>
+            
+            {/* Gradient Overlay & Explore Button */}
+            <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-linen-canvas via-linen-canvas/80 to-transparent flex flex-col items-center justify-end pb-4">
+              <Link href="/programs">
+                <Button size="lg" className="rounded-md shadow-lg h-14 px-8 text-base">
+                  Explore All Classes <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

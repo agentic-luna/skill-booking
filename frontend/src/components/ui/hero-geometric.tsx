@@ -23,7 +23,7 @@ export function HeroGeometric({
 }: HeroGeometricProps) {
     return (
         <div
-            className={cn("relative w-full min-h-[85vh] flex flex-col items-center bg-transparent text-foreground", className)}
+            className={cn("relative w-full min-h-[80vh] flex flex-col items-center bg-transparent text-foreground", className)}
             style={{ containerType: "size" }}
         >
             {/* Background Video */}
@@ -50,22 +50,17 @@ export function HeroGeometric({
                     
                     <div className="w-full max-w-[1200px] px-6 flex flex-col items-center relative">
                         
-                        {/* Introducing Badge */}
-                        <div className="inline-flex items-center space-x-2 bg-white/90 backdrop-blur-md text-iron-grey px-4 py-2 rounded-sm text-[12px] font-semibold border border-clay-shadow shadow-sm tracking-[0.444em] uppercase mb-8">
-                            <span>Introducing BookMySkill</span>
-                        </div>
-                        
                         {/* Headline */}
                         <div className="flex flex-col items-center text-center gap-2 md:gap-4 mb-8 md:mb-12">
                             {title1 && (
                                 <div className="overflow-hidden">
                                     <motion.h1
-                                        initial={{ y: "100%", opacity: 0 }}
-                                        animate={{ y: "0%", opacity: 1 }}
-                                        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-                                        className="text-[12cqi] md:text-[8cqi] lg:text-[6cqi] leading-[0.9] tracking-tighter text-graphite-ink"
+                                        initial={{ y: 20, opacity: 0, filter: "blur(10px)", scale: 0.95 }}
+                                        animate={{ y: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
+                                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                                        className="text-[12cqi] md:text-[8cqi] lg:text-[6cqi] leading-[0.9] tracking-tighter pb-4"
                                     >
-                                        <span className="font-serif italic font-light text-graphite-ink drop-shadow-sm">
+                                        <span className="font-serif italic font-light drop-shadow-md bg-clip-text text-transparent bg-gradient-to-br from-nightshade-black via-graphite-ink to-stone-grey/80">
                                             {title1}
                                         </span>
                                     </motion.h1>
@@ -76,7 +71,7 @@ export function HeroGeometric({
                                     <motion.h1
                                         initial={{ y: "100%", opacity: 0 }}
                                         animate={{ y: "0%", opacity: 1 }}
-                                        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.35 }}
+                                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                         className="text-[12cqi] md:text-[8cqi] lg:text-[6cqi] leading-[0.9] tracking-tighter font-bold text-nightshade-black drop-shadow-sm"
                                     >
                                         {title2}
@@ -91,7 +86,7 @@ export function HeroGeometric({
                                 <motion.p
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+                                    transition={{ duration: 0.5, ease: "easeOut" }}
                                     className="text-base md:text-[1.125rem] leading-relaxed text-charcoal-slate font-medium drop-shadow-sm"
                                 >
                                     {description}
@@ -104,7 +99,7 @@ export function HeroGeometric({
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
                                 className="w-full flex justify-center drop-shadow-sm"
                             >
                                 {children}
