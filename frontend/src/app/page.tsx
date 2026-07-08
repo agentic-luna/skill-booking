@@ -14,6 +14,7 @@ import ProgramCard from "@/components/common/ProgramCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MOCK_PROGRAMS } from "@/constants/mockData";
+import { HeroGeometric } from "@/components/ui/hero-geometric";
 
 interface StepItem {
   number: number;
@@ -186,59 +187,49 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-24 lg:py-32">
-        
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center space-x-2 bg-bone-white text-iron-grey px-4 py-2 rounded-[100px] text-[12px] font-medium border border-clay-shadow shadow-sm tracking-[0.444em] uppercase">
-              <span>Introducing BookMySkill</span>
+      <HeroGeometric
+        title1="Master New Skills."
+        description="Skip static videos. Book live masterclasses, interactive bootcamps, and certification training led by top-rated industry instructors."
+      >
+        <div className="w-full flex flex-col items-center space-y-6">
+          {/* Search Input Box */}
+          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2 w-full max-w-xl mx-auto bg-bone-white p-2 rounded shadow-lg border border-clay-shadow/50 relative z-20 group transition-all duration-300 ease-out hover:shadow-xl focus-within:shadow-xl focus-within:-translate-y-1 hover:-translate-y-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+              <Input
+                type="text"
+                placeholder="What skill do you want to learn today?"
+                className="pl-11 h-11 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-foreground"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-[52px] font-semibold tracking-tight text-graphite-ink leading-[1.1]">
-              Master New Skills in Live Interactive Sessions.
-            </h1>
-            <p className="text-charcoal-slate text-base sm:text-[18px] leading-relaxed max-w-2xl mx-auto">
-              Skip static videos. Book live masterclasses, interactive bootcamps, and certification training led by top-rated industry instructors.
-            </p>
+            <Button type="submit" size="lg" className="h-11 rounded-sm shadow-sm transition-transform active:scale-95">
+              Find Classes
+            </Button>
+          </form>
 
-            {/* Search Input Box */}
-            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto bg-bone-white p-2 rounded-[25px] shadow-sm border border-clay-shadow">
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="What skill do you want to learn today?"
-                  className="pl-11 h-11 w-full bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button type="submit" size="lg" className="h-11 rounded-xl">
-                Find Classes
-              </Button>
-            </form>
-
-            <div className="text-xs text-muted-foreground pt-1 flex items-center justify-center gap-2 flex-wrap">
-              <span>Popular Categories:</span>
-              {["React 19", "Sourdough", "HIIT Fit", "Street Photography"].map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery(item);
-                    router.push(`/programs?search=${encodeURIComponent(item)}`);
-                  }}
-                  className="bg-haze hover:bg-clay-shadow text-graphite-ink px-3 py-1.5 rounded-[12px] transition-colors"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+          <div className="text-xs text-graphite-ink/80 pt-1 flex items-center justify-center gap-2 flex-wrap relative z-20">
+            <span className="font-medium">Popular Categories:</span>
+            {["React 19", "Sourdough", "HIIT Fit", "Street Photography"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => {
+                  setSearchQuery(item);
+                  router.push(`/programs?search=${encodeURIComponent(item)}`);
+                }}
+                className="bg-bone-white/90 backdrop-blur hover:bg-white text-graphite-ink border border-clay-shadow/20 px-3 py-1.5 rounded-sm transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+              >
+                {item}
+              </button>
+            ))}
           </div>
         </div>
-      </section>
+      </HeroGeometric>
 
       {/* Featured Programs Section */}
-      <section className="py-20 border-t border-clay-shadow">
+      <section className="py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
             <div className="space-y-2">
@@ -352,7 +343,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 relative bg-linen-canvas/80 border-t border-clay-shadow/40 overflow-hidden">
+      <section className="py-20 relative bg-transparent border-t border-clay-shadow/40 overflow-hidden">
         {/* Abstract light glow */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,_rgba(168,156,138,0.15),transparent)] pointer-events-none" />
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-foreground relative z-10 space-y-6">

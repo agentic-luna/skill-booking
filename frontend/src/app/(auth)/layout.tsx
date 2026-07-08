@@ -16,9 +16,9 @@ export default function AuthLayout({
   }, []);
 
   return (
-    <div className="flex min-h-screen grid-cols-1 lg:grid-cols-12 overflow-hidden">
+    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-12 overflow-hidden bg-transparent">
       {/* Visual Banner - Hidden on mobile */}
-      <div className="hidden lg:flex lg:col-span-5 relative flex-col justify-between p-12 bg-linen-canvas border-r border-clay-shadow">
+      <div className="hidden lg:flex lg:col-span-5 relative flex-col justify-between p-12 bg-transparent border-r border-clay-shadow/20">
         {/* Dynamic Abstract Background Elements */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-clay-shadow/10 via-transparent to-transparent pointer-events-none" />
         
@@ -50,7 +50,7 @@ export default function AuthLayout({
       </div>
 
       {/* Main Authentication Flow Container */}
-      <div className="flex flex-col col-span-1 lg:col-span-7 justify-center px-4 sm:px-6 lg:px-8 py-12 bg-background relative">
+      <div className="flex flex-col col-span-1 lg:col-span-7 justify-center items-center px-4 sm:px-6 lg:px-8 py-12 bg-transparent relative">
         {/* Theme and Logo Header for Mobile */}
         <div className="absolute top-8 left-8 flex items-center justify-between w-full pr-16 lg:hidden">
           <Link href="/" className="flex items-center">
@@ -61,7 +61,7 @@ export default function AuthLayout({
         </div>
 
         {/* Auth Forms */}
-        <div className="mx-auto w-full max-w-[420px] transition-all">
+        <div className="w-full max-w-[420px] transition-all bg-bone-white p-8 rounded-2xl border border-clay-shadow/30 shadow-sm">
           {children}
         </div>
       </div>
