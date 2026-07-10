@@ -3,10 +3,14 @@ import { TestimonialCard } from "./TestimonialCard";
 import { testimonialsList } from "./testimonialsData";
 
 export default function TestimonialSection() {
+  // Duplicate cards for seamless infinite loop
+  const allCards = [...testimonialsList, ...testimonialsList];
+
   return (
-    <section className="py-20 bg-transparent border-t border-clay-shadow">
+    <section className="py-20 bg-transparent border-t border-clay-shadow overflow-hidden">
       <div className="space-y-12">
-        <div className="text-center max-w-xl mx-auto space-y-2">
+        {/* Header — constrained to page width */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-2">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Loved by Thousands of Learners
           </h2>
@@ -15,37 +19,34 @@ export default function TestimonialSection() {
           </p>
         </div>
 
-        {/* 
-          Correct infinite marquee pattern:
-          - ONE outer overflow-hidden container
-          - ONE inner flex row containing two copies of cards (original + duplicate)
-          - The animation slides the whole inner row left by 50%
-          - This creates a seamless loop
+        {/*
+          Single-row infinite marquee.
+          - ONE flex container with 2× the cards
+          - translateX(-50%) moves exactly one full set width → seamless loop
+          - px-3 on each card wrapper = equal 24px gap between all cards,
+            INCLUDING the gap at the loop boundary (last→first)
         */}
-        <div
-          className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)] py-4"
-          style={{ WebkitMaskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)" }}
-        >
-          <div className="flex animate-marquee hover:[animation-play-state:paused]">
-            {/* First copy */}
-            {testimonialsList.map((t, idx) => (
-              <div
-                key={`a-${idx}`}
-                className="flex-none w-[340px] px-3"
-              >
-                <TestimonialCard testimonial={t} />
-              </div>
-            ))}
-            {/* Duplicate for seamless loop */}
-            {testimonialsList.map((t, idx) => (
-              <div
-                key={`b-${idx}`}
-                className="flex-none w-[340px] px-3"
-                aria-hidden="true"
-              >
-                <TestimonialCard testimonial={t} />
-              </div>
-            ))}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div
+            className="relative py-4 overflow-hidden"
+            style={{
+              maskImage:
+                "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+              WebkitMaskImage:
+                "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+            }}
+          >
+            <div className="flex animate-marquee hover:[animation-play-state:paused]">
+              {allCards.map((t, idx) => (
+                <div
+                  key={idx}
+                  aria-hidden={idx >= testimonialsList.length ? "true" : undefined}
+                  className="flex-none w-[340px] px-3"
+                >
+                  <TestimonialCard testimonial={t} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
