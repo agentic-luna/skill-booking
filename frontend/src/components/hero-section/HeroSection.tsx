@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HeroGeometric } from "@/components/ui/hero-geometric";
+import AnimatedHeroText from "@/components/hero-section/AnimatedHeroText";
 
 export default function HeroSection() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function HeroSection() {
 
   return (
     <HeroGeometric
-      title1="Master New Skills."
+      titleComponent={<AnimatedHeroText />}
       description="Upskill with confidence. Book live, interactive training sessions and get hands-on guidance from proven industry experts."
     >
       <div className="w-full flex flex-col items-center space-y-6">

@@ -90,14 +90,14 @@ module.exports = {
         },
         marquee: {
           from: { transform: "translateX(0)" },
-          to: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(-50%)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-slow": "pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        marquee: "marquee 45s linear infinite",
+        marquee: "marquee 15s linear infinite",
       },
     },
   },

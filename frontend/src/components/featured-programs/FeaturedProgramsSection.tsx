@@ -5,7 +5,7 @@ import ProgramCard from "@/components/common/ProgramCard";
 import { MOCK_PROGRAMS } from "@/constants/mockData";
 
 export default function FeaturedProgramsSection() {
-  const featuredPrograms = MOCK_PROGRAMS.filter((p) => p.status === "approved").slice(0, 8);
+  const featuredPrograms = MOCK_PROGRAMS.filter((p) => p.status === "approved").slice(0, 4);
 
   return (
     <section id="featured-programs" className="py-20">
@@ -19,28 +19,25 @@ export default function FeaturedProgramsSection() {
               Reserve your spot in high-demand workshops starting this week.
             </p>
           </div>
+          
+          <Link href="/programs" className="group shrink-0">
+            <div className="flex items-center justify-center px-6 py-2.5 bg-bone-white border border-clay-shadow rounded-full shadow-sm transition-all duration-300 hover:shadow hover:bg-white hover:-translate-y-0.5">
+              <span className="text-sm font-semibold tracking-wide text-graphite-ink group-hover:text-nightshade-black transition-colors">
+                Explore All Classes
+              </span>
+              <div className="ml-2 rounded-full bg-charcoal-slate/5 p-1 group-hover:bg-charcoal-slate/10 transition-colors">
+                <ArrowRight className="h-4 w-4 text-graphite-ink group-hover:text-nightshade-black group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Program Cards Grid */}
-        <div className="relative w-full rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 max-h-[580px]">
+        <div className="w-full">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {featuredPrograms.map((prog) => (
               <ProgramCard key={prog.id} program={prog} />
             ))}
-          </div>
-
-          {/* Gradient Overlay & Explore Button */}
-          <div className="absolute bottom-0 left-0 w-full h-[320px] bg-gradient-to-t from-linen-canvas via-linen-canvas/95 to-transparent flex flex-col items-center justify-end pb-8">
-            <Link href="/programs" className="group">
-              <div className="relative flex items-center justify-center px-8 py-4 bg-bone-white/80 backdrop-blur-xl border border-clay-shadow/40 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:bg-white hover:-translate-y-1">
-                <span className="text-base font-semibold tracking-wide text-graphite-ink group-hover:text-nightshade-black transition-colors">
-                  Explore All Classes
-                </span>
-                <div className="ml-3 rounded-full bg-charcoal-slate/5 p-1.5 group-hover:bg-charcoal-slate/10 transition-colors">
-                  <ArrowRight className="h-4 w-4 text-graphite-ink group-hover:text-nightshade-black group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
-            </Link>
           </div>
         </div>
       </div>

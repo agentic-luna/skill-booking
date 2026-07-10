@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface HeroGeometricProps {
     title1?: string;
+    titleComponent?: React.ReactNode;
     title2?: string;
     description?: string;
     className?: string;
@@ -16,6 +17,7 @@ interface HeroGeometricProps {
 
 export function HeroGeometric({
     title1,
+    titleComponent,
     title2,
     description,
     className,
@@ -52,17 +54,19 @@ export function HeroGeometric({
                         
                         {/* Headline */}
                         <div className="flex flex-col items-center text-center gap-2 md:gap-4 mb-8 md:mb-12">
-                            {title1 && (
-                                <div className="overflow-hidden">
+                            {(title1 || titleComponent) && (
+                                <div className="overflow-visible">
                                     <motion.h1
                                         initial={{ y: 20, opacity: 0, filter: "blur(10px)", scale: 0.95 }}
                                         animate={{ y: 0, opacity: 1, filter: "blur(0px)", scale: 1 }}
                                         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                                        className="text-[12cqi] md:text-[8cqi] lg:text-[6cqi] leading-[0.9] tracking-tighter pb-4"
+                                        className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight tracking-tight pb-4 whitespace-nowrap"
                                     >
-                                        <span className="font-serif italic font-light drop-shadow-md bg-clip-text text-transparent bg-gradient-to-br from-nightshade-black via-graphite-ink to-stone-grey/80">
-                                            {title1}
-                                        </span>
+                                        {titleComponent ?? (
+                                            <span className="font-serif italic font-light drop-shadow-md text-nightshade-black">
+                                                {title1}
+                                            </span>
+                                        )}
                                     </motion.h1>
                                 </div>
                             )}

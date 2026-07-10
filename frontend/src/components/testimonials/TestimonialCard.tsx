@@ -4,7 +4,7 @@ import { TestimonialItem } from "./testimonialsData";
 
 export const TestimonialCard = ({ testimonial }: { testimonial: TestimonialItem }) => {
   return (
-    <div className="bg-bone-white p-6 rounded-[25px] border border-clay-shadow flex flex-col justify-between shadow-sm">
+    <div className="bg-bone-white p-6 rounded-2xl border border-clay-shadow flex flex-col justify-between shadow-sm h-full transition-all duration-300 hover:-translate-y-2 hover:shadow-md cursor-pointer">
       <p className="text-stone-grey text-xs leading-relaxed italic mb-6">
         &ldquo;{testimonial.text}&rdquo;
       </p>

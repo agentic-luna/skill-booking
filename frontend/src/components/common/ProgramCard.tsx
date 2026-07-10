@@ -11,7 +11,7 @@ interface ProgramCardProps {
 export default function ProgramCard({ program }: ProgramCardProps) {
   return (
     <div
-      className="group flex flex-col border border-clay-shadow rounded-md overflow-hidden bg-bone-white hover:border-nightshade-black transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
+      className="group flex flex-col border border-clay-shadow rounded-lg overflow-hidden bg-bone-white hover:border-nightshade-black transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
     >
       <div className="relative aspect-video w-full overflow-hidden =bg-haze">
         <img
