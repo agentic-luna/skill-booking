@@ -25,7 +25,7 @@ export function HeroGeometric({
 }: HeroGeometricProps) {
     return (
         <div
-            className={cn("relative w-full min-h-[80vh] flex flex-col items-center bg-transparent text-foreground", className)}
+            className={cn("relative w-full min-h-screen flex flex-col items-center bg-transparent text-foreground", className)}
             style={{ containerType: "size" }}
         >
             {/* Background Video */}
