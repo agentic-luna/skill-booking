@@ -6,6 +6,9 @@ import type {
   PlatformSetting, UpsertPlatformPayload,
   NotificationLogsResponse,
   BroadcastPayload, BroadcastResult,
+  PendingEvent, ApproveEventPayload, ApproveEventResult,
+  FinanceLedger, PayoutResult,
+  HostWithProfile, HostsResponse, KycReviewPayload, KycReviewResult
 } from "./types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -61,3 +64,34 @@ export const getNotificationLogs = (page = 1, limit = 20, status?: string) => {
 
 export const broadcastNotification = (payload: BroadcastPayload) =>
   request<ApiData<BroadcastResult>>("/admin/notifications/broadcast", { method: "POST", body: JSON.stringify(payload) }).then(r => r.data);
+
+// ── Admin Moderation ─────────────────────────────────────────────────────
+
+export const getEventQueue = () =>
+  request<ApiData<PendingEvent[]>>("/admin/events/queue").then(r => r.data);
+
+export const approveEvent = (eventId: string, payload: ApproveEventPayload) =>
+  request<ApiData<ApproveEventResult>>(`/admin/events/${eventId}/approve`, { method: "PUT", body: JSON.stringify(payload) }).then(r => r.data);
+
+// ── Admin Finance & Payouts ──────────────────────────────────────────────
+
+export const getFinanceLedger = () =>
+  request<ApiData<FinanceLedger>>("/admin/finance/ledger").then(r => r.data);
+
+export const payoutHost = (hostId: string) =>
+  request<ApiData<PayoutResult>>(`/admin/finance/payouts/${hostId}`, { method: "PUT" }).then(r => r.data);
+
+// ── Admin KYC Review ─────────────────────────────────────────────────────
+
+export const getAllHosts = (kycStatus?: string) => {
+  const params = new URLSearchParams();
+  if (kycStatus) params.set("kycStatus", kycStatus);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request<ApiData<HostsResponse>>(`/admin/hosts${query}`).then(r => r.data);
+};
+
+export const getPendingKycHosts = () =>
+  request<ApiData<HostsResponse>>("/admin/hosts/kyc/pending").then(r => r.data);
+
+export const reviewKyc = (hostProfileId: string, payload: KycReviewPayload) =>
+  request<ApiData<KycReviewResult>>(`/admin/hosts/${hostProfileId}/kyc`, { method: "PUT", body: JSON.stringify(payload) }).then(r => r.data);
