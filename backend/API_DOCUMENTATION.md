@@ -33,7 +33,46 @@ All API responses follow a unified response structure.
 
 ---
 
-## 2. Entity Schemas
+## 2. System Health Check
+
+### `GET /api/v1/health`
+
+Comprehensive health check endpoint reporting database connectivity, process memory, system resources, and server uptime. No authentication required.
+
+**Response Fields:**
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `status` | `UP` \| `DEGRADED` | Overall system status |
+| `timestamp` | DateTime | ISO 8601 response timestamp |
+| `responseTimeMs` | Integer | Time taken to generate the health response |
+| `server.uptime` | Number | Process uptime in seconds |
+| `server.uptimeFormatted` | String | Human-readable uptime (e.g. `1h 30m 5s`) |
+| `server.nodeVersion` | String | Node.js runtime version |
+| `server.pid` | Integer | Process ID |
+| `server.environment` | String | Current `NODE_ENV` value |
+| `database.status` | `UP` \| `DOWN` | PostgreSQL connection status |
+| `database.latencyMs` | Integer | DB ping latency in milliseconds |
+| `database.error` | String (nullable) | Error message if DB is down |
+| `memory.process.rss` | String | Resident Set Size (e.g. `128.50 MB`) |
+| `memory.process.heapTotal` | String | Total V8 heap allocated |
+| `memory.process.heapUsed` | String | V8 heap currently in use |
+| `memory.process.external` | String | Memory used by C++ objects bound to JS |
+| `memory.system.total` | String | Total system RAM |
+| `memory.system.free` | String | Available system RAM |
+| `memory.system.used` | String | Used system RAM |
+| `memory.system.usagePercent` | String | RAM usage percentage (e.g. `71.9%`) |
+| `system.platform` | String | OS platform (e.g. `linux`, `darwin`) |
+| `system.arch` | String | CPU architecture (e.g. `x64`, `arm64`) |
+| `system.hostname` | String | Machine hostname |
+| `system.cpuCores` | Integer | Number of CPU cores |
+| `system.loadAverage` | String[] | 1, 5, 15 minute load averages |
+
+**Response Codes:** `200` — All systems UP, `503` — System DEGRADED (database down)
+
+---
+
+## 3. Entity Schemas
 
 ### User Entity
 | Field | Type | Description |
@@ -85,7 +124,7 @@ All API responses follow a unified response structure.
 
 ---
 
-## 3. Authentication & User Profile API
+## 4. Authentication & User Profile API
 
 ### 1. Request OTP Code
 `POST /api/v1/auth/otp/send`
@@ -220,7 +259,7 @@ All API responses follow a unified response structure.
 
 ---
 
-## 4. Host Management & KYC API
+## 5. Host Management & KYC API
 
 ### 1. Submit Host KYC
 `POST /api/v1/hosts/kyc` *(Requires Bearer Header - HOST)*
@@ -255,7 +294,7 @@ All API responses follow a unified response structure.
 
 ---
 
-## 5. Event Discovery & Booking API
+## 6. Event Discovery & Booking API
 
 ### 1. Create Host Event
 `POST /api/v1/hosts/events` *(Requires Bearer Header - Approved HOST)*
@@ -302,7 +341,7 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ---
 
-## 6. Wishlist & Event Likes API
+## 7. Wishlist & Event Likes API
 
 ### 1. Add Event to Wishlist
 `POST /api/v1/wishlist` *(Requires Bearer Header - Policy: `client:wishlist_manage`)*
@@ -328,7 +367,7 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ---
 
-## 7. Reviews & Ratings API
+## 8. Reviews & Ratings API
 
 ### 1. Submit Event Review
 `POST /api/v1/reviews` *(Requires Bearer Header - CLIENT with confirmed booking)*
@@ -348,7 +387,7 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ---
 
-## 7. User Notifications API
+## 9. User Notifications API
 
 ### 1. Get Notification Inbox
 `GET /api/v1/notifications` *(Requires Bearer Header)*
@@ -358,7 +397,7 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ---
 
-## 8. Webhook Integrations API
+## 10. Webhook Integrations API
 
 ### Razorpay Webhook Callback
 `POST /api/v1/webhooks/razorpay`
@@ -383,7 +422,7 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ---
 
-## 9. Admin Controls & Finance API
+## 11. Admin Controls & Finance API
 
 ### 1. Get Event Moderation Queue
 `GET /api/v1/admin/events/queue` *(Requires Bearer Header - SUPERADMIN)*

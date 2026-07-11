@@ -1,0 +1,42 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: backend
+
+    restart: unless-stopped
+
+    ports:
+      - "4000:4000"
+
+    env_file:
+      - ./backend/.env.docker
+
+    depends_on:
+      redis:
+        condition: service_started
+
+    networks:
+      - backend-network
+
+  redis:
+    image: redis:7-alpine
+
+    container_name: redis
+
+    restart: unless-stopped
+
+    volumes:
+      - redis-data:/data
+
+    networks:
+      - backend-network
+
+volumes:
+  redis-data:
+
+networks:
+  backend-network:
+    driver: bridge

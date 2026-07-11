@@ -70,51 +70,107 @@ export default function AuthLayout({
   }, []);
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: authStyles }} />
+    <div className="flex min-h-screen overflow-hidden">
 
-      {/* ── MOBILE layout (single column) ─────────────────────── */}
-      <div className="lg:hidden relative min-h-screen bg-transparent overflow-hidden">
-        {/* Mobile logo */}
-        <div className="absolute top-8 left-8 z-10">
-          <Link href="/" className="flex items-center">
-            <span className="text-lg font-bold tracking-tight text-graphite-ink">
-              BookMy<span className="text-nightshade-black">Skill</span>
-            </span>
-          </Link>
+      {/* ── Left Brand Panel ── */}
+      <div className="hidden lg:flex lg:w-[55%] relative flex-col justify-between p-14 overflow-hidden bg-gradient-to-br from-[#6b3a2a] via-[#8b5230] to-[#c47c5a]">
+
+        {/* Decorative blobs */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-20 blur-3xl bg-[#fdf6f0]" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-15 blur-2xl bg-[#3d1f12]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-10 blur-2xl bg-[#e8d5c0]" />
+
+        {/* Logo */}
+        <Link
+          href="/"
+          className="relative z-10 flex items-center gap-2.5 hover:opacity-90 transition-opacity"
+        >
+          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20l-7-3-7 3V2z" />
+            </svg>
+          </div>
+          <span className="text-xl font-bold tracking-tight text-white">
+            BookMy<span className="opacity-75">Skill</span>
+          </span>
+        </Link>
+
+        {/* Hero copy */}
+        <div className="relative z-10 space-y-6 max-w-md">
+          <p className="text-sm font-semibold tracking-widest text-white/60 uppercase">
+            Learn · Grow · Excel
+          </p>
+          <h1 className="text-5xl font-extrabold leading-[1.1] text-white">
+            Hey,&nbsp;Hello!
+          </h1>
+          <p className="text-lg font-medium text-white/80">
+            Join The Waitlist For The Skill Marketplace!
+          </p>
+          <p className="text-sm text-white/60 leading-relaxed">
+            We provide all the advantages that can simplify your learning
+            journey without any further requirements — connecting eager learners
+            with certified instructors, instantly.
+          </p>
+
+          {/* Stats row */}
+          <div className="flex gap-8 pt-4">
+            {[
+              { value: "12k+", label: "Learners" },
+              { value: "800+", label: "Instructors" },
+              { value: "4.9★", label: "Rating" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-2xl font-bold text-white">{s.value}</p>
+                <p className="text-xs text-white/60">{s.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        {/* Form pinned to bottom */}
-        <div className="flex flex-col min-h-screen justify-end">
-          <div
-            className={`${initialLoad ? "carpet-unroll-animate" : ""} w-full bg-bone-white px-6 pt-8 pb-16 rounded-t-2xl border border-b-0 border-clay-shadow/30 shadow-[0_-4px_24px_0_rgba(0,0,0,0.08)] min-h-[78vh] flex flex-col`}
-          >
-            {children}
+
+        {/* Footer */}
+        <div className="relative z-10 text-xs text-white/40 flex justify-between">
+          <span>© {new Date().getFullYear()} BookMySkill Inc.</span>
+          <div className="space-x-3">
+            <a href="#" className="hover:text-white/70 transition-colors">
+              Privacy Policy
+            </a>
+            <a href="#" className="hover:text-white/70 transition-colors">
+              Terms
+            </a>
           </div>
         </div>
       </div>
 
-      {/* ── DESKTOP layout (dual sliding panels) ───────────────── */}
-      <div className="hidden lg:block relative min-h-screen overflow-hidden bg-transparent">
+      {/* ── Right Auth Panel ── */}
+      <div className="flex flex-1 items-center justify-center px-4 sm:px-8 py-12 relative bg-gradient-to-br from-linen-canvas to-haze">
 
-        {/* ── Banner Panel ───────────────────────────────────── */}
-        <div
-          className="auth-panel absolute top-0 bottom-0 flex flex-col justify-between p-12 bg-transparent"
-          style={{
-            width: BANNER_W,
-            left: isRegister ? BANNER_LEFT_REGISTER : BANNER_LEFT_LOGIN,
-            borderRight: isRegister ? undefined : "1px solid rgba(0,0,0,0.07)",
-            borderLeft:  isRegister ? "1px solid rgba(0,0,0,0.07)" : undefined,
-          }}
-        >
-          {/* Radial glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-clay-shadow/10 via-transparent to-transparent pointer-events-none" />
-
-          {/* Logo */}
-          <Link
-            href="/"
-            className="banner-animate-logo relative z-10 flex items-center hover:opacity-90 transition-opacity"
-          >
-            <span className="text-xl font-bold tracking-tight text-graphite-ink">
+        {/* Mobile logo */}
+        <div className="absolute top-8 left-8 lg:hidden">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-nightshade-black">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-4 h-4"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20l-7-3-7 3V2z" />
+              </svg>
+            </div>
+            <span className="text-lg font-bold tracking-tight text-graphite-ink">
               BookMy<span className="text-nightshade-black">Skill</span>
             </span>
           </Link>
@@ -145,22 +201,12 @@ export default function AuthLayout({
           </div>
         </div>
 
-        {/* ── Form Panel ─────────────────────────────────────── */}
-        <div
-          className="auth-panel absolute top-0 bottom-0 flex flex-col justify-end items-center pb-0"
-          style={{
-            width: FORM_W,
-            left: isRegister ? FORM_LEFT_REGISTER : FORM_LEFT_LOGIN,
-          }}
-        >
-          {/* Form card */}
-          <div
-            className={`${initialLoad ? "carpet-unroll-animate" : ""} w-full max-w-[420px] bg-bone-white px-8 pt-8 pb-16 rounded-t-2xl border border-b-0 border-clay-shadow/30 shadow-[0_-4px_24px_0_rgba(0,0,0,0.08)] min-h-[78vh] flex flex-col`}
-          >
-            {children}
-          </div>
+        {/* White card */}
+        <div className="w-full max-w-[440px] rounded-3xl bg-white shadow-2xl shadow-[#6b3a2a]/10 p-8 sm:p-10">
+          {children}
         </div>
       </div>
-    </>
+
+    </div>
   );
 }
