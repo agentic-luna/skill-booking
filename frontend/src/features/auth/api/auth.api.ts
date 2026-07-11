@@ -89,10 +89,11 @@ export async function forgotPasswordVerifyOtp(
   identifier: string,
   otp: string
 ): Promise<ForgotPasswordVerifyResponse> {
-  return request<ForgotPasswordVerifyResponse>(
+  const res: ForgotPasswordVerifyResponse = await request<ForgotPasswordVerifyResponse>(
     "/auth/forgot-password/verify-otp",
     { method: "POST", body: JSON.stringify({ identifier, otp }) }
   );
+  return res;
 }
 
 /** POST /auth/forgot-password/reset */
@@ -100,6 +101,8 @@ export async function resetPassword(
   resetToken: string,
   newPassword: string
 ): Promise<ResetPasswordResponse> {
+
+  console.log(resetToken, "Hello ");
   return request<ResetPasswordResponse>("/auth/forgot-password/reset", {
     method: "POST",
     body: JSON.stringify({ resetToken, newPassword }),

@@ -42,10 +42,12 @@ export interface ForgotPasswordSendResponse {
 }
 
 export interface ForgotPasswordVerifyResponse {
-  success: boolean;
-  message: string;
-  resetToken: string;
-  expiresInSeconds: number;
+  data : {
+    success: boolean;
+    message: string;
+    resetToken: string;
+    expiresInSeconds: number;
+  };
 }
 
 export interface ResetPasswordResponse {

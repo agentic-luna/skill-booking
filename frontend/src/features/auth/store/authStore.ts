@@ -144,7 +144,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const res = await authApi.forgotPasswordVerifyOtp(identifier, otp);
       set({ isLoading: false });
-      return res.resetToken;
+
+      console.log(res.data.resetToken, "FROM OTP ");
+      return res.data.resetToken;
+
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;
@@ -155,6 +158,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await authApi.resetPassword(resetToken, newPassword);
+      console.log(resetToken + "DEBUG mode is ON");
       set({ isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
