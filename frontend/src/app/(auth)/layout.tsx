@@ -1,17 +1,72 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { initAuth } from "@/features/auth/store/authStore";
+
+const authStyles = `
+  /* ── Carpet-roll reveal (initial load only) ─────────────────── */
+  @keyframes carpet-unroll {
+    0%   { clip-path: inset(100% 0 0 0); transform: translateY(60px) scaleY(0.85); opacity: 0; }
+    30%  { opacity: 1; }
+    60%  { transform: translateY(-6px) scaleY(1.01); }
+    80%  { clip-path: inset(0% 0 0 0); transform: translateY(3px) scaleY(0.99); }
+    100% { clip-path: inset(0% 0 0 0); transform: translateY(0) scaleY(1); opacity: 1; }
+  }
+  .carpet-unroll-animate {
+    animation: carpet-unroll 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    transform-origin: bottom center;
+  }
+
+  /* ── Banner staggered fade-up (initial load) ─────────────────── */
+  @keyframes banner-fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .banner-animate-logo   { animation: banner-fade-up 0.6s ease 0.10s forwards; opacity: 0; }
+  .banner-animate-copy   { animation: banner-fade-up 0.7s ease 0.25s forwards; opacity: 0; }
+  .banner-animate-footer { animation: banner-fade-up 0.6s ease 0.40s forwards; opacity: 0; }
+
+  /* ── Panel slide transition ──────────────────────────────────── */
+  .auth-panel {
+    transition: left 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.65s ease;
+  }
+
+  /* ── Content fade when panel swaps side ─────────────────────── */
+  @keyframes content-pop-in {
+    from { opacity: 0; transform: scale(0.97) translateY(8px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+  }
+  .content-pop-in {
+    animation: content-pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  }
+`;
+
+// 5/12 and 7/12 expressed as percentages
+const BANNER_W = "41.6667%";   // 5 cols
+const FORM_W   = "58.3333%";   // 7 cols
+const BANNER_LEFT_LOGIN    = "0%";
+const BANNER_LEFT_REGISTER = FORM_W;        // slides to right
+const FORM_LEFT_LOGIN      = BANNER_W;      // sits at right
+const FORM_LEFT_REGISTER   = "0%";          // slides to left
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Rehydrate auth session client-side
+  useEffect(() => { initAuth(); }, []);
+
+  const pathname = usePathname();
+  const isRegister = pathname?.includes("/register") ?? false;
+
+  // Only play the carpet-roll animation on the very first mount
+  const [initialLoad, setInitialLoad] = useState(true);
   useEffect(() => {
-    initAuth();
+    const t = setTimeout(() => setInitialLoad(false), 1100);
+    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -119,6 +174,31 @@ export default function AuthLayout({
               BookMy<span className="text-nightshade-black">Skill</span>
             </span>
           </Link>
+
+          {/* Copy */}
+          <div
+            className="banner-animate-copy relative z-10 space-y-6 my-auto max-w-md"
+          >
+            <h1 className="text-4xl font-extrabold tracking-tight text-graphite-ink leading-[1.15]">
+              Unlock Your{" "}
+              <span className="text-nightshade-black">Potential</span> with
+              Expert Training.
+            </h1>
+            <p className="text-stone-grey text-base leading-relaxed">
+              Join a global marketplace connecting eager learners with certified
+              hosts. Streamlined bookings, dynamic scheduling, and interactive
+              analytics all in one place.
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="banner-animate-footer relative z-10 text-xs text-stone-grey flex justify-between">
+            <span>&copy; {new Date().getFullYear()} BookMySkill Inc.</span>
+            <div className="space-x-3">
+              <a href="#" className="hover:underline">Privacy Policy</a>
+              <a href="#" className="hover:underline">Terms</a>
+            </div>
+          </div>
         </div>
 
         {/* White card */}

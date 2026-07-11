@@ -49,7 +49,7 @@ export default function Navbar() {
 
           {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/programs" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/programs" className="text-sm font-medium text-foreground hover:text-black transition-colors">
               Explore Skills
             </Link>
 
@@ -154,7 +154,7 @@ export default function Navbar() {
             <Link
               href="/programs"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5"
+              className="text-sm font-medium text-foreground hover:text-black py-1.5"
             >
               Explore Skills
             </Link>

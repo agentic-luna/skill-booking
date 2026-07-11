@@ -11,15 +11,15 @@ interface ProgramCardProps {
 export default function ProgramCard({ program }: ProgramCardProps) {
   return (
     <div
-      className="group flex flex-col border border-clay-shadow rounded-[25px] overflow-hidden bg-bone-white hover:border-nightshade-black transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
+      className="group flex flex-col border border-clay-shadow rounded-lg overflow-hidden bg-bone-white hover:border-nightshade-black transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
     >
-      <div className="relative aspect-video w-full overflow-hidden bg-haze">
+      <div className="relative aspect-video w-full overflow-hidden =bg-haze">
         <img
           src={program.imageUrl}
           alt={program.title}
           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute top-3 left-3 bg-nightshade-black/60 backdrop-blur-md text-bone-white text-xs px-2.5 py-1 rounded-[8px] font-semibold capitalize">
+        <div className="absolute top-3 left-3 bg-nightshade-black/60 backdrop-blur-md text-bone-white text-xs px-2.5 py-1 rounded-sm font-semibold capitalize">
           {program.category}
         </div>
       </div>
