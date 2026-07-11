@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { 
   Star, Clock, MapPin, Calendar, Heart, Share2, ShieldCheck, 
-  CheckCircle2, CreditCard, ChevronLeft, Ticket, Loader2 
+  CheckCircle2, CreditCard, ChevronLeft, Ticket, Loader2, MessageSquare
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, 
   DialogHeader, DialogTitle 
 } from "@/components/ui/dialog";
-import { Program, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useClientStore } from "@/features/client/store/clientStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 // Zod schema for card payment validation
@@ -36,25 +36,35 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 interface ProgramDetailsProps {
   programId: string;
-  initialProgram: Program | undefined;
 }
 
-export default function ProgramDetailsContent({ programId, initialProgram }: ProgramDetailsProps) {
+export default function ProgramDetailsContent({ programId }: ProgramDetailsProps) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
-  const [program, setProgram] = useState<Program | undefined>(initialProgram);
+  const showAlert = useAlertStore((s) => s.showAlert);
+  const { isAuthenticated } = useAuthStore();
+  const {
+    wishlist,
+    reviews,
+    addToWishlist,
+    removeFromWishlist,
+    checkoutBooking,
+    confirmPayment,
+    fetchReviews,
+    fetchEventDetails,
+    fetchWishlist
+  } = useClientStore();
 
-  // States
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [event, setEvent] = useState<any>(null);
+  const [eventLoading, setEventLoading] = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [spotsCount, setSpotsCount] = useState(1);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [confirmedBookingId, setConfirmedBookingId] = useState("");
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -66,7 +76,34 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     },
   });
 
-  if (!program) {
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const details = await fetchEventDetails(programId);
+        setEvent(details);
+        await fetchReviews(programId);
+        if (isAuthenticated) {
+          await fetchWishlist();
+        }
+      } catch (err: any) {
+        showAlert("Error Loading Event", err.message || "Failed to retrieve workshop details.", "destructive");
+      } finally {
+        setEventLoading(false);
+      }
+    }
+    loadData();
+  }, [programId, fetchEventDetails, fetchReviews, fetchWishlist, isAuthenticated]);
+
+  if (eventLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <span className="text-xs text-muted-foreground mt-2">Loading workshop specs...</span>
+      </div>
+    );
+  }
+
+  if (!event) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
         <h3 className="text-xl font-bold text-foreground">Program Not Found</h3>
@@ -80,7 +117,12 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     );
   }
 
-  const showAlert = useAlertStore((s) => s.showAlert);
+  const isWishlisted = wishlist.some((w) => w.eventId === event.id);
+  const price = Number(event.venueDetails?.price || 0);
+  const formattedDate = new Date(event.startTime).toLocaleDateString();
+  const formattedTime = new Date(event.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const location = event.mode === "ONLINE" ? "Online Stream Room" : event.venueDetails?.address || "Physical Venue";
+  const instructorName = event.host?.user ? `${event.host.user.firstName} ${event.host.user.lastName}` : "Platform Coach";
 
   const handleBookClick = () => {
     if (!isAuthenticated) {
@@ -90,43 +132,50 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     setCheckoutOpen(true);
   };
 
-  const handleWishlistToggle = () => {
-    setIsWishlisted(!isWishlisted);
-    showAlert(
-      isWishlisted ? "Removed from Wishlist" : "Added to Wishlist",
-      isWishlisted ? "The workshop has been removed from your saved list." : "The workshop has been added to your saved list successfully.",
-      isWishlisted ? "info" : "success"
-    );
+  const handleWishlistToggle = async () => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/programs/${programId}`);
+      return;
+    }
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(event.id);
+        showAlert("Removed from Wishlist", "Workshop removed from your saved list.", "info");
+      } else {
+        await addToWishlist(event.id);
+        showAlert("Added to Wishlist", "Workshop added to your saved list.", "success");
+      }
+    } catch (err: any) {
+      showAlert("Wishlist Error", err.message || "Failed to update wishlist.", "destructive");
+    }
   };
 
   const onCheckoutSubmit = async (data: CheckoutFormValues) => {
     setPaymentLoading(true);
-    // Simulate payment authorization
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setPaymentLoading(false);
-    
-    // Add to mock bookings roster
-    const newBooking: Booking = {
-      id: `bk_${Math.random().toString(36).substr(2, 9)}`,
-      programId: program.id,
-      programTitle: program.title,
-      programImage: program.imageUrl,
-      bookingDate: new Date().toISOString().split("T")[0],
-      amountPaid: program.price * spotsCount,
-      status: "confirmed",
-      spotsBooked: spotsCount,
-      date: program.date,
-      time: program.time,
-      location: program.location,
-      hostName: program.instructorName,
-    };
-
-    MOCK_BOOKINGS.unshift(newBooking);
-
-    // Update remaining spots count locally
-    setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
-
-    setPaymentSuccess(true);
+    try {
+      // 1. Lock tickets & setup payment order
+      const order = await checkoutBooking({
+        eventId: event.id,
+        seatCount: spotsCount
+      });
+      // 2. Directly confirm booking payment without gateway redirect
+      const confirm = await confirmPayment(order.booking.id, {
+        paymentMethod: "CARD"
+      });
+      if (confirm.success) {
+        setConfirmedBookingId(order.booking.id);
+        setPaymentSuccess(true);
+        // Refresh event details
+        const updated = await fetchEventDetails(programId);
+        setEvent(updated);
+      } else {
+        showAlert("Payment Failed", "Ticket reservation payment failed. Check your card credentials.", "destructive");
+      }
+    } catch (err: any) {
+      showAlert("Checkout Error", err.message || "Failed to complete ticket lock checkout.", "destructive");
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   const handleShareClick = () => {
@@ -155,19 +204,19 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
             
             {/* Header info */}
             <div className="space-y-3">
-              <span className="inline-block text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full capitalize">
-                {program.category}
+              <span className="inline-block text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full uppercase">
+                {event.mode} CLASS
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
-                {program.title}
+                {event.title}
               </h1>
             </div>
 
             {/* Core Banner Image */}
             <div className="aspect-video w-full rounded-2xl overflow-hidden bg-muted border">
               <img
-                src={program.imageUrl}
-                alt={program.title}
+                src={event.posterUrl || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600"}
+                alt={event.title}
                 className="object-cover w-full h-full animate-in fade-in duration-300"
               />
             </div>
@@ -176,13 +225,12 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
             <div className="space-y-3">
               <h2 className="text-lg font-bold text-foreground">Workshop Details</h2>
               <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
-                {program.description}
+                {event.description || "In this hands-on workshop, you will learn standard principles from verified coaches. Gain practical skill training and level up your skills."}
               </p>
             </div>
 
-            {/* Large Highlighted Key Details */}
+            {/* Highlighted Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
-              {/* Rating Spec */}
               <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">
                 <CardContent className="p-5 flex items-center space-x-4">
                   <div className="bg-amber-500/10 text-amber-500 p-3.5 rounded-xl shrink-0">
@@ -190,17 +238,16 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   </div>
                   <div>
                     <div className="text-2xl font-black text-foreground leading-none flex items-baseline space-x-1">
-                      <span>{program.rating}</span>
+                      <span>4.8</span>
                       <span className="text-[10px] font-bold text-muted-foreground">/ 5.0</span>
                     </div>
                     <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wide">
-                      {program.reviewsCount} Verified Roster Reviews
+                      {reviews.length} Verified Student Reviews
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Location Spec */}
               <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">
                 <CardContent className="p-5 flex items-center space-x-4">
                   <div className="bg-primary/10 text-primary p-3.5 rounded-xl shrink-0">
@@ -208,8 +255,8 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Class Venue</div>
-                    <div className="text-xs font-extrabold text-foreground mt-1 leading-snug break-words line-clamp-2" title={program.location}>
-                      {program.location}
+                    <div className="text-xs font-extrabold text-foreground mt-1 leading-snug break-words line-clamp-2" title={location}>
+                      {location}
                     </div>
                   </div>
                 </CardContent>
@@ -223,27 +270,63 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               <h2 className="text-lg font-bold text-foreground">Meet Your Instructor</h2>
               <Card className="rounded-xl border-border/40 overflow-hidden bg-card/50">
                 <CardContent className="p-6 flex items-start space-x-4">
-                  <img
-                    src={program.instructorAvatar}
-                    alt={program.instructorName}
-                    className="h-14 w-14 rounded-full object-cover ring-2 ring-primary/20 shrink-0"
-                  />
+                  <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary shrink-0 ring-2 ring-primary/20">
+                    {instructorName.slice(0, 2).toUpperCase()}
+                  </div>
                   <div className="space-y-2">
                     <div>
-                      <h3 className="font-bold text-sm text-foreground">{program.instructorName}</h3>
-                      <span className="text-[10px] text-muted-foreground">Certified Masterclass Coach</span>
+                      <h3 className="font-bold text-sm text-foreground">{instructorName}</h3>
+                      <span className="text-[10px] text-muted-foreground">Certified Skill Coach</span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Sarah is a seasoned educational director with over 10 years of experience launching immersive programs. She focuses on hands-on practical teaching setups.
+                      {event.host?.bio || "An experienced educator dedicated to conducting practical skill workshops and delivering premium student learning resources."}
                     </p>
-                    <div className="flex items-center space-x-3 text-xs text-primary font-semibold">
-                      <span>4.9★ Coach Rating</span>
-                      <span>•</span>
-                      <span>500+ Students Taught</span>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            <Separator />
+
+            {/* Reviews list log */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-1.5">
+                <MessageSquare className="h-5 w-5 text-primary" /> Verified Learner Reviews
+              </h2>
+              {reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((rev) => (
+                    <Card key={rev.id} className="rounded-xl border-border/30 bg-card">
+                      <CardContent className="p-4 space-y-2.5">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-2">
+                            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[10px] font-bold text-primary">
+                              {rev.user ? `${rev.user.firstName[0]}${rev.user.lastName[0]}`.toUpperCase() : "SL"}
+                            </div>
+                            <span className="text-xs font-semibold text-foreground">
+                              {rev.user ? `${rev.user.firstName} ${rev.user.lastName}` : "Student Learner"}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-3 w-3 ${i < rev.rating ? "fill-amber-400 text-amber-400" : "text-muted"}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{rev.comment || "Great practical workshop! Learned a lot from the coach."}</p>
+                        <span className="text-[9px] text-muted-foreground/60 block">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 border border-dashed rounded-xl text-xs text-muted-foreground bg-muted/10">
+                  No student reviews posted for this workshop. Be the first to leave a feedback!
+                </div>
+              )}
             </div>
 
           </div>
@@ -255,13 +338,13 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               <div className="flex justify-between items-end border-b pb-4">
                 <div>
                   <span className="text-xs text-muted-foreground">Registration Fee</span>
-                  <div className="text-2xl font-extrabold text-foreground">${program.price}</div>
+                  <div className="text-2xl font-extrabold text-foreground">${price}</div>
                 </div>
                 <div className="text-right">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
-                    program.spotsLeft <= 5 ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-600"
+                    event.availableSeats <= 5 ? "bg-destructive/10 text-destructive" : "bg-emerald-500/10 text-emerald-600"
                   }`}>
-                    {program.spotsLeft === 0 ? "Fully Booked" : `${program.spotsLeft} spots left`}
+                    {event.availableSeats === 0 ? "Fully Booked" : `${event.availableSeats} spots left`}
                   </span>
                 </div>
               </div>
@@ -272,28 +355,28 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   <Calendar className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Date</div>
-                    <div>{program.date}</div>
+                    <div>{formattedDate}</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
                   <div>
-                    <div className="font-bold text-foreground">Schedule Time & Duration</div>
-                    <div>{program.time} • <span className="font-semibold text-foreground">{program.duration}</span></div>
+                    <div className="font-bold text-foreground">Schedule Time</div>
+                    <div>{formattedTime}</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <Ticket className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Total Capacity</div>
-                    <div>{program.maxSpots} seats cap ({program.spotsLeft} available)</div>
+                    <div>{event.totalSeats} seats cap ({event.availableSeats} available)</div>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Location Venue</div>
-                    <div className="text-foreground leading-relaxed break-words">{program.location}</div>
+                    <div className="text-foreground leading-relaxed break-words">{location}</div>
                   </div>
                 </div>
               </div>
@@ -302,16 +385,16 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               <div className="space-y-2 pt-2">
                 <Button 
                   className="w-full rounded-xl py-6 text-sm font-semibold shadow-md shadow-primary/10"
-                  disabled={program.spotsLeft === 0}
+                  disabled={event.availableSeats === 0}
                   onClick={handleBookClick}
                 >
-                  {program.spotsLeft === 0 ? "Registration Closed" : "Book Spot Now"}
+                  {event.availableSeats === 0 ? "Registration Closed" : "Book Spot Now"}
                 </Button>
                 
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" className="rounded-xl h-10 text-xs" onClick={handleWishlistToggle}>
                     <Heart className={`mr-1.5 h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} /> 
-                    {isWishlisted ? "Wishlisted" : "Wishlist"}
+                    {isWishlisted ? "Saved" : "Save Workshop"}
                   </Button>
                   <Button variant="outline" className="rounded-xl h-10 text-xs" onClick={handleShareClick}>
                     <Share2 className="mr-1.5 h-4 w-4" /> Share Event
@@ -338,7 +421,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
           <DialogHeader>
             <DialogTitle>Register for Workshop</DialogTitle>
             <DialogDescription>
-              Complete registration for: <span className="font-bold text-foreground">{program.title}</span>
+              Complete registration for: <span className="font-bold text-foreground">{event.title}</span>
             </DialogDescription>
           </DialogHeader>
 
@@ -356,9 +439,10 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               </div>
               
               <div className="bg-muted/50 p-4 rounded-xl text-left border text-xs space-y-2 max-w-sm mx-auto">
-                <div className="flex justify-between"><span className="text-muted-foreground">Class:</span> <span className="font-semibold text-foreground line-clamp-1">{program.title}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Class:</span> <span className="font-semibold text-foreground line-clamp-1">{event.title}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Seats:</span> <span className="font-semibold text-foreground">{spotsCount} Spot(s)</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Amount Paid:</span> <span className="font-bold text-foreground">${program.price * spotsCount}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Amount Paid:</span> <span className="font-bold text-foreground">${price * spotsCount}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Booking ID:</span> <span className="font-mono text-muted-foreground">{confirmedBookingId.slice(0, 10)}</span></div>
               </div>
 
               <div className="pt-4 flex gap-2">
@@ -386,7 +470,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   <Ticket className="h-5 w-5 text-primary" />
                   <div className="text-xs">
                     <div className="font-bold text-foreground">Select Spots</div>
-                    <div className="text-muted-foreground">${program.price} per ticket</div>
+                    <div className="text-muted-foreground">${price} per ticket</div>
                   </div>
                 </div>
                 
@@ -403,9 +487,9 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   <span className="font-bold text-sm text-foreground w-4 text-center">{spotsCount}</span>
                   <button
                     type="button"
-                    onClick={() => setSpotsCount(prev => Math.min(program.spotsLeft, prev + 1))}
+                    onClick={() => setSpotsCount(prev => Math.min(event.availableSeats, prev + 1))}
                     className="w-7 h-7 bg-card rounded-md border flex items-center justify-center font-bold text-sm text-foreground active:scale-95 transition-transform"
-                    disabled={spotsCount === program.spotsLeft}
+                    disabled={spotsCount === event.availableSeats}
                   >
                     +
                   </button>
@@ -415,7 +499,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               {/* Subtotal calculation */}
               <div className="flex justify-between items-center text-xs font-semibold px-1">
                 <span className="text-muted-foreground">Subtotal ({spotsCount} tickets)</span>
-                <span className="text-foreground text-sm font-extrabold">${program.price * spotsCount}</span>
+                <span className="text-foreground text-sm font-extrabold">${price * spotsCount}</span>
               </div>
 
               <div className="h-[1px] bg-border/40" />
@@ -488,7 +572,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                       <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Authorizing...
                     </>
                   ) : (
-                    `Pay $${program.price * spotsCount}`
+                    `Pay $${price * spotsCount}`
                   )}
                 </Button>
               </DialogFooter>

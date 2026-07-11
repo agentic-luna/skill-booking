@@ -6,24 +6,33 @@ import { useRouter } from "next/navigation";
 import { BookmarkCheck, ArrowLeft } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useClientStore } from "@/features/client/store/clientStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
-import { MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 
 import BookingTabs from "./_components/BookingTabs";
 import CancelDialog from "./_components/CancelDialog";
+import WriteReviewModal from "./_components/WriteReviewModal";
+import type { ClientBooking } from "@/features/client/api/types";
 
 export default function BookingsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const showAlert = useAlertStore((s) => s.showAlert);
-  const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+
+  const { bookings, fetchBookings, cancelBooking, loading } = useClientStore();
+
   const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
+  const [reviewingBooking, setReviewingBooking] = useState<ClientBooking | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) router.push("/login");
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+    fetchBookings();
+  }, [isAuthenticated, router, fetchBookings]);
 
   if (!isAuthenticated) {
     return (
@@ -36,26 +45,28 @@ export default function BookingsPage() {
     );
   }
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!cancellingBookingId) return;
-    setBookings((prev) =>
-      prev.map((bk) =>
-        bk.id === cancellingBookingId ? { ...bk, status: "cancelled" as const } : bk
-      )
-    );
-    const idx = MOCK_BOOKINGS.findIndex((b) => b.id === cancellingBookingId);
-    if (idx !== -1) MOCK_BOOKINGS[idx] = { ...MOCK_BOOKINGS[idx], status: "cancelled" as const };
-    setCancellingBookingId(null);
-    showAlert(
-      "Booking Cancelled",
-      "Your reservation has been successfully cancelled. A 100% automatic refund has been initiated.",
-      "success"
-    );
+    try {
+      const result = await cancelBooking(cancellingBookingId);
+      if (result.success) {
+        showAlert(
+          "Booking Cancelled",
+          `Your reservation has been successfully cancelled. A dynamic refund of $${result.refundAmount || 0} was processed.`,
+          "success"
+        );
+      } else {
+        showAlert("Cancellation Issue", "We could not cancel this booking.", "warning");
+      }
+      setCancellingBookingId(null);
+    } catch (err: any) {
+      showAlert("Cancellation Error", err.message || "Failed to cancel ticket booking.", "destructive");
+    }
   };
 
-  const activeBookings = bookings.filter((b) => b.status === "confirmed");
+  const activeBookings = bookings.filter((b) => b.status === "CONFIRMED" || b.status === "PENDING");
   const pastBookings = bookings.filter((b) =>
-    ["completed", "cancelled", "refunded"].includes(b.status)
+    ["COMPLETED", "CANCELLED", "REFUNDED"].includes(b.status)
   );
 
   return (
@@ -78,6 +89,7 @@ export default function BookingsPage() {
             activeBookings={activeBookings}
             pastBookings={pastBookings}
             onCancel={setCancellingBookingId}
+            onWriteReview={setReviewingBooking}
           />
         </div>
       </main>
@@ -86,6 +98,15 @@ export default function BookingsPage() {
         open={cancellingBookingId !== null}
         onClose={() => setCancellingBookingId(null)}
         onConfirm={handleConfirmCancel}
+      />
+
+      <WriteReviewModal
+        isOpen={reviewingBooking !== null}
+        onOpenChange={(open) => {
+          if (!open) setReviewingBooking(null);
+        }}
+        booking={reviewingBooking}
+        onSuccess={() => fetchBookings()}
       />
 
       <Footer />
