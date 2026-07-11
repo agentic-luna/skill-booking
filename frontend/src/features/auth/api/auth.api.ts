@@ -31,6 +31,18 @@ export async function login(
   return res.data;
 }
 
+/** POST /admin/login — Login with email or username + password for administrators */
+export async function adminLogin(
+  identifier: string,
+  password: string
+): Promise<AuthResponse> {
+  const res = await request<{ success: boolean; data: AuthResponse }>(
+    "/admin/login",
+    { method: "POST", body: JSON.stringify({ identifier, password }) }
+  );
+  return res.data;
+}
+
 // ── Session management ────────────────────────────────────────────────────
 
 /** POST /auth/refresh — Rotate tokens */

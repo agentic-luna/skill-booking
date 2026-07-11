@@ -54,6 +54,7 @@ export interface AuthState {
   verifyPhoneOtpAndSignup: (otp: string) => Promise<User>;
   verifyOtp: (code: string) => Promise<boolean>;
   login: (identifier: string, password: string) => Promise<User>;
+  adminLogin: (identifier: string, password: string) => Promise<User>;
   forgotPassword: (identifier: string) => Promise<void>;
   forgotPasswordVerifyOtp: (identifier: string, otp: string) => Promise<string>;
   resetPassword: (resetToken: string, newPassword: string) => Promise<void>;
