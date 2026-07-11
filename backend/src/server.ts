@@ -2,6 +2,7 @@ import http from 'http';
 import app from './app';
 import { env } from './config/environment';
 import { prisma } from './config/prisma';
+import { seedSuperadmin } from './config/seed';
 import { initSocket } from './config/socket';
 import { commsService, logger } from './api/di-container';
 
@@ -20,6 +21,9 @@ const startServer = async () => {
     logger.info('[Prisma] Connecting to the database...');
     await prisma.$connect();
     logger.info('[Prisma] Database connection established.');
+
+    // Seed Superadmin user
+    await seedSuperadmin();
 
     // Initialize notification worker queue listener with Clean Architecture dependency injection
     logger.info('[BullMQ] Starting background notification worker...');

@@ -57,6 +57,7 @@ const broadcast_notification_1 = require("../application/use-cases/admin/broadca
 const get_ledger_1 = require("../application/use-cases/admin/get-ledger");
 const payout_host_1 = require("../application/use-cases/admin/payout-host");
 const admin_login_1 = require("../application/use-cases/admin/admin-login");
+const review_kyc_1 = require("../application/use-cases/admin/review-kyc");
 const get_user_notifications_1 = require("../application/use-cases/notifications/get-user-notifications");
 const mark_notification_read_1 = require("../application/use-cases/notifications/mark-notification-read");
 const create_review_1 = require("../application/use-cases/reviews/create-review");
@@ -147,6 +148,9 @@ mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.
 mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new admin_login_1.AdminLoginCommandHandler(userRepo, cacheService));
+mediator.register('GetPendingKycHostsQuery', new review_kyc_1.GetPendingKycHostsQueryHandler(userRepo));
+mediator.register('GetAllHostsQuery', new review_kyc_1.GetAllHostsQueryHandler(userRepo));
+mediator.register('ReviewKycCommand', new review_kyc_1.ReviewKycCommandHandler(userRepo));
 mediator.register('GetConfigsQuery', new get_configs_1.GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new update_config_1.UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('GetTemplatesQuery', new get_templates_1.GetTemplatesQueryHandler(configRepo));

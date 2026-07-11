@@ -26,10 +26,13 @@ class CreateEventCommandHandler {
         const { userId, data } = command;
         const hostProfile = await this.userRepo.findHostProfileByUserId(userId);
         if (!hostProfile) {
-            throw new errors_1.BadRequestError('Host Profile not found. Please complete KYC registration first.');
+            throw new errors_1.BadRequestError('Host profile not found. Please contact support.');
+        }
+        if (!hostProfile.govIdUrl) {
+            throw new errors_1.ForbiddenError('Cannot create events. Please submit your KYC documents first via the /hosts/kyc endpoint.');
         }
         if (hostProfile.kycStatus !== client_1.KycStatus.APPROVED) {
-            throw new errors_1.ForbiddenError('Cannot create events. Your KYC verification status is not APPROVED.');
+            throw new errors_1.ForbiddenError('Cannot create events. Your KYC verification is ' + hostProfile.kycStatus + '. Please wait for admin approval.');
         }
         const event = await this.eventRepo.create({
             hostId: hostProfile.id,

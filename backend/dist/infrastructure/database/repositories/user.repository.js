@@ -104,5 +104,100 @@ class PrismaUserRepository {
     async findUsers(filters) {
         return prisma_1.prisma.user.findMany({ where: filters });
     }
+    async findPendingKycHosts() {
+        // Use a direct join-style approach via prisma.user.findMany to avoid include bugs
+        const users = await prisma_1.prisma.user.findMany({
+            where: {
+                role: 'HOST',
+                hostProfile: { kycStatus: 'PENDING' },
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                status: true,
+                createdAt: true,
+                hostProfile: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        accountType: true,
+                        govIdUrl: true,
+                        gstNumber: true,
+                        kycStatus: true,
+                        bio: true,
+                        updatedAt: true,
+                        bankDetail: true,
+                    },
+                },
+            },
+            orderBy: { hostProfile: { updatedAt: 'asc' } },
+        });
+        return users;
+    }
+    async findAllHosts(filters) {
+        const users = await prisma_1.prisma.user.findMany({
+            where: {
+                role: 'HOST',
+                deletedAt: null,
+                ...(filters?.kycStatus
+                    ? { hostProfile: { kycStatus: filters.kycStatus } }
+                    : {}),
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
+                hostProfile: {
+                    select: {
+                        id: true,
+                        accountType: true,
+                        govIdUrl: true,
+                        gstNumber: true,
+                        kycStatus: true,
+                        bio: true,
+                        updatedAt: true,
+                        bankDetail: {
+                            select: {
+                                id: true,
+                                accountHolderName: true,
+                                bankName: true,
+                                ifscCode: true,
+                                upiId: true,
+                                updatedAt: true,
+                            },
+                        },
+                        events: {
+                            select: {
+                                id: true,
+                                title: true,
+                                status: true,
+                                startTime: true,
+                                totalSeats: true,
+                                availableSeats: true,
+                            },
+                            orderBy: { startTime: 'desc' },
+                            take: 5,
+                        },
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        return users;
+    }
+    async updateKycStatus(hostProfileId, status, _rejectionReason) {
+        return prisma_1.prisma.hostProfile.update({
+            where: { id: hostProfileId },
+            data: { kycStatus: status },
+        });
+    }
 }
 exports.PrismaUserRepository = PrismaUserRepository;

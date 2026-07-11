@@ -132,6 +132,88 @@ exports.swaggerSpec = {
         },
     },
     paths: {
+        '/health': {
+            get: {
+                tags: ['System'],
+                summary: 'Comprehensive system health check',
+                description: 'Returns detailed health information including database connectivity, process memory, system resources, and server uptime.',
+                responses: {
+                    200: {
+                        description: 'All systems operational',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: { type: 'string', enum: ['UP', 'DEGRADED'], example: 'UP' },
+                                        timestamp: { type: 'string', format: 'date-time' },
+                                        responseTimeMs: { type: 'integer', example: 12 },
+                                        server: {
+                                            type: 'object',
+                                            properties: {
+                                                uptime: { type: 'number', example: 3600.5 },
+                                                uptimeFormatted: { type: 'string', example: '1h 0m 0s' },
+                                                nodeVersion: { type: 'string', example: 'v20.11.0' },
+                                                pid: { type: 'integer', example: 12345 },
+                                                environment: { type: 'string', example: 'development' },
+                                            },
+                                        },
+                                        database: {
+                                            type: 'object',
+                                            properties: {
+                                                status: { type: 'string', enum: ['UP', 'DOWN'], example: 'UP' },
+                                                latencyMs: { type: 'integer', nullable: true, example: 5 },
+                                                error: { type: 'string', nullable: true },
+                                            },
+                                        },
+                                        memory: {
+                                            type: 'object',
+                                            properties: {
+                                                process: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        rss: { type: 'string', example: '128.50 MB' },
+                                                        heapTotal: { type: 'string', example: '64.00 MB' },
+                                                        heapUsed: { type: 'string', example: '45.30 MB' },
+                                                        external: { type: 'string', example: '2.10 MB' },
+                                                    },
+                                                },
+                                                system: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        total: { type: 'string', example: '16.00 GB' },
+                                                        free: { type: 'string', example: '4.50 GB' },
+                                                        used: { type: 'string', example: '11.50 GB' },
+                                                        usagePercent: { type: 'string', example: '71.9%' },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                        system: {
+                                            type: 'object',
+                                            properties: {
+                                                platform: { type: 'string', example: 'linux' },
+                                                arch: { type: 'string', example: 'x64' },
+                                                hostname: { type: 'string', example: 'prod-server-01' },
+                                                cpuCores: { type: 'integer', example: 4 },
+                                                loadAverage: {
+                                                    type: 'array',
+                                                    items: { type: 'string' },
+                                                    example: ['1.25', '1.10', '0.95'],
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    503: {
+                        description: 'System degraded — one or more subsystems are down',
+                    },
+                },
+            },
+        },
         '/integrations/twilio': {
             post: {
                 tags: ['Admin Config & Controls'],
@@ -856,7 +938,7 @@ exports.swaggerSpec = {
                                 required: ['identifier', 'password'],
                                 properties: {
                                     identifier: { type: 'string', example: 'admin@luna.com' },
-                                    password: { type: 'string', example: 'admin123' },
+                                    password: { type: 'string', example: 'Admin@123' },
                                 },
                             },
                         },
@@ -1072,6 +1154,65 @@ exports.swaggerSpec = {
                 parameters: [{ name: 'hostId', in: 'path', required: true, schema: { type: 'string' } }],
                 responses: {
                     200: { description: 'Escrow released successfully' },
+                },
+            },
+        },
+        '/admin/hosts': {
+            get: {
+                tags: ['Admin KYC Review'],
+                summary: 'List all hosts on the platform with full profile details (profile, bank detail, recent events)',
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'kycStatus',
+                        in: 'query',
+                        required: false,
+                        schema: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'] },
+                        description: 'Optional filter by KYC status. Omit to get all hosts regardless of KYC status.',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Returns list of all hosts with hostProfile (govIdUrl, kycStatus, gstNumber, bankDetail, last 5 events)',
+                    },
+                },
+            },
+        },
+        '/admin/hosts/kyc/pending': {
+            get: {
+                tags: ['Admin KYC Review'],
+                summary: 'List all hosts with pending KYC verification submissions (oldest first)',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    200: { description: 'Returns array of pending host KYC profiles with user details' },
+                },
+            },
+        },
+        '/admin/hosts/{hostProfileId}/kyc': {
+            put: {
+                tags: ['Admin KYC Review'],
+                summary: 'Approve or reject a host KYC submission',
+                security: [{ bearerAuth: [] }],
+                parameters: [{ name: 'hostProfileId', in: 'path', required: true, schema: { type: 'string' }, description: 'Host Profile ID (not user ID)' }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['decision'],
+                                properties: {
+                                    decision: { type: 'string', enum: ['APPROVED', 'REJECTED'], example: 'APPROVED' },
+                                    rejectionReason: { type: 'string', example: 'Government ID document is blurry and unreadable', description: 'Required when decision is REJECTED' },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: { description: 'KYC decision recorded, host profile updated with new kycStatus' },
+                    400: { description: 'Missing rejection reason or invalid decision value' },
+                    404: { description: 'Host profile not found' },
                 },
             },
         },

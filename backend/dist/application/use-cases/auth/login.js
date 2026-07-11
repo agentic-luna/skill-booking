@@ -31,9 +31,22 @@ class LoginCommandHandler {
         if (!identifier || !passwordText) {
             throw new errors_1.BadRequestError('Email or mobile number and password are required');
         }
-        let user = await this.userRepo.findByEmail(identifier);
+        let user = await this.userRepo.findByEmail(identifier.toLowerCase().trim());
         if (!user) {
-            user = await this.userRepo.findByPhone(identifier);
+            // Try case-sensitive email as fallback
+            user = await this.userRepo.findByEmail(identifier.trim());
+        }
+        if (!user) {
+            // Try exact phone match
+            user = await this.userRepo.findByPhone(identifier.trim());
+        }
+        if (!user && !identifier.startsWith('+')) {
+            // Try with leading + (e.g. user types "919947811507" but stored as "+919947811507")
+            user = await this.userRepo.findByPhone('+' + identifier.trim());
+        }
+        if (!user && identifier.startsWith('+')) {
+            // Try without leading + as fallback
+            user = await this.userRepo.findByPhone(identifier.trim().slice(1));
         }
         if (!user || user.deletedAt) {
             throw new errors_1.BadRequestError('Invalid email/mobile number or password');

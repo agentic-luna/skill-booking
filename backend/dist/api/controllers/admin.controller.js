@@ -11,6 +11,7 @@ const get_ledger_1 = require("../../application/use-cases/admin/get-ledger");
 const payout_host_1 = require("../../application/use-cases/admin/payout-host");
 const admin_login_1 = require("../../application/use-cases/admin/admin-login");
 const approve_event_1 = require("../../application/use-cases/events/approve-event");
+const review_kyc_1 = require("../../application/use-cases/admin/review-kyc");
 const socket_1 = require("../../config/socket");
 const api_response_1 = require("../common/api-response");
 const errors_1 = require("../common/errors");
@@ -170,6 +171,36 @@ class AdminController {
         try {
             const { hostId } = req.params;
             const result = await di_container_1.mediator.send(new payout_host_1.PayoutHostCommand(hostId));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getPendingKycHosts(req, res, next) {
+        try {
+            const result = await di_container_1.mediator.send(new review_kyc_1.GetPendingKycHostsQuery());
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getAllHosts(req, res, next) {
+        try {
+            const { kycStatus } = req.query;
+            const result = await di_container_1.mediator.send(new review_kyc_1.GetAllHostsQuery(kycStatus));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async reviewKyc(req, res, next) {
+        try {
+            const { hostProfileId } = req.params;
+            const { decision, rejectionReason } = req.body;
+            const result = await di_container_1.mediator.send(new review_kyc_1.ReviewKycCommand(hostProfileId, decision, rejectionReason));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

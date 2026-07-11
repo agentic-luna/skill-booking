@@ -936,7 +936,7 @@ export const swaggerSpec = {
                 required: ['identifier', 'password'],
                 properties: {
                   identifier: { type: 'string', example: 'admin@luna.com' },
-                  password: { type: 'string', example: 'admin123' },
+                  password: { type: 'string', example: 'Admin@123' },
                 },
               },
             },

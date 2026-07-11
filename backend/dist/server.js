@@ -7,6 +7,7 @@ const http_1 = __importDefault(require("http"));
 const app_1 = __importDefault(require("./app"));
 const environment_1 = require("./config/environment");
 const prisma_1 = require("./config/prisma");
+const seed_1 = require("./config/seed");
 const socket_1 = require("./config/socket");
 const di_container_1 = require("./api/di-container");
 // Clean Architecture Worker bootstrapping dependencies
@@ -21,6 +22,8 @@ const startServer = async () => {
         di_container_1.logger.info('[Prisma] Connecting to the database...');
         await prisma_1.prisma.$connect();
         di_container_1.logger.info('[Prisma] Database connection established.');
+        // Seed Superadmin user
+        await (0, seed_1.seedSuperadmin)();
         // Initialize notification worker queue listener with Clean Architecture dependency injection
         di_container_1.logger.info('[BullMQ] Starting background notification worker...');
         const notificationRepo = new notification_repository_1.PrismaNotificationRepository();

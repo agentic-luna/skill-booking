@@ -31,4 +31,8 @@ router.put('/events/:eventId/approve', (0, authorize_1.requirePermission)(system
 // Escrows & Ledger
 router.get('/finance/ledger', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getFinanceLedger);
 router.put('/finance/payouts/:hostId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.payoutHost);
+// KYC Review
+router.get('/hosts', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.getAllHosts);
+router.get('/hosts/kyc/pending', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.getPendingKycHosts);
+router.put('/hosts/:hostProfileId/kyc', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.reviewKyc);
 exports.default = router;

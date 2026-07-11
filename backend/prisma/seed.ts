@@ -12,8 +12,9 @@ async function main() {
     where: { email: adminEmail },
   });
 
+  const passwordHash = await bcrypt.hash('Admin@123', 10);
+
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash('admin123', 10);
     await prisma.user.create({
       data: {
         firstName: 'Luna',
@@ -25,9 +26,17 @@ async function main() {
         status: 'ACTIVE',
       },
     });
-    console.log('[Seeder] Superadmin user created successfully: admin@luna.com / password: admin123');
+    console.log('[Seeder] Superadmin user created successfully: admin@luna.com / password: Admin@123');
   } else {
-    console.log('[Seeder] Superadmin user already exists.');
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        passwordHash,
+        role: 'SUPERADMIN',
+        status: 'ACTIVE',
+      },
+    });
+    console.log('[Seeder] Superadmin user updated/verified successfully: admin@luna.com / password: Admin@123');
   }
 
   // 2. Seed Platform Settings

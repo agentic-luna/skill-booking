@@ -114,7 +114,7 @@ async function runTests() {
     // Standard login attempt with Superadmin credentials -> Should fail and direct to /admin/login
     const standardAdminLoginRes = await post('/auth/login', {
       email: 'admin@luna.com',
-      password: 'admin123',
+      password: 'Admin@123',
     });
     assert(!standardAdminLoginRes.success && standardAdminLoginRes.error?.message?.includes('/admin/login'), 'Standard login failed to direct admin to admin portal');
     console.log('✔ Security Isolation Assertion: Superadmin blocked from standard /auth/login portal');
@@ -130,7 +130,7 @@ async function runTests() {
     // Dedicated admin login with Superadmin credentials -> Should succeed
     const adminLoginRes = await post('/admin/login', {
       identifier: 'admin@luna.com',
-      password: 'admin123',
+      password: 'Admin@123',
     });
     assert(adminLoginRes.success && adminLoginRes.data.user.adminProfile !== undefined, 'Dedicated Superadmin login failed');
     const adminToken = adminLoginRes.data.accessToken;
