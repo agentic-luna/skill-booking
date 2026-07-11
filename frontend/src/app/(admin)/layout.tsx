@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { 
   Sparkles, LayoutDashboard, UserCheck, CheckSquare, Settings, 
-  Menu, X, LogOut, Bell 
+  Menu, X, LogOut, Bell, Radio 
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -46,6 +46,8 @@ export default function AdminLayout({
     { name: "Host Verification", href: "/admin/hosts", icon: UserCheck },
     { name: "Program Approval", href: "/admin/approvals", icon: CheckSquare },
     { name: "Platform Settings", href: "/admin/settings", icon: Settings },
+    { name: "Notification Logs", href: "/admin/notifications", icon: Bell },
+    { name: "Broadcast", href: "/admin/broadcast", icon: Radio },
   ];
 
   const handleLogout = () => {
