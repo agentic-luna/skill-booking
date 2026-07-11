@@ -144,7 +144,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const res = await authApi.forgotPasswordVerifyOtp(identifier, otp);
       set({ isLoading: false });
-      return res.resetToken;
+
+      return res.data.resetToken;
+
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;
