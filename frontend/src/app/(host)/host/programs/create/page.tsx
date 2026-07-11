@@ -19,6 +19,7 @@ import CoverImageSection from "./_components/CoverImageSection";
 import PreviewSidebar from "./_components/PreviewSidebar";
 import SuccessState from "./_components/SuccessState";
 
+
 // Map local category values to the EventMode the backend expects
 const CATEGORY_TO_MODE: Record<string, EventMode> = {
   technology: "ONLINE",
@@ -85,38 +86,6 @@ export default function CreateProgramPage() {
     } catch {
       // error displayed from store
     }
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-
-    const newProg : Program = {
-      id: `prog_${Math.random().toString(36).substr(2, 9)}`,
-      title: data.title,
-      category: data.category,
-      price: data.price,
-      duration: data.duration,
-      rating:2,
-      reviewsCount:2,
-      date: data.date,
-      time: data.time,
-      maxSpots: data.maxSpots,
-      spotsLeft: data.maxSpots,
-      location: data.location,
-      description: data.description,
-      instructorName: "Sarah Jenkins",
-      instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100",
-      imageUrl: data.imageUrl || "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=600",
-      status: "pending",
-      featured: false,
-    };
-
-    MOCK_PROGRAMS.unshift(newProg);
-    setIsSubmitting(false);
-    setSubmitted(true);
-
-    // Redirect to programs list after brief success animation
-    setTimeout(() => {
-      router.push("/host/programs");
-    }, 2000);
   };
 
   const categoryMeta = CATEGORIES.find((c) => c.value === selectedCategory);
