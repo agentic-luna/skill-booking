@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { 
   Sparkles, LayoutDashboard, Calendar, Users, DollarSign, Settings, 
-  Menu, X, LogOut, UserCheck 
+  Menu, X, LogOut, UserCheck, ShieldCheck
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -46,6 +46,7 @@ export default function HostLayout({
     { name: "My Programs", href: "/host/programs", icon: Calendar },
     { name: "Participants Roster", href: "/host/participants", icon: Users },
     { name: "Earnings Center", href: "/host/earnings", icon: DollarSign },
+    { name: "KYC Verification", href: "/host/kyc", icon: ShieldCheck },
   ];
 
   const handleLogout = () => {
