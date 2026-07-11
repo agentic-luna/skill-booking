@@ -6,6 +6,9 @@ import type {
   MessageTemplate, UpdateTemplatePayload,
   PlatformSetting, UpsertPlatformPayload,
   NotificationLog, BroadcastPayload, BroadcastResult,
+  PendingEvent, ApproveEventPayload, ApproveEventResult,
+  FinanceLedger, PayoutResult,
+  HostWithProfile, KycReviewPayload, KycReviewResult
 } from "@/features/admin/api/types";
 
 interface AdminState {
@@ -41,6 +44,23 @@ interface AdminState {
 
   // Broadcast
   broadcastNotification: (payload: BroadcastPayload) => Promise<BroadcastResult>;
+
+  // Moderation Event Queue
+  eventQueue: PendingEvent[];
+  fetchEventQueue: () => Promise<void>;
+  approveEvent: (eventId: string, payload: ApproveEventPayload) => Promise<ApproveEventResult>;
+
+  // Finance & Ledger
+  financeLedger: FinanceLedger | null;
+  fetchFinanceLedger: () => Promise<void>;
+  payoutHost: (hostId: string) => Promise<PayoutResult>;
+
+  // KYC & Host Review
+  hosts: HostWithProfile[];
+  pendingKycHosts: HostWithProfile[];
+  fetchHosts: (kycStatus?: string) => Promise<void>;
+  fetchPendingKycHosts: () => Promise<void>;
+  reviewKyc: (hostProfileId: string, payload: KycReviewPayload) => Promise<KycReviewResult>;
 
   clearError: () => void;
 }
@@ -159,6 +179,60 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   // ── Broadcast ──────────────────────────────────────────────────────────
 
   broadcastNotification: (payload) => withLoading(set, () => api.broadcastNotification(payload)),
+
+  // ── Moderation Event Queue ─────────────────────────────────────────────
+
+  eventQueue: [],
+
+  fetchEventQueue: () => withLoading(set, async () => {
+    const queue = await api.getEventQueue();
+    set({ eventQueue: queue });
+  }),
+
+  approveEvent: (eventId, payload) => withLoading(set, async () => {
+    const result = await api.approveEvent(eventId, payload);
+    set({ eventQueue: get().eventQueue.filter((e) => e.id !== eventId) });
+    return result;
+  }),
+
+  // ── Finance & Ledger ───────────────────────────────────────────────────
+
+  financeLedger: null,
+
+  fetchFinanceLedger: () => withLoading(set, async () => {
+    const ledger = await api.getFinanceLedger();
+    set({ financeLedger: ledger });
+  }),
+
+  payoutHost: (hostId) => withLoading(set, async () => {
+    const result = await api.payoutHost(hostId);
+    // Refresh ledger after payout release
+    await get().fetchFinanceLedger();
+    return result;
+  }),
+
+  // ── KYC & Host Review ──────────────────────────────────────────────────
+
+  hosts: [],
+  pendingKycHosts: [],
+
+  fetchHosts: (kycStatus) => withLoading(set, async () => {
+    const response = await api.getAllHosts(kycStatus);
+    set({ hosts: response.hosts });
+  }),
+
+  fetchPendingKycHosts: () => withLoading(set, async () => {
+    const response = await api.getPendingKycHosts();
+    set({ pendingKycHosts: response.hosts });
+  }),
+
+  reviewKyc: (hostProfileId, payload) => withLoading(set, async () => {
+    const result = await api.reviewKyc(hostProfileId, payload);
+    // Refresh list states
+    await get().fetchPendingKycHosts();
+    await get().fetchHosts();
+    return result;
+  }),
 
   clearError: () => set({ error: null }),
 }));

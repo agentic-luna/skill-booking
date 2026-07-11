@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck } from "lucide-react";
+import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useClientStore } from "@/features/client/store/clientStore";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import {
 export default function Navbar() {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { notifications, fetchNotifications, readNotification } = useClientStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,6 +36,14 @@ export default function Navbar() {
     logout();
     router.push("/");
   };
+
+  const unreadNotificationsCount = notifications.filter(n => n.status !== "READ").length;
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "client") {
+      fetchNotifications();
+    }
+  }, [isAuthenticated, user]);
 
   return (
     <nav className="glass-nav">
@@ -57,6 +67,46 @@ export default function Navbar() {
 
             {isAuthenticated && user ? (
               <>
+                {/* Notification Bell Dropdown */}
+                {user.role === "client" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground relative">
+                        <Bell className="h-4.5 w-4.5" />
+                        {unreadNotificationsCount > 0 && (
+                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto rounded-xl">
+                      <DropdownMenuLabel className="font-bold text-xs flex justify-between items-center px-4 py-2.5">
+                        <span>Notifications Feed</span>
+                        {unreadNotificationsCount > 0 && (
+                          <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">{unreadNotificationsCount} unread</span>
+                        )}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {notifications.length > 0 ? (
+                        notifications.slice(0, 5).map((notif) => (
+                          <DropdownMenuItem
+                            key={notif.id}
+                            className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-primary/5 font-semibold" : ""}`}
+                            onClick={() => {
+                              if (notif.status !== "READ") readNotification(notif.id);
+                            }}
+                          >
+                            <span className="font-bold text-foreground text-[11px]">{notif.subject || "Alert Notice"}</span>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">{notif.bodyContent}</p>
+                            <span className="text-[9px] text-muted-foreground/60 font-medium">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-xs text-muted-foreground">No alerts in your feed.</div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 {/* Wishlist Link */}
                 <Link href="/wishlist">
                   <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground">
@@ -95,6 +145,9 @@ export default function Navbar() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/bookings")}>
                           <BookmarkCheck className="mr-2 h-4 w-4" /> My Bookings
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push("/liked-events")}>
+                          <Heart className="mr-2 h-4 w-4 text-rose-500" /> Liked Workshops
                         </DropdownMenuItem>
                       </>
                     )}

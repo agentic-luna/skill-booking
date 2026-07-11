@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { 
-  Sparkles, LayoutDashboard, UserCheck, CheckSquare, Settings, 
-  Menu, X, LogOut, Bell, Radio 
+import {
+  Sparkles, LayoutDashboard, UserCheck, CheckSquare, Settings,
+  Menu, X, LogOut, Bell, Radio, Wallet, Users
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -44,7 +44,9 @@ export default function AdminLayout({
   const menuItems = [
     { name: "Overview Board", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Host Verification", href: "/admin/hosts", icon: UserCheck },
+    { name: "Host Management", href: "/admin/hosts-management", icon: Users },
     { name: "Program Approval", href: "/admin/approvals", icon: CheckSquare },
+    { name: "Finance & Payouts", href: "/admin/finance", icon: Wallet },
     { name: "Platform Settings", href: "/admin/settings", icon: Settings },
     { name: "Notification Logs", href: "/admin/notifications", icon: Bell },
     { name: "Broadcast", href: "/admin/broadcast", icon: Radio },
@@ -58,7 +60,7 @@ export default function AdminLayout({
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-card border-r border-border/40 justify-between p-6">
       <div className="space-y-8">
-        
+
         {/* Logo */}
         <Link href="/" className="flex items-center hover:opacity-90 transition-opacity">
           <span className="text-lg font-bold tracking-tight text-graphite-ink">
@@ -89,11 +91,10 @@ export default function AdminLayout({
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
+                className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
               >
                 <IconComp className="h-4.5 w-4.5" />
                 <span>{item.name}</span>
@@ -119,7 +120,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-muted/20 dark:bg-card/5">
-      
+
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:block w-64 shrink-0 h-screen sticky top-0 z-45">
         <SidebarContent />
@@ -127,7 +128,7 @@ export default function AdminLayout({
 
       {/* Main content body */}
       <div className="flex-1 flex flex-col min-w-0">
-        
+
         {/* Top Navbar - Mobile & Small screens */}
         <header className="lg:hidden flex items-center justify-between h-16 px-4 bg-card border-b border-border/40 sticky top-0 z-40">
           <Link href="/" className="flex items-center space-x-2">
