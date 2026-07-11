@@ -55,12 +55,14 @@ export default function CreateProgramPage() {
     setIsSubmitting(true);
     await new Promise((resolve) => setTimeout(resolve, 1200));
 
-    const newProg: Program = {
+    const newProg : Program = {
       id: `prog_${Math.random().toString(36).substr(2, 9)}`,
       title: data.title,
       category: data.category,
       price: data.price,
       duration: data.duration,
+      rating:2,
+      reviewsCount:2,
       date: data.date,
       time: data.time,
       maxSpots: data.maxSpots,
