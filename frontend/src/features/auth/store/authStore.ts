@@ -1,128 +1,167 @@
 import { create } from "zustand";
+import * as authApi from "@/features/auth/api/authApi";
+import type { AuthState, User } from "./auth.types";
+import { mapApiUser } from "./auth.types";
+import {
+  saveTokens,
+  clearTokens,
+  saveSession,
+  getRefreshToken,
+} from "./auth.helpers";
 
-export type UserRole = "client" | "host" | "admin";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatarUrl?: string;
-  verified?: boolean;
-}
-
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isVerifying: boolean; // true if registering and waiting for OTP
-  pendingUser: User | null; // store user details during OTP step
-  isLoading: boolean;
-  error: string | null;
-  
-  login: (email: string, role: UserRole) => Promise<User>;
-  register: (name: string, email: string, role: UserRole) => Promise<User>;
-  verifyOtp: (code: string) => Promise<boolean>;
-  forgotPassword: (email: string) => Promise<boolean>;
-  logout: () => void;
-  updateProfile: (updates: Partial<User>) => void;
-  clearError: () => void;
-}
+export type { UserRole, User, PendingRegistration } from "./auth.types";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isVerifying: false,
-  pendingUser: null,
   isLoading: false,
   error: null,
+  pendingRegistration: null,
+  isVerifying: false,
+  pendingUser: null,
 
-  login: async (email: string, role: UserRole) => {
+  startRegistration: async ({ firstName, lastName, email, phone, password, role }) => {
     set({ isLoading: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 800)); // Simulate API delay
-    
-    // Mock user database lookup
-    const user: User = {
-      id: `usr_${Math.random().toString(36).substr(2, 9)}`,
-      name: email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1),
-      email,
-      role,
-      avatarUrl: `https://images.unsplash.com/photo-${role === "admin" ? "1472099645785-5658abf4ff4e" : role === "host" ? "1534528741775-53994a69daeb" : "1507003211169-0a1dd7228f2d"}?auto=format&fit=crop&q=80&w=120`,
-      verified: true,
-    };
-
-    set({ user, isAuthenticated: true, isLoading: false });
-    // Persist session to localstorage mock
-    if (typeof window !== "undefined") {
-      localStorage.setItem("bookmyskill_session", JSON.stringify(user));
+    try {
+      await Promise.all([authApi.sendOtp(email, "EMAIL"), authApi.sendOtp(phone, "PHONE")]);
+      set({
+        pendingRegistration: {
+          firstName, lastName, email, phone, password,
+          role: role.toUpperCase() as "CLIENT" | "HOST",
+          emailOtpSent: true, phoneOtpSent: true,
+          emailVerified: false, phoneVerified: false,
+        },
+        isVerifying: true,
+        isLoading: false,
+      });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
     }
-    return user;
   },
 
-  register: async (name: string, email: string, role: UserRole) => {
+  verifyEmailOtp: async (otp) => {
+    const { pendingRegistration } = get();
+    if (!pendingRegistration) throw new Error("No pending registration");
     set({ isLoading: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const pendingUser: User = {
-      id: `usr_${Math.random().toString(36).substr(2, 9)}`,
-      name,
-      email,
-      role,
-      avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=120",
-      verified: false,
-    };
-
-    set({ pendingUser, isVerifying: true, isLoading: false });
-    return pendingUser;
+    try {
+      await authApi.verifyOtp(pendingRegistration.email, "EMAIL", otp);
+      set((s) => ({
+        pendingRegistration: s.pendingRegistration
+          ? { ...s.pendingRegistration, emailVerified: true }
+          : null,
+        isLoading: false,
+      }));
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
   },
 
-  verifyOtp: async (code: string) => {
+  verifyPhoneOtpAndSignup: async (otp) => {
+    const { pendingRegistration } = get();
+    if (!pendingRegistration) throw new Error("No pending registration");
     set({ isLoading: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      await authApi.verifyOtp(pendingRegistration.phone, "PHONE", otp);
+      const response = await authApi.signup({
+        firstName: pendingRegistration.firstName,
+        lastName: pendingRegistration.lastName,
+        email: pendingRegistration.email,
+        phone: pendingRegistration.phone,
+        password: pendingRegistration.password,
+        role: pendingRegistration.role,
+      });
+      const user = mapApiUser(response.user);
+      saveTokens(response.accessToken, response.refreshToken);
+      saveSession(user);
+      set({ user, isAuthenticated: true, isVerifying: false, pendingRegistration: null, pendingUser: null, isLoading: false });
+      return user;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
 
-    // Simulate OTP Code matching "123456" or "1234"
-    if (code === "123456" || code === "1234") {
-      const { pendingUser } = get();
-      if (pendingUser) {
-        const verifiedUser = { ...pendingUser, verified: true };
-        set({
-          user: verifiedUser,
-          isAuthenticated: true,
-          isVerifying: false,
-          pendingUser: null,
-          isLoading: false,
-        });
-        if (typeof window !== "undefined") {
-          localStorage.setItem("bookmyskill_session", JSON.stringify(verifiedUser));
-        }
+  verifyOtp: async (code) => {
+    const { pendingRegistration } = get();
+    if (!pendingRegistration) return false;
+    try {
+      if (!pendingRegistration.emailVerified) {
+        await get().verifyEmailOtp(code);
         return true;
       }
+      await get().verifyPhoneOtpAndSignup(code);
+      return true;
+    } catch {
+      return false;
     }
-    
-    set({ error: "Invalid verification code. Use '123456' for mock verify.", isLoading: false });
-    return false;
   },
 
-  forgotPassword: async (email: string) => {
+  login: async (identifier, password) => {
     set({ isLoading: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    set({ isLoading: false });
-    return true; // Mock email successfully sent
-  },
-
-  logout: () => {
-    set({ user: null, isAuthenticated: false, isVerifying: false, pendingUser: null });
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("bookmyskill_session");
+    try {
+      const response = await authApi.login(identifier, password);
+      const user = mapApiUser(response.user);
+      saveTokens(response.accessToken, response.refreshToken);
+      saveSession(user);
+      set({ user, isAuthenticated: true, isLoading: false });
+      return user;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
     }
   },
 
-  updateProfile: (updates: Partial<User>) => {
+  forgotPassword: async (identifier) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.forgotPasswordSendOtp(identifier);
+      set({ isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  forgotPasswordVerifyOtp: async (identifier, otp) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.forgotPasswordVerifyOtp(identifier, otp);
+      set({ isLoading: false });
+      return res.resetToken;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  resetPassword: async (resetToken, newPassword) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authApi.resetPassword(resetToken, newPassword);
+      set({ isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  logout: async () => {
+    const token = getRefreshToken();
+    try {
+      if (token) await authApi.logoutApi(token);
+    } catch { /* fail silently */ } finally {
+      clearTokens();
+      set({ user: null, isAuthenticated: false, isVerifying: false, pendingRegistration: null, pendingUser: null });
+    }
+  },
+
+  updateProfile: (updates) => {
     set((state) => {
       if (!state.user) return state;
-      const updatedUser = { ...state.user, ...updates };
-      if (typeof window !== "undefined") {
-        localStorage.setItem("bookmyskill_session", JSON.stringify(updatedUser));
-      }
+      const updatedUser = { ...state.user, ...updates } as User;
+      saveSession(updatedUser);
       return { user: updatedUser };
     });
   },
@@ -130,17 +169,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearError: () => set({ error: null }),
 }));
 
-// Client-side initialization helper to rehydrate session
-export const initAuth = () => {
-  if (typeof window !== "undefined") {
-    const session = localStorage.getItem("bookmyskill_session");
-    if (session) {
-      try {
-        const user = JSON.parse(session);
-        useAuthStore.setState({ user, isAuthenticated: true });
-      } catch (e) {
-        localStorage.removeItem("bookmyskill_session");
-      }
-    }
+// ── Session rehydration ───────────────────────────────────────────────────
+
+export const initAuth = async () => {
+  if (typeof window === "undefined") return;
+  const token = localStorage.getItem("bms_access_token");
+  if (!token) return;
+  const apiUser = await authApi.getMe();
+  if (apiUser) {
+    const user = mapApiUser(apiUser);
+    saveSession(user);
+    useAuthStore.setState({ user, isAuthenticated: true });
+  } else {
+    clearTokens();
   }
 };

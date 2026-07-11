@@ -1,0 +1,95 @@
+import { request } from "./client";
+import type {
+  AuthResponse,
+  AuthUser,
+  SignupPayload,
+  ForgotPasswordSendResponse,
+  ForgotPasswordVerifyResponse,
+  ResetPasswordResponse,
+} from "./types";
+
+// ── Signup / Login ────────────────────────────────────────────────────────
+
+/** POST /auth/signup — Register new user account */
+export async function signup(data: SignupPayload): Promise<AuthResponse> {
+  const res = await request<{ success: boolean; data: AuthResponse }>(
+    "/auth/signup",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+  return res.data;
+}
+
+/** POST /auth/login — Login with email or phone + password */
+export async function login(
+  identifier: string,
+  password: string
+): Promise<AuthResponse> {
+  const res = await request<{ success: boolean; data: AuthResponse }>(
+    "/auth/login",
+    { method: "POST", body: JSON.stringify({ identifier, password }) }
+  );
+  return res.data;
+}
+
+// ── Session management ────────────────────────────────────────────────────
+
+/** POST /auth/refresh — Rotate tokens */
+export async function refreshToken(token: string): Promise<AuthResponse> {
+  const res = await request<{ success: boolean; data: AuthResponse }>(
+    "/auth/refresh",
+    { method: "POST", body: JSON.stringify({ refreshToken: token }) }
+  );
+  return res.data;
+}
+
+/** POST /auth/logout — Revoke refresh token */
+export async function logoutApi(token: string): Promise<void> {
+  await request("/auth/logout", {
+    method: "POST",
+    body: JSON.stringify({ refreshToken: token }),
+  });
+}
+
+/** GET /auth/me — Get current authenticated user */
+export async function getMe(): Promise<AuthUser | null> {
+  try {
+    const res = await request<{ success: boolean; data: AuthUser }>("/auth/me");
+    return res.data;
+  } catch {
+    return null;
+  }
+}
+
+// ── Forgot password flow ──────────────────────────────────────────────────
+
+/** POST /auth/forgot-password/send-otp */
+export async function forgotPasswordSendOtp(
+  identifier: string
+): Promise<ForgotPasswordSendResponse> {
+  return request<ForgotPasswordSendResponse>(
+    "/auth/forgot-password/send-otp",
+    { method: "POST", body: JSON.stringify({ identifier }) }
+  );
+}
+
+/** POST /auth/forgot-password/verify-otp — returns resetToken */
+export async function forgotPasswordVerifyOtp(
+  identifier: string,
+  otp: string
+): Promise<ForgotPasswordVerifyResponse> {
+  return request<ForgotPasswordVerifyResponse>(
+    "/auth/forgot-password/verify-otp",
+    { method: "POST", body: JSON.stringify({ identifier, otp }) }
+  );
+}
+
+/** POST /auth/forgot-password/reset */
+export async function resetPassword(
+  resetToken: string,
+  newPassword: string
+): Promise<ResetPasswordResponse> {
+  return request<ResetPasswordResponse>("/auth/forgot-password/reset", {
+    method: "POST",
+    body: JSON.stringify({ resetToken, newPassword }),
+  });
+}
