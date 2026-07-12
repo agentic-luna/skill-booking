@@ -20,7 +20,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, 
   DialogHeader, DialogTitle 
 } from "@/components/ui/dialog";
-import { Program, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
+import { Program, MOCK_PROGRAMS, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
@@ -74,7 +74,9 @@ interface ProgramDetailsProps {
 export default function ProgramDetailsContent({ programId, initialProgram }: ProgramDetailsProps) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-  const [program, setProgram] = useState<Program | undefined>(initialProgram);
+  const [program, setProgram] = useState<Program | undefined>(
+    initialProgram || MOCK_PROGRAMS.find((p) => p.id === programId)
+  );
 
   // States
   const [isWishlisted, setIsWishlisted] = useState(false);
