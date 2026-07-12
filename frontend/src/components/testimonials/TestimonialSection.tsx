@@ -7,7 +7,7 @@ export default function TestimonialSection() {
   const allCards = [...testimonialsList, ...testimonialsList];
 
   return (
-    <section className="py-20 bg-transparent border-t border-clay-shadow overflow-hidden">
+    <section className="py-20 bg-transparent overflow-hidden">
       <div className="space-y-12">
         {/* Header — constrained to page width */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-2">

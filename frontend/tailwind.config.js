@@ -43,11 +43,11 @@ module.exports = {
         foreground: "var(--color-graphite-ink)",
         primary: {
           DEFAULT: "var(--color-nightshade-black)",
-          foreground: "var(--color-bone-white)",
+          foreground: "var(--color-graphite-ink)",
         },
         secondary: {
-          DEFAULT: "var(--color-bone-white)",
-          foreground: "var(--color-charcoal-slate)",
+          DEFAULT: "var(--color-deep-harbor)",
+          foreground: "var(--color-graphite-ink)",
         },
         destructive: {
           DEFAULT: "var(--color-nightshade-black)",
@@ -58,8 +58,8 @@ module.exports = {
           foreground: "var(--color-stone-grey)",
         },
         accent: {
-          DEFAULT: "var(--color-bone-white)",
-          foreground: "var(--color-charcoal-slate)",
+          DEFAULT: "var(--color-ash)",
+          foreground: "var(--color-graphite-ink)",
         },
         popover: {
           DEFAULT: "var(--color-bone-white)",

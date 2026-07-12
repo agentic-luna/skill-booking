@@ -25,11 +25,11 @@ export function HeroGeometric({
 }: HeroGeometricProps) {
     return (
         <div
-            className={cn("relative w-full min-h-screen flex flex-col items-center bg-transparent text-foreground", className)}
+            className={cn("relative w-full h-[80vh] min-h-[600px] flex flex-col items-center bg-transparent text-foreground overflow-hidden", className)}
             style={{ containerType: "size" }}
         >
             {/* Background Video */}
-            <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,white_70%,transparent_100%)] -webkit-[mask-image:linear-gradient(to_bottom,white_70%,transparent_100%)]">
+            <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none overflow-hidden [mask-image:linear-gradient(to_bottom,white_85%,transparent_100%)] -webkit-[mask-image:linear-gradient(to_bottom,white_85%,transparent_100%)]">
                 <video
                     autoPlay
                     loop
@@ -37,19 +37,16 @@ export function HeroGeometric({
                     playsInline
                     className="absolute top-0 left-0 w-full h-full object-cover animate-in fade-in duration-1000"
                 >
-                    <source src="/hero.mp4" type="video/mp4" />
+                    <source src="/h3.mp4" type="video/mp4" />
                 </video>
-                {/* Gradient Overlays for smooth blending and text readability */}
-                <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-white/10" />
+                {/* Clean dark overlay for white text readability */}
+                <div className="absolute inset-0 bg-black/40" />
             </div>
 
             {/* Content */}
             {(title1 || title2 || description || children) && (
                 <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center pt-8 pb-8 md:pt-20 md:pb-20">
-                    {/* Glowing backdrop to ensure text is always readable over any video */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[800px] h-[70%] bg-white/70 blur-[100px] rounded-full pointer-events-none -z-10" />
-                    
+                    {/* Content Container */}
                     <div className="w-full max-w-[1200px] px-6 flex flex-col items-center relative">
                         
                         {/* Headline */}
@@ -76,7 +73,7 @@ export function HeroGeometric({
                                         initial={{ y: "100%", opacity: 0 }}
                                         animate={{ y: "0%", opacity: 1 }}
                                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                                        className="text-[12cqi] md:text-[8cqi] lg:text-[6cqi] leading-[0.9] tracking-tighter font-bold text-nightshade-black drop-shadow-sm"
+                                        className="text-[12cqi] md:text-[8cqi] lg:text-[6cqi] leading-[0.9] tracking-tighter font-bold text-white drop-shadow-md"
                                     >
                                         {title2}
                                     </motion.h1>
@@ -91,7 +88,7 @@ export function HeroGeometric({
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, ease: "easeOut" }}
-                                    className="text-base md:text-[1.125rem] leading-relaxed text-charcoal-slate font-medium drop-shadow-sm"
+                                    className="text-base md:text-[1.125rem] leading-relaxed text-white/90 font-medium drop-shadow-md"
                                 >
                                     {description}
                                 </motion.p>

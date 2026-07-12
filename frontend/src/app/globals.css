@@ -4,22 +4,22 @@
 
 @layer base {
   :root {
-    --color-linen-canvas: #fcf9f7;
+    --color-linen-canvas: #f2fff8;
     --color-bone-white: #ffffff;
-    --color-graphite-ink: #000000;
-    --color-nightshade-black: #05060b;
-    --color-deep-harbor: #030f1c;
-    --color-charcoal-slate: #1d1d1d;
-    --color-iron-grey: #262628;
-    --color-obsidian: #111112;
+    --color-graphite-ink: #0b0c01;
+    --color-nightshade-black: #a0f212;
+    --color-deep-harbor: #abf282;
+    --color-charcoal-slate: #68ea3f;
+    --color-iron-grey: #68ea3f;
+    --color-obsidian: #0b0c01;
     --color-stone-grey: #575757;
-    --color-ash: #0fb9d3;
+    --color-ash: #abf282;
     --color-pebble: #989695;
     --color-concrete: #a5a5a5;
     --color-dove: #bababa;
-    --color-clay-shadow: #d1cfcd;
-    --color-haze: #ecedef;
-    --color-spotlight-gradient: #a89c8a;
+    --color-clay-shadow: #abf282;
+    --color-haze: #e2fceb;
+    --color-spotlight-gradient: #a0f212;
 
     --radius: 12px;
   }

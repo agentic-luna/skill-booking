@@ -24,7 +24,7 @@ export const CategoryCard = ({ cat }: { cat: CategoryItem }) => {
       </div>
       
       <div className="ml-5 flex-1 z-10">
-        <h3 className="font-serif italic tracking-wide font-medium text-lg text-graphite-ink mb-0.5 group-hover:text-nightshade-black transition-colors duration-500">
+        <h3 className="font-serif italic tracking-wide font-medium text-lg text-graphite-ink mb-0.5 group-hover:text-black transition-colors duration-500">
           {cat.name}
         </h3>
         <p className="text-xs font-medium text-stone-grey group-hover:text-graphite-ink/70 transition-colors duration-500">
