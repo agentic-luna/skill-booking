@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
-import Navbar from "@/components/common/Navbar";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,7 +122,6 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
 
       <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">

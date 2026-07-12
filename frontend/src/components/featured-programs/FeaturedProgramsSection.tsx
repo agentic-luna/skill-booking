@@ -22,11 +22,11 @@ export default function FeaturedProgramsSection() {
           
           <Link href="/programs" className="group shrink-0">
             <div className="flex items-center justify-center px-6 py-2.5 bg-bone-white border border-clay-shadow rounded-full shadow-sm transition-all duration-300 hover:shadow hover:bg-white hover:-translate-y-0.5">
-              <span className="text-sm font-semibold tracking-wide text-graphite-ink group-hover:text-nightshade-black transition-colors">
+              <span className="text-sm font-semibold tracking-wide text-graphite-ink transition-colors">
                 Explore All Classes
               </span>
               <div className="ml-2 rounded-full bg-charcoal-slate/5 p-1 group-hover:bg-charcoal-slate/10 transition-colors">
-                <ArrowRight className="h-4 w-4 text-graphite-ink group-hover:text-nightshade-black group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="h-4 w-4 text-graphite-ink group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </Link>

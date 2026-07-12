@@ -1,6 +1,5 @@
 import { MOCK_PROGRAMS } from "@/constants/mockData";
 import ProgramDetailsContent from "./ProgramDetailsContent";
-import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 
 interface PageProps {
@@ -13,7 +12,6 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <ProgramDetailsContent programId={id} initialProgram={program} />
       <Footer />
     </div>

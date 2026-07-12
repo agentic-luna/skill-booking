@@ -1,13 +1,11 @@
 import { Suspense } from "react";
 import ProgramsListContent from "./ProgramsListContent";
-import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import { Skeleton } from "@/components/common/SkeletonLoader";
 
 export default function ProgramsPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <Suspense fallback={
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
           <div className="h-8 w-48 bg-muted animate-pulse rounded-md" />

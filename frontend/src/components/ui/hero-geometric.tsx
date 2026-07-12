@@ -25,7 +25,7 @@ export function HeroGeometric({
 }: HeroGeometricProps) {
     return (
         <div
-            className={cn("relative w-full h-[80vh] min-h-[600px] flex flex-col items-center bg-transparent text-foreground overflow-hidden", className)}
+            className={cn("relative w-full min-h-screen flex flex-col items-center bg-transparent text-foreground overflow-hidden", className)}
             style={{ containerType: "size" }}
         >
             {/* Background Video */}
@@ -35,7 +35,7 @@ export function HeroGeometric({
                     loop
                     muted
                     playsInline
-                    className="absolute top-0 left-0 w-full h-full object-cover animate-in fade-in duration-1000"
+                    className="absolute top-0 left-0 w-full h-full object-cover object-[center_top] animate-in fade-in duration-1000"
                 >
                     <source src="/h3.mp4" type="video/mp4" />
                 </video>

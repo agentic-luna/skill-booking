@@ -155,7 +155,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
             
             {/* Header info */}
             <div className="space-y-3">
-              <span className="inline-block text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full capitalize">
+              <span className="inline-block text-[10px] tracking-widest font-extrabold text-white bg-[#0b0c01] border border-[#a0f212]/20 px-3 py-1.5 rounded-full uppercase shadow-sm">
                 {program.category}
               </span>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
@@ -269,28 +269,28 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               {/* Booking Info Grid */}
               <div className="space-y-4 text-xs text-muted-foreground">
                 <div className="flex items-center">
-                  <Calendar className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <Calendar className="h-4.5 w-4.5 text-foreground mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Date</div>
                     <div>{program.date}</div>
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <Clock className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <Clock className="h-4.5 w-4.5 text-foreground mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Schedule Time & Duration</div>
                     <div>{program.time} • <span className="font-semibold text-foreground">{program.duration}</span></div>
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <Ticket className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <Ticket className="h-4.5 w-4.5 text-foreground mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Total Capacity</div>
                     <div>{program.maxSpots} seats cap ({program.spotsLeft} available)</div>
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <MapPin className="h-4.5 w-4.5 text-primary mr-3 shrink-0" />
+                  <MapPin className="h-4.5 w-4.5 text-foreground mr-3 shrink-0" />
                   <div>
                     <div className="font-bold text-foreground">Location Venue</div>
                     <div className="text-foreground leading-relaxed break-words">{program.location}</div>
@@ -309,11 +309,11 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                 </Button>
                 
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="rounded-xl h-10 text-xs" onClick={handleWishlistToggle}>
+                  <Button variant="outline" className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleWishlistToggle}>
                     <Heart className={`mr-1.5 h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} /> 
                     {isWishlisted ? "Wishlisted" : "Wishlist"}
                   </Button>
-                  <Button variant="outline" className="rounded-xl h-10 text-xs" onClick={handleShareClick}>
+                  <Button variant="outline" className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleShareClick}>
                     <Share2 className="mr-1.5 h-4 w-4" /> Share Event
                   </Button>
                 </div>

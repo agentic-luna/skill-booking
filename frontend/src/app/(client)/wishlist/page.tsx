@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Heart, Star, Clock, MapPin, Trash2, ArrowLeft, Ticket } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
-import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,7 +43,6 @@ export default function WishlistPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
 
       <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
