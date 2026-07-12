@@ -45,6 +45,10 @@ class CreateEventCommandHandler {
             availableSeats: data.totalSeats,
             status: client_1.EventStatus.PENDING,
             version: 1,
+            price: data.price,
+            duration: data.duration,
+            description: data.description,
+            category: data.category,
         });
         // Invalidate event listings caches
         await this.cacheService.delPattern('events:search:*');

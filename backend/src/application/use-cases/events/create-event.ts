@@ -16,6 +16,10 @@ export class CreateEventCommand implements IRequest<any> {
       venueDetails?: any;
       startTime: string;
       totalSeats: number;
+      price?: number;
+      duration?: string;
+      description?: string;
+      category?: string;
     }
   ) {}
 }
@@ -54,6 +58,10 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       availableSeats: data.totalSeats,
       status: EventStatus.PENDING,
       version: 1,
+      price: data.price,
+      duration: data.duration,
+      description: data.description,
+      category: data.category,
     });
 
     // Invalidate event listings caches

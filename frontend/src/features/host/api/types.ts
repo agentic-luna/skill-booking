@@ -49,6 +49,10 @@ export interface CreateEventPayload {
   venueDetails?: string;
   startTime: string; // ISO 8601
   totalSeats: number;
+  price?: number;
+  duration?: string;
+  description?: string;
+  category?: string;
 }
 
 export interface CreatedEvent {

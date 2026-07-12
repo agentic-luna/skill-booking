@@ -676,6 +676,10 @@ export const swaggerSpec = {
                   venueDetails: { type: 'object', example: { link: 'https://zoom.us/j/12345' } },
                   startTime: { type: 'string', format: 'date-time' },
                   totalSeats: { type: 'integer', example: 10 },
+                  price: { type: 'number', example: 500 },
+                  duration: { type: 'string', example: '2 hours' },
+                  description: { type: 'string', example: 'A comprehensive workshop on NestJS.' },
+                  category: { type: 'string', example: 'technology' },
                 },
               },
             },
@@ -683,6 +687,52 @@ export const swaggerSpec = {
         },
         responses: {
           201: { description: 'Event created and pending review' },
+        },
+      },
+    },
+    '/hosts/events/{id}': {
+      put: {
+        tags: ['Host Workflows'],
+        summary: 'Update details of a pending host event',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string' },
+                  posterUrl: { type: 'string' },
+                  mode: { type: 'string', enum: ['ONLINE', 'OFFLINE'] },
+                  venueDetails: { type: 'object' },
+                  startTime: { type: 'string', format: 'date-time' },
+                  totalSeats: { type: 'integer' },
+                  price: { type: 'number' },
+                  duration: { type: 'string' },
+                  description: { type: 'string' },
+                  category: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Event updated successfully' },
+          400: { description: 'Invalid status or values' },
+          403: { description: 'Access denied' },
+        },
+      },
+      delete: {
+        tags: ['Host Workflows'],
+        summary: 'Delete a pending host event',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          200: { description: 'Event deleted successfully' },
+          400: { description: 'Invalid status or values' },
+          403: { description: 'Access denied' },
         },
       },
     },
@@ -1443,6 +1493,42 @@ export const swaggerSpec = {
         responses: {
           200: { description: 'Processed callback successfully' },
           202: { description: 'Webhook acknowledged with partial error warnings' },
+        },
+      },
+    },
+    '/boosted-events': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Get all active boosted events',
+        responses: {
+          200: { description: 'Returns array of active boosted events' },
+        },
+      },
+      post: {
+        tags: ['Admin Config & Controls'],
+        summary: 'Boost a specific approved event',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['eventId', 'priority', 'startDate', 'endDate'],
+                properties: {
+                  eventId: { type: 'string', format: 'uuid' },
+                  priority: { type: 'integer', example: 1 },
+                  startDate: { type: 'string', format: 'date-time' },
+                  endDate: { type: 'string', format: 'date-time' },
+                  isActive: { type: 'boolean', default: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Event boosted successfully' },
+          403: { description: 'Access denied' },
         },
       },
     },

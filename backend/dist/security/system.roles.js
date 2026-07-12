@@ -14,6 +14,9 @@ exports.RolePermissionMap = {
         system_permissions_1.SystemPermissions.HOST_DASHBOARD_READ,
         system_permissions_1.SystemPermissions.HOST_EVENTS_CREATE,
         system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE,
+        system_permissions_1.SystemPermissions.HOST_EVENTS_DELETE,
+        system_permissions_1.SystemPermissions.CLIENT_WISHLIST_MANAGE,
+        system_permissions_1.SystemPermissions.CLIENT_LIKES_MANAGE,
     ],
     [client_1.UserRole.CLIENT]: [
         system_permissions_1.SystemPermissions.AUTH_PROFILE_READ,
