@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -20,9 +20,19 @@ import {
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 250);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,31 +45,46 @@ export default function Navbar() {
     router.push("/");
   };
 
+  const isHome = pathname === "/";
+
   return (
-    <nav className="glass-nav">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          
-          {/* Logo */}
-            <Link href="/" className="flex items-center hover:opacity-90">
-              <span className="text-lg font-bold tracking-tight text-graphite-ink">
-                BookMy<span className="text-nightshade-black">Skill</span>
-              </span>
-            </Link>
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[950px] z-[100] transition-all duration-500 ease-out">
+      <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${
+        isScrolled || !isHome
+          ? "bg-bone-white/80 backdrop-blur-xl border border-clay-shadow/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+          : "bg-transparent border-transparent"
+      }`}>
+        <div className="px-6 sm:px-8">
+          <div className="flex h-16 items-center justify-between gap-4">
+            
+            {/* Logo */}
+              <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
+                <span className={`text-lg font-bold tracking-tight transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink" : "text-white"}`}>
+                  BookMy<span className="text-primary/90">Skill</span>
+                </span>
+              </Link>
+              
+            {/* Integrated Search Bar (Shows on Scroll) */}
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden flex items-center ${isScrolled ? "max-w-[280px] mx-4 opacity-100" : "max-w-0 mx-0 opacity-0"}`}>
+              <form onSubmit={handleSearchSubmit} className="relative group w-[280px] shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-grey group-focus-within:text-graphite-ink transition-colors" />
+                <Input
+                  type="text"
+                  placeholder="Search skills..."
+                  className="h-10 pl-10 w-full bg-graphite-ink/5 border-clay-shadow/40 text-graphite-ink placeholder:text-stone-grey/60 rounded-full focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:bg-white transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
+            </div>
 
-          {/* Desktop Nav Items */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link href="/programs" className="text-sm font-medium text-foreground hover:text-black transition-colors">
-              Explore Skills
-            </Link>
-
-
-
+            {/* Desktop Nav Items */}
+            <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
             {isAuthenticated && user ? (
               <>
                 {/* Wishlist Link */}
                 <Link href="/wishlist">
-                  <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
                     <Heart className="h-4.5 w-4.5" />
                   </Button>
                 </Link>
@@ -121,12 +146,12 @@ export default function Navbar() {
                 </DropdownMenu>
               </>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Link href="/login">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}>Sign In</Button>
                 </Link>
                 <Link href="/register">
-                  <Button>Get Started</Button>
+                  <Button className="px-6 shadow-lg shadow-primary/20">Get Started</Button>
                 </Link>
               </div>
             )}
@@ -137,7 +162,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-lg p-2 text-muted-foreground hover:bg-muted focus:outline-none"
+              className={`rounded-full p-2 transition-colors focus:outline-none ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -145,6 +170,7 @@ export default function Navbar() {
 
         </div>
       </div>
+    </nav>
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
@@ -236,6 +262,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+    </div>
   );
 }

@@ -28,7 +28,6 @@ export default function RootLayout({
       </head>
       <body 
         className={`${hanken.variable} font-sans min-h-screen text-foreground antialiased`}
-        style={{ background: "radial-gradient(50% 95% at 50% 108.6%, var(--color-linen-canvas) 0%, var(--color-spotlight-gradient) 100%)", backgroundAttachment: "fixed" }}
       >
         <QueryProvider>
           <ThemeProvider>

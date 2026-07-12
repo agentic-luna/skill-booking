@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function CtaSection() {
   return (
-    <section className="py-20 relative bg-transparent border-t border-clay-shadow/40 overflow-hidden">
+    <section className="py-20 relative bg-transparent overflow-hidden">
       {/* Abstract light glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_120%,_rgba(168,156,138,0.15),transparent)] pointer-events-none" />
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center text-foreground relative z-10 space-y-6">

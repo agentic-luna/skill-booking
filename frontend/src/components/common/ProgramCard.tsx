@@ -11,7 +11,7 @@ interface ProgramCardProps {
 export default function ProgramCard({ program }: ProgramCardProps) {
   return (
     <div
-      className="group flex flex-col border border-clay-shadow rounded-lg overflow-hidden bg-bone-white hover:border-nightshade-black transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
+      className="group flex flex-col border border-black/10 rounded-lg overflow-hidden bg-bone-white hover:border-black/30 transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
     >
       <div className="relative aspect-video w-full overflow-hidden =bg-haze">
         <img
@@ -34,7 +34,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
           <span className="text-xs text-stone-grey">{program.instructorName}</span>
         </div>
 
-        <h3 className="font-bold text-base text-graphite-ink line-clamp-2 leading-tight group-hover:text-nightshade-black transition-colors">
+        <h3 className="font-bold text-base text-graphite-ink line-clamp-2 leading-tight group-hover:text-black transition-colors">
           {program.title}
         </h3>
 
@@ -49,13 +49,13 @@ export default function ProgramCard({ program }: ProgramCardProps) {
           <span className="text-xs text-stone-grey">({program.reviewsCount} reviews)</span>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-clay-shadow mt-auto">
+        <div className="flex items-center justify-between pt-4 border-t border-black/10 mt-auto">
           <div>
             <span className="text-xs text-stone-grey">Registration Fee</span>
             <div className="text-lg font-extrabold text-graphite-ink">${program.price}</div>
           </div>
           <Link href={`/programs/${program.id}`}>
-            <Button size="sm" className="rounded-[12px]">Book Spot</Button>
+            <Button size="sm">Book Spot</Button>
           </Link>
         </div>
       </div>
