@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -59,25 +57,6 @@ export default function Navbar() {
   }, [isAuthenticated, user]);
 
   return (
-    <nav className="glass-nav">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          
-          {/* Logo */}
-            <Link href="/" className="flex items-center hover:opacity-90">
-              <span className="text-lg font-bold tracking-tight text-graphite-ink">
-                BookMy<span className="text-nightshade-black">Skill</span>
-              </span>
-            </Link>
-
-          {/* Desktop Nav Items */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link href="/programs" className="text-sm font-medium text-foreground hover:text-black transition-colors">
-              Explore Skills
-            </Link>
-
-
-  return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[950px] z-[100] transition-all duration-500 ease-out">
       <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${
         isScrolled || !isHome
@@ -110,6 +89,9 @@ export default function Navbar() {
 
             {/* Desktop Nav Items */}
             <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
+              <Link href="/programs" className="text-sm font-medium hover:opacity-80 transition-opacity">
+                Explore Skills
+              </Link>
             {isAuthenticated && user ? (
               <>
                 {/* Notification Bell Dropdown */}
