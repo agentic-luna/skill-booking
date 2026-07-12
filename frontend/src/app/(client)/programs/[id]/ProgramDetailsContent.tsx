@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -23,6 +23,38 @@ import {
 import { Program, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
+import { useClientStore } from "@/features/client/store/clientStore";
+
+function mapEventToProgram(event: any): Program {
+  const hostUser = event.host?.user;
+  const instructorName = event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
+  const instructorAvatar = hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
+  const locationStr = event.mode === "ONLINE" ? "Online" : (event.venueDetails?.address || "In Person");
+  const imageUrlStr = event.posterUrl || event.images?.[0] || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600";
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description || "",
+    instructorName,
+    instructorAvatar,
+    category: event.category || "technology",
+    rating: 4.8,
+    reviewsCount: event._count?.bookings || 12,
+    price: event.price || 0,
+    duration: event.duration || "2 hours",
+    date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
+    time: event.startTime 
+      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
+      : "10:00 AM EST",
+    spotsLeft: event.availableSeats ?? 0,
+    maxSpots: event.totalSeats ?? 20,
+    location: locationStr,
+    imageUrl: imageUrlStr,
+    status: event.status ? event.status.toLowerCase() : "approved",
+    featured: true,
+  };
+}
 
 // Zod schema for card payment validation
 const checkoutSchema = z.object({
@@ -51,6 +83,57 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
+  const { 
+    fetchEventDetails, 
+    checkoutBooking, 
+    confirmPayment, 
+    wishlist, 
+    fetchWishlist, 
+    addToWishlist, 
+    removeFromWishlist 
+  } = useClientStore();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadDetails = async () => {
+      try {
+        setLoading(true);
+        const details = await fetchEventDetails(programId);
+        if (active) {
+          setProgram(mapEventToProgram(details));
+          setError(null);
+        }
+      } catch (err: any) {
+        if (active) {
+          setError(err.message || "Failed to load program details");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDetails();
+    if (isAuthenticated) {
+      fetchWishlist();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [programId, fetchEventDetails, fetchWishlist, isAuthenticated]);
+
+  useEffect(() => {
+    if (program && wishlist) {
+      const wishlisted = wishlist.some((item) => item.eventId === program.id);
+      setIsWishlisted(wishlisted);
+    }
+  }, [program, wishlist]);
+
   const {
     register,
     handleSubmit,
@@ -66,6 +149,29 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     },
   });
 
+  const showAlert = useAlertStore((s) => s.showAlert);
+
+  if (loading && !program) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-16 text-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm font-semibold">Loading workshop details...</p>
+      </div>
+    );
+  }
+
+  if (error && !program) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+        <h3 className="text-xl font-bold text-destructive">Error Loading Program</h3>
+        <p className="text-muted-foreground text-sm max-w-sm">{error}</p>
+        <Link href="/programs">
+          <Button>Back to Marketplace</Button>
+        </Link>
+      </div>
+    );
+  }
+
   if (!program) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
@@ -80,8 +186,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     );
   }
 
-  const showAlert = useAlertStore((s) => s.showAlert);
-
   const handleBookClick = () => {
     if (!isAuthenticated) {
       router.push(`/login?redirect=/programs/${programId}`);
@@ -90,43 +194,51 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     setCheckoutOpen(true);
   };
 
-  const handleWishlistToggle = () => {
-    setIsWishlisted(!isWishlisted);
-    showAlert(
-      isWishlisted ? "Removed from Wishlist" : "Added to Wishlist",
-      isWishlisted ? "The workshop has been removed from your saved list." : "The workshop has been added to your saved list successfully.",
-      isWishlisted ? "info" : "success"
-    );
+  const handleWishlistToggle = async () => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/programs/${programId}`);
+      return;
+    }
+
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(program.id);
+        showAlert("Removed from Wishlist", "The workshop has been removed from your saved list.", "info");
+      } else {
+        await addToWishlist(program.id);
+        showAlert("Added to Wishlist", "The workshop has been added to your saved list successfully.", "success");
+      }
+    } catch (err: any) {
+      showAlert("Error", err.message || "Failed to update wishlist.", "destructive");
+    }
   };
 
   const onCheckoutSubmit = async (data: CheckoutFormValues) => {
+    if (!program) return;
     setPaymentLoading(true);
-    // Simulate payment authorization
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setPaymentLoading(false);
-    
-    // Add to mock bookings roster
-    const newBooking: Booking = {
-      id: `bk_${Math.random().toString(36).substr(2, 9)}`,
-      programId: program.id,
-      programTitle: program.title,
-      programImage: program.imageUrl,
-      bookingDate: new Date().toISOString().split("T")[0],
-      amountPaid: program.price * spotsCount,
-      status: "confirmed",
-      spotsBooked: spotsCount,
-      date: program.date,
-      time: program.time,
-      location: program.location,
-      hostName: program.instructorName,
-    };
+    try {
+      // 1. Call checkout API to create the booking reservation
+      const checkoutResult = await checkoutBooking({
+        eventId: program.id,
+        seatCount: spotsCount,
+      });
 
-    MOCK_BOOKINGS.unshift(newBooking);
+      // 2. Confirm the payment (CARD method)
+      const confirmResult = await confirmPayment(checkoutResult.booking.id, {
+        paymentMethod: "CARD",
+      });
 
-    // Update remaining spots count locally
-    setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
-
-    setPaymentSuccess(true);
+      if (confirmResult.success) {
+        setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
+        setPaymentSuccess(true);
+      } else {
+        showAlert("Payment Failed", "Could not confirm booking payment.", "destructive");
+      }
+    } catch (err: any) {
+      showAlert("Checkout Error", err.message || "Failed to finalize booking.", "destructive");
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   const handleShareClick = () => {

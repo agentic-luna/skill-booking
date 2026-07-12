@@ -15,10 +15,48 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MOCK_PROGRAMS, Program } from "@/constants/mockData";
+import { useClientStore } from "@/features/client/store/clientStore";
+
+function mapEventToProgram(event: any): Program {
+  const hostUser = event.host?.user;
+  const instructorName = event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
+  const instructorAvatar = hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
+  const locationStr = event.mode === "ONLINE" ? "Online" : (event.venueDetails?.address || "In Person");
+  const imageUrlStr = event.posterUrl || event.images?.[0] || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600";
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description || "",
+    instructorName,
+    instructorAvatar,
+    category: event.category || "technology",
+    rating: 4.8,
+    reviewsCount: event._count?.bookings || 12,
+    price: event.price || 0,
+    duration: event.duration || "2 hours",
+    date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
+    time: event.startTime 
+      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
+      : "10:00 AM EST",
+    spotsLeft: event.availableSeats ?? 0,
+    maxSpots: event.totalSeats ?? 20,
+    location: locationStr,
+    imageUrl: imageUrlStr,
+    status: event.status ? event.status.toLowerCase() : "approved",
+    featured: true,
+  };
+}
 
 export default function ProgramsListContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const { events, fetchEvents, loading } = useClientStore();
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   // URL Parameter rehydration
   const initialCategory = searchParams.get("category") || "all";
@@ -54,8 +92,10 @@ export default function ProgramsListContent() {
     { name: "Business", value: "business" },
   ];
 
+  const programsList = (events || []).map(mapEventToProgram);
+
   // Filtering calculations
-  const filteredPrograms = MOCK_PROGRAMS.filter((prog) => {
+  const filteredPrograms = programsList.filter((prog) => {
     if (prog.status !== "approved") return false;
     
     // Search check
@@ -291,7 +331,13 @@ export default function ProgramsListContent() {
 
           {/* Catalog results container */}
           <section className="md:col-span-9 lg:col-span-9">
-            {sortedPrograms.length > 0 ? (
+            {loading && programsList.length === 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-80 bg-muted/60 animate-pulse rounded-3xl" />
+                ))}
+              </div>
+            ) : sortedPrograms.length > 0 ? (
               layout === "grid" ? (
                 // PREMIUM GRID LAYOUT
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
