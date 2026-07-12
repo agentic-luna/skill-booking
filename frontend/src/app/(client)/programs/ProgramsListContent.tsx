@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   Search, SlidersHorizontal, LayoutGrid, List, X, Star, Clock, MapPin, 
-  ChevronRight, Calendar, AlertCircle, RefreshCw 
+  ChevronRight, Calendar, AlertCircle, RefreshCw, User
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,12 +27,21 @@ export default function ProgramsListContent() {
   // Filters State
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
-  const [maxPrice, setMaxPrice] = useState<number>(200);
+  const [maxPrice, setMaxPrice] = useState<number>(0); // 0 means "Any Price"
   const [minRating, setMinRating] = useState<number>(0);
   const [hideFull, setHideFull] = useState(false);
   const [sortBy, setSortBy] = useState("popular");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Sync Search state if URL parameter changes
   useEffect(() => {
@@ -68,7 +77,7 @@ export default function ProgramsListContent() {
     const matchesCategory = category === "all" || prog.category === category;
     
     // Price check
-    const matchesPrice = prog.price <= maxPrice;
+    const matchesPrice = maxPrice === 0 || prog.price <= maxPrice;
     
     // Rating check
     const matchesRating = prog.rating >= minRating;
@@ -91,7 +100,7 @@ export default function ProgramsListContent() {
   const handleResetFilters = () => {
     setSearch("");
     setCategory("all");
-    setMaxPrice(200);
+    setMaxPrice(0);
     setMinRating(0);
     setHideFull(false);
     setSortBy("popular");
@@ -100,20 +109,6 @@ export default function ProgramsListContent() {
 
   const FilterSidebar = () => (
     <div className="space-y-6">
-      {/* Search Input */}
-      <div className="space-y-3">
-        <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Search</label>
-        <div className="relative group">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input
-            placeholder="Search keywords..."
-            className="pl-10 h-11 text-sm bg-white/50 backdrop-blur-sm border-border/40 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all shadow-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
       {/* Category Select */}
       <div className="space-y-3">
         <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Categories</label>
@@ -145,7 +140,7 @@ export default function ProgramsListContent() {
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-end">
           <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Max Ticket Price</label>
-          <span className="font-extrabold text-primary">${maxPrice}</span>
+          <span className="font-extrabold text-[#0b0c01]">{maxPrice === 0 ? "Any Price" : `$${maxPrice}`}</span>
         </div>
         <div className="pt-2">
           <input
@@ -199,7 +194,7 @@ export default function ProgramsListContent() {
       </div>
 
       {/* Reset Button */}
-      <Button variant="outline" className="w-full h-11 text-xs font-bold rounded-xl border-border/60 hover:bg-muted/50 transition-all shadow-sm" onClick={handleResetFilters}>
+      <Button variant="outline" className="w-full h-11 text-xs font-bold rounded-xl border-[#0b0c01]/20 text-[#0b0c01] hover:bg-[#0b0c01] hover:text-white transition-all shadow-sm" onClick={handleResetFilters}>
         <RefreshCw className="mr-2 h-3.5 w-3.5" /> Clear All Filters
       </Button>
     </div>
@@ -208,8 +203,29 @@ export default function ProgramsListContent() {
   return (
     <main className="flex-1 bg-[#fcfcfc] dark:bg-[#0a0a0a] min-h-screen pb-16">
       
+      {/* Top Wide Navbar (Fixed) */}
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? "bg-white/70 backdrop-blur-xl border-b border-black/5 shadow-sm py-3" : "bg-transparent py-6"}`}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <Link href="/home" className={`text-2xl font-bold tracking-tight hover:opacity-80 transition-colors duration-500 ${isScrolled ? "text-[#0b0c01]" : "text-white"}`}>
+            BookMy<span className="text-[#a0f212]">Skill</span>
+          </Link>
+          <div className={`hidden md:flex items-center gap-8 text-sm font-semibold transition-colors duration-500 ${isScrolled ? "text-[#0b0c01]/70" : "text-white/80"}`}>
+            <Link href="/programs" className={`transition-colors ${isScrolled ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Explore Skills</Link>
+            <Link href="/wishlist" className={`transition-colors ${isScrolled ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Wishlist</Link>
+            <Link href="/bookings" className={`transition-colors ${isScrolled ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>My Tickets</Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/profile">
+              <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 transition-colors duration-500 ${isScrolled ? "text-[#0b0c01] hover:bg-black/5" : "text-white hover:bg-white/10"}`}>
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* 1. DARK GLOWING HERO HEADER */}
-      <div className="relative w-full bg-[#0b0c01] overflow-hidden rounded-b-[2rem] shadow-xl">
+      <div className="relative w-full bg-[#0b0c01] overflow-hidden rounded-b-[2rem] shadow-xl pt-16">
         {/* Ambient background glows */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a0f212]/20 rounded-full blur-[100px] pointer-events-none transform -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-1/4 w-[30rem] h-[30rem] bg-[#a0f212]/10 rounded-full blur-[120px] pointer-events-none transform translate-y-1/3"></div>
@@ -230,11 +246,19 @@ export default function ProgramsListContent() {
         
         {/* Action Bar (Sorting & Layout) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white/80 backdrop-blur-xl border border-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-4">
-          <div className="flex items-center space-x-2 text-sm font-semibold text-muted-foreground px-2">
-            Showing <span className="text-foreground mx-1">{sortedPrograms.length}</span> results
+          
+          {/* Search Input in Action Bar */}
+          <div className="relative group w-full flex-1">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground group-focus-within:text-[#0b0c01] transition-colors" />
+            <Input
+              placeholder="Search keywords, instructors, or skills..."
+              className="pl-10 h-11 text-sm bg-white border-border/40 focus:border-[#0b0c01] focus-visible:ring-[#0b0c01] focus-visible:border-[#0b0c01] rounded-xl transition-all shadow-sm w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             {/* Grid vs List layout togglers */}
             <div className="bg-muted/50 rounded-xl p-1 hidden sm:flex items-center">
               <Button
@@ -315,7 +339,7 @@ export default function ProgramsListContent() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col flex-1 p-6 space-y-4">
+                      <div className="flex flex-col flex-1 p-6 gap-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2.5">
                             <img
@@ -347,7 +371,7 @@ export default function ProgramsListContent() {
                           </div>
                           <Link href={`/programs/${prog.id}`}>
                             {/* Premium Glow Button */}
-                            <Button className="rounded-xl h-10 px-5 text-xs font-bold bg-[#0b0c01] text-white hover:bg-[#1a1b0a] hover:shadow-[0_0_20px_rgba(160,242,18,0.4)] hover:text-[#a0f212] transition-all duration-300">
+                            <Button className="rounded-xl h-10 px-5 text-xs font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
                               View Details
                             </Button>
                           </Link>
@@ -398,7 +422,7 @@ export default function ProgramsListContent() {
                             </div>
                             <Link href={`/programs/${prog.id}`}>
                               {/* Premium Glow Button */}
-                              <Button className="rounded-xl h-10 px-6 text-sm font-bold bg-[#0b0c01] text-white hover:bg-[#1a1b0a] hover:shadow-[0_0_20px_rgba(160,242,18,0.4)] hover:text-[#a0f212] transition-all duration-300">
+                              <Button className="rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
                                 View Details
                               </Button>
                             </Link>
