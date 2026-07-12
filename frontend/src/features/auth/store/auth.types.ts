@@ -4,6 +4,20 @@ import type { AuthUser } from "@/features/auth/api/types";
 
 export type UserRole = "client" | "host" | "admin";
 
+export interface HostProfile {
+  id: string;
+  userId: string;
+  accountType: string;
+  govIdUrl?: string | null;
+  gstNumber?: string | null;
+  kycStatus: "PENDING" | "APPROVED" | "REJECTED";
+  bio?: string | null;
+  bankDetail?: {
+    id: string;
+    bankName: string;
+  } | null;
+}
+
 export interface User {
   id: string;
   firstName: string;
@@ -15,6 +29,7 @@ export interface User {
   role: UserRole;
   status: "ACTIVE" | "SUSPENDED";
   avatarUrl?: string;
+  hostProfile?: HostProfile | null;
 }
 
 /** Transient state while user is going through the registration wizard */
@@ -66,7 +81,7 @@ export interface AuthState {
 
 // ── mapApiUser helper (shared between store and initAuth) ─────────────────
 
-export function mapApiUser(u: AuthUser): User {
+export function mapApiUser(u: any): User {
   return {
     id: u.id,
     firstName: u.firstName,
@@ -77,5 +92,6 @@ export function mapApiUser(u: AuthUser): User {
     role:
       u.role === "SUPERADMIN" ? "admin" : (u.role.toLowerCase() as UserRole),
     status: u.status,
+    hostProfile: u.hostProfile || null,
   };
 }

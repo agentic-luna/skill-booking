@@ -33,6 +33,9 @@ export interface ClientEvent {
   totalSeats: number;
   availableSeats: number;
   status: EventStatus;
+  price?: number;
+  duration?: string;
+  category?: string;
   createdAt: string;
   updatedAt: string;
   host?: ClientHostProfile;

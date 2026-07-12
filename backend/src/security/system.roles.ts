@@ -11,6 +11,9 @@ export const RolePermissionMap: Record<UserRole, SystemPermission[]> = {
     SystemPermissions.HOST_DASHBOARD_READ,
     SystemPermissions.HOST_EVENTS_CREATE,
     SystemPermissions.HOST_EVENTS_UPDATE,
+    SystemPermissions.HOST_EVENTS_DELETE,
+    SystemPermissions.CLIENT_WISHLIST_MANAGE,
+    SystemPermissions.CLIENT_LIKES_MANAGE,
   ],
   [UserRole.CLIENT]: [
     SystemPermissions.AUTH_PROFILE_READ,

@@ -50,7 +50,7 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       throw new ConflictError('Booking failed due to temporary ticket race conditions. Please retry.');
     }
 
-    const ticketPrice = 500;
+    const ticketPrice = event.price || 500;
     const totalAmount = customAmount || seatCount * ticketPrice;
     const bookingRef = `BK-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 

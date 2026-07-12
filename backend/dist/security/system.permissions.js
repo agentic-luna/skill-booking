@@ -11,6 +11,7 @@ exports.SystemPermissions = {
     HOST_DASHBOARD_READ: 'host:dashboard_read',
     HOST_EVENTS_CREATE: 'host:events_create',
     HOST_EVENTS_UPDATE: 'host:events_update',
+    HOST_EVENTS_DELETE: 'host:events_delete',
     // Client Permissions
     CLIENT_BOOKINGS_CREATE: 'client:bookings_create',
     CLIENT_BOOKINGS_READ_OWN: 'client:bookings_read_own',

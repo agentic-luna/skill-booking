@@ -21,6 +21,10 @@ export interface IEventRepository {
     availableSeats: number;
     status?: EventStatus;
     version?: number;
+    price?: number;
+    duration?: string;
+    description?: string;
+    category?: string;
   }): Promise<Event>;
   update(id: string, data: any): Promise<Event>;
   findPendingEvents(): Promise<any[]>;

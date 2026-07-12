@@ -100,6 +100,9 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 | `availableSeats` | Integer | Currently available seats |
 | `status` | String (Enum) | `PENDING`, `APPROVED`, `CANCELED` |
 | `version` | Integer | Optimistic locking version number |
+| `price` | Float | Cost per ticket in INR |
+| `duration` | String | Human readable event duration (e.g. `2 hours`) |
+| `category` | String | Specific course category (e.g. `technology`, `culinary`) |
 
 ### Booking Entity
 | Field | Type | Description |
@@ -339,6 +342,11 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 *Calculates refund percentage (>48h = 100%, 24-48h = 50%, <24h = 0%) and replenishes seat capacity.*
 
+### 6. Get Active Boosted Events
+`GET /api/v1/boosted-events`
+
+Returns list of all active sponsored or boosted events.
+
 ---
 
 ## 7. Wishlist & Event Likes API
@@ -533,6 +541,22 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ### 6. Fetch Bookings for a Specific Host Event
 `GET /api/v1/hosts/events/:eventId/bookings` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+### 7. Update Pending Host Event Details
+`PUT /api/v1/hosts/events/:id` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+**Request Body:**
+```json
+{
+  "title": "Advanced NestJS Masterclass (Updated)",
+  "price": 600,
+  "duration": "4 hours",
+  "description": "An updated comprehensive course details..."
+}
+```
+
+### 8. Delete Pending Host Event
+`DELETE /api/v1/hosts/events/:id` *(Requires Bearer Header - HOST/SUPERADMIN)*
 
 ---
 
