@@ -31,7 +31,7 @@ export const MOCK_PROGRAMS: Program[] = [
     reviewsCount: 142,
     price: 99,
     duration: "6 hours (2 days)",
-    date: "2026-07-15",
+    date: typeof window !== "undefined" ? new Date().toISOString().split("T")[0] : "2026-07-12",
     time: "10:00 AM - 1:00 PM EST",
     spotsLeft: 5,
     maxSpots: 20,
