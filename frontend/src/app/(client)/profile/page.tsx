@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import * as clientApi from "@/features/client/api/client.api";
 import Navbar from "@/components/common/Navbar";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { Button } from "@/components/ui/button";
@@ -99,26 +100,50 @@ export default function ProfilePage() {
 
   const onProfileSave = async (data: ProfileFormValues) => {
     setProfileSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    updateProfile({ name: data.name, email: data.email });
-    setProfileSaving(false);
-    showAlert("Profile Updated", "Profile details successfully updated!", "success");
+    try {
+      const [firstName, ...lastNameParts] = data.name.trim().split(" ");
+      const lastName = lastNameParts.join(" ");
+      await clientApi.updateProfile({ firstName, lastName: lastName || "", email: data.email });
+      updateProfile({ name: data.name, email: data.email });
+      showAlert("Profile Updated", "Profile details successfully updated!", "success");
+    } catch (err: any) {
+      showAlert("Update Failed", err.message || "Could not update profile info.", "destructive");
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const onPasswordSave = async (data: PasswordFormValues) => {
     setPasswordSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setPasswordSaving(false);
-    resetPassword();
-    showAlert("Password Changed", "Your password has been successfully updated!", "success");
+    try {
+      await clientApi.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      });
+      resetPassword();
+      showAlert("Password Changed", "Your password has been successfully updated!", "success");
+    } catch (err: any) {
+      showAlert("Error", err.message || "Failed to update password.", 'destructive');
+    } finally {
+      setPasswordSaving(false);
+    }
   };
 
   const handleApplyHost = async (e: React.FormEvent) => {
     e.preventDefault();
+    const expertise = (document.getElementById("expertise") as HTMLInputElement)?.value || "";
+    const bio = (document.getElementById("bio") as HTMLTextAreaElement)?.value || "";
+    
     setSubmittingHost(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSubmittingHost(false);
-    setHostApplied(true);
+    try {
+      await clientApi.applyHost({ expertise, bio });
+      setHostApplied(true);
+      showAlert("Application Submitted", "Your host credentials have been submitted for verification.", "success");
+    } catch (err: any) {
+      showAlert("Submission Failed", err.message || "Could not apply to become host.", "destructive");
+    } finally {
+      setSubmittingHost(false);
+    }
   };
 
   return (

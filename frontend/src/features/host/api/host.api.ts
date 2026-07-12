@@ -64,3 +64,24 @@ export async function getHostDashboard(): Promise<DashboardStats> {
   );
   return res.data;
 }
+
+export async function getMyEvents(): Promise<any[]> {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
+    "/hosts/my-events"
+  );
+  return res.data;
+}
+
+export async function getHostParticipants(): Promise<any[]> {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
+    "/hosts/participants"
+  );
+  return res.data;
+}
+
+export async function getEventBookings(eventId: string): Promise<any[]> {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
+    `/hosts/events/${eventId}/bookings`
+  );
+  return res.data;
+}

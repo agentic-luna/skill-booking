@@ -49,11 +49,16 @@ interface AdminState {
   eventQueue: PendingEvent[];
   fetchEventQueue: () => Promise<void>;
   approveEvent: (eventId: string, payload: ApproveEventPayload) => Promise<ApproveEventResult>;
+  declineEvent: (eventId: string) => Promise<any>;
 
   // Finance & Ledger
   financeLedger: FinanceLedger | null;
+  refundRequests: any[];
   fetchFinanceLedger: () => Promise<void>;
   payoutHost: (hostId: string) => Promise<PayoutResult>;
+  fetchRefundRequests: () => Promise<void>;
+  approveRefund: (id: string) => Promise<any>;
+  declineRefund: (id: string) => Promise<any>;
 
   // KYC & Host Review
   hosts: HostWithProfile[];
@@ -61,6 +66,8 @@ interface AdminState {
   fetchHosts: (kycStatus?: string) => Promise<void>;
   fetchPendingKycHosts: () => Promise<void>;
   reviewKyc: (hostProfileId: string, payload: KycReviewPayload) => Promise<KycReviewResult>;
+  deleteHost: (hostId: string) => Promise<any>;
+  notifyHost: (hostId: string, subject: string, bodyContent: string) => Promise<any>;
 
   clearError: () => void;
 }
@@ -195,6 +202,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     return result;
   }),
 
+  declineEvent: (eventId) => withLoading(set, async () => {
+    const result = await api.declineEvent(eventId);
+    set({ eventQueue: get().eventQueue.filter((e) => e.id !== eventId) });
+    return result;
+  }),
+
   // ── Finance & Ledger ───────────────────────────────────────────────────
 
   financeLedger: null,
@@ -208,6 +221,25 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const result = await api.payoutHost(hostId);
     // Refresh ledger after payout release
     await get().fetchFinanceLedger();
+    return result;
+  }),
+
+  refundRequests: [],
+
+  fetchRefundRequests: () => withLoading(set, async () => {
+    const refundRequests = await api.getRefundRequests();
+    set({ refundRequests });
+  }),
+
+  approveRefund: (id) => withLoading(set, async () => {
+    const result = await api.approveRefundRequest(id);
+    await get().fetchRefundRequests();
+    return result;
+  }),
+
+  declineRefund: (id) => withLoading(set, async () => {
+    const result = await api.declineRefundRequest(id);
+    await get().fetchRefundRequests();
     return result;
   }),
 
@@ -231,6 +263,17 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     // Refresh list states
     await get().fetchPendingKycHosts();
     await get().fetchHosts();
+    return result;
+  }),
+
+  deleteHost: (hostId) => withLoading(set, async () => {
+    const result = await api.deleteHost(hostId);
+    set({ hosts: get().hosts.filter((h) => h.id !== hostId) });
+    return result;
+  }),
+
+  notifyHost: (hostId, subject, bodyContent) => withLoading(set, async () => {
+    const result = await api.notifyHost(hostId, { subject, bodyContent });
     return result;
   }),
 

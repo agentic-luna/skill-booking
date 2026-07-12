@@ -696,6 +696,115 @@ export const swaggerSpec = {
         },
       },
     },
+    '/hosts/profile': {
+      put: {
+        tags: ['Host Workflows'],
+        summary: 'Update logged-in user profile details',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  email: { type: 'string', format: 'email' },
+                },
+                required: ['firstName', 'email'],
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Profile updated successfully' },
+        },
+      },
+    },
+    '/hosts/change-password': {
+      put: {
+        tags: ['Host Workflows'],
+        summary: 'Change logged-in user password',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  currentPassword: { type: 'string' },
+                  newPassword: { type: 'string' },
+                },
+                required: ['currentPassword', 'newPassword'],
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Password changed successfully' },
+        },
+      },
+    },
+    '/hosts/apply-host': {
+      post: {
+        tags: ['Host Workflows'],
+        summary: 'Apply to become a verified Host',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  expertise: { type: 'string' },
+                  bio: { type: 'string' },
+                },
+                required: ['bio'],
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Host application submitted successfully' },
+        },
+      },
+    },
+    '/hosts/my-events': {
+      get: {
+        tags: ['Host Workflows'],
+        summary: 'List all workshops created by the authenticated host',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'List of events' },
+        },
+      },
+    },
+    '/hosts/participants': {
+      get: {
+        tags: ['Host Workflows'],
+        summary: 'List all ticket bookings/participants for the host\'s events',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'List of participant bookings' },
+        },
+      },
+    },
+    '/hosts/events/{eventId}/bookings': {
+      get: {
+        tags: ['Host Workflows'],
+        summary: 'List all bookings for a specific host event',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'eventId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }
+        ],
+        responses: {
+          200: { description: 'List of event bookings' },
+        },
+      },
+    },
     '/events': {
       get: {
         tags: ['Client & Booking Workflows'],
@@ -862,6 +971,24 @@ export const swaggerSpec = {
         parameters: [{ name: 'bookingId', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           200: { description: 'Booking canceled/refunded and seats replenished' },
+        },
+      },
+    },
+    '/bookings/{bookingId}/invoice': {
+      get: {
+        tags: ['Client & Booking Workflows'],
+        summary: 'Download a PDF invoice statement for a specific ticket booking',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'bookingId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' }, description: 'Booking ID' }],
+        responses: {
+          200: {
+            description: 'Returns generated invoice PDF file download stream',
+            content: {
+              'application/pdf': {
+                schema: { type: 'string', format: 'binary' }
+              }
+            }
+          },
         },
       },
     },
@@ -1211,6 +1338,86 @@ export const swaggerSpec = {
           200: { description: 'KYC decision recorded, host profile updated with new kycStatus' },
           400: { description: 'Missing rejection reason or invalid decision value' },
           404: { description: 'Host profile not found' },
+        },
+      },
+    },
+    '/admin/hosts/{id}': {
+      delete: {
+        tags: ['Admin KYC Review'],
+        summary: 'Soft-delete a host user account',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' }, description: 'Host User ID' }],
+        responses: {
+          200: { description: 'Host user soft-deleted successfully' },
+        },
+      },
+    },
+    '/admin/hosts/{id}/notify': {
+      post: {
+        tags: ['Admin KYC Review'],
+        summary: 'Send personal email notification to a host',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' }, description: 'Host User ID' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['subject', 'bodyContent'],
+                properties: {
+                  subject: { type: 'string' },
+                  bodyContent: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Notification dispatched successfully' },
+        },
+      },
+    },
+    '/admin/events/{eventId}/decline': {
+      put: {
+        tags: ['Admin KYC Review'],
+        summary: 'Decline / Reject a pending workshop listing',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'eventId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' }, description: 'Event ID' }],
+        responses: {
+          200: { description: 'Event status updated to CANCELED' },
+        },
+      },
+    },
+    '/admin/finance/refund-requests': {
+      get: {
+        tags: ['Admin Finance & Payouts'],
+        summary: 'List all ticket refund requests',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'List of refund requests' },
+        },
+      },
+    },
+    '/admin/finance/refund-requests/{id}/approve': {
+      put: {
+        tags: ['Admin Finance & Payouts'],
+        summary: 'Approve refund request and mark booking as REFUNDED',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' }, description: 'Refund Request ID' }],
+        responses: {
+          200: { description: 'Refund request approved successfully' },
+        },
+      },
+    },
+    '/admin/finance/refund-requests/{id}/decline': {
+      put: {
+        tags: ['Admin Finance & Payouts'],
+        summary: 'Decline refund request',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' }, description: 'Refund Request ID' }],
+        responses: {
+          200: { description: 'Refund request declined' },
         },
       },
     },

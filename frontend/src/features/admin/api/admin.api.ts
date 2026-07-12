@@ -95,3 +95,21 @@ export const getPendingKycHosts = () =>
 
 export const reviewKyc = (hostProfileId: string, payload: KycReviewPayload) =>
   request<ApiData<KycReviewResult>>(`/admin/hosts/${hostProfileId}/kyc`, { method: "PUT", body: JSON.stringify(payload) }).then(r => r.data);
+
+export const deleteHost = (hostId: string) =>
+  request<ApiData<any>>(`/admin/hosts/${hostId}`, { method: "DELETE" }).then(r => r.data);
+
+export const notifyHost = (hostId: string, payload: { subject: string; bodyContent: string }) =>
+  request<ApiData<any>>(`/admin/hosts/${hostId}/notify`, { method: "POST", body: JSON.stringify(payload) }).then(r => r.data);
+
+export const declineEvent = (eventId: string) =>
+  request<ApiData<any>>(`/admin/events/${eventId}/decline`, { method: "PUT" }).then(r => r.data);
+
+export const getRefundRequests = () =>
+  request<ApiData<any[]>>("/admin/finance/refund-requests").then(r => r.data);
+
+export const approveRefundRequest = (refundId: string) =>
+  request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/approve`, { method: "PUT" }).then(r => r.data);
+
+export const declineRefundRequest = (refundId: string) =>
+  request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/decline`, { method: "PUT" }).then(r => r.data);

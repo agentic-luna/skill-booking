@@ -28,7 +28,8 @@ export default function AdminApprovalsPage() {
     loading,
     error,
     fetchEventQueue,
-    approveEvent
+    approveEvent,
+    declineEvent
   } = useAdminStore();
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function AdminApprovalsPage() {
       });
       showAlert(
         "Listing Approved",
-        `Workshop listing status has been successfully set to: APPROVED with {commissionType === "PERCENTAGE" ? platformValue + "%" : platformValue} commission.`,
+        `Workshop listing status has been successfully set to: APPROVED with ${commissionType === "PERCENTAGE" ? platformValue + "%" : platformValue} commission.`,
         "success"
       );
       setIsApproveOpen(false);
@@ -70,13 +71,21 @@ export default function AdminApprovalsPage() {
     }
   };
 
-  const handleDeclineLocal = (eventId: string, e: React.MouseEvent) => {
+  const handleDeclineLocal = async (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    showAlert(
-      "Decline Event",
-      "Event declined. Note: event remains PENDING in database as there is no backend reject endpoint.",
-      "destructive"
-    );
+    try {
+      await declineEvent(eventId);
+      showAlert(
+        "Listing Declined",
+        "The pending program listing has been successfully declined.",
+        "success"
+      );
+      if (selectedProgram?.id === eventId) {
+        setSelectedProgram(null);
+      }
+    } catch (err: any) {
+      showAlert("Decline Failed", err.message || "Could not decline listing.", "destructive");
+    }
   };
 
   const filteredApprovals = (eventQueue || []).filter((prog) => {

@@ -1,4 +1,5 @@
 import { request } from "@/features/auth/api/client";
+import { API_BASE_URL } from "@/lib/config";
 import type {
   ClientEvent, SearchEventsFilter, WishlistItem, ClientBooking,
   CheckoutPayload, CheckoutResult, ConfirmPaymentPayload, ConfirmPaymentResult,
@@ -86,3 +87,29 @@ export const markNotificationRead = (id: string) =>
   request<ApiData<InAppNotification>>(`/notifications/${id}/read`, {
     method: "PUT",
   }).then(r => r.data);
+
+// ── Profile Settings & Host application (mounted under /hosts router) ──
+
+export const updateProfile = (payload: { firstName: string; lastName: string; email: string }) =>
+  request<ApiData<any>>("/hosts/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  }).then(r => r.data);
+
+export const changePassword = (payload: { currentPassword: string; newPassword: string }) =>
+  request<ApiData<any>>("/hosts/change-password", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  }).then(r => r.data);
+
+export const applyHost = (payload: { expertise: string; bio: string }) =>
+  request<ApiData<any>>("/hosts/apply-host", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  }).then(r => r.data);
+
+// ── Booking Invoice Download ──
+
+export const getInvoiceUrl = (bookingId: string) => {
+  return `${API_BASE_URL}/bookings/${bookingId}/invoice`;
+};

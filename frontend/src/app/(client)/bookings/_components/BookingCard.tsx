@@ -78,13 +78,38 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                 variant="outline"
                 size="sm"
                 className="h-8 text-xs rounded-lg"
-                onClick={() =>
-                  showAlert(
-                    "Receipt Downloaded",
-                    `Invoice successfully downloaded for transaction reference: TXN_${booking.id.slice(0, 8).toUpperCase()}`,
-                    "success"
-                  )
-                }
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem("bms_access_token");
+                    const { getInvoiceUrl } = await import("@/features/client/api/client.api");
+                    const invoiceUrl = getInvoiceUrl(booking.id);
+                    
+                    const res = await fetch(invoiceUrl, {
+                      headers: {
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                    });
+
+                    if (!res.ok) {
+                      throw new Error("Failed to generate and download invoice");
+                    }
+
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.style.display = "none";
+                    a.href = url;
+                    a.download = `invoice_${booking.id.slice(0, 8).toUpperCase()}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    
+                    showAlert("Receipt Downloaded", "Your PDF invoice has been generated and downloaded successfully.", "success");
+                  } catch (err: any) {
+                    showAlert("Download Failed", err.message || "Failed to download receipt.", "destructive");
+                  }
+                }}
               >
                 <FileText className="h-3.5 w-3.5 mr-1" /> Invoice
               </Button>

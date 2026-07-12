@@ -17,12 +17,13 @@ export default function HostManagementPage() {
     hosts,
     loading,
     error,
-    fetchHosts
+    fetchHosts,
+    deleteHost,
+    notifyHost
   } = useAdminStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [deletedHostIds, setDeletedHostIds] = useState<string[]>([]);
   const [selectedHost, setSelectedHost] = useState<any>(null);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [notifySubject, setNotifySubject] = useState("");
@@ -34,33 +35,41 @@ export default function HostManagementPage() {
     fetchHosts();
   }, [fetchHosts]);
 
-  const handleDeleteHost = (hostId: string) => {
-    setDeletedHostIds((prev) => [...prev, hostId]);
-    showAlert("Host Removed", "Host registry entry has been successfully deleted from local admin roster.", "success");
-    setIsDeleteOpen(false);
-    setDeleteTargetId(null);
+  const handleDeleteHost = async (hostId: string) => {
+    try {
+      await deleteHost(hostId);
+      showAlert("Host Removed", "Host registry entry has been successfully deleted/disabled on the platform.", "success");
+      setIsDeleteOpen(false);
+      setDeleteTargetId(null);
+    } catch (err: any) {
+      showAlert("Deletion Issue", err.message || "Could not delete this host.", "destructive");
+    }
   };
 
-  const handleSendNotification = () => {
+  const handleSendNotification = async () => {
     if (!notifySubject.trim() || !notifyBody.trim()) {
       showAlert("Error", "Subject and message body contents are required to notify.", "destructive");
       return;
     }
 
-    const hostEmail = selectedHost.email || "host@platform.com";
-    showAlert(
-      "Notification Scheduled",
-      `Personal alert message successfully dispatched to ${selectedHost.firstName || ""} ${selectedHost.lastName || ""} (${hostEmail}).`,
-      "success"
-    );
-    setIsNotifyOpen(false);
-    setNotifySubject("");
-    setNotifyBody("");
-    setSelectedHost(null);
+    try {
+      await notifyHost(selectedHost.id, notifySubject, notifyBody);
+      showAlert(
+        "Notification Sent",
+        `Personal alert email successfully dispatched to ${selectedHost.firstName || ""} ${selectedHost.lastName || ""} (${selectedHost.email}).`,
+        "success"
+      );
+      setIsNotifyOpen(false);
+      setNotifySubject("");
+      setNotifyBody("");
+      setSelectedHost(null);
+    } catch (err: any) {
+      showAlert("Dispatch Failed", err.message || "Could not send notification to host.", "destructive");
+    }
   };
 
-  // Only display real hosts loaded from API that have not been locally deleted
-  const activeHosts = (hosts || []).filter((h) => !deletedHostIds.includes(h.id));
+  // Only display real hosts loaded from API
+  const activeHosts = hosts || [];
 
   const filteredHosts = activeHosts.filter((host) => {
     if (statusFilter !== "ALL" && host.status !== statusFilter) return false;

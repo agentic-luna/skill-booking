@@ -1,12 +1,21 @@
 import React from "react";
 import Link from "next/link";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
-
 import { Card } from "@/components/ui/card";
-import { Program } from "@/constants/mockData";
 
 interface ProgramRowCardProps {
-  program: Program & { enrolledCount?: number };
+  program: {
+    id: string;
+    title: string;
+    imageUrl: string;
+    category: string;
+    status: string;
+    date: string;
+    time: string;
+    maxSpots: number;
+    price: number;
+    enrolledCount?: number;
+  };
   href?: string;
 }
 
