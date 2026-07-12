@@ -36,16 +36,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden bg-gradient-to-r from-linen-canvas via-white to-haze">
       <style dangerouslySetInnerHTML={{ __html: authStyles }} />
 
       <AuthBrandPanel />
 
       {/* Right Auth Panel */}
-      <div className="flex flex-1 items-center justify-center px-4 sm:px-8 py-12 relative bg-gradient-to-br from-linen-canvas to-haze">
+      <div className="flex flex-1 items-center justify-center px-4 sm:px-8 py-12 relative bg-transparent">
 
         {/* Mobile logo */}
-        <div className="absolute top-8 left-8 lg:hidden">
+        <div className="absolute top-6 left-6 lg:hidden">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-nightshade-black">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -54,31 +54,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </svg>
             </div>
             <span className="text-lg font-bold tracking-tight text-graphite-ink">
-              BookMy<span className="text-nightshade-black">Skill</span>
+              BookMy<span className="text-charcoal-slate">Skill</span>
             </span>
           </Link>
-
-          <div className="banner-animate-copy relative z-10 space-y-6 my-auto max-w-md">
-            <h1 className="text-4xl font-extrabold tracking-tight text-graphite-ink leading-[1.15]">
-              Unlock Your{" "}<span className="text-nightshade-black">Potential</span> with Expert Training.
-            </h1>
-            <p className="text-stone-grey text-base leading-relaxed">
-              Join a global marketplace connecting eager learners with certified hosts. Streamlined bookings,
-              dynamic scheduling, and interactive analytics all in one place.
-            </p>
-          </div>
-
-          <div className="banner-animate-footer relative z-10 text-xs text-stone-grey flex justify-between">
-            <span>&copy; {new Date().getFullYear()} BookMySkill Inc.</span>
-            <div className="space-x-3">
-              <a href="#" className="hover:underline">Privacy Policy</a>
-              <a href="#" className="hover:underline">Terms</a>
-            </div>
-          </div>
         </div>
 
         {/* Form card */}
-        <div className="w-full max-w-[440px] rounded-3xl bg-white shadow-2xl shadow-[#6b3a2a]/10 p-8 sm:p-10">
+        <div className="w-full max-w-[440px] rounded-3xl bg-white border border-clay-shadow/50 shadow-2xl shadow-clay-shadow/10 p-8 sm:p-10">
           {children}
         </div>
       </div>

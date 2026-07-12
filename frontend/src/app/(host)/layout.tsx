@@ -93,7 +93,10 @@ export default function HostLayout({
           {menuItems.map((item) => {
             const IconComp = item.icon;
             const isActive = pathname === item.href;
-            const isRestricted = !hasSubmittedBoth && item.href !== "/host/kyc" && item.href !== "/host/earnings";
+            const isRestricted = !hasSubmittedBoth && 
+              item.href !== "/host/kyc" && 
+              item.href !== "/host/earnings" && 
+              item.href !== "/programs";
             
             return (
               <Link
@@ -130,6 +133,17 @@ export default function HostLayout({
       {/* Sidebar Footer buttons */}
       <div className="space-y-3 pt-6 border-t border-border/40">
         <Link
+          href="/programs"
+          className={`flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-medium transition-all ${
+            pathname === "/programs"
+              ? "bg-primary/10 text-primary font-semibold"
+              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          }`}
+        >
+          <Sparkles className="h-4.5 w-4.5" />
+          <span>Explore Skills</span>
+        </Link>
+        <Link
           href="/profile"
           className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"
         >
@@ -138,9 +152,9 @@ export default function HostLayout({
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-bold text-destructive hover:bg-destructive/10 w-full text-left"
+          className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 w-full text-left transition-colors"
         >
-          <LogOut className="h-4.5 w-4.5" />
+          <LogOut className="h-4.5 w-4.5 text-red-600 dark:text-red-400" />
           <span>Log out</span>
         </button>
       </div>

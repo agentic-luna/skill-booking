@@ -109,9 +109,9 @@ export default function AdminLayout({
 
         <button
           onClick={handleLogout}
-          className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-bold text-destructive hover:bg-destructive/10 w-full text-left"
+          className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 w-full text-left transition-colors"
         >
-          <LogOut className="h-4.5 w-4.5" />
+          <LogOut className="h-4.5 w-4.5 text-red-600 dark:text-red-400" />
           <span>Log out</span>
         </button>
       </div>

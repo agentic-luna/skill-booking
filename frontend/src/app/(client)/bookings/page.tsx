@@ -18,7 +18,7 @@ import type { ClientBooking } from "@/features/client/api/types";
 
 export default function BookingsPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const showAlert = useAlertStore((s) => s.showAlert);
 
   const { bookings, fetchBookings, cancelBooking, loading } = useClientStore();
@@ -31,10 +31,14 @@ export default function BookingsPage() {
       router.push("/login");
       return;
     }
+    if (user?.role === "host") {
+      router.push("/host/dashboard");
+      return;
+    }
     fetchBookings();
-  }, [isAuthenticated, router, fetchBookings]);
+  }, [isAuthenticated, user, router, fetchBookings]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || user?.role === "host") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <div className="animate-pulse flex flex-col items-center space-y-4">
