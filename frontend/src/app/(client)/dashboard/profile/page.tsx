@@ -182,7 +182,7 @@ export default function ProfilePage() {
                   <p className="text-[10px] text-muted-foreground">{user.email}</p>
                 </div>
 
-                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+                <div className="bg-primary/10 text-green-800 dark:text-green-600 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
                   {user.role} Account
                 </div>
               </CardContent>

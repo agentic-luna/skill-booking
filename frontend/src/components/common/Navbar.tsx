@@ -105,10 +105,18 @@ export default function Navbar() {
                   {user.role === "client" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground relative">
-                          <Bell className="h-4.5 w-4.5" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className={`rounded-full relative transition-all duration-300 ${
+                            isScrolled || !isHome 
+                              ? "text-graphite-ink hover:bg-graphite-ink/5 hover:drop-shadow-sm" 
+                              : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                          }`}
+                        >
+                          <Bell className="h-5 w-5" />
                           {unreadNotificationsCount > 0 && (
-                            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                            <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse" />
                           )}
                         </Button>
                       </DropdownMenuTrigger>
@@ -142,17 +150,19 @@ export default function Navbar() {
                   )}
 
                   {/* Wishlist Link */}
-                  <Link href="/wishlist">
-                    <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
-                      <Heart className="h-4.5 w-4.5" />
-                    </Button>
-                  </Link>
+                  {user.role === "client" && (
+                    <Link href="/wishlist">
+                      <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
+                        <Heart className="h-4.5 w-4.5" />
+                      </Button>
+                    </Link>
+                  )}
 
 
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center space-x-2 focus:outline-none">
+                      <button className="flex items-center space-x-2 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none">
                         <div className="h-9 w-9 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-xs font-extrabold ring-2 ring-primary/20 tracking-wider shadow-sm">
                           {user.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
                         </div>
@@ -191,7 +201,7 @@ export default function Navbar() {
                         </DropdownMenuItem>
                       )}
 
-                      <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
                         <UserCheck className="mr-2 h-4 w-4" /> Profile Details
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -289,7 +299,7 @@ export default function Navbar() {
                   Wishlist
                 </Link>
                 <Link
-                  href="/profile"
+                  href="/dashboard/profile"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5"
                 >

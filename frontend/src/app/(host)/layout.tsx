@@ -144,7 +144,7 @@ export default function HostLayout({
           <span>Explore Skills</span>
         </Link>
         <Link
-          href="/profile"
+          href="/dashboard/profile"
           className="flex items-center space-x-3 px-3.5 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"
         >
           <UserCheck className="h-4.5 w-4.5" />

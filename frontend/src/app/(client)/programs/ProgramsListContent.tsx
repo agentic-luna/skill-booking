@@ -334,9 +334,10 @@ export default function ProgramsListContent() {
                     const price = prog.price || prog.venueDetails?.price || 0;
                     
                     return (
-                      <div
+                      <Link
                         key={prog.id}
-                        className="group flex flex-col bg-white border border-border/20 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1"
+                        href={`/programs/${prog.id}`}
+                        className="group flex flex-col bg-white border border-border/20 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 relative cursor-pointer"
                       >
                         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
                           <img
@@ -381,15 +382,12 @@ export default function ProgramsListContent() {
                               <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">Price</span>
                               <div className="text-xl font-black text-foreground">${price}</div>
                             </div>
-                            <Link href={`/programs/${prog.id}`}>
-                              {/* Premium Glow Button */}
-                              <Button className="rounded-xl h-10 px-5 text-xs font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
-                                View Details
-                              </Button>
-                            </Link>
+                            <div className="flex items-center justify-center rounded-xl h-10 px-5 text-xs font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] group-hover:from-[#a0f212] group-hover:to-[#8ce20b] group-hover:text-[#0b0c01] group-hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
+                              View Details
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -401,7 +399,7 @@ export default function ProgramsListContent() {
                     const price = prog.price || prog.venueDetails?.price || 0;
 
                     return (
-                      <Card key={prog.id} className="overflow-hidden bg-white border border-border/20 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 group">
+                      <Link key={prog.id} href={`/programs/${prog.id}`} className="overflow-hidden bg-white border border-border/20 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 group block cursor-pointer">
                         <div className="flex flex-col sm:flex-row h-full">
                           <div className="sm:w-72 aspect-[16/10] sm:aspect-auto relative overflow-hidden bg-muted/20">
                             <img
@@ -439,16 +437,13 @@ export default function ProgramsListContent() {
                                   <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> 4.8 ({prog._count?.likes || 0})
                                 </div>
                               </div>
-                              <Link href={`/programs/${prog.id}`}>
-                                {/* Premium Glow Button */}
-                                <Button className="rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
-                                  View Details
-                                </Button>
-                              </Link>
+                              <div className="flex items-center justify-center rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] group-hover:from-[#a0f212] group-hover:to-[#8ce20b] group-hover:text-[#0b0c01] group-hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
+                                View Details
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </Link>
                     );
                   })}
                 </div>

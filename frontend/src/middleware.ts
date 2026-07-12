@@ -58,7 +58,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 5. Client dashboard and protected pages
-  const clientProtectedPaths = ["/dashboard", "/programs", "/profile", "/wishlist", "/liked-events", "/bookings"];
+  const clientProtectedPaths = ["/dashboard", "/programs", "/wishlist", "/liked-events", "/bookings"];
   const isClientPath = clientProtectedPaths.some(p => pathname === p || pathname.startsWith(p + "/"));
   if (isClientPath) {
     if (!isAuthenticated) {
@@ -78,7 +78,6 @@ export const config = {
     "/dashboard/:path*",
     "/programs/:path*",
     "/bookings/:path*",
-    "/profile/:path*",
     "/wishlist/:path*",
     "/liked-events/:path*"
   ],

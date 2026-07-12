@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { User, BookmarkCheck, Heart, LayoutDashboard, Settings } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { User, BookmarkCheck, Heart, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { cn } from "@/lib/utils";
 
 const DASHBOARD_LINKS = [
@@ -11,11 +12,12 @@ const DASHBOARD_LINKS = [
   { name: "Profile Settings", href: "/dashboard/profile", icon: User },
   { name: "My Tickets", href: "/dashboard/tickets", icon: BookmarkCheck },
   { name: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
-  { name: "Liked Events", href: "/dashboard/liked-events", icon: Heart },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -55,6 +57,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </Link>
                 );
               })}
+              
+              <div className="my-2 h-[1px] bg-black/5 dark:bg-white/10 w-full" />
+              
+              <button
+                onClick={() => {
+                  logout();
+                  router.push("/");
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 w-full text-left"
+              >
+                <LogOut className="h-4 w-4 opacity-70" />
+                Log out
+              </button>
             </nav>
           </div>
         </aside>

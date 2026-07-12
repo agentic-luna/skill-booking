@@ -258,6 +258,69 @@ async function main() {
     });
   }
 
+  // Kerala Skills Mock Data
+  const additionalEvents = [
+    {
+      title: 'Traditional Kerala Cooking Masterclass',
+      description: 'Learn to cook authentic Kerala Sadya with secret family recipes.',
+      posterUrl: 'https://images.unsplash.com/photo-1626509653294-1d11b332b49c?auto=format&fit=crop&q=80&w=600',
+      mode: 'ONLINE',
+      price: 50.00,
+      category: 'cooking',
+      duration: '3 hours',
+    },
+    {
+      title: 'Kalaripayattu Basics - Martial Arts',
+      description: 'An introductory workshop to the ancient martial art form of Kerala.',
+      posterUrl: 'https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&q=80&w=600',
+      mode: 'OFFLINE',
+      price: 75.00,
+      category: 'fitness',
+      duration: '4 hours',
+    },
+    {
+      title: 'Malayalam Language for Beginners',
+      description: 'Master the basics of Malayalam language for conversation and travel.',
+      posterUrl: 'https://images.unsplash.com/photo-1510137600163-2729bc6959a6?auto=format&fit=crop&q=80&w=600',
+      mode: 'ONLINE',
+      price: 30.00,
+      category: 'languages',
+      duration: '2 hours',
+    },
+    {
+      title: 'Kerala Mural Painting Techniques',
+      description: 'Discover the vibrant world of traditional Kerala Mural arts and colors.',
+      posterUrl: 'https://images.unsplash.com/photo-1582561424760-0321d6cb1d6b?auto=format&fit=crop&q=80&w=600',
+      mode: 'OFFLINE',
+      price: 60.00,
+      category: 'arts',
+      duration: '5 hours',
+    }
+  ];
+
+  for (const evt of additionalEvents) {
+    let existingEvt = await prisma.event.findFirst({ where: { title: evt.title } });
+    if (!existingEvt) {
+      await prisma.event.create({
+        data: {
+          hostId: hostProfile.id,
+          title: evt.title,
+          description: evt.description,
+          posterUrl: evt.posterUrl,
+          mode: evt.mode as 'ONLINE' | 'OFFLINE',
+          price: evt.price,
+          category: evt.category,
+          duration: evt.duration,
+          startTime: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000), 
+          totalSeats: 30,
+          availableSeats: 25,
+          status: 'APPROVED',
+          venueDetails: evt.mode === 'ONLINE' ? { meetingLink: 'https://zoom.us/j/123456' } : { address: 'Kochi, Kerala' },
+        },
+      });
+    }
+  }
+
   // Booking 1 - Standard Booking
   const booking1Ref = 'BMS-837492';
   let booking1 = await prisma.booking.findUnique({ where: { bookingRef: booking1Ref } });

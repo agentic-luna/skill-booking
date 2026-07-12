@@ -1,11 +1,54 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import ProgramCard from "@/components/common/ProgramCard";
-import { MOCK_PROGRAMS } from "@/constants/mockData";
+import { Program } from "@/constants/mockData";
+import { useClientStore } from "@/features/client/store/clientStore";
+
+function mapEventToProgram(event: any): Program {
+  const hostUser = event.host?.user;
+  const instructorName = event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
+  const instructorAvatar = hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
+  const locationStr = event.mode === "ONLINE" ? "Online" : (event.venueDetails?.address || "In Person");
+  const imageUrlStr = event.posterUrl || event.images?.[0] || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600";
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description || "",
+    instructorName,
+    instructorAvatar,
+    category: event.category || "technology",
+    rating: 4.8,
+    reviewsCount: event._count?.bookings || 12,
+    price: event.price || 0,
+    duration: event.duration || "2 hours",
+    date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
+    time: event.startTime 
+      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
+      : "10:00 AM EST",
+    spotsLeft: event.availableSeats ?? 0,
+    maxSpots: event.totalSeats ?? 20,
+    location: locationStr,
+    imageUrl: imageUrlStr,
+    status: event.status ? event.status.toLowerCase() : "approved",
+    featured: true,
+  };
+}
 
 export default function FeaturedProgramsSection() {
-  const featuredPrograms = MOCK_PROGRAMS.filter((p) => p.status === "approved").slice(0, 4);
+  const { events, fetchEvents } = useClientStore();
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  const featuredPrograms = (events || [])
+    .filter((p) => p.status === "APPROVED")
+    .map(mapEventToProgram)
+    .slice(0, 4);
 
   return (
     <section id="featured-programs" className="py-20">
@@ -34,11 +77,17 @@ export default function FeaturedProgramsSection() {
 
         {/* Program Cards Grid */}
         <div className="w-full">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredPrograms.map((prog) => (
-              <ProgramCard key={prog.id} program={prog} />
-            ))}
-          </div>
+          {featuredPrograms.length === 0 ? (
+            <div className="text-center py-10 text-stone-grey">
+              No featured masterclasses available right now.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredPrograms.map((prog) => (
+                <ProgramCard key={prog.id} program={prog} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

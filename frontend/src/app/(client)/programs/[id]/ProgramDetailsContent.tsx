@@ -253,7 +253,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   };
 
   return (
-    <main className="flex-1 py-8 bg-muted/10 dark:bg-card/5">
+    <main className="flex-1 pt-[104px] pb-8 bg-muted/10 dark:bg-card/5">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Back Link */}

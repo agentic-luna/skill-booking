@@ -11,7 +11,7 @@ interface TopNavbarProps {
   hiddenRoutes?: string[];
 }
 
-export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"] }: TopNavbarProps) {
+export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin", "/login", "/register", "/forgot-password", "/admin/login"] }: TopNavbarProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,7 +31,7 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
   }
 
   // Check if we should force dark styling (e.g. on dashboard where background is white)
-  const forceDark = pathname.startsWith("/dashboard");
+  const forceDark = pathname.startsWith("/dashboard") || pathname.startsWith("/programs/") || pathname.startsWith("/host") || pathname.startsWith("/admin");
   const isDarkText = isScrolled || forceDark;
 
   return (
@@ -42,11 +42,21 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
         </Link>
         <div className={`hidden md:flex items-center gap-8 text-sm font-semibold transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]/70" : "text-white/80"}`}>
           <Link href="/programs" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Explore Skills</Link>
-          <Link href="/dashboard/wishlist" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Wishlist</Link>
-          <Link href="/dashboard/tickets" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>My Tickets</Link>
+          {user?.role === "client" && (
+            <>
+              <Link href="/dashboard/wishlist" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Wishlist</Link>
+              <Link href="/dashboard/tickets" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>My Tickets</Link>
+            </>
+          )}
+          {user?.role === "host" && (
+            <Link href="/host/dashboard" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Host Dashboard</Link>
+          )}
+          {user?.role === "admin" && (
+            <Link href="/admin/dashboard" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Admin Dashboard</Link>
+          )}
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/profile" className="flex items-center gap-3 group">
+          <Link href={user?.role === "host" ? "/host/dashboard" : user?.role === "admin" ? "/admin/dashboard" : "/dashboard"} className="flex items-center gap-3 group">
             {user?.name && (
               <span className={`text-sm font-bold transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]/80 group-hover:text-[#0b0c01]" : "text-white/80 group-hover:text-white"}`}>
                 {user.name}
