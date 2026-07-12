@@ -14,49 +14,13 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_PROGRAMS, Program } from "@/constants/mockData";
+import { CanvasText } from "@/components/ui/canvas-text";
 import { useClientStore } from "@/features/client/store/clientStore";
-
-function mapEventToProgram(event: any): Program {
-  const hostUser = event.host?.user;
-  const instructorName = event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
-  const instructorAvatar = hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
-  const locationStr = event.mode === "ONLINE" ? "Online" : (event.venueDetails?.address || "In Person");
-  const imageUrlStr = event.posterUrl || event.images?.[0] || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600";
-
-  return {
-    id: event.id,
-    title: event.title,
-    description: event.description || "",
-    instructorName,
-    instructorAvatar,
-    category: event.category || "technology",
-    rating: 4.8,
-    reviewsCount: event._count?.bookings || 12,
-    price: event.price || 0,
-    duration: event.duration || "2 hours",
-    date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
-    time: event.startTime 
-      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
-      : "10:00 AM EST",
-    spotsLeft: event.availableSeats ?? 0,
-    maxSpots: event.totalSeats ?? 20,
-    location: locationStr,
-    imageUrl: imageUrlStr,
-    status: event.status ? event.status.toLowerCase() : "approved",
-    featured: true,
-  };
-}
+import type { ClientEvent } from "@/features/client/api/types";
 
 export default function ProgramsListContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  const { events, fetchEvents, loading } = useClientStore();
-
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
 
   // URL Parameter rehydration
   const initialCategory = searchParams.get("category") || "all";
@@ -72,6 +36,12 @@ export default function ProgramsListContent() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const { events, fetchEvents, loading } = useClientStore();
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,40 +71,45 @@ export default function ProgramsListContent() {
     { name: "Business", value: "business" },
   ];
 
-  const programsList = (events || []).map(mapEventToProgram);
-
   // Filtering calculations
-  const filteredPrograms = programsList.filter((prog) => {
-    if (prog.status !== "approved") return false;
+  const filteredPrograms = events.filter((prog) => {
+    if (prog.status !== "APPROVED") return false;
     
     // Search check
+    const trainerName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
     const matchesSearch = 
       prog.title.toLowerCase().includes(search.toLowerCase()) ||
-      prog.description.toLowerCase().includes(search.toLowerCase()) ||
-      prog.instructorName.toLowerCase().includes(search.toLowerCase());
+      (prog.description || "").toLowerCase().includes(search.toLowerCase()) ||
+      trainerName.toLowerCase().includes(search.toLowerCase());
     
     // Category check
-    const matchesCategory = category === "all" || prog.category === category;
+    const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category;
     
     // Price check
-    const matchesPrice = maxPrice === 0 || prog.price <= maxPrice;
+    const price = prog.price || prog.venueDetails?.price || 0;
+    const matchesPrice = maxPrice === 0 || price <= maxPrice;
     
-    // Rating check
-    const matchesRating = prog.rating >= minRating;
+    // Rating check (Mocked to 4.8 for now)
+    const matchesRating = 4.8 >= minRating;
     
     // Availability check
-    const matchesAvailability = !hideFull || prog.spotsLeft > 0;
+    const matchesAvailability = !hideFull || prog.availableSeats > 0;
 
     return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesAvailability;
   });
 
   // Sorting calculations
   const sortedPrograms = [...filteredPrograms].sort((a, b) => {
-    if (sortBy === "price-asc") return a.price - b.price;
-    if (sortBy === "price-desc") return b.price - a.price;
-    if (sortBy === "rating") return b.rating - a.rating;
-    // default: popular (reviewsCount)
-    return b.reviewsCount - a.reviewsCount;
+    const priceA = a.price || a.venueDetails?.price || 0;
+    const priceB = b.price || b.venueDetails?.price || 0;
+    const likesA = a._count?.likes || 0;
+    const likesB = b._count?.likes || 0;
+
+    if (sortBy === "price-asc") return priceA - priceB;
+    if (sortBy === "price-desc") return priceB - priceA;
+    if (sortBy === "rating") return likesB - likesA; // Fallback to likes
+    // default: popular (likesCount)
+    return likesB - likesA;
   });
 
   const handleResetFilters = () => {
@@ -242,28 +217,6 @@ export default function ProgramsListContent() {
 
   return (
     <main className="flex-1 bg-[#fcfcfc] dark:bg-[#0a0a0a] min-h-screen pb-16">
-      
-      {/* Top Wide Navbar (Fixed) */}
-      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? "bg-white/70 backdrop-blur-xl border-b border-black/5 shadow-sm py-3" : "bg-transparent py-6"}`}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link href="/home" className={`text-2xl font-bold tracking-tight hover:opacity-80 transition-colors duration-500 ${isScrolled ? "text-[#0b0c01]" : "text-white"}`}>
-            BookMy<span className="text-[#a0f212]">Skill</span>
-          </Link>
-          <div className={`hidden md:flex items-center gap-8 text-sm font-semibold transition-colors duration-500 ${isScrolled ? "text-[#0b0c01]/70" : "text-white/80"}`}>
-            <Link href="/programs" className={`transition-colors ${isScrolled ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Explore Skills</Link>
-            <Link href="/wishlist" className={`transition-colors ${isScrolled ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Wishlist</Link>
-            <Link href="/bookings" className={`transition-colors ${isScrolled ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>My Tickets</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/profile">
-              <Button variant="ghost" size="icon" className={`rounded-full h-10 w-10 transition-colors duration-500 ${isScrolled ? "text-[#0b0c01] hover:bg-black/5" : "text-white hover:bg-white/10"}`}>
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       {/* 1. DARK GLOWING HERO HEADER */}
       <div className="relative w-full bg-[#0b0c01] overflow-hidden rounded-b-[2rem] shadow-xl pt-16">
         {/* Ambient background glows */}
@@ -276,7 +229,24 @@ export default function ProgramsListContent() {
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col items-center text-center space-y-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight max-w-3xl">
             Find Your Next <br className="hidden md:block"/> 
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a0f212] to-[#abf282]">Expert Workshop</span>
+            <CanvasText
+              text="Expert Workshop"
+              backgroundClassName="bg-white"
+              colors={[
+                "rgba(160, 242, 18, 1)",
+                "rgba(160, 242, 18, 0.9)",
+                "rgba(160, 242, 18, 0.8)",
+                "rgba(171, 242, 130, 0.7)",
+                "rgba(160, 242, 18, 0.6)",
+                "rgba(160, 242, 18, 0.5)",
+                "rgba(171, 242, 130, 0.4)",
+                "rgba(160, 242, 18, 0.3)",
+                "rgba(171, 242, 130, 0.2)",
+                "rgba(160, 242, 18, 0.1)",
+              ]}
+              lineGap={3}
+              animationDuration={15}
+            />
           </h1>
         </div>
       </div>
@@ -355,128 +325,132 @@ export default function ProgramsListContent() {
 
           {/* Catalog results container */}
           <section className="md:col-span-9 lg:col-span-9">
-            {loading && programsList.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-80 bg-muted/60 animate-pulse rounded-3xl" />
-                ))}
-              </div>
-            ) : sortedPrograms.length > 0 ? (
+            {sortedPrograms.length > 0 ? (
               layout === "grid" ? (
                 // PREMIUM GRID LAYOUT
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sortedPrograms.map((prog) => (
-                    <div
-                      key={prog.id}
-                      className="group flex flex-col bg-white border border-border/20 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1"
-                    >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
-                        <img
-                          src={prog.imageUrl}
-                          alt={prog.title}
-                          className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
-                        />
-                        {/* Elegant Glassmorphic Overlay Gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        
-                        {/* Premium Glass Badge */}
-                        <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-                          {prog.category}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col flex-1 p-6 gap-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2.5">
-                            <img
-                              src={prog.instructorAvatar}
-                              alt={prog.instructorName}
-                              className="h-6 w-6 rounded-full object-cover ring-2 ring-background shadow-sm"
-                            />
-                            <span className="text-xs font-semibold text-muted-foreground">{prog.instructorName}</span>
-                          </div>
-                          <div className="flex items-center bg-amber-500/10 px-2 py-0.5 rounded-full">
-                            <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
-                            <span className="text-xs font-bold text-amber-700 dark:text-amber-500">{prog.rating}</span>
-                          </div>
-                        </div>
-
-                        <h3 className="font-extrabold text-[15px] text-foreground line-clamp-2 leading-snug transition-colors duration-300">
-                          {prog.title}
-                        </h3>
-
-                        <div className="flex flex-wrap gap-y-2 text-xs text-muted-foreground font-medium">
-                          <span className="flex items-center w-1/2"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.duration.split(" ")[0]} hrs</span>
-                          <span className="flex items-center w-1/2"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.location.split(",")[0]}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 mt-auto">
-                          <div className="flex flex-col">
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">Price</span>
-                            <div className="text-xl font-black text-foreground">${prog.price}</div>
-                          </div>
-                          <Link href={`/programs/${prog.id}`}>
-                            {/* Premium Glow Button */}
-                            <Button className="rounded-xl h-10 px-5 text-xs font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
-                              View Details
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // PREMIUM LIST LAYOUT
-                <div className="space-y-4">
-                  {sortedPrograms.map((prog) => (
-                    <Card key={prog.id} className="overflow-hidden bg-white border border-border/20 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 group">
-                      <div className="flex flex-col sm:flex-row h-full">
-                        <div className="sm:w-72 aspect-[16/10] sm:aspect-auto relative overflow-hidden bg-muted/20">
+                  {sortedPrograms.map((prog) => {
+                    const instructorName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
+                    const price = prog.price || prog.venueDetails?.price || 0;
+                    
+                    return (
+                      <div
+                        key={prog.id}
+                        className="group flex flex-col bg-white border border-border/20 rounded-3xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1"
+                      >
+                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
                           <img
-                            src={prog.imageUrl}
+                            src={prog.posterUrl || prog.images?.[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80"}
                             alt={prog.title}
                             className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                          {/* Elegant Glassmorphic Overlay Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                          
+                          {/* Premium Glass Badge */}
                           <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-                            {prog.category}
+                            {prog.category || "General"}
                           </div>
                         </div>
-                        <div className="flex-1 p-6 flex flex-col justify-between">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between gap-4">
-                              <h3 className="font-extrabold text-lg text-foreground leading-tight transition-colors duration-300 max-w-lg">
-                                {prog.title}
-                              </h3>
-                              <div className="text-2xl font-black text-foreground shrink-0">${prog.price}</div>
+
+                        <div className="flex flex-col flex-1 p-6 gap-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2.5">
+                              <div className="h-6 w-6 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-[8px] font-extrabold ring-2 ring-background shadow-sm">
+                                {instructorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                              </div>
+                              <span className="text-xs font-semibold text-muted-foreground">{instructorName}</span>
                             </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-2xl font-medium">{prog.description}</p>
+                            <div className="flex items-center bg-amber-500/10 px-2 py-0.5 rounded-full">
+                              <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
+                              <span className="text-xs font-bold text-amber-700 dark:text-amber-500">4.8</span>
+                            </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 mt-6 border-t border-border/40">
-                            <div className="flex items-center space-x-5 text-xs text-muted-foreground font-semibold">
-                              <div className="flex items-center space-x-2">
-                                <img src={prog.instructorAvatar} alt={prog.instructorName} className="h-6 w-6 rounded-full object-cover ring-2 ring-background shadow-sm" />
-                                <span className="text-foreground">{prog.instructorName}</span>
-                              </div>
-                              <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 opacity-60" /> {prog.duration}</span>
-                              <span className="flex items-center"><MapPin className="h-4 w-4 mr-1.5 opacity-60" /> {prog.location.split(",")[0]}</span>
-                              <div className="flex items-center bg-amber-500/10 px-2 py-1 rounded-md text-amber-700 dark:text-amber-500">
-                                <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> {prog.rating} ({prog.reviewsCount})
-                              </div>
+                          <h3 className="font-extrabold text-[15px] text-foreground line-clamp-2 leading-snug transition-colors duration-300">
+                            {prog.title}
+                          </h3>
+
+                          <div className="flex flex-wrap gap-y-2 text-xs text-muted-foreground font-medium">
+                            <span className="flex items-center w-1/2"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.duration || "2 hrs"}</span>
+                            <span className="flex items-center w-1/2"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.mode}</span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 mt-auto">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">Price</span>
+                              <div className="text-xl font-black text-foreground">${price}</div>
                             </div>
                             <Link href={`/programs/${prog.id}`}>
                               {/* Premium Glow Button */}
-                              <Button className="rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
+                              <Button className="rounded-xl h-10 px-5 text-xs font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
                                 View Details
                               </Button>
                             </Link>
                           </div>
                         </div>
                       </div>
-                    </Card>
-                  ))}
+                    );
+                  })}
+                </div>
+              ) : (
+                // PREMIUM LIST LAYOUT
+                <div className="space-y-4">
+                  {sortedPrograms.map((prog) => {
+                    const instructorName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
+                    const price = prog.price || prog.venueDetails?.price || 0;
+
+                    return (
+                      <Card key={prog.id} className="overflow-hidden bg-white border border-border/20 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-1 group">
+                        <div className="flex flex-col sm:flex-row h-full">
+                          <div className="sm:w-72 aspect-[16/10] sm:aspect-auto relative overflow-hidden bg-muted/20">
+                            <img
+                              src={prog.posterUrl || prog.images?.[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80"}
+                              alt={prog.title}
+                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+                              {prog.category || "General"}
+                            </div>
+                          </div>
+                          <div className="flex-1 p-6 flex flex-col justify-between">
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-4">
+                                <h3 className="font-extrabold text-lg text-foreground leading-tight transition-colors duration-300 max-w-lg">
+                                  {prog.title}
+                                </h3>
+                                <div className="text-2xl font-black text-foreground shrink-0">${price}</div>
+                              </div>
+                              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-2xl font-medium">{prog.description}</p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 mt-6 border-t border-border/40">
+                              <div className="flex items-center space-x-5 text-xs text-muted-foreground font-semibold">
+                                <div className="flex items-center space-x-2">
+                                  <div className="h-6 w-6 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-[8px] font-extrabold ring-2 ring-background shadow-sm">
+                                    {instructorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <span className="text-foreground">{instructorName}</span>
+                                </div>
+                                <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 opacity-60" /> {prog.duration || "2 hrs"}</span>
+                                <span className="flex items-center"><MapPin className="h-4 w-4 mr-1.5 opacity-60" /> {prog.mode}</span>
+                                <div className="flex items-center bg-amber-500/10 px-2 py-1 rounded-md text-amber-700 dark:text-amber-500">
+                                  <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> 4.8 ({prog._count?.likes || 0})
+                                </div>
+                              </div>
+                              <Link href={`/programs/${prog.id}`}>
+                                {/* Premium Glow Button */}
+                                <Button className="rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
+                                  View Details
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               )
             ) : (

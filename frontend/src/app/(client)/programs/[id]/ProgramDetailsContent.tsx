@@ -68,7 +68,7 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 interface ProgramDetailsProps {
   programId: string;
-  initialProgram: Program | undefined;
+  initialProgram?: Program | undefined;
 }
 
 export default function ProgramDetailsContent({ programId, initialProgram }: ProgramDetailsProps) {

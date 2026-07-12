@@ -128,19 +128,23 @@ export default function WishlistPage() {
               })}
             </div>
           ) : (
-            <div className="text-center p-12 border bg-card border-dashed border-border/60 rounded-2xl space-y-4">
-              <div className="p-4 bg-muted/60 dark:bg-muted/30 rounded-full text-muted-foreground w-fit mx-auto">
-                <Heart className="h-6 w-6 text-muted-foreground" />
+            <div className="text-center p-12 border rounded-3xl bg-muted/20 border-dashed border-border/60 flex flex-col items-center justify-center space-y-5 min-h-[300px]">
+              <div className="bg-muted p-4 rounded-full shadow-sm border border-black/5 dark:border-white/5">
+                <Heart className="h-8 w-8 text-muted-foreground opacity-50" />
               </div>
-              <div className="space-y-1">
-                <h3 className="font-bold text-base text-foreground">Wishlist is empty</h3>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+              <div className="space-y-1.5">
+                <h3 className="font-extrabold text-lg text-foreground">Wishlist is empty</h3>
+                <p className="text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
                   You haven&apos;t saved any courses yet. Save them while exploring to keep track here.
                 </p>
               </div>
-              <Link href="/programs">
-                <Button className="rounded-xl text-xs h-9">Explore Classes</Button>
-              </Link>
+              <div className="pt-3">
+                <Link href="/programs">
+                  <Button className="rounded-xl px-8 h-11 font-bold shadow-sm bg-[#0b0c01] text-white hover:bg-[#0b0c01]/90 dark:bg-[#a0f212] dark:text-[#0b0c01] dark:hover:bg-[#abf282]">
+                    Explore Classes
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
 

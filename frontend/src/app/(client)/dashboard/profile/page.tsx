@@ -169,11 +169,9 @@ export default function ProfilePage() {
             <Card className="col-span-1 border-border/40 rounded-2xl h-fit overflow-hidden bg-card">
               <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative group">
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.name}
-                    className="h-24 w-24 rounded-full object-cover ring-4 ring-primary/20"
-                  />
+                  <div className="h-24 w-24 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-3xl font-extrabold ring-4 ring-primary/20 shadow-inner tracking-widest">
+                    {user.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                  </div>
                   <button className="absolute inset-0 bg-black/50 text-white text-[10px] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Upload className="h-4 w-4" />
                   </button>

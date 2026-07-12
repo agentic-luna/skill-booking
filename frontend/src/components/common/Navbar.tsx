@@ -153,11 +153,9 @@ export default function Navbar() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center space-x-2 focus:outline-none">
-                        <img
-                          src={user.avatarUrl}
-                          alt={user.name}
-                          className="h-9 w-9 rounded-full object-cover ring-2 ring-primary/20"
-                        />
+                        <div className="h-9 w-9 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-xs font-extrabold ring-2 ring-primary/20 tracking-wider shadow-sm">
+                          {user.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+                        </div>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -174,13 +172,10 @@ export default function Navbar() {
                       {/* Role Dashboard Routing */}
                       {user.role === "client" && (
                         <>
-                          <DropdownMenuItem onClick={() => router.push("/home")}>
-                            <LayoutDashboard className="mr-2 h-4 w-4" /> Home Feed
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push("/bookings")}>
+                          <DropdownMenuItem onClick={() => router.push("/dashboard/tickets")}>
                             <BookmarkCheck className="mr-2 h-4 w-4" /> My Bookings
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push("/liked-events")}>
+                          <DropdownMenuItem onClick={() => router.push("/dashboard/wishlist")}>
                             <Heart className="mr-2 h-4 w-4 text-rose-500" /> Liked Workshops
                           </DropdownMenuItem>
                         </>

@@ -37,7 +37,7 @@ export function middleware(request: NextRequest) {
       } else if (role === "host") {
         return NextResponse.redirect(new URL("/host/dashboard", request.url));
       } else {
-        return NextResponse.redirect(new URL("/home", request.url));
+        return NextResponse.redirect(new URL("/programs", request.url));
       }
     }
     return NextResponse.next();
@@ -58,7 +58,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 5. Client dashboard and protected pages
-  const clientProtectedPaths = ["/home", "/bookings", "/profile", "/wishlist", "/liked-events"];
+  const clientProtectedPaths = ["/dashboard", "/programs", "/profile", "/wishlist", "/liked-events", "/bookings"];
   const isClientPath = clientProtectedPaths.some(p => pathname === p || pathname.startsWith(p + "/"));
   if (isClientPath) {
     if (!isAuthenticated) {
@@ -75,7 +75,8 @@ export const config = {
     "/host/:path*",
     "/login",
     "/register",
-    "/home/:path*",
+    "/dashboard/:path*",
+    "/programs/:path*",
     "/bookings/:path*",
     "/profile/:path*",
     "/wishlist/:path*",

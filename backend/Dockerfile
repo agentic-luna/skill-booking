@@ -11,7 +11,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
+RUN npx prisma@6.19.3 generate
 
 RUN npm run build
 

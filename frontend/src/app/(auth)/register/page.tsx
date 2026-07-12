@@ -49,7 +49,7 @@ export default function RegisterPage() {
   const onPhoneOtpSubmit = async (otp: string) => {
     try {
       const user = await verifyPhoneOtpAndSignup(otp);
-      router.push(user.role === "host" ? "/host/dashboard" : "/home");
+      router.push(user.role === "host" ? "/host/dashboard" : "/programs");
     } catch { /* error set in store */ }
   };
 
