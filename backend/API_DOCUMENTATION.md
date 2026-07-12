@@ -100,6 +100,9 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 | `availableSeats` | Integer | Currently available seats |
 | `status` | String (Enum) | `PENDING`, `APPROVED`, `CANCELED` |
 | `version` | Integer | Optimistic locking version number |
+| `price` | Float | Cost per ticket in INR |
+| `duration` | String | Human readable event duration (e.g. `2 hours`) |
+| `category` | String | Specific course category (e.g. `technology`, `culinary`) |
 
 ### Booking Entity
 | Field | Type | Description |
@@ -339,6 +342,11 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 *Calculates refund percentage (>48h = 100%, 24-48h = 50%, <24h = 0%) and replenishes seat capacity.*
 
+### 6. Get Active Boosted Events
+`GET /api/v1/boosted-events`
+
+Returns list of all active sponsored or boosted events.
+
 ---
 
 ## 7. Wishlist & Event Likes API
@@ -460,3 +468,99 @@ Returns all ticket bookings made by the authenticated client, ordered by creatio
 
 ### 6. Setup Integration Provider Configs
 `POST /api/v1/integrations/twilio` | `/sendgrid` | `/meta-wa` | `/razorpay`
+
+### 7. Soft-Delete Host
+`DELETE /api/v1/admin/hosts/:id` *(Requires Bearer Header - SUPERADMIN)*
+
+### 8. Send Direct Personal Notification to Host
+`POST /api/v1/admin/hosts/:id/notify` *(Requires Bearer Header - SUPERADMIN)*
+
+**Request Body:**
+```json
+{
+  "subject": "Important Account Update",
+  "bodyContent": "Please update your credentials."
+}
+```
+
+### 9. Decline Workshop Listing
+`PUT /api/v1/admin/events/:eventId/decline` *(Requires Bearer Header - SUPERADMIN)*
+
+### 10. Get Refund Requests Queue
+`GET /api/v1/admin/finance/refund-requests` *(Requires Bearer Header - SUPERADMIN)*
+
+### 11. Approve Refund Request
+`PUT /api/v1/admin/finance/refund-requests/:id/approve` *(Requires Bearer Header - SUPERADMIN)*
+
+### 12. Decline Refund Request
+`PUT /api/v1/admin/finance/refund-requests/:id/decline` *(Requires Bearer Header - SUPERADMIN)*
+
+---
+
+## 12. Host Features & Roster Board API
+
+### 1. Update Profile Information
+`PUT /api/v1/hosts/profile` *(Requires Bearer Header - Role-Agnostic)*
+
+**Request Body:**
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@luna.com"
+}
+```
+
+### 2. Change Password
+`PUT /api/v1/hosts/change-password` *(Requires Bearer Header - Role-Agnostic)*
+
+**Request Body:**
+```json
+{
+  "currentPassword": "password123",
+  "newPassword": "newPassword123"
+}
+```
+
+### 3. Apply as Verified Host
+`POST /api/v1/hosts/apply-host` *(Requires Bearer Header - Role-Agnostic)*
+
+**Request Body:**
+```json
+{
+  "expertise": "Culinary Baking",
+  "bio": "Certified senior culinary instructor."
+}
+```
+
+### 4. Fetch Host's Own Events List
+`GET /api/v1/hosts/my-events` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+### 5. Fetch Roster Board Booking Aggregates
+`GET /api/v1/hosts/participants` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+### 6. Fetch Bookings for a Specific Host Event
+`GET /api/v1/hosts/events/:eventId/bookings` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+### 7. Update Pending Host Event Details
+`PUT /api/v1/hosts/events/:id` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+**Request Body:**
+```json
+{
+  "title": "Advanced NestJS Masterclass (Updated)",
+  "price": 600,
+  "duration": "4 hours",
+  "description": "An updated comprehensive course details..."
+}
+```
+
+### 8. Delete Pending Host Event
+`DELETE /api/v1/hosts/events/:id` *(Requires Bearer Header - HOST/SUPERADMIN)*
+
+---
+
+## 13. Client Booking Invoices API
+
+### 1. Download Booking Invoice Statement (PDF)
+`GET /api/v1/bookings/:bookingId/invoice` *(Requires Bearer Header - Client/Host/Admin)*

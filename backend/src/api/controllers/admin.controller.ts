@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { mediator, configRepo, cacheService, notificationRepo, eventRepo, logger } from '../di-container';
+import { prisma } from '../../config/prisma';
+import { mediator, configRepo, cacheService, notificationRepo, eventRepo, logger, commsService } from '../di-container';
 import { GetConfigsQuery } from '../../application/use-cases/admin/get-configs';
 import { UpdateConfigCommand } from '../../application/use-cases/admin/update-config';
 import { GetTemplatesQuery } from '../../application/use-cases/admin/get-templates';
@@ -228,6 +229,169 @@ export class AdminController {
         rejectionReason
       ));
       return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getRefundRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const refundRequests = await prisma.refundRequest.findMany({
+        include: {
+          booking: {
+            include: {
+              client: true,
+              event: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const mapped = refundRequests.map((r) => ({
+        id: r.id,
+        clientName: `${r.booking.client.firstName} ${r.booking.client.lastName}`,
+        email: r.booking.client.email,
+        eventTitle: r.booking.event.title,
+        bookingRef: r.booking.bookingRef,
+        amount: String(r.booking.totalAmount),
+        reason: r.reason || '',
+        status: r.status,
+        dateRequested: r.createdAt.toISOString().split('T')[0],
+      }));
+
+      return ApiResponse.success(res, mapped);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async approveRefundRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const refundRequest = await prisma.refundRequest.findUnique({
+        where: { id },
+        include: { booking: true },
+      });
+      if (!refundRequest) {
+        throw new BadRequestError('Refund request not found');
+      }
+
+      const [updatedRequest, updatedBooking] = await prisma.$transaction([
+        prisma.refundRequest.update({
+          where: { id },
+          data: { status: 'APPROVED' },
+        }),
+        prisma.booking.update({
+          where: { id: refundRequest.bookingId },
+          data: { status: 'REFUNDED' },
+        }),
+        prisma.transactionLedger.updateMany({
+          where: { bookingId: refundRequest.bookingId },
+          data: { status: 'REFUNDED_TO_CLIENT' },
+        }),
+      ]);
+
+      return ApiResponse.success(res, {
+        message: 'Refund request approved successfully',
+        refundRequest: updatedRequest,
+        booking: updatedBooking,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async declineRefundRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const updated = await prisma.refundRequest.update({
+        where: { id },
+        data: { status: 'DECLINED' },
+      });
+      return ApiResponse.success(res, {
+        message: 'Refund request declined successfully',
+        refundRequest: updated,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteHost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+      return ApiResponse.success(res, {
+        message: 'Host soft-deleted successfully',
+        user: updatedUser,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async notifyHost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { subject, bodyContent } = req.body;
+      if (!subject || !bodyContent) {
+        throw new BadRequestError('Subject and message content are required');
+      }
+
+      const host = await prisma.user.findUnique({ where: { id } });
+      if (!host) {
+        throw new BadRequestError('Host not found');
+      }
+
+      const log = await prisma.notificationLog.create({
+        data: {
+          userId: host.id,
+          channel: 'EMAIL',
+          triggerEvent: 'ADMIN_DIRECT',
+          recipient: host.email,
+          content: bodyContent,
+          status: 'PENDING',
+        },
+      });
+
+      try {
+        await commsService.sendEmail(host.email, subject, bodyContent);
+        await prisma.notificationLog.update({
+          where: { id: log.id },
+          data: { status: 'SENT', sentAt: new Date() },
+        });
+      } catch (err: any) {
+        await prisma.notificationLog.update({
+          where: { id: log.id },
+          data: { status: 'FAILED', errorMessage: err.message },
+        });
+        logger.error(`[AdminNotify] Failed to dispatch email to host ${host.email}:`, err);
+      }
+
+      return ApiResponse.success(res, {
+        message: 'Notification sent successfully',
+        log,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async declineEvent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.params;
+      const updatedEvent = await prisma.event.update({
+        where: { id: eventId },
+        data: { status: 'CANCELED' },
+      });
+      return ApiResponse.success(res, {
+        message: 'Program listing declined successfully',
+        event: updatedEvent,
+      });
     } catch (error) {
       next(error);
     }

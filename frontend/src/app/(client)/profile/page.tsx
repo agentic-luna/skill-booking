@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import * as clientApi from "@/features/client/api/client.api";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,37 +99,63 @@ export default function ProfilePage() {
 
   const onProfileSave = async (data: ProfileFormValues) => {
     setProfileSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    updateProfile({ name: data.name, email: data.email });
-    setProfileSaving(false);
-    showAlert("Profile Updated", "Profile details successfully updated!", "success");
+    try {
+      const [firstName, ...lastNameParts] = data.name.trim().split(" ");
+      const lastName = lastNameParts.join(" ");
+      await clientApi.updateProfile({ firstName, lastName: lastName || "", email: data.email });
+      updateProfile({ name: data.name, email: data.email });
+      showAlert("Profile Updated", "Profile details successfully updated!", "success");
+    } catch (err: any) {
+      showAlert("Update Failed", err.message || "Could not update profile info.", "destructive");
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const onPasswordSave = async (data: PasswordFormValues) => {
     setPasswordSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-    setPasswordSaving(false);
-    resetPassword();
-    showAlert("Password Changed", "Your password has been successfully updated!", "success");
+    try {
+      await clientApi.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      });
+      resetPassword();
+      showAlert("Password Changed", "Your password has been successfully updated!", "success");
+    } catch (err: any) {
+      showAlert("Error", err.message || "Failed to update password.", 'destructive');
+    } finally {
+      setPasswordSaving(false);
+    }
   };
 
   const handleApplyHost = async (e: React.FormEvent) => {
     e.preventDefault();
+    const expertise = (document.getElementById("expertise") as HTMLInputElement)?.value || "";
+    const bio = (document.getElementById("bio") as HTMLTextAreaElement)?.value || "";
+    
     setSubmittingHost(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSubmittingHost(false);
-    setHostApplied(true);
+    try {
+      await clientApi.applyHost({ expertise, bio });
+      setHostApplied(true);
+      showAlert("Application Submitted", "Your host credentials have been submitted for verification.", "success");
+    } catch (err: any) {
+      showAlert("Submission Failed", err.message || "Could not apply to become host.", "destructive");
+    } finally {
+      setSubmittingHost(false);
+    }
   };
 
   return (
     <div className="flex flex-col min-h-screen">
-
       <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
           
           <div className="space-y-1">
-            <Link href="/home" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
-              <ArrowLeft className="h-3 w-3" /> Back to feed
+            <Link 
+              href={user?.role === "host" ? "/host/dashboard" : "/home"} 
+              className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold"
+            >
+              <ArrowLeft className="h-3 w-3" /> {user?.role === "host" ? "Back to dashboard" : "Back to feed"}
             </Link>
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
               <Settings className="h-6 w-6 text-primary" /> Profile & Settings

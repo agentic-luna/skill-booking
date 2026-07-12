@@ -79,6 +79,10 @@ export default function CreateProgramPage() {
         venueDetails: data.location,
         startTime,
         totalSeats: data.maxSpots,
+        price: data.price,
+        duration: data.duration,
+        description: data.description,
+        category: data.category,
       });
 
       setSubmitted(true);

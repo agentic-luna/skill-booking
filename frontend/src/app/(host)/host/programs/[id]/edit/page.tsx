@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { MOCK_PROGRAMS, Program } from "@/constants/mockData";
+import { useHostStore } from "@/features/host/store/hostStore";
+import { getEventDetails } from "@/features/client/api/client.api";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 import { programSchema, ProgramFormValues, CATEGORIES } from "../../create/_components/program-schema";
 import BasicInfoSection from "../../create/_components/BasicInfoSection";
@@ -20,36 +22,129 @@ export default function EditProgramPage() {
   const router = useRouter();
   const params = useParams();
   const programId = params.id as string;
+  const showAlert = useAlertStore((s) => s.showAlert);
 
-  const program = MOCK_PROGRAMS.find((p) => p.id === programId);
+  const { updateEvent, deleteEvent } = useHostStore();
 
+  const [program, setProgram] = useState<any>(null);
+  const [pageLoading, setPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>(program?.category || "technology");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("technology");
 
   const {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
-    defaultValues: {
-      title: program?.title || "",
-      category: program?.category || "technology",
-      price: program?.price || 49,
-      duration: program?.duration || "3 hours",
-      date: program?.date || new Date().toISOString().split("T")[0],
-      time: program?.time || "10:00 AM - 1:00 PM EST",
-      maxSpots: program?.maxSpots || 15,
-      location: program?.location || "",
-      description: program?.description || "",
-      imageUrl: program?.imageUrl || "",
-    },
   });
+
+  useEffect(() => {
+    async function loadProgram() {
+      try {
+        const details = await getEventDetails(programId);
+        setProgram(details);
+        setSelectedCategory(details.category || "technology");
+
+        const start = details.startTime ? new Date(details.startTime) : new Date();
+        const dateStr = start.toISOString().split("T")[0];
+        
+        // Format local standard time string
+        const timeStr = start.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }) + " - " + new Date(start.getTime() + 2 * 60 * 60 * 1000).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+
+        reset({
+          title: details.title || "",
+          category: (details.category as any) || "technology",
+          price: details.price || 500,
+          duration: details.duration || "2 hours",
+          date: dateStr,
+          time: timeStr,
+          maxSpots: details.totalSeats || 10,
+          location: typeof details.venueDetails === 'string' ? details.venueDetails : (details.venueDetails?.address || details.venueDetails?.link || ""),
+          description: details.description || "",
+          imageUrl: details.posterUrl || "",
+        });
+      } catch (err: any) {
+        showAlert("Error", err.message || "Failed to load program details.", "destructive");
+      } finally {
+        setPageLoading(false);
+      }
+    }
+    loadProgram();
+  }, [programId, reset, showAlert]);
 
   const categoryMeta = CATEGORIES.find((c) => c.value === selectedCategory);
 
-  // ── 404 ──────────────────────────────────────────────────────────────
+  const onSubmit = async (data: ProgramFormValues) => {
+    setIsSubmitting(true);
+    try {
+      const startTime = new Date(`${data.date}T${data.time.split(" ")[0]}`).toISOString();
+      const CATEGORY_TO_MODE: Record<string, string> = {
+        technology: "ONLINE",
+        design: "ONLINE",
+        fitness: "OFFLINE",
+        culinary: "OFFLINE",
+        business: "HYBRID",
+        photography: "HYBRID",
+      };
+      const mode = CATEGORY_TO_MODE[data.category] ?? "ONLINE";
+
+      await updateEvent(programId, {
+        title: data.title,
+        posterUrl: data.imageUrl || undefined,
+        mode,
+        venueDetails: data.location,
+        startTime,
+        totalSeats: data.maxSpots,
+        price: data.price,
+        duration: data.duration,
+        description: data.description,
+        category: data.category,
+      });
+
+      showAlert("Program Updated", "Your changes have been saved successfully.", "success");
+      router.push("/host/programs");
+    } catch (err: any) {
+      showAlert("Error", err.message || "Failed to save changes.", "destructive");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this program? This action cannot be undone.")) return;
+    setIsDeleting(true);
+    try {
+      await deleteEvent(programId);
+      showAlert("Program Deleted", "The workshop has been removed.", "success");
+      router.push("/host/programs");
+    } catch (err: any) {
+      showAlert("Error", err.message || "Failed to delete program.", "destructive");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (pageLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-xs text-muted-foreground">Loading workshop details...</p>
+      </div>
+    );
+  }
+
   if (!program) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
@@ -63,24 +158,6 @@ export default function EditProgramPage() {
       </div>
     );
   }
-
-  const onSubmit = async (data: ProgramFormValues) => {
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-
-    // Update in mock array
-    const idx = MOCK_PROGRAMS.findIndex((p) => p.id === programId);
-    if (idx !== -1) {
-      MOCK_PROGRAMS[idx] = {
-        ...MOCK_PROGRAMS[idx],
-        ...data,
-        spotsLeft: Math.min(data.maxSpots, MOCK_PROGRAMS[idx].spotsLeft + (data.maxSpots - MOCK_PROGRAMS[idx].maxSpots)),
-      };
-    }
-
-    setIsSubmitting(false);
-    router.push("/host/programs");
-  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -131,9 +208,9 @@ export default function EditProgramPage() {
                 <span className="text-muted-foreground font-medium">Current status:</span>
                 <span
                   className={`px-2.5 py-1 rounded-md font-bold uppercase text-[10px] text-white ${
-                    program.status === "approved"
+                    program.status.toLowerCase() === "approved"
                       ? "bg-emerald-500"
-                      : program.status === "pending"
+                      : program.status.toLowerCase() === "pending"
                       ? "bg-amber-500"
                       : "bg-destructive"
                   }`}
@@ -147,7 +224,7 @@ export default function EditProgramPage() {
                 type="submit"
                 form="edit-program-form"
                 className="w-full h-11 rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isDeleting}
               >
                 {isSubmitting ? (
                   <>
@@ -161,6 +238,29 @@ export default function EditProgramPage() {
                   </>
                 )}
               </Button>
+
+              {/* Delete button (only if status is PENDING) */}
+              {program.status.toLowerCase() === "pending" && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  className="w-full h-10 rounded-xl text-xs font-bold"
+                  disabled={isDeleting || isSubmitting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting…
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Workshop
+                    </>
+                  )}
+                </Button>
+              )}
 
               <Link href="/host/programs" className="block">
                 <Button variant="outline" type="button" className="w-full h-10 rounded-xl text-xs font-semibold">

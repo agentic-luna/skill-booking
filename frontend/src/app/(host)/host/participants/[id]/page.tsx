@@ -1,16 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Users, Mail, CheckCircle2, MessageSquare,
-  TicketCheck, Calendar, Clock, DollarSign, User, ShieldCheck, Tag
+  ArrowLeft, Mail, CheckCircle2, MessageSquare,
+  TicketCheck, Calendar, Clock, User, ShieldCheck, Loader2
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MOCK_PROGRAMS, MOCK_BOOKINGS, Booking, Program } from "@/constants/mockData";
+import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 interface StudentRosterItem {
@@ -21,19 +21,35 @@ interface StudentRosterItem {
   spots: number;
   paid: number;
   date: string;
-  status: "confirmed" | "completed" | "cancelled" | "refunded";
+  status: "confirmed" | "completed" | "cancelled" | "refunded" | "initiated";
 }
 
 export default function ParticipantDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const programId = params.id as string;
 
-  // Find the selected program
-  const program = MOCK_PROGRAMS.find((p) => p.id === programId);
+  const showAlert = useAlertStore((s) => s.showAlert);
+  const { myEvents, eventBookings, fetchMyEvents, fetchEventBookings, isLoading } = useHostStore();
 
-  // If program doesn't exist, show 404 fallback
-  if (!program) {
+  useEffect(() => {
+    fetchMyEvents();
+    fetchEventBookings(programId);
+  }, [programId, fetchMyEvents, fetchEventBookings]);
+
+  const programObj = myEvents.find((p) => p.id === programId);
+  const bookingsForEvent = eventBookings[programId] || [];
+
+  if (isLoading && !programObj) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center p-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-xs text-muted-foreground mt-2">Loading event roster...</span>
+      </div>
+    );
+  }
+
+  // If program doesn't exist, show fallback
+  if (!programObj) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
         <h2 className="text-xl font-extrabold text-foreground">Program Not Found</h2>
@@ -47,65 +63,30 @@ export default function ParticipantDetailPage() {
     );
   }
 
-  // Find actual bookings matching this program
-  const actualBookings = MOCK_BOOKINGS.filter(
-    (b) => b.programId === program.id || b.programTitle === program.title
-  );
+  const program = {
+    id: programObj.id,
+    title: programObj.title,
+    imageUrl: programObj.posterUrl || "https://images.unsplash.com/photo-1618401471353-b98aedd07871?auto=format&fit=crop&q=80&w=600",
+    status: programObj.status.toLowerCase(),
+    category: programObj.mode,
+    date: new Date(programObj.startTime).toLocaleDateString(),
+    time: new Date(programObj.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    maxSpots: programObj.totalSeats,
+    price: 500,
+  };
 
-  const students: StudentRosterItem[] = actualBookings.map((b) => {
-    const isLiam = b.id.startsWith("bk_1");
+  const students: StudentRosterItem[] = bookingsForEvent.map((b: any) => {
     return {
       id: b.id,
-      name: isLiam ? "Liam O'Connor" : "Sophia Martinez",
-      email: isLiam ? "liam.oc@example.com" : "sophia.mt@example.com",
-      avatarUrl: isLiam
-        ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100"
-        : "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100",
-      spots: b.spotsBooked,
-      paid: b.amountPaid,
-      date: b.bookingDate,
-      status: b.status,
+      name: `${b.client.firstName} ${b.client.lastName}`,
+      email: b.client.email,
+      avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100",
+      spots: b.seatCount,
+      paid: Number(b.totalAmount),
+      date: new Date(b.createdAt).toLocaleDateString(),
+      status: b.status.toLowerCase() as any,
     };
   });
-
-  // Inject mock successful students if none exist in standard mocks for other approved programs
-  if (students.length === 0 && program.status === "approved") {
-    if (program.id === "prog_2") {
-      students.push(
-        {
-          id: "mock_bk_2_1",
-          name: "Emily Watson",
-          email: "emily.w@example.com",
-          avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=100",
-          spots: 1,
-          paid: program.price,
-          date: "2026-06-30",
-          status: "confirmed",
-        },
-        {
-          id: "mock_bk_2_2",
-          name: "Lucas Harper",
-          email: "lucas.h@example.com",
-          avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100",
-          spots: 2,
-          paid: program.price * 2,
-          date: "2026-07-02",
-          status: "confirmed",
-        }
-      );
-    } else if (program.id === "prog_4") {
-      students.push({
-        id: "mock_bk_4_1",
-        name: "Chloe Bennett",
-        email: "chloe.b@example.com",
-        avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100",
-        spots: 1,
-        paid: program.price,
-        date: "2026-07-01",
-        status: "confirmed",
-      });
-    }
-  }
 
   // Filter to active successfully paid clients
   const activeStudents = students.filter(
@@ -113,7 +94,6 @@ export default function ParticipantDetailPage() {
   );
 
   const enrolledSeats = activeStudents.reduce((sum, s) => sum + s.spots, 0);
-  const showAlert = useAlertStore((s) => s.showAlert);
 
   const handleVerifyTicket = (bookingId: string) => {
     showAlert("Ticket Verified", `Check-in ticket successfully verified for check-in: CONFIRM_${bookingId}`, "success");
@@ -136,6 +116,7 @@ export default function ParticipantDetailPage() {
           <div className="space-y-1">
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
               Roster: {program.title}
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </h1>
             <p className="text-sm text-muted-foreground">
               Review and manage participants enrolled in this workshop.
@@ -182,7 +163,7 @@ export default function ParticipantDetailPage() {
               </div>
             </div>
             <div className="text-xs font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/15">
-              ${program.price} / Ticket
+              {program.price} INR / Ticket
             </div>
           </div>
         </div>
@@ -222,7 +203,7 @@ export default function ParticipantDetailPage() {
                 <div className="flex flex-col items-end space-y-3 shrink-0">
                   <div>
                     <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg uppercase inline-flex items-center gap-1 border border-emerald-500/15 shadow-2xs">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Paid (${student.paid})
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Paid ({student.paid} INR)
                     </span>
                   </div>
 

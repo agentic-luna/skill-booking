@@ -55,12 +55,51 @@ export async function createEvent(payload: CreateEventPayload): Promise<CreatedE
   return res.data;
 }
 
+/** PUT /hosts/events/:id — Update a host event (before approval) */
+export async function updateEvent(id: string, payload: any): Promise<any> {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    `/hosts/events/${id}`,
+    { method: "PUT", body: JSON.stringify(payload) }
+  );
+  return res.data;
+}
+
+/** DELETE /hosts/events/:id — Delete a host event (before approval) */
+export async function deleteEvent(id: string): Promise<any> {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    `/hosts/events/${id}`,
+    { method: "DELETE" }
+  );
+  return res.data;
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────
 
 /** GET /hosts/dashboard — Retrieve host dashboard financial aggregations */
 export async function getHostDashboard(): Promise<DashboardStats> {
   const res = await hostRequest<{ success: boolean; data: DashboardStats }>(
     "/hosts/dashboard"
+  );
+  return res.data;
+}
+
+export async function getMyEvents(): Promise<any[]> {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
+    "/hosts/my-events"
+  );
+  return res.data;
+}
+
+export async function getHostParticipants(): Promise<any[]> {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
+    "/hosts/participants"
+  );
+  return res.data;
+}
+
+export async function getEventBookings(eventId: string): Promise<any[]> {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
+    `/hosts/events/${eventId}/bookings`
   );
   return res.data;
 }

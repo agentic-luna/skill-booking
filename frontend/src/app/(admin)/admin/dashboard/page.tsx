@@ -1,45 +1,126 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { 
-  Users, DollarSign, Calendar, ShieldCheck, CheckSquare, 
-  ArrowUpRight, Landmark, ArrowRight, UserPlus 
+  Users, DollarSign, CheckSquare, Landmark, ArrowRight, UserPlus, Scale, RefreshCw, AlertCircle
 } from "lucide-react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer 
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MOCK_PROGRAMS, MOCK_BOOKINGS } from "@/constants/mockData";
-
-const platformFinancials = [
-  { month: "Jan", platformFee: 67 },
-  { month: "Feb", platformFee: 123 },
-  { month: "Mar", platformFee: 165 },
-  { month: "Apr", platformFee: 135 },
-  { month: "May", platformFee: 210 },
-  { month: "Jun", platformFee: 277 },
-];
+import { useAdminStore } from "@/features/admin/store/adminStore";
 
 export default function AdminDashboard() {
-  
+  const {
+    eventQueue,
+    hosts,
+    pendingKycHosts,
+    financeLedger,
+    loading,
+    error,
+    fetchEventQueue,
+    fetchHosts,
+    fetchPendingKycHosts,
+    fetchFinanceLedger
+  } = useAdminStore();
+
+  useEffect(() => {
+    fetchEventQueue();
+    fetchHosts();
+    fetchPendingKycHosts();
+    fetchFinanceLedger();
+  }, [fetchEventQueue, fetchHosts, fetchPendingKycHosts, fetchFinanceLedger]);
+
   // Calculations
-  const grossSales = MOCK_BOOKINGS.reduce((sum, b) => sum + (["confirmed", "completed"].includes(b.status) ? b.amountPaid : 0), 0);
-  const totalCommission = Math.round(grossSales * 0.15); // 15% marketplace commission
-  const pendingApprovalsCount = MOCK_PROGRAMS.filter(p => p.status === "pending").length;
-  const activeHostsCount = 14;
+  const grossSales = (financeLedger?.totalRealizedRevenue || 0) + (financeLedger?.totalEscrowLiabilities || 0);
+  const totalCommission = financeLedger?.totalRealizedRevenue || 0;
+  const pendingApprovalsCount = eventQueue?.length || 0;
+  const activeHostsCount = hosts?.length || 0;
+
+  // Chart data showing ledger breakdown
+  const platformFinancials = [
+    { name: "Escrow Held", amount: financeLedger?.totalEscrowLiabilities || 0 },
+    { name: "Realized Net", amount: financeLedger?.totalRealizedRevenue || 0 },
+    { name: "Refunded", amount: financeLedger?.totalRefunded || 0 }
+  ];
+
+  // Match event titles to category
+  const getCategoryFromTitle = (title: string): string => {
+    const t = (title || "").toLowerCase();
+    if (t.includes("react") || t.includes("next") || t.includes("python") || t.includes("code") || t.includes("web") || t.includes("javascript") || t.includes("tech") || t.includes("develop") || t.includes("program")) return "Technology & Tech";
+    if (t.includes("design") || t.includes("ux") || t.includes("ui") || t.includes("figma") || t.includes("art") || t.includes("sketch")) return "Design & Creative";
+    if (t.includes("business") || t.includes("market") || t.includes("finance") || t.includes("sales") || t.includes("startup")) return "Business & Marketing";
+    if (t.includes("cook") || t.includes("bake") || t.includes("chef") || t.includes("food") || t.includes("culinary")) return "Culinary & Baking";
+    if (t.includes("fitness") || t.includes("yoga") || t.includes("workout") || t.includes("gym") || t.includes("wellness")) return "Fitness & Health";
+    if (t.includes("photo") || t.includes("camera") || t.includes("video") || t.includes("lens")) return "Photography";
+    return "Other Skills";
+  };
+
+  const categoryCounts: Record<string, number> = {};
+  let totalMatches = 0;
+
+  (hosts || []).forEach((host) => {
+    (host.hostProfile?.events || []).forEach((e) => {
+      const cat = getCategoryFromTitle(e.title);
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      totalMatches++;
+    });
+  });
+
+  // Convert to array, calculate and sort
+  const sortedCategories = Object.entries(categoryCounts)
+    .map(([name, count]) => {
+      const percentage = totalMatches > 0 ? Math.round((count / totalMatches) * 100) : 0;
+      return { name, count, percentage };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  const displaySectors = sortedCategories.map((c, i) => {
+    const colors = ["bg-blue-500", "bg-indigo-500", "bg-amber-500", "bg-emerald-500", "bg-pink-500"];
+    return {
+      name: c.name,
+      count: c.count,
+      percentage: c.percentage,
+      color: colors[i % colors.length]
+    };
+  });
+
+  const firstPendingKyc = pendingKycHosts?.[0];
 
   return (
     <div className="space-y-6">
       
       {/* Page Header */}
-      <div className="pb-4 border-b">
-        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Super Admin Board</h1>
-        <p className="text-sm text-muted-foreground">Monitor platform transactions, verify host credential files, and approve new listings.</p>
+      <div className="flex justify-between items-center pb-4 border-b">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Super Admin Board</h1>
+          <p className="text-sm text-muted-foreground">Monitor platform transactions, verify host credential files, and approve new listings.</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => {
+            fetchEventQueue();
+            fetchHosts();
+            fetchPendingKycHosts();
+            fetchFinanceLedger();
+          }}
+          disabled={loading}
+          className="rounded-xl flex items-center gap-1.5"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh Registry
+        </Button>
       </div>
+
+      {error && (
+        <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-xl border border-destructive/20 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>Sync issue detected: {error}</span>
+        </div>
+      )}
 
       {/* Platform Analytics Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -56,7 +137,7 @@ export default function AdminDashboard() {
         <Card className="border-border/40 bg-card rounded-2xl">
           <CardContent className="pt-6 flex justify-between items-center">
             <div className="space-y-1">
-              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Platform Revenue (15%)</span>
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Realized Net Commission</span>
               <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-500">${totalCommission}</div>
             </div>
             <div className="bg-emerald-500/10 text-emerald-500 p-3 rounded-xl"><Landmark className="h-5 w-5" /></div>
@@ -76,7 +157,7 @@ export default function AdminDashboard() {
         <Card className="border-border/40 bg-card rounded-2xl">
           <CardContent className="pt-6 flex justify-between items-center">
             <div className="space-y-1">
-              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Verified Hosts</span>
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Registered Hosts</span>
               <div className="text-2xl font-extrabold text-foreground">{activeHostsCount} Instructors</div>
             </div>
             <div className="bg-blue-500/10 text-blue-500 p-3 rounded-xl"><Users className="h-5 w-5" /></div>
@@ -87,50 +168,51 @@ export default function AdminDashboard() {
       {/* Visual Graphs Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Platform commission charts */}
+        {/* Platform ledger distribution bar chart */}
         <Card className="lg:col-span-7 border-border/40 rounded-2xl bg-card">
           <CardHeader>
-            <CardTitle className="text-sm font-bold">Marketplace Commission (USD)</CardTitle>
-            <CardDescription className="text-xs">Timeline of platform commission collected monthly.</CardDescription>
+            <CardTitle className="text-sm font-bold">Escrow Ledger Breakdown (USD)</CardTitle>
+            <CardDescription className="text-xs">Platform ledger balances distribution from backend database.</CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={platformFinancials} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#888888" opacity={0.15} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, fontSize: 11 }} />
-                  <Bar dataKey="platformFee" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Dynamic Category distribution bar lists */}
+        {/* Dynamic Topic distribution */}
         <Card className="lg:col-span-5 border-border/40 rounded-2xl bg-card">
           <CardHeader>
-            <CardTitle className="text-sm font-bold">Popular Domains</CardTitle>
-            <CardDescription className="text-xs">Booking density across marketplace sectors.</CardDescription>
+            <CardTitle className="text-sm font-bold">Top 5 Core Topic Areas</CardTitle>
+            <CardDescription className="text-xs">Workshop format distribution across core educational sectors.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-2">
-            {[
-              { name: "Technology & Code", count: 48, percentage: 80, color: "bg-blue-500" },
-              { name: "Design & UX", count: 32, percentage: 60, color: "bg-indigo-500" },
-              { name: "Culinary Arts", count: 24, percentage: 45, color: "bg-amber-500" },
-              { name: "Fitness & Wellness", count: 18, percentage: 35, color: "bg-emerald-500" },
-            ].map((sector) => (
-              <div key={sector.name} className="space-y-1.5">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span>{sector.name}</span>
-                  <span className="text-muted-foreground">{sector.count} Books</span>
+            {displaySectors.length > 0 ? (
+              displaySectors.map((sector) => (
+                <div key={sector.name} className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span>{sector.name}</span>
+                    <span className="text-muted-foreground">{sector.count} classes ({sector.percentage}%)</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full ${sector.color} rounded-full`} style={{ width: `${sector.percentage}%` }} />
+                  </div>
                 </div>
-                <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full ${sector.color} rounded-full`} style={{ width: `${sector.percentage}%` }} />
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 text-muted-foreground text-xs italic">
+                No active classes recorded to compute topic sectors.
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -158,17 +240,19 @@ export default function AdminDashboard() {
                 <thead>
                   <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
                     <th className="py-3 px-4">Title</th>
-                    <th className="py-3 px-4">Domain</th>
-                    <th className="py-3 px-4">Instructor</th>
+                    <th className="py-3 px-4">Mode</th>
+                    <th className="py-3 px-4">Host Name</th>
                     <th className="py-3 px-4 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {MOCK_PROGRAMS.filter(p => p.status === "pending").slice(0, 2).map((prog) => (
-                    <tr key={prog.id} className="border-b hover:bg-muted/30">
+                  {eventQueue && eventQueue.slice(0, 3).map((prog) => (
+                    <tr key={prog.id} className="border-b hover:bg-muted/30 last:border-none">
                       <td className="py-3 px-4 font-bold max-w-[200px] truncate">{prog.title}</td>
-                      <td className="py-3 px-4 capitalize">{prog.category}</td>
-                      <td className="py-3 px-4">{prog.instructorName}</td>
+                      <td className="py-3 px-4 uppercase">{prog.mode}</td>
+                      <td className="py-3 px-4">
+                        {prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host"}
+                      </td>
                       <td className="py-3 px-4 text-center">
                         <Link href="/admin/approvals">
                           <Button size="sm" className="rounded-lg h-7 px-3 text-[10px] font-bold">Verify</Button>
@@ -176,7 +260,7 @@ export default function AdminDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {MOCK_PROGRAMS.filter(p => p.status === "pending").length === 0 && (
+                  {(!eventQueue || eventQueue.length === 0) && (
                     <tr>
                       <td colSpan={4} className="text-center py-6 text-muted-foreground text-xs">
                         All listing approval queues cleared.
@@ -196,16 +280,24 @@ export default function AdminDashboard() {
             <CardDescription className="text-xs">Pending teacher certificates reviews.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-start space-x-3 text-xs bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 text-amber-600 dark:text-amber-500">
-              <UserPlus className="h-4 w-4 mt-0.5 shrink-0" />
-              <div className="space-y-1">
-                <div className="font-bold">Pending Host: Sarah Jenkins</div>
-                <p className="text-[10px] opacity-90 leading-relaxed">Submitted proof credentials for Technology and React 19 Mastery.</p>
-                <Link href="/admin/hosts" className="text-[10px] font-bold underline block pt-1">
-                  View Credentials Sheet
-                </Link>
+            {firstPendingKyc ? (
+              <div className="flex items-start space-x-3 text-xs bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 text-amber-600 dark:text-amber-500">
+                <UserPlus className="h-4 w-4 mt-0.5 shrink-0" />
+                <div className="space-y-1">
+                  <div className="font-bold">Pending Host: {firstPendingKyc.firstName} {firstPendingKyc.lastName}</div>
+                  <p className="text-[10px] opacity-90 leading-relaxed truncate max-w-[180px]">
+                    {firstPendingKyc.hostProfile?.bio || "Submitted government credentials for review."}
+                  </p>
+                  <Link href="/admin/hosts" className="text-[10px] font-bold underline block pt-1">
+                    View Credentials Sheet
+                  </Link>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-4 border border-dashed rounded-xl text-center text-muted-foreground text-xs bg-muted/10">
+                All host registration KYC submissions verified!
+              </div>
+            )}
           </CardContent>
         </Card>
 

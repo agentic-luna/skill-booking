@@ -234,6 +234,9 @@ model Event {
   availableSeats Int
   status         EventStatus @default(PENDING)
   version        Int         @default(1) // Optimistic concurrency lock
+  price          Float       @default(500.0)
+  duration       String?     @default("2 hours")
+  category       String?     @default("technology")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -305,6 +308,7 @@ model Booking {
   client            User                @relation(fields: [clientId], references: [id], onDelete: Cascade)
   event             Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   transactionLedger TransactionLedger[]
+  refundRequest     RefundRequest?
 
   @@map("bookings")
 }
@@ -367,4 +371,23 @@ model EventLike {
 
   @@unique([clientId, eventId])
   @@map("event_likes")
+}
+
+enum RefundRequestStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+model RefundRequest {
+  id        String              @id @default(uuid()) @db.Uuid
+  bookingId String              @unique @db.Uuid
+  reason    String?
+  status    RefundRequestStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("refund_requests")
 }

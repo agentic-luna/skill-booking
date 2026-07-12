@@ -165,6 +165,155 @@ async function main() {
     }
   }
 
+  // 4. Seed Mock Host, Client, Event, Bookings, and Refund Requests for integration testing
+  console.log('[Seeder] Seeding integration testing data (Host, Client, Event, Bookings, Refund Requests)...');
+
+  // Host User
+  const hostEmail = 'host@luna.com';
+  let host = await prisma.user.findUnique({ where: { email: hostEmail } });
+  if (!host) {
+    const passwordHash = await bcrypt.hash('password123', 10);
+    host = await prisma.user.create({
+      data: {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: hostEmail,
+        phone: '+15550202',
+        passwordHash,
+        role: 'HOST',
+        status: 'ACTIVE',
+      },
+    });
+  }
+
+  // Host Profile
+  let hostProfile = await prisma.hostProfile.findUnique({ where: { userId: host.id } });
+  if (!hostProfile) {
+    hostProfile = await prisma.hostProfile.create({
+      data: {
+        userId: host.id,
+        bio: 'Certified senior React & NextJS instructor with 10+ years developer experience.',
+        kycStatus: 'APPROVED',
+        accountType: 'INDIVIDUAL',
+      },
+    });
+  }
+
+  // Client User
+  const clientEmail = 'client@luna.com';
+  let client = await prisma.user.findUnique({ where: { email: clientEmail } });
+  if (!client) {
+    const passwordHash = await bcrypt.hash('password123', 10);
+    client = await prisma.user.create({
+      data: {
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: clientEmail,
+        phone: '+15550201',
+        passwordHash,
+        role: 'CLIENT',
+        status: 'ACTIVE',
+      },
+    });
+  }
+
+  // Client Profile
+  let clientProfile = await prisma.clientProfile.findUnique({ where: { userId: client.id } });
+  if (!clientProfile) {
+    await prisma.clientProfile.create({
+      data: {
+        userId: client.id,
+        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
+        bio: 'Enthusiastic developer learning fullstack programming.',
+      },
+    });
+  }
+
+  // Event (Workshop)
+  const eventTitle = 'Advanced Next.js 15 & React 19 Sprint';
+  let event = await prisma.event.findFirst({ where: { title: eventTitle } });
+  if (!event) {
+    event = await prisma.event.create({
+      data: {
+        hostId: hostProfile.id,
+        title: eventTitle,
+        description: 'Deep dive into server actions, concurrent rendering, and app router architectural patterns.',
+        posterUrl: 'https://images.unsplash.com/photo-1618401471353-b98aedd07871?auto=format&fit=crop&q=80&w=600',
+        mode: 'ONLINE',
+        startTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        totalSeats: 20,
+        availableSeats: 18,
+        status: 'APPROVED',
+        venueDetails: { meetingLink: 'https://zoom.us/j/987654321' },
+      },
+    });
+
+    // Create Event Commission
+    await prisma.eventCommission.create({
+      data: {
+        eventId: event.id,
+        commissionType: 'PERCENTAGE',
+        platformValue: 15.00,
+      },
+    });
+  }
+
+  // Booking 1 - Standard Booking
+  const booking1Ref = 'BMS-837492';
+  let booking1 = await prisma.booking.findUnique({ where: { bookingRef: booking1Ref } });
+  if (!booking1) {
+    booking1 = await prisma.booking.create({
+      data: {
+        bookingRef: booking1Ref,
+        clientId: client.id,
+        eventId: event.id,
+        seatCount: 1,
+        totalAmount: 150.00,
+        status: 'CONFIRMED',
+      },
+    });
+  }
+
+  // Refund Request 1 - Pending
+  let refund1 = await prisma.refundRequest.findUnique({ where: { bookingId: booking1.id } });
+  if (!refund1) {
+    await prisma.refundRequest.create({
+      data: {
+        bookingId: booking1.id,
+        reason: 'Class schedule conflict due to unexpected business travel.',
+        status: 'PENDING',
+      },
+    });
+  }
+
+  // Booking 2 - Standard Booking
+  const booking2Ref = 'BMS-910283';
+  let booking2 = await prisma.booking.findUnique({ where: { bookingRef: booking2Ref } });
+  if (!booking2) {
+    booking2 = await prisma.booking.create({
+      data: {
+        bookingRef: booking2Ref,
+        clientId: client.id,
+        eventId: event.id,
+        seatCount: 1,
+        totalAmount: 75.00,
+        status: 'CONFIRMED',
+      },
+    });
+  }
+
+  // Refund Request 2 - Pending
+  let refund2 = await prisma.refundRequest.findUnique({ where: { bookingId: booking2.id } });
+  if (!refund2) {
+    await prisma.refundRequest.create({
+      data: {
+        bookingId: booking2.id,
+        reason: 'Instructor rescheduled the timing twice, no longer convenient.',
+        status: 'PENDING',
+      },
+    });
+  }
+
   console.log('[Seeder] Message templates seeded successfully.');
   console.log('[Seeder] Database seeding complete.');
 }

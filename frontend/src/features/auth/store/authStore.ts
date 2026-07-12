@@ -15,6 +15,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
   pendingRegistration: null,
   isVerifying: false,
@@ -186,18 +187,84 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearError: () => set({ error: null }),
 }));
 
+// Helper to decode JWT payload safely client-side
+function decodeJwt(token: string): any {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 // ── Session rehydration ───────────────────────────────────────────────────
 
 export const initAuth = async () => {
   if (typeof window === "undefined") return;
   const token = localStorage.getItem("bms_access_token");
-  if (!token) return;
-  const apiUser = await authApi.getMe();
-  if (apiUser) {
-    const user = mapApiUser(apiUser);
-    saveSession(user);
-    useAuthStore.setState({ user, isAuthenticated: true });
-  } else {
+  if (!token) {
+    useAuthStore.setState({ isInitialized: true });
+    return;
+  }
+  try {
+    // 1. Try to read the user session from localStorage first to avoid API call traffic
+    const sessionStr = localStorage.getItem("bookmyskill_session");
+    let user = null;
+    if (sessionStr) {
+      user = JSON.parse(sessionStr);
+    } else {
+      // 2. Decode user info from the JWT token directly
+      const decoded = decodeJwt(token);
+      if (decoded) {
+        user = {
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role === "SUPERADMIN" ? "admin" : decoded.role?.toLowerCase(),
+          firstName: "",
+          lastName: "",
+          name: "",
+          phone: "",
+          status: "ACTIVE",
+          hostProfile: null,
+        };
+      }
+    }
+
+    if (user) {
+      useAuthStore.setState({ user, isAuthenticated: true });
+
+      // 3. Fallback: If user is logged in but hostProfile is missing, fetch once asynchronously in the background
+      if (user.role === "host" && !user.hostProfile) {
+        authApi.getMe().then((apiUser) => {
+          if (apiUser) {
+            const fullUser = mapApiUser(apiUser);
+            saveSession(fullUser);
+            useAuthStore.setState({ user: fullUser });
+          }
+        }).catch(() => {});
+      }
+    } else {
+      // Fetch user from backend if both session and JWT decoding failed
+      const apiUser = await authApi.getMe();
+      if (apiUser) {
+        const fullUser = mapApiUser(apiUser);
+        saveSession(fullUser);
+        useAuthStore.setState({ user: fullUser, isAuthenticated: true });
+      } else {
+        clearTokens();
+      }
+    }
+  } catch (e) {
     clearTokens();
+  } finally {
+    useAuthStore.setState({ isInitialized: true });
   }
 };

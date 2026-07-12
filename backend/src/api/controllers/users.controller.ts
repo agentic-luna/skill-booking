@@ -1,4 +1,6 @@
 import { Response, NextFunction } from 'express';
+import { prisma } from '../../config/prisma';
+import bcrypt from 'bcryptjs';
 import { mediator, userRepo } from '../di-container';
 import { SubmitKycCommand } from '../../application/use-cases/hosts/submit-kyc';
 import { SubmitBankDetailsCommand } from '../../application/use-cases/hosts/submit-bank-details';
@@ -82,6 +84,127 @@ export class UsersController {
 
       const stats = await mediator.send(new GetHostDashboardQuery(hostProfile.id));
       return ApiResponse.success(res, stats);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { firstName, lastName, email } = req.body;
+      if (!firstName || !email) {
+        throw new BadRequestError('First name and email are required');
+      }
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { firstName, lastName: lastName || '', email },
+      });
+      return ApiResponse.success(res, { user: updatedUser });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async changePassword(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      if (!currentPassword || !newPassword) {
+        throw new BadRequestError('Current password and new password are required');
+      }
+      const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+      if (!user) {
+        throw new BadRequestError('User not found');
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isMatch) {
+        throw new BadRequestError('Incorrect current password');
+      }
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { passwordHash },
+      });
+      return ApiResponse.success(res, { message: 'Password updated successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async applyHost(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { expertise, bio } = req.body;
+      if (!bio) {
+        throw new BadRequestError('Professional bio is required to apply');
+      }
+      const hostProfile = await prisma.hostProfile.upsert({
+        where: { userId: req.user!.id },
+        update: { bio },
+        create: {
+          userId: req.user!.id,
+          bio,
+          kycStatus: 'PENDING',
+        },
+      });
+      return ApiResponse.success(res, hostProfile);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getMyEvents(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        return ApiResponse.success(res, []);
+      }
+      const events = await prisma.event.findMany({
+        where: { hostId: hostProfile.id },
+        orderBy: { startTime: 'desc' },
+      });
+      return ApiResponse.success(res, events);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getHostParticipants(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        return ApiResponse.success(res, []);
+      }
+      const bookings = await prisma.booking.findMany({
+        where: {
+          event: { hostId: hostProfile.id },
+        },
+        include: {
+          event: true,
+          client: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      return ApiResponse.success(res, bookings);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getEventBookings(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.params;
+      const bookings = await prisma.booking.findMany({
+        where: { eventId },
+        include: {
+          client: true,
+          event: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      return ApiResponse.success(res, bookings);
     } catch (error) {
       next(error);
     }

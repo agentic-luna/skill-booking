@@ -127,3 +127,137 @@ export interface BroadcastResult {
   failed: number;
   channel: BroadcastChannel;
 }
+
+// ── Event Queue (Moderation) ─────────────────────────────────────────────
+
+export type EventMode = "ONLINE" | "OFFLINE";
+export type EventStatus = "PENDING" | "APPROVED" | "CANCELED";
+export type CommissionType = "FIXED" | "PERCENTAGE";
+
+export interface PendingEvent {
+  id: string;
+  hostId: string;
+  title: string;
+  description?: string;
+  images: string[];
+  trainerName?: string;
+  trainerInfo?: string;
+  trainerBio?: string;
+  posterUrl: string;
+  mode: EventMode;
+  venueDetails?: Record<string, unknown>;
+  startTime: string;
+  totalSeats: number;
+  availableSeats: number;
+  status: EventStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  host?: {
+    id: string;
+    userId: string;
+    accountType: string;
+    bio?: string;
+    kycStatus: string;
+    user?: {
+      firstName: string;
+      lastName: string;
+      phone: string;
+    };
+  };
+}
+
+export interface ApproveEventPayload {
+  commissionType: CommissionType;
+  platformValue: number;
+}
+
+export interface ApproveEventResult {
+  event: PendingEvent;
+  commission: {
+    id: string;
+    eventId: string;
+    commissionType: CommissionType;
+    platformValue: number;
+    assignedAt: string;
+  };
+}
+
+// ── Finance / Ledger ─────────────────────────────────────────────────────
+
+export interface FinanceLedger {
+  totalEscrowLiabilities: number;
+  totalRealizedRevenue: number;
+  totalRefunded: number;
+  ledgerCount: number;
+}
+
+export interface PayoutResult {
+  success: boolean;
+  amount?: number;
+  payoutId?: string;
+  transactionsPaid?: number;
+  message?: string;
+}
+
+// ── KYC / Host Management ────────────────────────────────────────────────
+
+export type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type AccountType = "INDIVIDUAL" | "COMPANY";
+
+export interface HostBankDetail {
+  id: string;
+  accountHolderName: string;
+  bankName: string;
+  ifscCode: string;
+  upiId?: string;
+  updatedAt: string;
+}
+
+export interface HostEvent {
+  id: string;
+  title: string;
+  status: EventStatus;
+  startTime: string;
+  totalSeats: number;
+  availableSeats: number;
+}
+
+export interface HostProfile {
+  id: string;
+  accountType: AccountType;
+  govIdUrl?: string;
+  gstNumber?: string;
+  kycStatus: KycStatus;
+  bio?: string;
+  updatedAt: string;
+  bankDetail?: HostBankDetail;
+  events?: HostEvent[];
+}
+
+export interface HostWithProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  status: "ACTIVE" | "SUSPENDED";
+  createdAt: string;
+  updatedAt?: string;
+  hostProfile?: HostProfile;
+}
+
+export interface HostsResponse {
+  count: number;
+  hosts: HostWithProfile[];
+}
+
+export interface KycReviewPayload {
+  decision: "APPROVED" | "REJECTED";
+  rejectionReason?: string;
+}
+
+export interface KycReviewResult {
+  message: string;
+  hostProfile: HostProfile;
+}

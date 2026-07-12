@@ -11,6 +11,7 @@ const router = (0, express_1.Router)();
 router.use(auth_1.authenticate);
 router.get('/my-bookings', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_READ_OWN), bookings_controller_1.BookingsController.getMyBookings);
 router.get('/mybookings', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_READ_OWN), bookings_controller_1.BookingsController.getMyBookings);
+router.get('/:bookingId/invoice', bookings_controller_1.BookingsController.downloadInvoice);
 router.post('/checkout', rate_limiter_1.checkoutLimiter, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_CREATE), bookings_controller_1.BookingsController.checkout);
 router.post('/:bookingId/confirm', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_CREATE), (0, authorize_1.requireResourceOwner)(async (req) => {
     const booking = await di_container_1.bookingRepo.findById(req.params.bookingId);

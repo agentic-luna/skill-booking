@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import * as hostApi from "@/features/host/api/host.api";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { saveSession } from "@/features/auth/store/auth.helpers";
 import type {
   SubmitKycPayload,
   KycResponse,
@@ -29,6 +31,16 @@ interface HostState {
   // Events
   latestCreatedEvent: CreatedEvent | null;
   createEvent: (payload: CreateEventPayload) => Promise<CreatedEvent>;
+  updateEvent: (id: string, payload: any) => Promise<any>;
+  deleteEvent: (id: string) => Promise<any>;
+  myEvents: any[];
+  fetchMyEvents: () => Promise<void>;
+
+  // Roster Board
+  participants: any[];
+  fetchParticipants: () => Promise<void>;
+  eventBookings: Record<string, any[]>;
+  fetchEventBookings: (eventId: string) => Promise<void>;
 
   // Dashboard
   dashboard: DashboardStats | null;
@@ -47,6 +59,9 @@ export const useHostStore = create<HostState>((set) => ({
   kyc: null,
   bankDetails: null,
   latestCreatedEvent: null,
+  myEvents: [],
+  participants: [],
+  eventBookings: {},
   dashboard: null,
   dashboardLoading: false,
 
@@ -57,6 +72,21 @@ export const useHostStore = create<HostState>((set) => ({
     try {
       const kyc = await hostApi.submitKyc(payload);
       set({ kyc, isLoading: false });
+
+      // Sync changes with authStore and localStorage
+      const authUser = useAuthStore.getState().user;
+      if (authUser) {
+        const updatedUser = {
+          ...authUser,
+          hostProfile: {
+            ...(authUser.hostProfile || {}),
+            ...kyc,
+          },
+        } as any;
+        useAuthStore.setState({ user: updatedUser });
+        saveSession(updatedUser);
+      }
+
       return kyc;
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -71,6 +101,21 @@ export const useHostStore = create<HostState>((set) => ({
     try {
       const bankDetails = await hostApi.submitBankDetails(payload);
       set({ bankDetails, isLoading: false });
+
+      // Sync changes with authStore and localStorage
+      const authUser = useAuthStore.getState().user;
+      if (authUser) {
+        const updatedUser = {
+          ...authUser,
+          hostProfile: {
+            ...(authUser.hostProfile || {}),
+            bankDetail: bankDetails,
+          },
+        } as any;
+        useAuthStore.setState({ user: updatedUser });
+        saveSession(updatedUser);
+      }
+
       return bankDetails;
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -83,6 +128,21 @@ export const useHostStore = create<HostState>((set) => ({
     try {
       const bankDetails = await hostApi.updateBankDetails(payload);
       set({ bankDetails, isLoading: false });
+
+      // Sync changes with authStore and localStorage
+      const authUser = useAuthStore.getState().user;
+      if (authUser) {
+        const updatedUser = {
+          ...authUser,
+          hostProfile: {
+            ...(authUser.hostProfile || {}),
+            bankDetail: bankDetails,
+          },
+        } as any;
+        useAuthStore.setState({ user: updatedUser });
+        saveSession(updatedUser);
+      }
+
       return bankDetails;
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -101,6 +161,72 @@ export const useHostStore = create<HostState>((set) => ({
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;
+    }
+  },
+
+  updateEvent: async (id, payload) => {
+    set({ isLoading: true, error: null });
+    try {
+      const event = await hostApi.updateEvent(id, payload);
+      set((state) => ({
+        myEvents: state.myEvents.map((e) => (e.id === id ? event : e)),
+        isLoading: false,
+      }));
+      return event;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  deleteEvent: async (id) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await hostApi.deleteEvent(id);
+      set((state) => ({
+        myEvents: state.myEvents.filter((e) => e.id !== id),
+        isLoading: false,
+      }));
+      return res;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  fetchMyEvents: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const myEvents = await hostApi.getMyEvents();
+      set({ myEvents, isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+    }
+  },
+
+  fetchParticipants: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const participants = await hostApi.getHostParticipants();
+      set({ participants, isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+    }
+  },
+
+  fetchEventBookings: async (eventId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const bookings = await hostApi.getEventBookings(eventId);
+      set((state) => ({
+        eventBookings: {
+          ...state.eventBookings,
+          [eventId]: bookings,
+        },
+        isLoading: false,
+      }));
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
     }
   },
 

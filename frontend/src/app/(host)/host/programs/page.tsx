@@ -1,12 +1,32 @@
+"use client";
+
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { MOCK_PROGRAMS } from "@/constants/mockData";
 import ProgramCard from "@/components/ui/program-card";
+import { useHostStore } from "@/features/host/store/hostStore";
 
 export default function HostProgramsPage() {
-  const programsList = MOCK_PROGRAMS;
+  const { myEvents, fetchMyEvents, isLoading } = useHostStore();
+
+  useEffect(() => {
+    fetchMyEvents();
+  }, [fetchMyEvents]);
+
+  const programsList = myEvents.map((event: any) => ({
+    id: event.id,
+    title: event.title,
+    imageUrl: event.posterUrl || "https://images.unsplash.com/photo-1618401471353-b98aedd07871?auto=format&fit=crop&q=80&w=600",
+    status: event.status.toLowerCase(), // approved, pending, rejected, canceled
+    category: event.mode,
+    duration: "2 hours",
+    spotsLeft: event.availableSeats,
+    maxSpots: event.totalSeats,
+    location: event.mode === "ONLINE" ? "Online Meeting" : (event.venueDetails?.address || "Physical Venue"),
+    price: 500, // 500 INR matches default ticket price in backend checkout handler
+  }));
 
   return (
     <div className="space-y-6">
@@ -14,7 +34,10 @@ export default function HostProgramsPage() {
       {/* Page Header */}
       <div className="flex justify-between items-center pb-4 border-b">
         <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Program Management</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+            Program Management
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </h1>
           <p className="text-sm text-muted-foreground">List, check validation status, and edit details of your skill classes.</p>
         </div>
         <Link href="/host/programs/create">
@@ -27,12 +50,12 @@ export default function HostProgramsPage() {
       {/* Program grid list */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {programsList.map((prog) => (
-          <ProgramCard key={prog.id} program={prog} />
+          <ProgramCard key={prog.id} program={prog as any} />
         ))}
       </div>
 
       {/* Empty state */}
-      {programsList.length === 0 && (
+      {!isLoading && programsList.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="bg-muted/50 p-4 rounded-full">
             <Plus className="h-8 w-8 text-muted-foreground" />
