@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminController = void 0;
+const prisma_1 = require("../../config/prisma");
 const di_container_1 = require("../di-container");
 const get_configs_1 = require("../../application/use-cases/admin/get-configs");
 const update_config_1 = require("../../application/use-cases/admin/update-config");
@@ -202,6 +203,162 @@ class AdminController {
             const { decision, rejectionReason } = req.body;
             const result = await di_container_1.mediator.send(new review_kyc_1.ReviewKycCommand(hostProfileId, decision, rejectionReason));
             return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getRefundRequests(req, res, next) {
+        try {
+            const refundRequests = await prisma_1.prisma.refundRequest.findMany({
+                include: {
+                    booking: {
+                        include: {
+                            client: true,
+                            event: true,
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            });
+            const mapped = refundRequests.map((r) => ({
+                id: r.id,
+                clientName: `${r.booking.client.firstName} ${r.booking.client.lastName}`,
+                email: r.booking.client.email,
+                eventTitle: r.booking.event.title,
+                bookingRef: r.booking.bookingRef,
+                amount: String(r.booking.totalAmount),
+                reason: r.reason || '',
+                status: r.status,
+                dateRequested: r.createdAt.toISOString().split('T')[0],
+            }));
+            return api_response_1.ApiResponse.success(res, mapped);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async approveRefundRequest(req, res, next) {
+        try {
+            const { id } = req.params;
+            const refundRequest = await prisma_1.prisma.refundRequest.findUnique({
+                where: { id },
+                include: { booking: true },
+            });
+            if (!refundRequest) {
+                throw new errors_1.BadRequestError('Refund request not found');
+            }
+            const [updatedRequest, updatedBooking] = await prisma_1.prisma.$transaction([
+                prisma_1.prisma.refundRequest.update({
+                    where: { id },
+                    data: { status: 'APPROVED' },
+                }),
+                prisma_1.prisma.booking.update({
+                    where: { id: refundRequest.bookingId },
+                    data: { status: 'REFUNDED' },
+                }),
+                prisma_1.prisma.transactionLedger.updateMany({
+                    where: { bookingId: refundRequest.bookingId },
+                    data: { status: 'REFUNDED_TO_CLIENT' },
+                }),
+            ]);
+            return api_response_1.ApiResponse.success(res, {
+                message: 'Refund request approved successfully',
+                refundRequest: updatedRequest,
+                booking: updatedBooking,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async declineRefundRequest(req, res, next) {
+        try {
+            const { id } = req.params;
+            const updated = await prisma_1.prisma.refundRequest.update({
+                where: { id },
+                data: { status: 'DECLINED' },
+            });
+            return api_response_1.ApiResponse.success(res, {
+                message: 'Refund request declined successfully',
+                refundRequest: updated,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async deleteHost(req, res, next) {
+        try {
+            const { id } = req.params;
+            const updatedUser = await prisma_1.prisma.user.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            });
+            return api_response_1.ApiResponse.success(res, {
+                message: 'Host soft-deleted successfully',
+                user: updatedUser,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async notifyHost(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { subject, bodyContent } = req.body;
+            if (!subject || !bodyContent) {
+                throw new errors_1.BadRequestError('Subject and message content are required');
+            }
+            const host = await prisma_1.prisma.user.findUnique({ where: { id } });
+            if (!host) {
+                throw new errors_1.BadRequestError('Host not found');
+            }
+            const log = await prisma_1.prisma.notificationLog.create({
+                data: {
+                    userId: host.id,
+                    channel: 'EMAIL',
+                    triggerEvent: 'ADMIN_DIRECT',
+                    recipient: host.email,
+                    content: bodyContent,
+                    status: 'PENDING',
+                },
+            });
+            try {
+                await di_container_1.commsService.sendEmail(host.email, subject, bodyContent);
+                await prisma_1.prisma.notificationLog.update({
+                    where: { id: log.id },
+                    data: { status: 'SENT', sentAt: new Date() },
+                });
+            }
+            catch (err) {
+                await prisma_1.prisma.notificationLog.update({
+                    where: { id: log.id },
+                    data: { status: 'FAILED', errorMessage: err.message },
+                });
+                di_container_1.logger.error(`[AdminNotify] Failed to dispatch email to host ${host.email}:`, err);
+            }
+            return api_response_1.ApiResponse.success(res, {
+                message: 'Notification sent successfully',
+                log,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async declineEvent(req, res, next) {
+        try {
+            const { eventId } = req.params;
+            const updatedEvent = await prisma_1.prisma.event.update({
+                where: { id: eventId },
+                data: { status: 'CANCELED' },
+            });
+            return api_response_1.ApiResponse.success(res, {
+                message: 'Program listing declined successfully',
+                event: updatedEvent,
+            });
         }
         catch (error) {
             next(error);

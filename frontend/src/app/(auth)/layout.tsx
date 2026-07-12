@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { initAuth } from "@/features/auth/store/authStore";
 import AuthBrandPanel from "./_components/AuthBrandPanel";
 
 const authStyles = `
@@ -30,7 +29,6 @@ const authStyles = `
 `;
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  useEffect(() => { initAuth(); }, []);
   const [, setInitialLoad] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setInitialLoad(false), 1100);

@@ -3,29 +3,27 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Star, Clock, MapPin, Trash2, ArrowLeft, Ticket } from "lucide-react";
+import { Heart, Star, Clock, MapPin, Trash2, ArrowLeft, Ticket, Calendar } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useClientStore } from "@/features/client/store/clientStore";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MOCK_PROGRAMS, Program } from "@/constants/mockData";
 
 export default function WishlistPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  
-  // Set default wishlisted programs (e.g., marc's sourdough, street photography)
-  const [wishlist, setWishlist] = useState<Program[]>(
-    MOCK_PROGRAMS.filter((p) => ["prog_2", "prog_4"].includes(p.id))
-  );
+  const { wishlist, fetchWishlist, removeFromWishlist, loading } = useClientStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
+      return;
     }
-  }, [isAuthenticated, router]);
+    fetchWishlist();
+  }, [isAuthenticated, router, fetchWishlist]);
 
   if (!isAuthenticated) {
     return (
@@ -38,8 +36,12 @@ export default function WishlistPage() {
     );
   }
 
-  const handleRemoveFromWishlist = (programId: string) => {
-    setWishlist((prev) => prev.filter((p) => p.id !== programId));
+  const handleRemoveFromWishlist = async (eventId: string) => {
+    try {
+      await removeFromWishlist(eventId);
+    } catch (err) {
+      // error is logged in store
+    }
   };
 
   return (
@@ -61,69 +63,72 @@ export default function WishlistPage() {
 
           {wishlist.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {wishlist.map((prog) => (
-                <div
-                  key={prog.id}
-                  className="group flex flex-col border border-border/40 bg-card rounded-2xl overflow-hidden hover:border-primary/20 animate-hover relative"
-                >
-                  {/* Remove Button overlay */}
-                  <button
-                    onClick={() => handleRemoveFromWishlist(prog.id)}
-                    className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white p-2 rounded-full z-15 active:scale-90 transition-transform"
-                    title="Remove from saved list"
+              {wishlist.map((item) => {
+                const prog = item.event;
+                if (!prog) return null;
+                const instructorName = prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host";
+                const price = Number(prog.venueDetails?.price || 0);
+                const formattedDate = new Date(prog.startTime).toLocaleDateString();
+
+                return (
+                  <div
+                    key={item.id}
+                    className="group flex flex-col border border-border/40 bg-card rounded-2xl overflow-hidden hover:border-primary/20 animate-hover relative"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                    {/* Remove Button overlay */}
+                    <button
+                      onClick={() => handleRemoveFromWishlist(prog.id)}
+                      className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white p-2 rounded-full z-15 active:scale-90 transition-transform"
+                      title="Remove from saved list"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
 
-                  <div className="relative aspect-video w-full bg-muted">
-                    <img
-                      src={prog.imageUrl}
-                      alt={prog.title}
-                      className="object-cover w-full h-full group-hover:scale-103 transition-transform duration-300"
-                    />
-                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-md font-semibold capitalize">
-                      {prog.category}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col flex-1 p-5 space-y-3">
-                    <div className="flex items-center space-x-2">
+                    <div className="relative aspect-video w-full bg-muted">
                       <img
-                        src={prog.instructorAvatar}
-                        alt={prog.instructorName}
-                        className="h-5 w-5 rounded-full object-cover"
+                        src={prog.posterUrl || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=300"}
+                        alt={prog.title}
+                        className="object-cover w-full h-full group-hover:scale-103 transition-transform duration-300"
                       />
-                      <span className="text-[10px] text-muted-foreground">{prog.instructorName}</span>
                     </div>
 
-                    <h3 className="font-bold text-sm text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                      {prog.title}
-                    </h3>
-
-                    <div className="flex items-center space-x-2 text-[10px] text-muted-foreground">
-                      <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {prog.duration}</span>
-                      <span>•</span>
-                      <span className="flex items-center"><MapPin className="h-3 w-3 mr-1" /> {prog.location.split(",")[0]}</span>
-                    </div>
-
-                    <div className="flex items-center space-x-1.5">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      <span className="text-xs font-semibold text-foreground">{prog.rating}</span>
-                      <span className="text-[10px] text-muted-foreground">({prog.reviewsCount} reviews)</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-border/40 mt-auto">
-                      <div>
-                        <span className="text-[10px] text-muted-foreground">Fee</span>
-                        <div className="text-base font-extrabold text-foreground">${prog.price}</div>
+                    <div className="flex flex-col flex-1 p-5 space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary">
+                          {instructorName.slice(0, 2).toUpperCase()}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{instructorName}</span>
                       </div>
-                      <Link href={`/programs/${prog.id}`}>
-                        <Button size="sm" className="rounded-lg h-8 text-xs">Book Seat</Button>
-                      </Link>
+
+                      <h3 className="font-bold text-sm text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                        {prog.title}
+                      </h3>
+
+                      <div className="flex items-center space-x-2 text-[10px] text-muted-foreground">
+                        <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> {formattedDate}</span>
+                        <span>•</span>
+                        <span className="flex items-center"><MapPin className="h-3 w-3 mr-1" /> {prog.mode}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        <span className="text-xs font-semibold text-foreground">4.8</span>
+                        <span className="text-[10px] text-muted-foreground">({prog.availableSeats} left)</span>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-border/40 mt-auto">
+                        <div>
+                          <span className="text-[10px] text-muted-foreground">Fee</span>
+                          <div className="text-base font-extrabold text-foreground">${price}</div>
+                        </div>
+                        <Link href={`/programs/${prog.id}`}>
+                          <Button size="sm" className="rounded-lg h-8 text-xs">Book Seat</Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center p-12 border bg-card border-dashed border-border/60 rounded-2xl space-y-4">

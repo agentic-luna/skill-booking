@@ -1,39 +1,45 @@
 "use client";
 
-import React, { useState } from "react";
-import { Users, Search } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Users, Search, Loader2 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { MOCK_PROGRAMS, MOCK_BOOKINGS } from "@/constants/mockData";
 import ProgramRowCard from "@/components/ui/program-row-card";
+import { useHostStore } from "@/features/host/store/hostStore";
 
 export default function HostParticipantsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { myEvents, participants, fetchMyEvents, fetchParticipants, isLoading } = useHostStore();
 
-  // Map programs and aggregate statistics for confirmed students
-  const programsWithRoster = MOCK_PROGRAMS.map((prog) => {
-    // Get actual bookings matching this program title or ID
-    const actualBookings = MOCK_BOOKINGS.filter(
-      (b) => b.programId === prog.id || b.programTitle === prog.title
-    );
+  useEffect(() => {
+    fetchMyEvents();
+    fetchParticipants();
+  }, [fetchMyEvents, fetchParticipants]);
 
-    // Build the student list counts for mock presentation purposes
-    let enrolledCount = actualBookings.filter(
-      (b) => b.status === "confirmed" || b.status === "completed"
-    ).reduce((sum, b) => sum + b.spotsBooked, 0);
+  // Map programs and aggregate statistics for confirmed students from DB
+  const programsWithRoster = myEvents.map((event: any) => {
+    // Get actual bookings matching this event
+    const eventBookings = participants.filter((b: any) => b.eventId === event.id);
 
-    // Mock count overrides to display interesting data
-    if (enrolledCount === 0 && prog.status === "approved") {
-      if (prog.id === "prog_2") {
-        enrolledCount = 3;
-      } else if (prog.id === "prog_4") {
-        enrolledCount = 1;
-      }
-    }
+    // Sum up spots booked for CONFIRMED bookings
+    const enrolledCount = eventBookings
+      .filter((b: any) => b.status === "CONFIRMED" || b.status === "COMPLETED")
+      .reduce((sum: number, b: any) => sum + b.seatCount, 0);
 
     return {
-      ...prog,
+      id: event.id,
+      title: event.title,
+      imageUrl: event.posterUrl || "https://images.unsplash.com/photo-1618401471353-b98aedd07871?auto=format&fit=crop&q=80&w=600",
+      status: event.status.toLowerCase(),
+      category: event.mode,
+      duration: "2 hours",
+      spotsLeft: event.availableSeats,
+      maxSpots: event.totalSeats,
+      location: event.mode === "ONLINE" ? "Online Zoom link" : (event.venueDetails?.address || "Physical Venue"),
+      price: 500,
       enrolledCount,
+      date: new Date(event.startTime).toLocaleDateString(),
+      time: new Date(event.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
   });
 
@@ -48,6 +54,7 @@ export default function HostParticipantsPage() {
       <div className="space-y-1 pb-4 border-b">
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" /> Roster Board
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
         </h1>
         <p className="text-sm text-muted-foreground font-medium">
           Select any active skill workshop to review confirmed learners and verify ticket payments.

@@ -28,11 +28,17 @@ router.post('/notifications/broadcast', (0, authorize_1.requirePermission)(syste
 // Moderation
 router.get('/events/queue', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_MODERATE), admin_controller_1.AdminController.getEventQueue);
 router.put('/events/:eventId/approve', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.approveEvent);
+router.put('/events/:eventId/decline', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_MODERATE), admin_controller_1.AdminController.declineEvent);
 // Escrows & Ledger
 router.get('/finance/ledger', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getFinanceLedger);
 router.put('/finance/payouts/:hostId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.payoutHost);
-// KYC Review
+router.get('/finance/refund-requests', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getRefundRequests);
+router.put('/finance/refund-requests/:id/approve', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.approveRefundRequest);
+router.put('/finance/refund-requests/:id/decline', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.declineRefundRequest);
+// KYC Review & Host Management
 router.get('/hosts', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.getAllHosts);
 router.get('/hosts/kyc/pending', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.getPendingKycHosts);
 router.put('/hosts/:hostProfileId/kyc', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.reviewKyc);
+router.delete('/hosts/:id', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_KYC_REVIEW), admin_controller_1.AdminController.deleteHost);
+router.post('/hosts/:id/notify', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_NOTIFICATIONS_BROADCAST), admin_controller_1.AdminController.notifyHost);
 exports.default = router;

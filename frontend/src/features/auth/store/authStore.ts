@@ -15,6 +15,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
   pendingRegistration: null,
   isVerifying: false,
@@ -191,13 +192,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 export const initAuth = async () => {
   if (typeof window === "undefined") return;
   const token = localStorage.getItem("bms_access_token");
-  if (!token) return;
-  const apiUser = await authApi.getMe();
-  if (apiUser) {
-    const user = mapApiUser(apiUser);
-    saveSession(user);
-    useAuthStore.setState({ user, isAuthenticated: true });
-  } else {
+  if (!token) {
+    useAuthStore.setState({ isInitialized: true });
+    return;
+  }
+  try {
+    const apiUser = await authApi.getMe();
+    if (apiUser) {
+      const user = mapApiUser(apiUser);
+      saveSession(user);
+      useAuthStore.setState({ user, isAuthenticated: true });
+    } else {
+      clearTokens();
+    }
+  } catch (e) {
     clearTokens();
+  } finally {
+    useAuthStore.setState({ isInitialized: true });
   }
 };

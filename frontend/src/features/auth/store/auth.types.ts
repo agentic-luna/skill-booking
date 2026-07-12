@@ -35,6 +35,7 @@ export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
   pendingRegistration: PendingRegistration | null;
   /** true while user is in the OTP verification steps */

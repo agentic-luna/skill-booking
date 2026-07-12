@@ -29,6 +29,14 @@ interface HostState {
   // Events
   latestCreatedEvent: CreatedEvent | null;
   createEvent: (payload: CreateEventPayload) => Promise<CreatedEvent>;
+  myEvents: any[];
+  fetchMyEvents: () => Promise<void>;
+
+  // Roster Board
+  participants: any[];
+  fetchParticipants: () => Promise<void>;
+  eventBookings: Record<string, any[]>;
+  fetchEventBookings: (eventId: string) => Promise<void>;
 
   // Dashboard
   dashboard: DashboardStats | null;
@@ -47,6 +55,9 @@ export const useHostStore = create<HostState>((set) => ({
   kyc: null,
   bankDetails: null,
   latestCreatedEvent: null,
+  myEvents: [],
+  participants: [],
+  eventBookings: {},
   dashboard: null,
   dashboardLoading: false,
 
@@ -101,6 +112,42 @@ export const useHostStore = create<HostState>((set) => ({
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;
+    }
+  },
+
+  fetchMyEvents: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const myEvents = await hostApi.getMyEvents();
+      set({ myEvents, isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+    }
+  },
+
+  fetchParticipants: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const participants = await hostApi.getHostParticipants();
+      set({ participants, isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+    }
+  },
+
+  fetchEventBookings: async (eventId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const bookings = await hostApi.getEventBookings(eventId);
+      set((state) => ({
+        eventBookings: {
+          ...state.eventBookings,
+          [eventId]: bookings,
+        },
+        isLoading: false,
+      }));
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
     }
   },
 

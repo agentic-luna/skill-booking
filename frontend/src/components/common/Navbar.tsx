@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useClientStore } from "@/features/client/store/clientStore";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +25,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { notifications, fetchNotifications, readNotification } = useClientStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -46,6 +50,32 @@ export default function Navbar() {
   };
 
   const isHome = pathname === "/";
+  const unreadNotificationsCount = notifications.filter(n => n.status !== "READ").length;
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "client") {
+      fetchNotifications();
+    }
+  }, [isAuthenticated, user]);
+
+  return (
+    <nav className="glass-nav">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
+          
+          {/* Logo */}
+            <Link href="/" className="flex items-center hover:opacity-90">
+              <span className="text-lg font-bold tracking-tight text-graphite-ink">
+                BookMy<span className="text-nightshade-black">Skill</span>
+              </span>
+            </Link>
+
+          {/* Desktop Nav Items */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link href="/programs" className="text-sm font-medium text-foreground hover:text-black transition-colors">
+              Explore Skills
+            </Link>
+
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[950px] z-[100] transition-all duration-500 ease-out">
@@ -82,6 +112,46 @@ export default function Navbar() {
             <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
             {isAuthenticated && user ? (
               <>
+                {/* Notification Bell Dropdown */}
+                {user.role === "client" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-foreground relative">
+                        <Bell className="h-4.5 w-4.5" />
+                        {unreadNotificationsCount > 0 && (
+                          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto rounded-xl">
+                      <DropdownMenuLabel className="font-bold text-xs flex justify-between items-center px-4 py-2.5">
+                        <span>Notifications Feed</span>
+                        {unreadNotificationsCount > 0 && (
+                          <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">{unreadNotificationsCount} unread</span>
+                        )}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {notifications.length > 0 ? (
+                        notifications.slice(0, 5).map((notif) => (
+                          <DropdownMenuItem
+                            key={notif.id}
+                            className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-primary/5 font-semibold" : ""}`}
+                            onClick={() => {
+                              if (notif.status !== "READ") readNotification(notif.id);
+                            }}
+                          >
+                            <span className="font-bold text-foreground text-[11px]">{notif.subject || "Alert Notice"}</span>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">{notif.bodyContent}</p>
+                            <span className="text-[9px] text-muted-foreground/60 font-medium">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-xs text-muted-foreground">No alerts in your feed.</div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 {/* Wishlist Link */}
                 <Link href="/wishlist">
                   <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
@@ -120,6 +190,9 @@ export default function Navbar() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/bookings")}>
                           <BookmarkCheck className="mr-2 h-4 w-4" /> My Bookings
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push("/liked-events")}>
+                          <Heart className="mr-2 h-4 w-4 text-rose-500" /> Liked Workshops
                         </DropdownMenuItem>
                       </>
                     )}

@@ -3,6 +3,7 @@ import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import GlobalAlert from "@/components/common/GlobalAlert";
 
 const hanken = Hanken_Grotesk({
@@ -31,10 +32,12 @@ export default function RootLayout({
       >
         <QueryProvider>
           <ThemeProvider>
-            <div className="relative flex min-h-screen flex-col">
-              {children}
-            </div>
-            <GlobalAlert />
+            <AuthProvider>
+              <div className="relative flex min-h-screen flex-col">
+                {children}
+              </div>
+              <GlobalAlert />
+            </AuthProvider>
           </ThemeProvider>
         </QueryProvider>
       </body>
