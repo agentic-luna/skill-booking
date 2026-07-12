@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DollarSign, Building2, CreditCard, ArrowUpRight, History } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,9 +15,25 @@ const EMPTY_FORM: BankDetailsPayload = {
 
 export default function HostEarningsPage() {
   const showAlert = useAlertStore((s) => s.showAlert);
-  const { bankDetails, submitBankDetails, updateBankDetails, isLoading, error, clearError } = useHostStore();
+  const { bankDetails, fetchBankDetails, submitBankDetails, updateBankDetails, isLoading, error, clearError } = useHostStore();
   const [form, setForm] = useState<BankDetailsPayload>(EMPTY_FORM);
   const isEdit = !!bankDetails;
+
+  useEffect(() => {
+    fetchBankDetails();
+  }, [fetchBankDetails]);
+
+  useEffect(() => {
+    if (bankDetails) {
+      setForm({
+        accountHolderName: bankDetails.accountHolderName || "",
+        accountNumber: bankDetails.accountNumber || "",
+        ifscCode: bankDetails.ifscCode || "",
+        bankName: bankDetails.bankName || "",
+        upiId: bankDetails.upiId || "",
+      });
+    }
+  }, [bankDetails]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -33,7 +49,6 @@ export default function HostEarningsPage() {
         await submitBankDetails(form);
         showAlert("Bank Details Saved", `Bank account at ${form.bankName} linked to your host profile.`, "success");
       }
-      setForm(EMPTY_FORM);
     } catch { /* error shown via banner */ }
   };
 

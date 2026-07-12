@@ -37,6 +37,7 @@ export default function EditProgramPage() {
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
@@ -51,27 +52,29 @@ export default function EditProgramPage() {
 
         const start = details.startTime ? new Date(details.startTime) : new Date();
         const dateStr = start.toISOString().split("T")[0];
-        
-        // Format local standard time string
-        const timeStr = start.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }) + " - " + new Date(start.getTime() + 2 * 60 * 60 * 1000).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
+
+        // Format as HH:MM for the native time input
+        const hh = String(start.getUTCHours()).padStart(2, "0");
+        const mm = String(start.getUTCMinutes()).padStart(2, "0");
+        const timeStr = `${hh}:${mm}`;
+
+        // Normalise mode: strip any HYBRID values the DB might have stored
+        const rawMode = (details.mode || "ONLINE").toUpperCase();
+        const safeMode: "ONLINE" | "OFFLINE" = rawMode === "OFFLINE" ? "OFFLINE" : "ONLINE";
 
         reset({
           title: details.title || "",
           category: (details.category as any) || "technology",
-          price: details.price || 500,
+          mode: safeMode,
+          price: details.price ?? 0,
           duration: details.duration || "2 hours",
           date: dateStr,
           time: timeStr,
           maxSpots: details.totalSeats || 10,
-          location: typeof details.venueDetails === 'string' ? details.venueDetails : (details.venueDetails?.address || details.venueDetails?.link || ""),
+          location:
+            typeof details.venueDetails === "string"
+              ? details.venueDetails
+              : details.venueDetails?.link || details.venueDetails?.address || "",
           description: details.description || "",
           imageUrl: details.posterUrl || "",
         });
@@ -89,27 +92,19 @@ export default function EditProgramPage() {
   const onSubmit = async (data: ProgramFormValues) => {
     setIsSubmitting(true);
     try {
-      const startTime = new Date(`${data.date}T${data.time.split(" ")[0]}`).toISOString();
-      const CATEGORY_TO_MODE: Record<string, string> = {
-        technology: "ONLINE",
-        design: "ONLINE",
-        fitness: "OFFLINE",
-        culinary: "OFFLINE",
-        business: "HYBRID",
-        photography: "HYBRID",
-      };
-      const mode = CATEGORY_TO_MODE[data.category] ?? "ONLINE";
+      // Build ISO startTime from YYYY-MM-DD + HH:MM (native time input — no AM/PM parsing needed)
+      const startTime = new Date(`${data.date}T${data.time}:00`).toISOString();
 
       await updateEvent(programId, {
-        title: data.title,
+        title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
-        mode,
-        venueDetails: data.location,
+        mode: data.mode,          // ← directly from form
+        venueDetails: data.location.trim(),
         startTime,
-        totalSeats: data.maxSpots,
-        price: data.price,
-        duration: data.duration,
-        description: data.description,
+        totalSeats: Number(data.maxSpots),
+        price: Number(data.price),
+        duration: data.duration.trim(),
+        description: data.description.trim(),
         category: data.category,
       });
 
@@ -179,6 +174,22 @@ export default function EditProgramPage() {
             </p>
           </div>
         </div>
+
+        {/* Current status badge */}
+        <div className="flex items-center space-x-2 text-xs">
+          <span className="text-muted-foreground font-medium">Status:</span>
+          <span
+            className={`px-2.5 py-1 rounded-md font-bold uppercase text-[10px] text-white ${
+              program.status.toLowerCase() === "approved"
+                ? "bg-emerald-500"
+                : program.status.toLowerCase() === "pending"
+                ? "bg-amber-500"
+                : "bg-destructive"
+            }`}
+          >
+            {program.status}
+          </span>
+        </div>
       </div>
 
       <form id="edit-program-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -194,7 +205,13 @@ export default function EditProgramPage() {
               onCategoryChange={setSelectedCategory}
               categoryMeta={categoryMeta}
             />
-            <ScheduleSection register={register} errors={errors} />
+            {/* Pass setValue + watch so ScheduleSection can control the mode toggle */}
+            <ScheduleSection
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+            />
             <PricingSection register={register} errors={errors} />
             <CoverImageSection register={register} errors={errors} />
           </div>
@@ -202,22 +219,6 @@ export default function EditProgramPage() {
           {/* ── Right Column: Actions ──────────────────────────────── */}
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24 space-y-4">
-
-              {/* Current status badge */}
-              <div className="flex items-center space-x-2 text-xs">
-                <span className="text-muted-foreground font-medium">Current status:</span>
-                <span
-                  className={`px-2.5 py-1 rounded-md font-bold uppercase text-[10px] text-white ${
-                    program.status.toLowerCase() === "approved"
-                      ? "bg-emerald-500"
-                      : program.status.toLowerCase() === "pending"
-                      ? "bg-amber-500"
-                      : "bg-destructive"
-                  }`}
-                >
-                  {program.status}
-                </span>
-              </div>
 
               {/* Submit */}
               <Button

@@ -9,7 +9,6 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useHostStore } from "@/features/host/store/hostStore";
-import type { EventMode } from "@/features/host/api/types";
 
 import { programSchema, ProgramFormValues, CATEGORIES } from "./_components/program-schema";
 import BasicInfoSection from "./_components/BasicInfoSection";
@@ -18,17 +17,6 @@ import PricingSection from "./_components/PricingSection";
 import CoverImageSection from "./_components/CoverImageSection";
 import PreviewSidebar from "./_components/PreviewSidebar";
 import SuccessState from "./_components/SuccessState";
-
-
-// Map local category values to the EventMode the backend expects
-const CATEGORY_TO_MODE: Record<string, EventMode> = {
-  technology: "ONLINE",
-  design: "ONLINE",
-  fitness: "OFFLINE",
-  culinary: "OFFLINE",
-  business: "HYBRID",
-  photography: "HYBRID",
-};
 
 export default function CreateProgramPage() {
   const router = useRouter();
@@ -47,12 +35,13 @@ export default function CreateProgramPage() {
     defaultValues: {
       title: "",
       category: "technology",
+      mode: "ONLINE",
       price: 49,
       duration: "3 hours",
       date: new Date().toISOString().split("T")[0],
-      time: "10:00 AM - 1:00 PM EST",
+      time: "10:00",
       maxSpots: 15,
-      location: "Online Zoom link",
+      location: "",
       description: "",
       imageUrl: "",
     },
@@ -62,26 +51,23 @@ export default function CreateProgramPage() {
   const watchedPrice = watch("price");
   const watchedMaxSpots = watch("maxSpots");
   const watchedDuration = watch("duration");
-  const watchedDate = watch("date");
-  const watchedTime = watch("time");
 
   const onSubmit = async (data: ProgramFormValues) => {
     clearError();
     try {
-      // Combine date + time into an ISO startTime string
-      const startTime = new Date(`${data.date}T${data.time.split(" ")[0]}`).toISOString();
-      const mode: EventMode = CATEGORY_TO_MODE[data.category] ?? "ONLINE";
+      // Build ISO startTime from YYYY-MM-DD + HH:MM (native time input)
+      const startTime = new Date(`${data.date}T${data.time}:00`).toISOString();
 
       await createEvent({
-        title: data.title,
+        title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
-        mode,
-        venueDetails: data.location,
+        mode: data.mode,          // ← directly from form; user chose ONLINE or OFFLINE
+        venueDetails: data.location.trim(),
         startTime,
-        totalSeats: data.maxSpots,
-        price: data.price,
-        duration: data.duration,
-        description: data.description,
+        totalSeats: Number(data.maxSpots),
+        price: Number(data.price),
+        duration: data.duration.trim(),
+        description: data.description.trim(),
         category: data.category,
       });
 
@@ -147,7 +133,13 @@ export default function CreateProgramPage() {
               onCategoryChange={setSelectedCategory}
               categoryMeta={categoryMeta}
             />
-            <ScheduleSection register={register} errors={errors} />
+            {/* Pass setValue + watch so ScheduleSection can control the mode field */}
+            <ScheduleSection
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+            />
             <PricingSection register={register} errors={errors} />
             <CoverImageSection register={register} errors={errors} />
           </div>

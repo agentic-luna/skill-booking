@@ -47,6 +47,31 @@ class UsersController {
             next(error);
         }
     }
+    static async getBankDetails(req, res, next) {
+        try {
+            const hostProfile = await di_container_1.userRepo.findHostProfileByUserId(req.user.id);
+            if (!hostProfile) {
+                throw new errors_1.BadRequestError('Host Profile not found.');
+            }
+            const bankDetails = await di_container_1.userRepo.findHostBankDetail(hostProfile.id);
+            if (!bankDetails) {
+                return api_response_1.ApiResponse.success(res, null);
+            }
+            return api_response_1.ApiResponse.success(res, {
+                id: bankDetails.id,
+                hostProfileId: bankDetails.hostProfileId,
+                accountHolderName: di_container_1.cryptoService.decrypt(bankDetails.accountHolderName),
+                accountNumber: di_container_1.cryptoService.decrypt(bankDetails.accountNumber),
+                ifscCode: di_container_1.cryptoService.decrypt(bankDetails.ifscCode),
+                bankName: bankDetails.bankName,
+                upiId: bankDetails.upiId ? di_container_1.cryptoService.decrypt(bankDetails.upiId) : null,
+                updatedAt: bankDetails.updatedAt,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async updateBankDetails(req, res, next) {
         try {
             const hostProfile = await di_container_1.userRepo.findHostProfileByUserId(req.user.id);

@@ -24,9 +24,10 @@ interface HostState {
   submitKyc: (payload: SubmitKycPayload) => Promise<KycResponse>;
 
   // Bank details
-  bankDetails: BankDetailsResponse | null;
+  bankDetails: any | null;
   submitBankDetails: (payload: BankDetailsPayload) => Promise<BankDetailsResponse>;
   updateBankDetails: (payload: BankDetailsPayload) => Promise<BankDetailsResponse>;
+  fetchBankDetails: () => Promise<void>;
 
   // Events
   latestCreatedEvent: CreatedEvent | null;
@@ -147,6 +148,16 @@ export const useHostStore = create<HostState>((set) => ({
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;
+    }
+  },
+
+  fetchBankDetails: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const bankDetails = await hostApi.getBankDetails();
+      set({ bankDetails, isLoading: false });
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
     }
   },
 

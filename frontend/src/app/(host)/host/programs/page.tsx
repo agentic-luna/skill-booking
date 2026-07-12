@@ -20,12 +20,13 @@ export default function HostProgramsPage() {
     title: event.title,
     imageUrl: event.posterUrl || "https://images.unsplash.com/photo-1618401471353-b98aedd07871?auto=format&fit=crop&q=80&w=600",
     status: event.status.toLowerCase(), // approved, pending, rejected, canceled
-    category: event.mode,
-    duration: "2 hours",
+    category: event.category || event.mode, // prefer category field, fallback to mode
+    duration: event.duration || "N/A",
     spotsLeft: event.availableSeats,
     maxSpots: event.totalSeats,
-    location: event.mode === "ONLINE" ? "Online Meeting" : (event.venueDetails?.address || "Physical Venue"),
-    price: 500, // 500 INR matches default ticket price in backend checkout handler
+    location: event.mode === "ONLINE" ? "Online Meeting" : (typeof event.venueDetails === "string" ? event.venueDetails : event.venueDetails?.address || "Physical Venue"),
+    price: event.price ?? 0, // use actual price from API
+    description: event.description || "",
   }));
 
   return (

@@ -286,11 +286,42 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 {
   "accountHolderName": "John Host",
   "accountNumber": "9876543210",
-  "ifscCode": "LUNABANK01",
-  "bankName": "Luna Reserve Bank",
-  "upiId": "john@luna"
+  "ifscCode": "HDFC0001234",
+  "bankName": "HDFC Bank",
+  "upiId": "john@hdfc"
 }
 ```
+
+**Note:** `upiId` is optional. `accountHolderName`, `accountNumber`, `ifscCode`, and `upiId` are AES-encrypted before storage.
+
+### 2b. Retrieve Host Bank Details (Decrypted)
+`GET /api/v1/hosts/bank-details` *(Requires Bearer Header - HOST)*
+
+Returns the decrypted bank account details for the authenticated host, for pre-populating edit forms. Sensitive fields are decrypted server-side and only returned on this endpoint — they are excluded from all other profile responses.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "hostProfileId": "uuid",
+    "accountHolderName": "John Host",
+    "accountNumber": "9876543210",
+    "ifscCode": "HDFC0001234",
+    "bankName": "HDFC Bank",
+    "upiId": "john@hdfc",
+    "updatedAt": "2026-07-12T07:00:00.000Z"
+  }
+}
+```
+
+Returns `data: null` if no bank details have been submitted yet.
+
+### 2c. Update Host Bank Details
+`PUT /api/v1/hosts/bank-details` *(Requires Bearer Header - HOST)*
+
+Partially updates bank account details. Only provided fields are updated. All sensitive fields are re-encrypted.
 
 ### 3. Fetch Host Dashboard Analytics
 `GET /api/v1/hosts/dashboard` *(Requires Bearer Header - HOST)*
@@ -300,7 +331,9 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 ## 6. Event Discovery & Booking API
 
 ### 1. Create Host Event
-`POST /api/v1/hosts/events` *(Requires Bearer Header - Approved HOST)*
+`POST /api/v1/hosts/events` *(Requires Bearer Header - Approved HOST, KYC Status: APPROVED)*
+
+**Requirements:** Host must have completed KYC and have `kycStatus = APPROVED` to create events.
 
 **Request Body:**
 ```json
@@ -308,11 +341,29 @@ Comprehensive health check endpoint reporting database connectivity, process mem
   "title": "Advanced NestJS Masterclass",
   "posterUrl": "https://example.com/poster.png",
   "mode": "ONLINE",
-  "venueDetails": { "link": "https://zoom.us/j/999888" },
+  "venueDetails": "https://zoom.us/j/999888",
   "startTime": "2026-07-10T10:00:00.000Z",
-  "totalSeats": 20
+  "totalSeats": 20,
+  "price": 149.99,
+  "duration": "3 hours",
+  "description": "A comprehensive deep-dive workshop on NestJS architecture, DI, guards, and interceptors.",
+  "category": "technology"
 }
 ```
+
+**Field Reference:**
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `title` | String | ✅ | Workshop title |
+| `posterUrl` | String | ❌ | URL to the cover image |
+| `mode` | `ONLINE` \| `OFFLINE` | ✅ | Delivery mode |
+| `venueDetails` | String | ❌ | Venue address or streaming URL |
+| `startTime` | ISO 8601 DateTime | ✅ | Workshop start date and time |
+| `totalSeats` | Integer | ✅ | Maximum number of participants |
+| `price` | Number (float) | ❌ | Ticket price in USD. Defaults to 0 |
+| `duration` | String | ❌ | Human-readable duration (e.g. `3 hours`) |
+| `description` | String | ❌ | Full workshop description and syllabus |
+| `category` | String | ❌ | Domain category: `technology`, `design`, `fitness`, `culinary`, `business`, `photography` |
 
 ### 2. Search Events
 `GET /api/v1/events?title=NestJS&mode=ONLINE` *(Cached via Redis)*

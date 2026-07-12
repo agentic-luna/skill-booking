@@ -11,7 +11,7 @@ export class CreateEventCommand implements IRequest<any> {
     public readonly userId: string,
     public readonly data: {
       title: string;
-      posterUrl: string;
+      posterUrl?: string;  // optional — defaults to empty string if not provided
       mode: EventMode;
       venueDetails?: any;
       startTime: string;
@@ -50,7 +50,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
     const event = await this.eventRepo.create({
       hostId: hostProfile.id,
       title: data.title,
-      posterUrl: data.posterUrl,
+      posterUrl: data.posterUrl || '',  // default to empty string if not provided
       mode: data.mode,
       venueDetails: data.venueDetails,
       startTime: new Date(data.startTime),

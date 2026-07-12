@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { prisma } from '../../config/prisma';
 import bcrypt from 'bcryptjs';
-import { mediator, userRepo } from '../di-container';
+import { mediator, userRepo, cryptoService } from '../di-container';
 import { SubmitKycCommand } from '../../application/use-cases/hosts/submit-kyc';
 import { SubmitBankDetailsCommand } from '../../application/use-cases/hosts/submit-bank-details';
 import { GetHostDashboardQuery } from '../../application/use-cases/hosts/get-dashboard';
@@ -43,6 +43,33 @@ export class UsersController {
         id: bankDetails.id,
         hostProfileId: bankDetails.hostProfileId,
         bankName: bankDetails.bankName,
+        updatedAt: bankDetails.updatedAt,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getBankDetails(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const hostProfile = await userRepo.findHostProfileByUserId(req.user!.id);
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+
+      const bankDetails = await userRepo.findHostBankDetail(hostProfile.id);
+      if (!bankDetails) {
+        return ApiResponse.success(res, null);
+      }
+
+      return ApiResponse.success(res, {
+        id: bankDetails.id,
+        hostProfileId: bankDetails.hostProfileId,
+        accountHolderName: cryptoService.decrypt(bankDetails.accountHolderName),
+        accountNumber: cryptoService.decrypt(bankDetails.accountNumber),
+        ifscCode: cryptoService.decrypt(bankDetails.ifscCode),
+        bankName: bankDetails.bankName,
+        upiId: bankDetails.upiId ? cryptoService.decrypt(bankDetails.upiId) : null,
         updatedAt: bankDetails.updatedAt,
       });
     } catch (error) {
@@ -161,9 +188,36 @@ export class UsersController {
       }
       const events = await prisma.event.findMany({
         where: { hostId: hostProfile.id },
+        select: {
+          id: true,
+          hostId: true,
+          title: true,
+          description: true,
+          posterUrl: true,
+          mode: true,
+          venueDetails: true,
+          startTime: true,
+          totalSeats: true,
+          availableSeats: true,
+          status: true,
+          version: true,
+          price: true,
+          duration: true,
+          category: true,
+          createdAt: true,
+          updatedAt: true,
+        },
         orderBy: { startTime: 'desc' },
       });
-      return ApiResponse.success(res, events);
+      // Serialize Decimal/BigInt fields to plain JS numbers for JSON
+      const serialized = events.map((e) => ({
+        ...e,
+        price: e.price ? Number(e.price) : null,
+        totalSeats: Number(e.totalSeats),
+        availableSeats: Number(e.availableSeats),
+        version: Number(e.version),
+      }));
+      return ApiResponse.success(res, serialized);
     } catch (error) {
       next(error);
     }

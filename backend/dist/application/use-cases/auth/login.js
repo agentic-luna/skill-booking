@@ -66,16 +66,9 @@ class LoginCommandHandler {
         const refreshToken = jsonwebtoken_1.default.sign({ id: user.id }, environment_1.env.JWT_SECRET, { expiresIn: '7d' });
         const cacheKey = `auth:refresh_tokens:${user.id}:${refreshToken}`;
         await this.cacheService.set(cacheKey, '1', 7 * 24 * 60 * 60);
+        const fullProfile = await this.userRepo.findProfile(user.id);
         return {
-            user: {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                phone: user.phone,
-                role: user.role,
-                status: user.status,
-            },
+            user: fullProfile,
             accessToken,
             refreshToken,
         };

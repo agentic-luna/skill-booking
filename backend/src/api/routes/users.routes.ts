@@ -25,6 +25,7 @@ router.get('/events/:eventId/bookings', UsersController.getEventBookings as any)
 router.post('/kyc', requirePermission(SystemPermissions.HOST_KYC_SUBMIT) as any, UsersController.submitKyc as any);
 router.post('/bank-details', requirePermission(SystemPermissions.HOST_BANK_UPDATE) as any, UsersController.submitBankDetails as any);
 router.put('/bank-details', requirePermission(SystemPermissions.HOST_BANK_UPDATE) as any, UsersController.updateBankDetails as any);
+router.get('/bank-details', requirePermission(SystemPermissions.HOST_BANK_UPDATE) as any, UsersController.getBankDetails as any);
 router.post('/events', requirePermission(SystemPermissions.HOST_EVENTS_CREATE) as any, EventsController.createEvent as any);
 router.put('/events/:id', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.updateEvent as any);
 router.delete('/events/:id', requirePermission(SystemPermissions.HOST_EVENTS_DELETE) as any, EventsController.deleteEvent as any);

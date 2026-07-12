@@ -22,6 +22,15 @@ export async function submitKyc(payload: SubmitKycPayload): Promise<KycResponse>
 
 // ── Bank Details ──────────────────────────────────────────────────────────
 
+/** GET /hosts/bank-details — Retrieve host bank account details (decrypted) */
+export async function getBankDetails(): Promise<any> {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    "/hosts/bank-details",
+    { method: "GET" }
+  );
+  return res.data;
+}
+
 /** POST /hosts/bank-details — Submit host bank account details (encrypted at rest) */
 export async function submitBankDetails(
   payload: BankDetailsPayload

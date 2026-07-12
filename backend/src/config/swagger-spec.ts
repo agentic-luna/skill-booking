@@ -36,17 +36,23 @@ export const swaggerSpec = {
       Event: {
         type: 'object',
         properties: {
-          id: { type: 'string', format: 'uuid' },
-          hostId: { type: 'string', format: 'uuid' },
-          title: { type: 'string' },
-          posterUrl: { type: 'string' },
-          mode: { type: 'string', enum: ['ONLINE', 'OFFLINE'] },
-          venueDetails: { type: 'object', nullable: true },
-          startTime: { type: 'string', format: 'date-time' },
-          totalSeats: { type: 'integer' },
-          availableSeats: { type: 'integer' },
-          status: { type: 'string', enum: ['PENDING', 'APPROVED', 'CANCELED'] },
-          version: { type: 'integer' },
+          id: { type: 'string', format: 'uuid', description: 'Unique event identifier' },
+          hostId: { type: 'string', format: 'uuid', description: 'Host profile ID who owns this event' },
+          title: { type: 'string', example: 'Advanced NestJS Masterclass' },
+          description: { type: 'string', nullable: true, example: 'A comprehensive deep-dive workshop on NestJS architecture.' },
+          posterUrl: { type: 'string', example: 'https://cdn.example.com/workshops/nestjs.jpg' },
+          mode: { type: 'string', enum: ['ONLINE', 'OFFLINE'], example: 'ONLINE' },
+          venueDetails: { type: 'object', nullable: true, description: 'Address or streaming link' },
+          startTime: { type: 'string', format: 'date-time', description: 'ISO 8601 event start datetime' },
+          totalSeats: { type: 'integer', example: 25 },
+          availableSeats: { type: 'integer', example: 18 },
+          status: { type: 'string', enum: ['PENDING', 'APPROVED', 'CANCELED'], example: 'PENDING' },
+          version: { type: 'integer', description: 'Optimistic locking version', example: 1 },
+          price: { type: 'number', format: 'float', description: 'Ticket price in USD', example: 149.99 },
+          duration: { type: 'string', nullable: true, description: 'Workshop duration', example: '3 hours' },
+          category: { type: 'string', nullable: true, description: 'Workshop domain category', example: 'technology' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
         },
       },
       Booking: {
@@ -63,14 +69,41 @@ export const swaggerSpec = {
       },
       HostProfile: {
         type: 'object',
+        description: 'Host identity and KYC verification profile',
         properties: {
           id: { type: 'string', format: 'uuid' },
           userId: { type: 'string', format: 'uuid' },
-          accountType: { type: 'string', enum: ['INDIVIDUAL', 'COMPANY'] },
-          govIdUrl: { type: 'string' },
-          gstNumber: { type: 'string', nullable: true },
-          kycStatus: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'] },
-          bio: { type: 'string', nullable: true },
+          accountType: { type: 'string', enum: ['INDIVIDUAL', 'COMPANY'], example: 'INDIVIDUAL' },
+          govIdUrl: { type: 'string', nullable: true, description: 'URL to uploaded government ID document' },
+          gstNumber: { type: 'string', nullable: true, description: 'GST registration number (optional for companies)' },
+          kycStatus: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'], example: 'PENDING' },
+          bio: { type: 'string', nullable: true, description: 'Host public bio / instructor description' },
+          updatedAt: { type: 'string', format: 'date-time' },
+          bankDetail: { $ref: '#/components/schemas/HostBankDetailSafe', nullable: true },
+        },
+      },
+      HostBankDetailSafe: {
+        type: 'object',
+        description: 'Bank account metadata (encrypted fields excluded from API responses)',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          hostProfileId: { type: 'string', format: 'uuid' },
+          bankName: { type: 'string', example: 'HDFC Bank' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      HostBankDetailDecrypted: {
+        type: 'object',
+        description: 'Decrypted bank account details returned only on GET /hosts/bank-details',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          hostProfileId: { type: 'string', format: 'uuid' },
+          accountHolderName: { type: 'string', example: 'John Host', description: 'Decrypted account holder name' },
+          accountNumber: { type: 'string', example: '9876543210', description: 'Decrypted account number (masked in most contexts)' },
+          ifscCode: { type: 'string', example: 'HDFC0001234', description: 'Decrypted IFSC routing code' },
+          bankName: { type: 'string', example: 'HDFC Bank' },
+          upiId: { type: 'string', nullable: true, example: 'host@hdfc', description: 'Decrypted UPI ID if provided' },
+          updatedAt: { type: 'string', format: 'date-time' },
         },
       },
       Wishlist: {
@@ -605,9 +638,39 @@ export const swaggerSpec = {
       },
     },
     '/hosts/bank-details': {
+      get: {
+        tags: ['Host Workflows'],
+        summary: 'Retrieve host bank account details (decrypted, for edit pre-population)',
+        description: 'Returns the full decrypted bank account details for the authenticated host. Used to pre-populate edit forms. Encrypted fields are decrypted server-side and returned only on this endpoint.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Decrypted bank details or null if not yet submitted',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: {
+                      oneOf: [
+                        { $ref: '#/components/schemas/HostBankDetailDecrypted' },
+                        { type: 'null' },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Unauthorized — missing or expired JWT' },
+          403: { description: 'Forbidden — requester is not a host' },
+        },
+      },
       post: {
         tags: ['Host Workflows'],
-        summary: 'Submit host bank account details (encrypted at rest)',
+        summary: 'Submit host bank account details (initial, encrypted at rest)',
+        description: 'Creates the bank account record for the host. Sensitive fields (accountHolderName, accountNumber, ifscCode, upiId) are AES-encrypted before database storage.',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -617,23 +680,40 @@ export const swaggerSpec = {
                 type: 'object',
                 required: ['accountHolderName', 'accountNumber', 'ifscCode', 'bankName'],
                 properties: {
-                  accountHolderName: { type: 'string', example: 'John Host' },
-                  accountNumber: { type: 'string', example: '9876543210' },
-                  ifscCode: { type: 'string', example: 'LUNABANK01' },
-                  bankName: { type: 'string', example: 'Luna Reserve Bank' },
-                  upiId: { type: 'string', example: 'john@luna' },
+                  accountHolderName: { type: 'string', example: 'John Host', description: 'Full name on bank account' },
+                  accountNumber: { type: 'string', example: '9876543210', description: 'Bank account number (will be encrypted)' },
+                  ifscCode: { type: 'string', example: 'HDFC0001234', description: 'IFSC routing code (will be encrypted)' },
+                  bankName: { type: 'string', example: 'HDFC Bank' },
+                  upiId: { type: 'string', nullable: true, example: 'host@hdfc', description: 'UPI ID (will be encrypted if provided)' },
                 },
               },
             },
           },
         },
         responses: {
-          200: { description: 'Bank details submitted and encrypted' },
+          200: {
+            description: 'Bank details submitted and encrypted at rest',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/HostBankDetailSafe' },
+                  },
+                },
+              },
+            },
+          },
+          400: { description: 'Missing required bank detail fields' },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden — requester is not a host' },
         },
       },
       put: {
         tags: ['Host Workflows'],
-        summary: 'Update host bank account details (encrypted at rest)',
+        summary: 'Update host bank account details (partial update, encrypted at rest)',
+        description: 'Updates one or more bank account fields. Only provided fields are updated. All sensitive fields are re-encrypted before storage.',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -642,18 +722,33 @@ export const swaggerSpec = {
               schema: {
                 type: 'object',
                 properties: {
-                  accountHolderName: { type: 'string' },
-                  accountNumber: { type: 'string' },
-                  ifscCode: { type: 'string' },
-                  bankName: { type: 'string' },
-                  upiId: { type: 'string' },
+                  accountHolderName: { type: 'string', description: 'Updated account holder name' },
+                  accountNumber: { type: 'string', description: 'Updated account number' },
+                  ifscCode: { type: 'string', description: 'Updated IFSC code' },
+                  bankName: { type: 'string', description: 'Updated bank name' },
+                  upiId: { type: 'string', nullable: true, description: 'Updated UPI ID (null to remove)' },
                 },
               },
             },
           },
         },
         responses: {
-          200: { description: 'Bank details updated successfully' },
+          200: {
+            description: 'Bank details updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/HostBankDetailSafe' },
+                  },
+                },
+              },
+            },
+          },
+          404: { description: 'Bank details not found — submit first via POST' },
+          401: { description: 'Unauthorized' },
         },
       },
     },
@@ -661,6 +756,7 @@ export const swaggerSpec = {
       post: {
         tags: ['Host Workflows'],
         summary: 'Create a new skill booking event (enters PENDING status)',
+        description: 'Creates a workshop event in PENDING state awaiting admin review. Host must have kycStatus = APPROVED. Mode is explicitly selected by the host (ONLINE or OFFLINE).',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -668,25 +764,40 @@ export const swaggerSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['title', 'posterUrl', 'mode', 'startTime', 'totalSeats'],
+                required: ['title', 'mode', 'startTime', 'totalSeats'],
                 properties: {
                   title: { type: 'string', example: 'Advanced NestJS Masterclass' },
-                  posterUrl: { type: 'string', example: 'https://example.com/nestjs.png' },
-                  mode: { type: 'string', enum: ['ONLINE', 'OFFLINE'] },
-                  venueDetails: { type: 'object', example: { link: 'https://zoom.us/j/12345' } },
-                  startTime: { type: 'string', format: 'date-time' },
-                  totalSeats: { type: 'integer', example: 10 },
-                  price: { type: 'number', example: 500 },
-                  duration: { type: 'string', example: '2 hours' },
-                  description: { type: 'string', example: 'A comprehensive workshop on NestJS.' },
-                  category: { type: 'string', example: 'technology' },
+                  posterUrl: { type: 'string', nullable: true, example: 'https://example.com/nestjs.png', description: 'Optional cover image URL. Defaults to empty string if not provided.' },
+                  mode: { type: 'string', enum: ['ONLINE', 'OFFLINE'], description: 'Delivery mode — explicitly chosen by the host. ONLINE for virtual sessions, OFFLINE for in-person.' },
+                  venueDetails: { type: 'string', nullable: true, example: 'https://zoom.us/j/12345 or 123 Workshop St', description: 'Streaming link (ONLINE) or venue address (OFFLINE).' },
+                  startTime: { type: 'string', format: 'date-time', description: 'ISO 8601 start datetime' },
+                  totalSeats: { type: 'integer', example: 20 },
+                  price: { type: 'number', format: 'float', example: 149.99, description: 'Ticket price in USD. Defaults to 0 if omitted.' },
+                  duration: { type: 'string', example: '3 hours', description: 'Human-readable workshop duration.' },
+                  description: { type: 'string', example: 'A comprehensive deep-dive workshop on NestJS architecture.', description: 'Full workshop syllabus and objectives.' },
+                  category: { type: 'string', example: 'technology', description: 'Domain category: technology | design | fitness | culinary | business | photography' },
                 },
               },
             },
           },
         },
         responses: {
-          201: { description: 'Event created and pending review' },
+          201: {
+            description: 'Event created and pending admin review',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/Event' },
+                  },
+                },
+              },
+            },
+          },
+          403: { description: 'Forbidden — host KYC not approved, or KYC documents not submitted' },
+          401: { description: 'Unauthorized' },
         },
       },
     },

@@ -38,7 +38,7 @@ export class EventsController {
 
   static async createEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { title, posterUrl, mode, venueDetails, startTime, totalSeats, price, duration, description } = req.body;
+      const { title, posterUrl, mode, venueDetails, startTime, totalSeats, price, duration, description, category } = req.body;
       const event = await mediator.send(new CreateEventCommand(req.user!.id, {
         title,
         posterUrl,
@@ -49,6 +49,7 @@ export class EventsController {
         price: price !== undefined ? Number(price) : undefined,
         duration: duration !== undefined ? String(duration) : undefined,
         description: description !== undefined ? String(description) : undefined,
+        category: category !== undefined ? String(category) : undefined,
       }));
       return ApiResponse.created(res, event);
     } catch (error) {

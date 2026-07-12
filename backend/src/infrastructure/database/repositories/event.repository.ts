@@ -114,6 +114,10 @@ export class PrismaEventRepository implements IEventRepository {
     availableSeats: number;
     status?: EventStatus;
     version?: number;
+    price?: number;
+    duration?: string;
+    description?: string;
+    category?: string;
   }): Promise<Event> {
     const created = await prisma.event.create({ data });
     return mapEvent(created);

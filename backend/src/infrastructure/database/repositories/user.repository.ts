@@ -35,7 +35,7 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async findProfile(id: string): Promise<any> {
-    return prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -47,12 +47,29 @@ export class PrismaUserRepository implements IUserRepository {
         status: true,
         createdAt: true,
         hostProfile: {
-          include: {
-            bankDetail: true,
+          select: {
+            id: true,
+            userId: true,
+            accountType: true,
+            govIdUrl: true,
+            gstNumber: true,
+            kycStatus: true,
+            bio: true,
+            updatedAt: true,
+            bankDetail: {
+              select: {
+                id: true,
+                hostProfileId: true,
+                bankName: true,  // not encrypted
+                updatedAt: true,
+                // accountHolderName, accountNumber, ifscCode, upiId are encrypted — excluded
+              },
+            },
           },
         },
       },
     });
+    return user;
   }
 
   async findHostProfileByUserId(userId: string): Promise<HostProfile | null> {
