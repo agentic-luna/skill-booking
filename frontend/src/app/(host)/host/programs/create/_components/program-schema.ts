@@ -12,7 +12,20 @@ export const programSchema = z.object({
   maxSpots: z.preprocess((val) => Number(val), z.number().min(1, "Must allow at least 1 spot")),
   location: z.string().min(3, "Location or online webinar links are required"),
   description: z.string().min(20, "Provide a description of at least 20 characters"),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  imageUrl: z.string().min(1, "Cover image URL is required").url("Must be a valid URL"),
+  instructorName: z.string().min(2, "Instructor name must be at least 2 characters"),
+  companyName: z.string().min(1, "Company/Organization name is required"),
+  instructorBio: z.string().min(10, "Instructor biography must be at least 10 characters"),
+  instructorPhoto: z.string().min(1, "Instructor photo URL is required").url("Must be a valid URL"),
+  instagram: z.string().url("Must be a valid Instagram URL").optional().or(z.literal("")),
+  linkedin: z.string().url("Must be a valid LinkedIn URL").optional().or(z.literal("")),
+  facebook: z.string().url("Must be a valid Facebook URL").optional().or(z.literal("")),
+  verifiedCorrect: z.boolean().refine(val => val === true, {
+    message: "You must confirm that all details are accurate"
+  }),
+  acknowledgedPolicy: z.boolean().refine(val => val === true, {
+    message: "You must acknowledge the admin review policy"
+  }),
 });
 
 export type ProgramFormValues = z.infer<typeof programSchema>;

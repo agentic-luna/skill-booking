@@ -15,6 +15,8 @@ import BasicInfoSection from "./_components/BasicInfoSection";
 import ScheduleSection from "./_components/ScheduleSection";
 import PricingSection from "./_components/PricingSection";
 import CoverImageSection from "./_components/CoverImageSection";
+import InstructorSection from "./_components/InstructorSection";
+import VerificationSection from "./_components/VerificationSection";
 import PreviewSidebar from "./_components/PreviewSidebar";
 import SuccessState from "./_components/SuccessState";
 
@@ -35,7 +37,7 @@ export default function CreateProgramPage() {
     defaultValues: {
       title: "",
       category: "technology",
-      mode: "ONLINE",
+      mode: "OFFLINE",
       price: 49,
       duration: "3 hours",
       date: new Date().toISOString().split("T")[0],
@@ -44,6 +46,15 @@ export default function CreateProgramPage() {
       location: "",
       description: "",
       imageUrl: "",
+      instructorName: "",
+      companyName: "",
+      instructorBio: "",
+      instructorPhoto: "",
+      instagram: "",
+      linkedin: "",
+      facebook: "",
+      verifiedCorrect: false,
+      acknowledgedPolicy: false,
     },
   });
 
@@ -63,7 +74,16 @@ export default function CreateProgramPage() {
         title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
         mode: data.mode,          // ← directly from form; user chose ONLINE or OFFLINE
-        venueDetails: data.location.trim(),
+        venueDetails: {
+          address: data.location.trim(),
+          instructorName: data.instructorName.trim(),
+          companyName: data.companyName.trim(),
+          instructorBio: data.instructorBio.trim(),
+          instructorPhoto: data.instructorPhoto.trim(),
+          instagram: data.instagram?.trim() || "",
+          linkedin: data.linkedin?.trim() || "",
+          facebook: data.facebook?.trim() || "",
+        },
         startTime,
         totalSeats: Number(data.maxSpots),
         price: Number(data.price),
@@ -143,6 +163,8 @@ export default function CreateProgramPage() {
             />
             <PricingSection register={register} errors={errors} />
             <CoverImageSection register={register} errors={errors} />
+            <InstructorSection register={register} errors={errors} />
+            <VerificationSection register={register} errors={errors} />
           </div>
 
           {/* Right: Sidebar */}
@@ -155,6 +177,7 @@ export default function CreateProgramPage() {
             selectedCategory={selectedCategory}
             categoryMeta={categoryMeta}
             isSubmitting={isLoading}
+            watch={watch}
           />
 
         </div>

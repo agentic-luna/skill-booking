@@ -17,6 +17,8 @@ export interface Program {
   imageUrl: string;
   status: "approved" | "pending" | "rejected";
   featured?: boolean;
+  mode?: "ONLINE" | "OFFLINE";
+  companyName?: string;
 }
 
 export const MOCK_PROGRAMS: Program[] = [
@@ -39,6 +41,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600",
     status: "approved",
     featured: true,
+    mode: "ONLINE",
   },
   {
     id: "prog_2",
@@ -59,6 +62,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?auto=format&fit=crop&q=80&w=600",
     status: "approved",
     featured: true,
+    mode: "OFFLINE",
   },
   {
     id: "prog_3",
@@ -79,6 +83,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&q=80&w=600",
     status: "approved",
     featured: true,
+    mode: "OFFLINE",
   },
   {
     id: "prog_4",
@@ -99,6 +104,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1500051644681-159e1022982c?auto=format&fit=crop&q=80&w=600",
     status: "approved",
     featured: true,
+    mode: "OFFLINE",
   },
   {
     id: "prog_5",
@@ -119,6 +125,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=600",
     status: "approved",
     featured: false,
+    mode: "ONLINE",
   },
   {
     id: "prog_6",
@@ -139,6 +146,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=600",
     status: "approved",
     featured: false,
+    mode: "OFFLINE",
   },
   {
     id: "prog_7",
@@ -159,6 +167,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?auto=format&fit=crop&q=80&w=600",
     status: "pending",
     featured: false,
+    mode: "OFFLINE",
   },
   {
     id: "prog_8",
@@ -179,6 +188,7 @@ export const MOCK_PROGRAMS: Program[] = [
     imageUrl: "https://images.unsplash.com/photo-1516116211223-5c359a36298a?auto=format&fit=crop&q=80&w=600",
     status: "pending",
     featured: false,
+    mode: "ONLINE",
   }
 ];
 

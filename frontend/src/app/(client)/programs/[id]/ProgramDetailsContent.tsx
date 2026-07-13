@@ -3,33 +3,47 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { 
   Star, Clock, MapPin, Calendar, Heart, Share2, ShieldCheck, 
-  CheckCircle2, CreditCard, ChevronLeft, Ticket, Loader2 
+  ChevronLeft, Ticket, Loader2,
+  Instagram, Linkedin, Facebook
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Dialog, DialogContent, DialogDescription, DialogFooter, 
-  DialogHeader, DialogTitle 
-} from "@/components/ui/dialog";
 import { Program, MOCK_PROGRAMS, MOCK_BOOKINGS, Booking } from "@/constants/mockData";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
+import BookingModal from "./BookingModal";
 
 function mapEventToProgram(event: any): Program {
   const hostUser = event.host?.user;
-  const instructorName = event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
-  const instructorAvatar = hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
-  const locationStr = event.mode === "ONLINE" ? "Online" : (event.venueDetails?.address || "In Person");
+  const isObj = typeof event.venueDetails === "object" && event.venueDetails !== null;
+  
+  const instructorName = (isObj && event.venueDetails.instructorName)
+    ? event.venueDetails.instructorName
+    : event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
+    
+  const instructorAvatar = (isObj && event.venueDetails.instructorPhoto)
+    ? event.venueDetails.instructorPhoto
+    : hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
+    
+  const instructorBio = (isObj && event.venueDetails.instructorBio)
+    ? event.venueDetails.instructorBio
+    : "Sarah is a seasoned educational director with over 10 years of experience launching immersive programs. She focuses on hands-on practical teaching setups.";
+
+  const instagram = (isObj && event.venueDetails.instagram) ? event.venueDetails.instagram : "";
+  const linkedin = (isObj && event.venueDetails.linkedin) ? event.venueDetails.linkedin : "";
+  const facebook = (isObj && event.venueDetails.facebook) ? event.venueDetails.facebook : "";
+  const companyName = (isObj && event.venueDetails.companyName) ? event.venueDetails.companyName : "Skill Masterclass Ltd.";
+
+  const locationStr = event.mode === "ONLINE"
+    ? "Online"
+    : typeof event.venueDetails === "string"
+      ? event.venueDetails
+      : event.venueDetails?.address || "In Person";
   const imageUrlStr = event.posterUrl || event.images?.[0] || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600";
 
   return {
@@ -38,6 +52,11 @@ function mapEventToProgram(event: any): Program {
     description: event.description || "",
     instructorName,
     instructorAvatar,
+    instructorBio,
+    instagram,
+    linkedin,
+    facebook,
+    companyName,
     category: event.category || "technology",
     rating: 4.8,
     reviewsCount: event._count?.bookings || 12,
@@ -53,18 +72,9 @@ function mapEventToProgram(event: any): Program {
     imageUrl: imageUrlStr,
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
+    mode: event.mode,
   };
 }
-
-// Zod schema for card payment validation
-const checkoutSchema = z.object({
-  cardholderName: z.string().min(3, "Cardholder name must be at least 3 characters"),
-  cardNumber: z.string().regex(/^\d{16}$/, "Card number must be exactly 16 digits"),
-  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Expiry format must be MM/YY"),
-  cvv: z.string().regex(/^\d{3}$/, "CVV must be exactly 3 digits"),
-});
-
-type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 interface ProgramDetailsProps {
   programId: string;
@@ -81,7 +91,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   // States
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [spotsCount, setSpotsCount] = useState(1);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -99,6 +108,16 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialProgram) {
+      setProgram(initialProgram);
+    }
+  }, [initialProgram]);
+
+  useEffect(() => {
+    if (programId === "preview") {
+      setLoading(false);
+      return;
+    }
     let active = true;
     const loadDetails = async () => {
       try {
@@ -135,21 +154,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       setIsWishlisted(wishlisted);
     }
   }, [program, wishlist]);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema),
-    defaultValues: {
-      cardholderName: "",
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
-    },
-  });
 
   const showAlert = useAlertStore((s) => s.showAlert);
 
@@ -215,24 +219,25 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     }
   };
 
-  const onCheckoutSubmit = async (data: CheckoutFormValues) => {
+  const handleConfirmBooking = async (spotsCount: number) => {
     if (!program) return;
     setPaymentLoading(true);
     try {
-      // 1. Call checkout API to create the booking reservation
       const checkoutResult = await checkoutBooking({
         eventId: program.id,
         seatCount: spotsCount,
       });
-
-      // 2. Confirm the payment (CARD method)
       const confirmResult = await confirmPayment(checkoutResult.booking.id, {
         paymentMethod: "CARD",
       });
-
       if (confirmResult.success) {
         setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
         setPaymentSuccess(true);
+        showAlert(
+          "🎉 Booking Confirmed!",
+          `Your ${spotsCount} seat${spotsCount > 1 ? "s" : ""} for "${program.title}" have been reserved. Check your email for the confirmation and invoice.`,
+          "success"
+        );
       } else {
         showAlert("Payment Failed", "Could not confirm booking payment.", "destructive");
       }
@@ -330,6 +335,37 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               </Card>
             </div>
 
+            {program.mode === "OFFLINE" && program.location && program.location !== "In Person" && (
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>Venue Map Direction</span>
+                </h3>
+                <div className="w-full h-[250px] rounded-2xl overflow-hidden border border-border/40 bg-muted/30 shadow-xs relative">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(program.location)}&output=embed`}
+                  />
+                </div>
+                <Button variant="outline" size="sm" asChild className="w-full h-10 rounded-xl text-xs font-semibold shadow-2xs">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(program.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                    <span>Get Directions on Google Maps</span>
+                  </a>
+                </Button>
+              </div>
+            )}
+
             <Separator />
 
             {/* Instructor Details */}
@@ -345,16 +381,53 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   <div className="space-y-2">
                     <div>
                       <h3 className="font-bold text-sm text-foreground">{program.instructorName}</h3>
-                      <span className="text-[10px] text-muted-foreground">Certified Masterclass Coach</span>
+                      <span className="text-[10px] text-muted-foreground">{program.companyName}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Sarah is a seasoned educational director with over 10 years of experience launching immersive programs. She focuses on hands-on practical teaching setups.
+                    <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {program.instructorBio}
                     </p>
                     <div className="flex items-center space-x-3 text-xs text-primary font-semibold">
-                      <span>4.9★ Coach Rating</span>
+                      <span>4.9★ Host Rating</span>
                       <span>•</span>
-                      <span>500+ Students Taught</span>
+                      <span>{program.companyName}</span>
                     </div>
+                    {(program.instagram || program.linkedin || program.facebook) && (
+                      <div className="flex items-center gap-3.5 pt-2 mt-1 border-t border-border/30">
+                        {program.instagram && (
+                          <a
+                            href={program.instagram}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-pink-500 transition-colors p-0.5"
+                            title="Instagram"
+                          >
+                            <Instagram className="h-4 w-4" />
+                          </a>
+                        )}
+                        {program.linkedin && (
+                          <a
+                            href={program.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-blue-500 transition-colors p-0.5"
+                            title="LinkedIn"
+                          >
+                            <Linkedin className="h-4 w-4" />
+                          </a>
+                        )}
+                        {program.facebook && (
+                          <a
+                            href={program.facebook}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-blue-600 transition-colors p-0.5"
+                            title="Facebook"
+                          >
+                            <Facebook className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -414,23 +487,36 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
               {/* Action Buttons */}
               <div className="space-y-2 pt-2">
-                <Button 
-                  className="w-full rounded-xl py-6 text-sm font-semibold shadow-md shadow-primary/10"
-                  disabled={program.spotsLeft === 0}
-                  onClick={handleBookClick}
-                >
-                  {program.spotsLeft === 0 ? "Registration Closed" : "Book Spot Now"}
-                </Button>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleWishlistToggle}>
-                    <Heart className={`mr-1.5 h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} /> 
-                    {isWishlisted ? "Wishlisted" : "Wishlist"}
-                  </Button>
-                  <Button variant="outline" className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleShareClick}>
-                    <Share2 className="mr-1.5 h-4 w-4" /> Share Event
-                  </Button>
-                </div>
+                {user?.role === "host" ? (
+                  <div className="space-y-2.5">
+                    <div className="text-center p-3 bg-muted/30 rounded-xl border text-[11px] text-muted-foreground font-bold">
+                      Booking disabled for Host accounts
+                    </div>
+                    <Button variant="outline" className="w-full rounded-xl h-11 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleShareClick}>
+                      <Share2 className="mr-1.5 h-4 w-4" /> Share Event
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Button 
+                      className="w-full rounded-xl py-6 text-sm font-semibold shadow-md shadow-primary/10"
+                      disabled={program.spotsLeft === 0}
+                      onClick={handleBookClick}
+                    >
+                      {program.spotsLeft === 0 ? "Registration Closed" : "Book Spot Now"}
+                    </Button>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleWishlistToggle}>
+                        <Heart className={`mr-1.5 h-4 w-4 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`} /> 
+                        {isWishlisted ? "Wishlisted" : "Wishlist"}
+                      </Button>
+                      <Button variant="outline" className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleShareClick}>
+                        <Share2 className="mr-1.5 h-4 w-4" /> Share Event
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Trust badges */}
@@ -446,171 +532,19 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
       </div>
 
-      {/* CHECKOUT MODAL DIALOG */}
-      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="max-w-md p-6">
-          <DialogHeader>
-            <DialogTitle>Register for Workshop</DialogTitle>
-            <DialogDescription>
-              Complete registration for: <span className="font-bold text-foreground">{program.title}</span>
-            </DialogDescription>
-          </DialogHeader>
-
-          {paymentSuccess ? (
-            /* PAYMENT SUCCESS SCREEN */
-            <div className="py-6 text-center space-y-4">
-              <div className="mx-auto w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500">
-                <CheckCircle2 className="h-7 w-7" />
-              </div>
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-bold text-foreground">Payment Successful!</h3>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  Your ticket has been confirmed. You can access the meeting details on your bookings dashboard.
-                </p>
-              </div>
-              
-              <div className="bg-muted/50 p-4 rounded-xl text-left border text-xs space-y-2 max-w-sm mx-auto">
-                <div className="flex justify-between"><span className="text-muted-foreground">Class:</span> <span className="font-semibold text-foreground line-clamp-1">{program.title}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Seats:</span> <span className="font-semibold text-foreground">{spotsCount} Spot(s)</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Amount Paid:</span> <span className="font-bold text-foreground">${program.price * spotsCount}</span></div>
-              </div>
-
-              <div className="pt-4 flex gap-2">
-                <Button variant="outline" className="w-full text-xs rounded-xl" onClick={() => {
-                  setCheckoutOpen(false);
-                  setPaymentSuccess(false);
-                }}>
-                  Close
-                </Button>
-                <Button className="w-full text-xs rounded-xl" onClick={() => {
-                  setCheckoutOpen(false);
-                  router.push("/bookings");
-                }}>
-                  Go to My Bookings
-                </Button>
-              </div>
-            </div>
-          ) : (
-            /* PAYMENT CHECKOUT FORM */
-            <form onSubmit={handleSubmit(onCheckoutSubmit)} className="space-y-4 pt-2">
-              
-              {/* Ticket Spot Count selector */}
-              <div className="flex items-center justify-between bg-muted/30 p-3 rounded-xl border">
-                <div className="flex items-center space-x-2.5">
-                  <Ticket className="h-5 w-5 text-primary" />
-                  <div className="text-xs">
-                    <div className="font-bold text-foreground">Select Spots</div>
-                    <div className="text-muted-foreground">${program.price} per ticket</div>
-                  </div>
-                </div>
-                
-                {/* Spot counter controls */}
-                <div className="flex items-center space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setSpotsCount(prev => Math.max(1, prev - 1))}
-                    className="w-7 h-7 bg-card rounded-md border flex items-center justify-center font-bold text-sm text-foreground active:scale-95 transition-transform"
-                    disabled={spotsCount === 1}
-                  >
-                    -
-                  </button>
-                  <span className="font-bold text-sm text-foreground w-4 text-center">{spotsCount}</span>
-                  <button
-                    type="button"
-                    onClick={() => setSpotsCount(prev => Math.min(program.spotsLeft, prev + 1))}
-                    className="w-7 h-7 bg-card rounded-md border flex items-center justify-center font-bold text-sm text-foreground active:scale-95 transition-transform"
-                    disabled={spotsCount === program.spotsLeft}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              {/* Subtotal calculation */}
-              <div className="flex justify-between items-center text-xs font-semibold px-1">
-                <span className="text-muted-foreground">Subtotal ({spotsCount} tickets)</span>
-                <span className="text-foreground text-sm font-extrabold">${program.price * spotsCount}</span>
-              </div>
-
-              <div className="h-[1px] bg-border/40" />
-
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="cardholderName" className="text-xs">Cardholder Name</Label>
-                  <Input
-                    id="cardholderName"
-                    placeholder="John Doe"
-                    className="h-9 text-xs"
-                    {...register("cardholderName")}
-                    disabled={paymentLoading}
-                  />
-                  {errors.cardholderName && <p className="text-[10px] text-destructive">{errors.cardholderName.message}</p>}
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="cardNumber" className="text-xs">Card Number</Label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="cardNumber"
-                      placeholder="4111 2222 3333 4444"
-                      className="pl-9 h-9 text-xs"
-                      maxLength={16}
-                      {...register("cardNumber")}
-                      disabled={paymentLoading}
-                    />
-                  </div>
-                  {errors.cardNumber && <p className="text-[10px] text-destructive">{errors.cardNumber.message}</p>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="expiryDate" className="text-xs">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      placeholder="MM/YY"
-                      className="h-9 text-xs"
-                      maxLength={5}
-                      {...register("expiryDate")}
-                      disabled={paymentLoading}
-                    />
-                    {errors.expiryDate && <p className="text-[10px] text-destructive">{errors.expiryDate.message}</p>}
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="cvv" className="text-xs">CVV Code</Label>
-                    <Input
-                      id="cvv"
-                      placeholder="123"
-                      type="password"
-                      className="h-9 text-xs"
-                      maxLength={3}
-                      {...register("cvv")}
-                      disabled={paymentLoading}
-                    />
-                    {errors.cvv && <p className="text-[10px] text-destructive">{errors.cvv.message}</p>}
-                  </div>
-                </div>
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button variant="outline" type="button" className="text-xs h-9 rounded-lg" onClick={() => setCheckoutOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="text-xs h-9 rounded-lg px-6" disabled={paymentLoading}>
-                  {paymentLoading ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Authorizing...
-                    </>
-                  ) : (
-                    `Pay $${program.price * spotsCount}`
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-
-        </DialogContent>
-      </Dialog>
+      {/* BOOKING MODAL */}
+      <BookingModal
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        program={program}
+        onConfirmBooking={handleConfirmBooking}
+        paymentLoading={paymentLoading}
+        paymentSuccess={paymentSuccess}
+        onClose={() => {
+          setCheckoutOpen(false);
+          setPaymentSuccess(false);
+        }}
+      />
 
     </main>
   );

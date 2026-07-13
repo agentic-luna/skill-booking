@@ -24,7 +24,7 @@ export default function CoverImageSection({ register, errors }: CoverImageSectio
           </div>
           <div>
             <CardTitle className="text-sm font-bold">Cover Image</CardTitle>
-            <CardDescription className="text-xs">Optional — provide a URL for the workshop banner image.</CardDescription>
+            <CardDescription className="text-xs">Provide a URL for the workshop banner image.</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -45,7 +45,7 @@ export default function CoverImageSection({ register, errors }: CoverImageSectio
         </div>
         <p className="text-[10px] text-muted-foreground flex items-center space-x-1">
           <Info className="h-3 w-3" />
-          <span>Leave empty to use a default cover image. Recommended size: 1200×630px.</span>
+          <span>A valid image URL is required. Recommended size: 1200×630px.</span>
         </p>
       </CardContent>
     </Card>

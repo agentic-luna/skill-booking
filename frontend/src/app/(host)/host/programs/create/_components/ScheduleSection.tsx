@@ -32,51 +32,67 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6 space-y-5">
+      <CardContent className="p-6 space-y-6">
 
-        {/* ── Delivery Mode ─────────────────────────────────────────── */}
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold flex items-center space-x-1.5">
-            <Video className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Delivery Mode</span>
-          </Label>
-          <div className="flex gap-3">
-            {(["ONLINE", "OFFLINE"] as const).map((m) => {
-              const active = selectedMode === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setValue("mode", m, { shouldValidate: true })}
-                  className={`
-                    flex items-center gap-2 flex-1 py-2.5 px-4 rounded-xl border text-xs font-bold
-                    transition-all duration-200 select-none
-                    ${active
-                      ? m === "ONLINE"
-                        ? "bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400 shadow-sm"
-                        : "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                      : "bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted/70 hover:border-border/70"
+        {/* ── Delivery Mode & Location Address ───────────────────────── */}
+        <div className="space-y-4 bg-muted/20 p-4.5 rounded-xl border border-border/40">
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold flex items-center space-x-1.5">
+              <Video className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>Delivery Mode</span>
+            </Label>
+            <div className="flex gap-3">
+              {(["OFFLINE", "ONLINE"] as const).map((m) => {
+                const active = selectedMode === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setValue("mode", m, { shouldValidate: true })}
+                    className={`
+                      flex items-center gap-2 flex-1 py-2.5 px-4 rounded-xl border text-xs font-bold
+                      transition-all duration-200 select-none
+                      ${active
+                        ? m === "ONLINE"
+                          ? "bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400 shadow-sm"
+                          : "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                        : "bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted/70 hover:border-border/70"
+                      }
+                    `}
+                  >
+                    {m === "ONLINE"
+                      ? <Video className="h-3.5 w-3.5 shrink-0" />
+                      : <MapPinned className="h-3.5 w-3.5 shrink-0" />
                     }
-                  `}
-                >
-                  {m === "ONLINE"
-                    ? <Video className="h-3.5 w-3.5 shrink-0" />
-                    : <MapPinned className="h-3.5 w-3.5 shrink-0" />
-                  }
-                  <span>{m === "ONLINE" ? "Online / Virtual" : "In-Person / Offline"}</span>
-                  {active && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-current" />
-                  )}
-                </button>
-              );
-            })}
+                    <span>{m === "ONLINE" ? "Online / Virtual" : "In-Person / Offline"}</span>
+                    {active && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-current" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Hidden input to integrate with react-hook-form */}
+            <input type="hidden" {...register("mode")} />
+            {errors.mode && <p className="text-[11px] text-destructive font-medium">{errors.mode.message}</p>}
           </div>
-          {/* Hidden input to integrate with react-hook-form */}
-          <input type="hidden" {...register("mode")} />
-          {errors.mode && <p className="text-[11px] text-destructive font-medium">{errors.mode.message}</p>}
+
+          <div className="space-y-2">
+            <Label htmlFor="location" className="text-xs font-semibold flex items-center space-x-1.5">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{selectedMode === "ONLINE" ? "Webinar / Stream Link" : "Venue Address / Map Location"}</span>
+            </Label>
+            <Input
+              id="location"
+              placeholder={selectedMode === "ONLINE" ? "https://zoom.us/j/..." : "123 Workshop St, City or Google Maps link"}
+              className="h-10 text-sm"
+              {...register("location")}
+            />
+            {errors.location && <p className="text-[11px] text-destructive font-medium">{errors.location.message}</p>}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {/* Date */}
           <div className="space-y-2">
             <Label htmlFor="date" className="text-xs font-semibold flex items-center space-x-1.5">
@@ -120,21 +136,6 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
               {...register("duration")}
             />
             {errors.duration && <p className="text-[11px] text-destructive font-medium">{errors.duration.message}</p>}
-          </div>
-
-          {/* Location / Venue */}
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-xs font-semibold flex items-center space-x-1.5">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>{selectedMode === "ONLINE" ? "Webinar / Stream Link" : "Venue Address"}</span>
-            </Label>
-            <Input
-              id="location"
-              placeholder={selectedMode === "ONLINE" ? "https://zoom.us/j/..." : "123 Workshop St, City"}
-              className="h-10 text-sm"
-              {...register("location")}
-            />
-            {errors.location && <p className="text-[11px] text-destructive font-medium">{errors.location.message}</p>}
           </div>
         </div>
       </CardContent>

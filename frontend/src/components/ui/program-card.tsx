@@ -100,11 +100,13 @@ export default function ProgramCard({ program }: ProgramCardProps) {
                 <Eye className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href={`/host/programs/${program.id}/edit`}>
-              <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg animate-hover" title="Edit workshop" disabled={isDeleting}>
-                <Edit3 className="h-4 w-4" />
-              </Button>
-            </Link>
+            {program.status.toLowerCase() !== "approved" && (
+              <Link href={`/host/programs/${program.id}/edit`}>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg animate-hover" title="Edit workshop" disabled={isDeleting}>
+                  <Edit3 className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
 
             {program.status.toLowerCase() === "pending" && (
               <Button

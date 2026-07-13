@@ -2,14 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
+import { UseFormWatch } from "react-hook-form";
 import {
   Sparkles, Clock, Ticket, Image as ImageIcon,
-  Loader2, Info,
+  Loader2, Info, Eye
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CategoryMeta } from "./program-schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CategoryMeta, ProgramFormValues } from "./program-schema";
+import { Program } from "@/constants/mockData";
+import ProgramDetailsContent from "../../../../../(client)/programs/[id]/ProgramDetailsContent";
 
 interface PreviewSidebarProps {
   watchedTitle: string;
@@ -20,6 +24,7 @@ interface PreviewSidebarProps {
   selectedCategory: string;
   categoryMeta: CategoryMeta | undefined;
   isSubmitting: boolean;
+  watch?: UseFormWatch<ProgramFormValues>;
 }
 
 export default function PreviewSidebar({
@@ -31,8 +36,10 @@ export default function PreviewSidebar({
   selectedCategory,
   categoryMeta,
   isSubmitting,
+  watch,
 }: PreviewSidebarProps) {
   const [imageError, setImageError] = React.useState(false);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
 
   React.useEffect(() => {
     setImageError(false);
@@ -123,12 +130,74 @@ export default function PreviewSidebar({
               </>
             )}
           </Button>
+
+          {watch && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPreviewOpen(true)}
+              className="w-full h-11 rounded-xl text-sm font-bold border-cyan-500/35 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/5 transition-all duration-200"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Preview Client View
+            </Button>
+          )}
+
           <Link href="/host/programs" className="block">
             <Button variant="outline" type="button" className="w-full h-10 rounded-xl text-xs font-semibold">
               Cancel
             </Button>
           </Link>
         </div>
+
+        {/* Dialog for Client View Live Preview */}
+        {watch && (
+          <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+            <DialogContent className="max-w-5xl w-full h-[90vh] overflow-y-auto p-0 border-none bg-background rounded-2xl">
+              <DialogHeader className="sr-only">
+                <DialogTitle>Client View Live Preview</DialogTitle>
+              </DialogHeader>
+              <div className="relative">
+                {(() => {
+                  const values = watch();
+                  const dateStr = values.date || new Date().toISOString().split("T")[0];
+                  const locationStr = values.mode === "ONLINE"
+                    ? "Online"
+                    : values.location || "In Person";
+
+                  const previewProgram: Program = {
+                    id: "preview",
+                    title: values.title || "Workshop Title Preview",
+                    description: values.description || "Course description text goes here...",
+                    instructorName: values.instructorName || "Instructor Name",
+                    instructorAvatar: values.instructorPhoto || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+                    instructorBio: values.instructorBio || "Bio of the instructor...",
+                    instagram: values.instagram || "",
+                    linkedin: values.linkedin || "",
+                    facebook: values.facebook || "",
+                    companyName: values.companyName || "Skill Masterclass Ltd.",
+                    category: (values.category as any) || "technology",
+                    rating: 4.8,
+                    reviewsCount: 12,
+                    price: Number(values.price) || 0,
+                    duration: values.duration || "2 hours",
+                    date: dateStr,
+                    time: values.time ? `${values.time} EST` : "10:00 AM EST",
+                    spotsLeft: Number(values.maxSpots) || 10,
+                    maxSpots: Number(values.maxSpots) || 10,
+                    location: locationStr,
+                    imageUrl: values.imageUrl || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600",
+                    status: "approved",
+                    featured: true,
+                    mode: values.mode || "OFFLINE",
+                  };
+
+                  return <ProgramDetailsContent programId="preview" initialProgram={previewProgram} />;
+                })()}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
       </div>
     </div>

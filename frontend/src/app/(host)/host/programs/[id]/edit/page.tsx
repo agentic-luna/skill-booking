@@ -17,6 +17,8 @@ import BasicInfoSection from "../../create/_components/BasicInfoSection";
 import ScheduleSection from "../../create/_components/ScheduleSection";
 import PricingSection from "../../create/_components/PricingSection";
 import CoverImageSection from "../../create/_components/CoverImageSection";
+import InstructorSection from "../../create/_components/InstructorSection";
+import VerificationSection from "../../create/_components/VerificationSection";
 
 export default function EditProgramPage() {
   const router = useRouter();
@@ -47,6 +49,11 @@ export default function EditProgramPage() {
     async function loadProgram() {
       try {
         const details = await getEventDetails(programId);
+        if (details.status.toLowerCase() === "approved") {
+          showAlert("Access Denied", "Approved programs cannot be edited.", "destructive");
+          router.push("/host/programs");
+          return;
+        }
         setProgram(details);
         setSelectedCategory(details.category || "technology");
 
@@ -59,7 +66,7 @@ export default function EditProgramPage() {
         const timeStr = `${hh}:${mm}`;
 
         // Normalise mode: strip any HYBRID values the DB might have stored
-        const rawMode = (details.mode || "ONLINE").toUpperCase();
+        const rawMode = (details.mode || "OFFLINE").toUpperCase();
         const safeMode: "ONLINE" | "OFFLINE" = rawMode === "OFFLINE" ? "OFFLINE" : "ONLINE";
 
         reset({
@@ -74,9 +81,18 @@ export default function EditProgramPage() {
           location:
             typeof details.venueDetails === "string"
               ? details.venueDetails
-              : details.venueDetails?.link || details.venueDetails?.address || "",
+              : details.venueDetails?.address || "",
           description: details.description || "",
           imageUrl: details.posterUrl || "",
+          instructorName: details.venueDetails?.instructorName || "",
+          companyName: details.venueDetails?.companyName || "",
+          instructorBio: details.venueDetails?.instructorBio || "",
+          instructorPhoto: details.venueDetails?.instructorPhoto || "",
+          instagram: details.venueDetails?.instagram || "",
+          linkedin: details.venueDetails?.linkedin || "",
+          facebook: details.venueDetails?.facebook || "",
+          verifiedCorrect: false,
+          acknowledgedPolicy: false,
         });
       } catch (err: any) {
         showAlert("Error", err.message || "Failed to load program details.", "destructive");
@@ -99,7 +115,16 @@ export default function EditProgramPage() {
         title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
         mode: data.mode,          // ← directly from form
-        venueDetails: data.location.trim(),
+        venueDetails: {
+          address: data.location.trim(),
+          instructorName: data.instructorName.trim(),
+          companyName: data.companyName.trim(),
+          instructorBio: data.instructorBio.trim(),
+          instructorPhoto: data.instructorPhoto.trim(),
+          instagram: data.instagram?.trim() || "",
+          linkedin: data.linkedin?.trim() || "",
+          facebook: data.facebook?.trim() || "",
+        },
         startTime,
         totalSeats: Number(data.maxSpots),
         price: Number(data.price),
@@ -214,6 +239,8 @@ export default function EditProgramPage() {
             />
             <PricingSection register={register} errors={errors} />
             <CoverImageSection register={register} errors={errors} />
+            <InstructorSection register={register} errors={errors} />
+            <VerificationSection register={register} errors={errors} />
           </div>
 
           {/* ── Right Column: Actions ──────────────────────────────── */}
