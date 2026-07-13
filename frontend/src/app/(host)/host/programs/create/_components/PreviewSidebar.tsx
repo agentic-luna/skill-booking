@@ -16,6 +16,7 @@ interface PreviewSidebarProps {
   watchedPrice: number;
   watchedMaxSpots: number;
   watchedDuration: string;
+  watchedImageUrl?: string;
   selectedCategory: string;
   categoryMeta: CategoryMeta | undefined;
   isSubmitting: boolean;
@@ -26,10 +27,16 @@ export default function PreviewSidebar({
   watchedPrice,
   watchedMaxSpots,
   watchedDuration,
+  watchedImageUrl,
   selectedCategory,
   categoryMeta,
   isSubmitting,
 }: PreviewSidebarProps) {
+  const [imageError, setImageError] = React.useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [watchedImageUrl]);
   return (
     <div className="lg:col-span-4 space-y-6">
       {/* Sticky wrapper */}
@@ -47,8 +54,18 @@ export default function PreviewSidebar({
           <CardContent className="p-4">
             <div className="rounded-xl border border-border/40 overflow-hidden bg-muted/20">
               {/* Image placeholder */}
-              <div className="aspect-video bg-gradient-to-br from-primary/10 via-muted to-violet-500/10 flex items-center justify-center relative">
-                <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
+              <div className="aspect-video bg-gradient-to-br from-primary/10 via-muted to-violet-500/10 flex items-center justify-center relative overflow-hidden">
+                {watchedImageUrl && !imageError ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={watchedImageUrl}
+                    alt={watchedTitle || "Program cover"}
+                    className="w-full h-full object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
+                )}
                 {categoryMeta && (
                   <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] px-2 py-0.5 rounded-md font-semibold capitalize">
                     {selectedCategory}

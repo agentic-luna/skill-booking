@@ -51,6 +51,7 @@ export default function CreateProgramPage() {
   const watchedPrice = watch("price");
   const watchedMaxSpots = watch("maxSpots");
   const watchedDuration = watch("duration");
+  const watchedImageUrl = watch("imageUrl");
 
   const onSubmit = async (data: ProgramFormValues) => {
     clearError();
@@ -150,6 +151,7 @@ export default function CreateProgramPage() {
             watchedPrice={watchedPrice}
             watchedMaxSpots={watchedMaxSpots}
             watchedDuration={watchedDuration}
+            watchedImageUrl={watchedImageUrl}
             selectedCategory={selectedCategory}
             categoryMeta={categoryMeta}
             isSubmitting={isLoading}
