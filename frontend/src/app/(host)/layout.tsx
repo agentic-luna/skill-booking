@@ -202,7 +202,7 @@ export default function HostLayout({
         </header>
 
         {/* Verification Status Header Banner */}
-        {hasSubmittedBoth && (
+        {!isFullyVerified && hasSubmittedBoth && (
           <div className="px-8 py-3 bg-white border-b border-black/5 text-xs flex flex-wrap gap-4 items-center justify-between">
             {isFullyVerified ? (
               <div className="flex items-center space-x-3">
