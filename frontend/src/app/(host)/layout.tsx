@@ -165,10 +165,10 @@ export default function HostLayout({
   const shouldBlock = !hasSubmittedBoth && isRestrictedPath;
 
   return (
-    <div className="flex min-h-screen bg-muted/20 dark:bg-card/5">
+    <div className="flex min-h-screen bg-muted/20 dark:bg-card/5 pt-[72px]">
       
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block w-64 shrink-0 h-screen sticky top-0 z-45">
+      <aside className="hidden lg:block w-64 shrink-0 h-[calc(100vh-72px)] sticky top-[72px] z-45">
         <SidebarContent />
       </aside>
 
@@ -176,7 +176,7 @@ export default function HostLayout({
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Navbar - Mobile & Small screens */}
-        <header className="lg:hidden flex items-center justify-between h-16 px-4 bg-card border-b border-border/40 sticky top-0 z-40">
+        <header className="lg:hidden flex items-center justify-between h-16 px-4 bg-card border-b border-border/40 sticky top-[72px] z-40">
           <Link href="/" className="flex items-center space-x-2">
             <div className="bg-primary p-1.5 rounded-lg text-white">
               <Sparkles className="h-4.5 w-4.5" />

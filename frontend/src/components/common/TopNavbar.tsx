@@ -26,22 +26,28 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
   }, []);
 
   // Check if we should hide the navbar on this route
-  if (hiddenRoutes.includes(pathname)) {
+  if (hiddenRoutes.includes(pathname) || pathname.startsWith("/admin")) {
     return null;
   }
 
   // Check if we should force dark styling (e.g. on dashboard where background is white)
   const forceDark = pathname.startsWith("/dashboard") || pathname.startsWith("/programs/") || pathname.startsWith("/host") || pathname.startsWith("/admin");
   const isDarkText = isScrolled || forceDark;
+  
+  const bgStyle = (isScrolled || forceDark)
+    ? "bg-white/90 backdrop-blur-xl border-b border-black/5 shadow-sm py-3"
+    : "bg-transparent py-6";
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? "bg-white/70 backdrop-blur-xl border-b border-black/5 shadow-sm py-3" : "bg-transparent py-6"}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${bgStyle}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <Link href="/programs" className={`text-2xl font-bold tracking-tight hover:opacity-80 transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]" : "text-white"}`}>
           BookMy<span className="text-[#a0f212]">Skill</span>
         </Link>
         <div className={`hidden md:flex items-center gap-8 text-sm font-semibold transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]/70" : "text-white/80"}`}>
-          <Link href="/programs" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Explore Skills</Link>
+          {user?.role !== "admin" && (
+            <Link href="/programs" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Explore Skills</Link>
+          )}
           {user?.role === "client" && (
             <>
               <Link href="/dashboard/wishlist" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Wishlist</Link>
@@ -50,9 +56,6 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
           )}
           {user?.role === "host" && (
             <Link href="/host/dashboard" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Host Dashboard</Link>
-          )}
-          {user?.role === "admin" && (
-            <Link href="/admin/dashboard" className={`transition-colors ${isDarkText ? "hover:text-[#0b0c01]" : "hover:text-white"}`}>Admin Dashboard</Link>
           )}
         </div>
         <div className="flex items-center gap-4">

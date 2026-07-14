@@ -21,9 +21,13 @@ export default function DashboardOverviewPage() {
       router.push("/login");
       return;
     }
+    if (user?.role === "admin") {
+      router.push("/dashboard/profile");
+      return;
+    }
     fetchBookings();
     fetchEvents();
-  }, [isAuthenticated, router, fetchBookings, fetchEvents]);
+  }, [isAuthenticated, user, router, fetchBookings, fetchEvents]);
 
   if (!isAuthenticated || !user) {
     return (

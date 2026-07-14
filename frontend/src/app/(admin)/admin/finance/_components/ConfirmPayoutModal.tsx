@@ -45,16 +45,16 @@ export default function ConfirmPayoutModal({
               <span className="text-muted-foreground">Bank Name:</span>
               <span className="font-bold text-foreground">{selectedHost.hostProfile?.bankDetail?.bankName}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">A/C Holder Name:</span>
-              <span className="font-mono font-bold text-foreground">{selectedHost.hostProfile?.bankDetail?.accountHolderName}</span>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4">
+              <span className="text-muted-foreground whitespace-nowrap">A/C Holder Name:</span>
+              <span className="font-mono font-bold text-foreground break-all sm:text-right">{selectedHost.hostProfile?.bankDetail?.accountHolderName}</span>
             </div>
           </div>
 
           <div className="p-3 border border-amber-500/20 bg-amber-500/5 rounded-xl text-amber-700 text-[11px] leading-relaxed flex gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
             <span>
-              This command triggers an asynchronous bank transfer via **Razorpay Payouts API**. Once confirmed, status transitions to `RELEASED_TO_HOST` for all pending txn ledger items.
+              This command triggers an asynchronous bank transfer via <span className="font-bold">Razorpay Payouts API</span>. Once confirmed, status transitions to <code className="bg-amber-500/20 px-1 py-0.5 rounded font-mono text-[10px]">RELEASED_TO_HOST</code> for all pending txn ledger items.
             </span>
           </div>
         </div>
