@@ -2,7 +2,7 @@ import React from "react";
 import { DollarSign, Users, Calendar, Star, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function EarningsCard({ totalRevenue }: { totalRevenue: number }) {
+export function EarningsCard({ totalRevenue, heldEscrow = 0 }: { totalRevenue: number; heldEscrow?: number }) {
   return (
     <Card className="rounded-[32px] border-0 bg-gradient-to-br from-[#d4fc94] to-[#a0f212] shadow-xl overflow-hidden relative group h-full">
       {/* Decorative background shapes */}
@@ -15,13 +15,18 @@ export function EarningsCard({ totalRevenue }: { totalRevenue: number }) {
             <DollarSign className="h-7 w-7 text-[#0b0c01]" />
           </div>
           <div className="bg-white/40 backdrop-blur-md border border-white/50 text-[#0b0c01] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
-            <ArrowUpRight className="w-3.5 h-3.5" /> +12%
+            <ArrowUpRight className="w-3.5 h-3.5" /> Released
           </div>
         </div>
         
         <div className="space-y-1 mt-10">
           <span className="text-sm text-[#0b0c01]/70 font-extrabold uppercase tracking-widest">Total Earnings</span>
           <div className="text-5xl font-black text-[#0b0c01] tracking-tighter">${totalRevenue.toLocaleString()}</div>
+          {heldEscrow > 0 && (
+            <div className="text-xs text-[#0b0c01]/60 font-semibold pt-1">
+              + ${heldEscrow.toLocaleString()} in escrow
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

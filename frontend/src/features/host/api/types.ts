@@ -68,23 +68,27 @@ export interface CreatedEvent {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
 
+/**
+ * Matches the actual backend response from GET /hosts/dashboard.
+ * Additional richer fields (charts, bookings) are optional — the UI
+ * falls back to zeros/empty arrays when they are absent.
+ */
 export interface DashboardStats {
-  grossRevenue: number;
-  netRevenue: number;
-  totalBookings: number;
-  totalEvents: number;
-  pendingEvents: number;
-  approvedEvents: number;
+  /** Net earnings released to the host */
+  totalEarnings: number;
+  /** Revenue still held in escrow (pending release) */
+  heldEscrow: number;
+  /** Number of active ticket sales (non-refunded captures) */
+  activeTicketSales: number;
+  /** Gross ticket revenue (captured amount) */
+  totalRevenue: number;
+  /** Total number of events created by the host */
+  eventsCount: number;
+
+  // ── Optional enriched fields (returned only when the backend is extended) ──
   averageRating?: number;
-  /** Monthly breakdown for charts */
   monthlyRevenue?: Array<{ month: string; earnings: number }>;
-  /** Weekly booking trend */
   weeklyBookings?: Array<{ day: string; bookings: number }>;
-  recentBookings?: Array<{
-    id: string;
-    clientName: string;
-    eventTitle: string;
-    amountPaid: number;
-    bookingDate: string;
-  }>;
+  /** Full booking objects as returned by the enriched endpoint */
+  recentBookings?: Array<any>;
 }

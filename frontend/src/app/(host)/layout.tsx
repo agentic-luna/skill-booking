@@ -161,8 +161,12 @@ export default function HostLayout({
     </div>
   );
 
-  const isRestrictedPath = pathname !== "/host/kyc" && pathname !== "/host/earnings";
+  const isRestrictedPath =
+    pathname !== "/host/kyc" &&
+    pathname !== "/host/earnings" &&
+    pathname !== "/host/dashboard"; // dashboard always accessible
   const shouldBlock = !hasSubmittedBoth && isRestrictedPath;
+  const showOnboardingBanner = !hasSubmittedBoth && pathname === "/host/dashboard";
 
   return (
     <div className="flex min-h-screen bg-[#9ea99f] dark:bg-[#121614] p-4 lg:p-6 gap-6 font-sans selection:bg-[#a0f212]/30 text-[#0b0c01]">
@@ -272,7 +276,35 @@ export default function HostLayout({
               </div>
             </div>
           ) : (
-            children
+            <>
+              {/* Inline onboarding nudge on dashboard when not fully set up */}
+              {showOnboardingBanner && (
+                <div className="mb-6 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    <p className="text-sm font-semibold text-amber-700">
+                      Complete onboarding to unlock all features —
+                      {!hasKycSubmitted && " KYC pending"}
+                      {!hasKycSubmitted && !hasBankDetailsSubmitted && " &"}
+                      {!hasBankDetailsSubmitted && " bank details pending"}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {!hasKycSubmitted && (
+                      <Link href="/host/kyc">
+                        <Button size="sm" className="rounded-xl text-xs font-bold bg-[#0b0c01] text-white h-8 px-4">KYC Docs</Button>
+                      </Link>
+                    )}
+                    {!hasBankDetailsSubmitted && (
+                      <Link href="/host/earnings">
+                        <Button size="sm" variant="outline" className="rounded-xl text-xs font-bold h-8 px-4 border-amber-500/30 text-amber-700">Bank Account</Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+              {children}
+            </>
           )}
           </div>
         </main>

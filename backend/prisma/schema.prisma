@@ -139,6 +139,7 @@ model HostProfile {
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   bankDetail HostBankDetail?
   events     Event[]
+  editRequests EditRequest[]
 
   @@map("host_profiles")
 }

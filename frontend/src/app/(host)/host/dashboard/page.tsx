@@ -41,9 +41,14 @@ export default function HostDashboard() {
 
   useEffect(() => { fetchDashboard(); }, []);
 
-  const totalRevenue = dashboard?.grossRevenue ?? 0;
-  const totalSignups = dashboard?.totalBookings ?? 0;
-  const activePrograms = dashboard?.approvedEvents ?? 0;
+  // Map actual backend fields → UI labels
+  // Backend returns: totalEarnings, heldEscrow, activeTicketSales, totalRevenue, eventsCount
+  // If the API is unavailable the store keeps dashboard === null, so every ?. falls back to the
+  // safe default via the ?? operator — the dashboard still renders with zeros / empty arrays.
+  const totalRevenue = dashboard?.totalEarnings ?? 0;
+  const heldEscrow = dashboard?.heldEscrow ?? 0;
+  const totalSignups = dashboard?.activeTicketSales ?? 0;
+  const activePrograms = dashboard?.eventsCount ?? 0;
   const averageRating = dashboard?.averageRating != null
     ? `${dashboard.averageRating.toFixed(1)}★` : "—";
   const revenueData = dashboard?.monthlyRevenue ?? FALLBACK_REVENUE;
@@ -83,7 +88,7 @@ export default function HostDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-[280px]">
             {/* 1. Lime Gradient Earnings */}
             <div className="col-span-1">
-              <EarningsCard totalRevenue={totalRevenue} />
+              <EarningsCard totalRevenue={totalRevenue} heldEscrow={heldEscrow} />
             </div>
 
             {/* 2. Dark Active Workshops */}
