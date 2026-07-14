@@ -92,6 +92,14 @@ export async function getHostDashboard(): Promise<DashboardStats> {
   return res.data;
 }
 
+export async function requestEditAccess(eventId: string, reason?: string) {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    `/hosts/events/${eventId}/request-edit`,
+    { method: "POST", body: JSON.stringify({ reason }) }
+  );
+  return res.data;
+}
+
 export async function getMyEvents(): Promise<any[]> {
   const res = await hostRequest<{ success: boolean; data: any[] }>(
     "/hosts/my-events"

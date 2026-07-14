@@ -65,6 +65,12 @@ enum EventStatus {
   CANCELED
 }
 
+enum EditRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum CommissionType {
   FIXED
   PERCENTAGE
@@ -247,6 +253,7 @@ model Event {
   boostedEvent BoostedEvent?
   wishlistedBy Wishlist[]
   likes        EventLike[]
+  editRequests EditRequest[]
 
   @@map("events")
 }
@@ -390,4 +397,19 @@ model RefundRequest {
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("refund_requests")
+}
+
+model EditRequest {
+  id        String            @id @default(uuid()) @db.Uuid
+  eventId   String            @db.Uuid
+  hostId    String            @db.Uuid
+  status    EditRequestStatus @default(PENDING)
+  reason    String?           @db.Text
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  host  HostProfile @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@map("edit_requests")
 }

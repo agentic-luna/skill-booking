@@ -21,14 +21,14 @@ export default function WishlistPage() {
       router.push("/login");
       return;
     }
-    if (user?.role === "admin") {
+    if (user?.role === "admin" || user?.role === "host") {
       router.push("/dashboard/profile");
       return;
     }
     fetchWishlist();
   }, [isAuthenticated, user, router, fetchWishlist]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || user?.role === "admin" || user?.role === "host") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <div className="animate-pulse flex flex-col items-center space-y-4">

@@ -15,6 +15,7 @@ export default function AdminApprovalsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProgram, setSelectedProgram] = useState<any | null>(null);
   const [modeFilter, setModeFilter] = useState<string>("ALL");
+  const [activeTab, setActiveTab] = useState<"listings" | "edits">("listings");
   
   // Commission settings dialog state
   const [isApproveOpen, setIsApproveOpen] = useState(false);
@@ -25,16 +26,21 @@ export default function AdminApprovalsPage() {
   const showAlert = useAlertStore((s) => s.showAlert);
   const {
     eventQueue,
+    editRequests,
     loading,
     error,
     fetchEventQueue,
+    fetchEditRequests,
     approveEvent,
-    declineEvent
+    declineEvent,
+    approveEditRequest,
+    rejectEditRequest
   } = useAdminStore();
 
   useEffect(() => {
     fetchEventQueue();
-  }, [fetchEventQueue]);
+    fetchEditRequests();
+  }, [fetchEventQueue, fetchEditRequests]);
 
   const handleOpenApproveDialog = (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -159,15 +165,96 @@ export default function AdminApprovalsPage() {
         </div>
       )}
 
+      {/* Approvals & Edit Requests Tabs */}
+      <div className="flex items-center gap-4 border-b border-black/5 dark:border-white/5 pb-2">
+        <button
+          className={`pb-2 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "listings"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("listings")}
+        >
+          New Listings ({filteredApprovals.length})
+        </button>
+        <button
+          className={`pb-2 px-2 text-sm font-bold border-b-2 transition-colors ${
+            activeTab === "edits"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("edits")}
+        >
+          Edit Requests ({editRequests?.length || 0})
+        </button>
+      </div>
+
       {/* Approvals list */}
-      <ApprovalsGrid
-        loading={loading}
-        filteredApprovals={filteredApprovals}
-        onSelectProgram={setSelectedProgram}
-        onDecline={handleDeclineLocal}
-        onApproveTrigger={handleOpenApproveDialog}
-        getVenueDetailsString={getVenueDetailsString}
-      />
+      {activeTab === "listings" ? (
+        <ApprovalsGrid
+          loading={loading}
+          filteredApprovals={filteredApprovals}
+          onSelectProgram={setSelectedProgram}
+          onDecline={handleDeclineLocal}
+          onApproveTrigger={handleOpenApproveDialog}
+          getVenueDetailsString={getVenueDetailsString}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {editRequests?.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-muted-foreground bg-card rounded-[32px] border border-black/5">
+              No pending edit requests.
+            </div>
+          ) : (
+            editRequests?.map((req: any) => (
+              <div key={req.id} className="bg-card border border-black/5 rounded-[32px] p-6 shadow-sm flex flex-col gap-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground line-clamp-1">{req.event?.title}</h3>
+                    <p className="text-sm text-muted-foreground">{req.host?.user?.firstName} {req.host?.user?.lastName}</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase bg-amber-500/10 text-amber-600">Pending</span>
+                </div>
+                
+                <div className="bg-muted/30 p-3 rounded-xl border border-black/5">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Reason for edit:</p>
+                  <p className="text-sm font-medium text-foreground">{req.reason || "No reason provided."}</p>
+                </div>
+
+                <div className="flex gap-2 mt-auto pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-xl text-xs font-bold border-destructive/20 text-destructive hover:bg-destructive/10"
+                    onClick={async () => {
+                      if(confirm("Reject this edit request?")) {
+                        try {
+                          await rejectEditRequest(req.id);
+                          showAlert("Rejected", "Edit request rejected.", "success");
+                        } catch (err: any) {}
+                      }
+                    }}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-xl text-xs font-bold bg-[#0b0c01] text-white hover:bg-black/80"
+                    onClick={async () => {
+                      if(confirm("Approve edit access? The event will be unlocked and moved back to pending status.")) {
+                        try {
+                          await approveEditRequest(req.id);
+                          showAlert("Approved", "Event is now unlocked for edits.", "success");
+                        } catch (err: any) {}
+                      }
+                    }}
+                  >
+                    Unlock Event
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* FULL PROGRAM DETAIL DIALOG MODAL */}
       <ProgramDetailModal

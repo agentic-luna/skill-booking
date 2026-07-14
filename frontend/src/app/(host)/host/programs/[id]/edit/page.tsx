@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Save, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useHostStore } from "@/features/host/store/hostStore";
@@ -26,13 +26,15 @@ export default function EditProgramPage() {
   const programId = params.id as string;
   const showAlert = useAlertStore((s) => s.showAlert);
 
-  const { updateEvent, deleteEvent } = useHostStore();
+  const { updateEvent, deleteEvent, requestEditAccess } = useHostStore();
 
   const [program, setProgram] = useState<any>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isApprovedLocked, setIsApprovedLocked] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("technology");
+  const [editReason, setEditReason] = useState("");
 
   const {
     register,
@@ -50,8 +52,9 @@ export default function EditProgramPage() {
       try {
         const details = await getEventDetails(programId);
         if (details.status.toLowerCase() === "approved") {
-          showAlert("Access Denied", "Approved programs cannot be edited.", "destructive");
-          router.push("/host/programs");
+          setProgram(details);
+          setIsApprovedLocked(true);
+          setPageLoading(false);
           return;
         }
         setProgram(details);
@@ -175,6 +178,57 @@ export default function EditProgramPage() {
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Programs
           </Button>
         </Link>
+      </div>
+    );
+  }
+
+  if (isApprovedLocked) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 bg-gray-50 border border-black/5 rounded-[40px] p-8">
+        <div className="w-16 h-16 bg-white shadow-sm border border-black/5 rounded-full flex items-center justify-center mb-2">
+          <Lock className="h-8 w-8 text-amber-500" />
+        </div>
+        <h2 className="text-2xl font-extrabold text-[#0b0c01]">Program Locked</h2>
+        <p className="text-sm text-muted-foreground max-w-md font-medium">
+          This workshop is currently live and approved. To protect attendees who may have already booked tickets, core details cannot be directly edited.
+        </p>
+
+        <div className="w-full max-w-md mt-4 space-y-2 text-left">
+          <label className="text-sm font-bold text-foreground">Reason for Edit (Optional)</label>
+          <textarea 
+            className="w-full rounded-xl border border-black/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[80px]"
+            placeholder="E.g., Need to update physical venue location..."
+            value={editReason}
+            onChange={(e) => setEditReason(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-4 mt-8 pt-4">
+          <Link href="/host/programs">
+            <Button variant="outline" className="rounded-xl text-sm font-bold h-11 px-6">
+              Back to Programs
+            </Button>
+          </Link>
+          <Button 
+            disabled={isSubmitting}
+            onClick={async () => {
+              setIsSubmitting(true);
+              try {
+                await requestEditAccess(programId, editReason);
+                showAlert("Request Sent", "Admin has been notified of your request to edit this live program.", "success");
+                router.push("/host/programs");
+              } catch (err: any) {
+                showAlert("Request Failed", err.message || "Failed to submit request.", "destructive");
+              } finally {
+                setIsSubmitting(false);
+              }
+            }} 
+            className="rounded-xl text-sm font-bold h-11 px-6 bg-[#0b0c01] text-white hover:bg-black/80 shadow-xl"
+          >
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Request Edit Access
+          </Button>
+        </div>
       </div>
     );
   }

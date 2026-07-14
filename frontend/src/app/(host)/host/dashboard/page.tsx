@@ -4,11 +4,10 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useHostStore } from "@/features/host/store/hostStore";
 
-import KpiCards from "./_components/KpiCards";
-import DashboardCharts from "./_components/DashboardCharts";
+import { EarningsCard, ActiveWorkshopsCard, CommunityStatsCard } from "./_components/KpiCards";
+import { SalesChartCard, WeeklyFlowCard } from "./_components/DashboardCharts";
 import RecentBookingsTable from "./_components/RecentBookingsTable";
 
 const FALLBACK_REVENUE = [
@@ -23,17 +22,17 @@ const FALLBACK_WEEKLY = [
   { day: "Sun", bookings: 0 },
 ];
 
-function SkeletonCard() {
+function SkeletonBento() {
   return (
-    <Card className="rounded-2xl border-border/40 bg-card animate-pulse">
-      <CardContent className="pt-6 flex items-center justify-between">
-        <div className="space-y-2">
-          <div className="h-2 w-20 bg-muted rounded" />
-          <div className="h-6 w-24 bg-muted rounded" />
-        </div>
-        <div className="h-11 w-11 bg-muted rounded-xl" />
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+      {/* Top Row Skeletons */}
+      <div className="col-span-1 h-64 bg-black/5 rounded-[32px]" />
+      <div className="col-span-1 h-64 bg-black/5 rounded-[32px]" />
+      <div className="col-span-1 h-64 bg-black/5 rounded-[32px]" />
+      {/* Middle Row Skeletons */}
+      <div className="col-span-1 md:col-span-2 h-96 bg-black/5 rounded-[32px]" />
+      <div className="col-span-1 h-96 bg-black/5 rounded-[32px]" />
+    </div>
   );
 }
 
@@ -52,36 +51,69 @@ export default function HostDashboard() {
   const recentBookings = dashboard?.recentBookings ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-10">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Host Control Center</h1>
-          <p className="text-sm text-muted-foreground">Monitor class bookings, track revenue metrics, and publish new programs.</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#0b0c01]">Host Control Center</h1>
+          <p className="text-muted-foreground font-medium">Monitor class bookings, track revenue metrics, and publish new programs.</p>
         </div>
         <Link href="/host/programs/create">
-          <Button className="rounded-xl h-10 text-xs font-semibold">
-            <Plus className="mr-1.5 h-4 w-4" /> Create Workshop
+          <Button className="rounded-2xl h-12 px-6 text-sm font-bold bg-[#0b0c01] text-white hover:bg-[#0b0c01]/90 shadow-lg shadow-black/10 transition-all hover:-translate-y-0.5 duration-300">
+            <Plus className="mr-2 h-5 w-5" /> Create Workshop
           </Button>
         </Link>
       </div>
 
       {error && (
-        <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
+        <div className="p-4 text-sm font-semibold text-red-600 bg-red-50 rounded-2xl border border-red-100 flex items-center gap-2 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           {error} — dashboard data may not be up to date.
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {dashboardLoading
-          ? [1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)
-          : <KpiCards totalRevenue={totalRevenue} totalSignups={totalSignups} activePrograms={activePrograms} averageRating={averageRating} />
-        }
-      </div>
+      {/* Mixed-Bento Grid Layout */}
+      {dashboardLoading ? (
+        <SkeletonBento />
+      ) : (
+        <div className="flex flex-col gap-6">
+          
+          {/* Top Row: 3 Equal Columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-[280px]">
+            {/* 1. Lime Gradient Earnings */}
+            <div className="col-span-1">
+              <EarningsCard totalRevenue={totalRevenue} />
+            </div>
 
-      <DashboardCharts revenueData={revenueData} bookingsTrendData={bookingsTrendData} />
+            {/* 2. Dark Active Workshops */}
+            <div className="col-span-1">
+              <ActiveWorkshopsCard activePrograms={activePrograms} />
+            </div>
+
+            {/* 3. White Community Stats (Students & Rating combined) */}
+            <div className="col-span-1 lg:col-span-2 xl:col-span-1">
+              <CommunityStatsCard totalSignups={totalSignups} averageRating={averageRating} />
+            </div>
+          </div>
+
+          {/* Middle Row: 2/3 and 1/3 Columns */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* 4. White Sales Chart (2/3 width) */}
+            <div className="col-span-1 xl:col-span-2">
+              <SalesChartCard revenueData={revenueData} />
+            </div>
+
+            {/* 5. Dark Weekly Flow (1/3 width) */}
+            <div className="col-span-1">
+              <WeeklyFlowCard bookingsTrendData={bookingsTrendData} />
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Bottom Row: Full width Table */}
       <RecentBookingsTable loading={dashboardLoading} bookings={recentBookings} />
 
     </div>

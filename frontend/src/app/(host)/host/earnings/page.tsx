@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DollarSign, Building2, CreditCard, ArrowUpRight, History } from "lucide-react";
+import { DollarSign, ArrowUpRight, TrendingUp, Download, Loader2 } from "lucide-react";
+import { BarChart, Bar, ResponsiveContainer, Cell } from "recharts";
+import Link from "next/link";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import type { BankDetailsPayload } from "@/features/host/api/types";
@@ -15,13 +16,14 @@ const EMPTY_FORM: BankDetailsPayload = {
 
 export default function HostEarningsPage() {
   const showAlert = useAlertStore((s) => s.showAlert);
-  const { bankDetails, fetchBankDetails, submitBankDetails, updateBankDetails, isLoading, error, clearError } = useHostStore();
+  const { bankDetails, fetchBankDetails, submitBankDetails, updateBankDetails, isLoading, error, clearError, dashboard, fetchDashboard } = useHostStore();
   const [form, setForm] = useState<BankDetailsPayload>(EMPTY_FORM);
   const isEdit = !!bankDetails;
 
   useEffect(() => {
     fetchBankDetails();
-  }, [fetchBankDetails]);
+    fetchDashboard();
+  }, [fetchBankDetails, fetchDashboard]);
 
   useEffect(() => {
     if (bankDetails) {
@@ -52,80 +54,197 @@ export default function HostEarningsPage() {
     } catch { /* error shown via banner */ }
   };
 
-  return (
-    <div className="space-y-6">
+  const grossRevenue = dashboard?.grossRevenue ?? 0;
+  const recentBookings = dashboard?.recentBookings?.slice(0, 3) ?? [];
+  const revenueData = dashboard?.monthlyRevenue?.slice(-2) ?? [
+    { month: "Prev", earnings: 0 }, { month: "Cur", earnings: 0 }
+  ];
 
-      <div className="space-y-1 pb-4 border-b">
-        <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-          <DollarSign className="h-6 w-6 text-primary" /> Earnings Center
+  return (
+    <div className="space-y-6 pb-10">
+
+      {/* Header */}
+      <div className="space-y-1 pb-4 border-b border-black/5">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[#0b0c01]">
+          Earnings Center
         </h1>
-        <p className="text-sm text-muted-foreground">Manage your finances, bank details, and withdrawal settings.</p>
+        <p className="text-muted-foreground font-medium">Manage your finances, track revenue, and update withdrawal settings.</p>
       </div>
 
       {error && (
-        <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20">{error}</div>
+        <div className="p-3 text-xs font-bold text-red-600 bg-red-50 rounded-xl border border-red-100">{error}</div>
       )}
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Card className="border-border/40 bg-card rounded-2xl">
-          <CardContent className="pt-6 flex justify-between items-center">
+      {/* Mixed-Bento Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        
+        {/* TOP ROW */}
+        
+        {/* 1. Sales Statistics (Dark Card) */}
+        <div className="lg:col-span-2 xl:col-span-2 bg-[#0b0c01] rounded-[32px] p-8 flex flex-col justify-between relative overflow-hidden group shadow-2xl">
+          {/* Subtle bg texture */}
+          <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,1)_50%,transparent_75%,transparent_100%)] bg-[length:4px_4px]" />
+          
+          <div className="relative z-10 flex justify-between items-start">
             <div className="space-y-1">
-              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Linked Bank</span>
-              <div className="text-base font-bold text-foreground">{bankDetails ? bankDetails.bankName : "Not linked"}</div>
+              <h2 className="text-white font-extrabold text-lg">Sales statistics</h2>
+              <p className="text-white/40 text-xs font-semibold">Updated today</p>
             </div>
-            <div className="bg-primary/10 text-primary p-3 rounded-xl"><Building2 className="h-5 w-5" /></div>
-          </CardContent>
-        </Card>
-        <Card className="border-border/40 bg-card rounded-2xl">
-          <CardContent className="pt-6 flex justify-between items-center">
-            <div className="space-y-1">
-              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Last Updated</span>
-              <div className="text-base font-bold text-foreground">{bankDetails ? new Date(bankDetails.updatedAt).toLocaleDateString() : "—"}</div>
+            <div className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-full text-white/70 text-xs font-bold cursor-pointer hover:bg-white/10 transition-colors">
+              Monthly v
             </div>
-            <div className="bg-emerald-500/10 text-emerald-500 p-3 rounded-xl"><CreditCard className="h-5 w-5" /></div>
-          </CardContent>
-        </Card>
-        <Card className="border-primary bg-primary/5 rounded-2xl shadow-sm">
-          <CardContent className="pt-6 flex justify-between items-center">
-            <div className="space-y-1">
-              <span className="text-[10px] text-primary font-bold uppercase tracking-wider">Account Status</span>
-              <div className="text-base font-bold text-primary">{bankDetails ? "Active" : "Pending Setup"}</div>
+          </div>
+
+          <div className="relative z-10 flex justify-between items-end mt-12">
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-[#a0f212] text-xs font-bold">
+                Gross Revenue <ArrowUpRight className="w-3 h-3 bg-[#a0f212] text-[#0b0c01] rounded-full" />
+              </div>
+              <div className="text-6xl font-black text-white tracking-tighter">
+                ${grossRevenue.toLocaleString()}
+              </div>
             </div>
-            <div className="bg-primary text-white p-3 rounded-xl"><ArrowUpRight className="h-5 w-5" /></div>
-          </CardContent>
-        </Card>
+
+            {/* Mini Bar Chart mimicking reference */}
+            <div className="w-32 h-24 flex items-end gap-3 pb-1">
+              {revenueData.map((data, idx) => {
+                const isLast = idx === revenueData.length - 1;
+                const heightPercent = data.earnings > 0 ? Math.max(30, (data.earnings / (grossRevenue || 1)) * 100) : (isLast ? 80 : 50);
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 group-hover:-translate-y-1 transition-transform">
+                    <span className="text-[9px] text-white/40 font-bold uppercase tracking-wider">{data.month}</span>
+                    <div className="w-full bg-white/5 rounded-t-xl overflow-hidden flex items-end" style={{ height: 80 }}>
+                      <div 
+                        className={`w-full rounded-t-xl transition-all duration-1000 ${isLast ? 'bg-[#a0f212]' : 'bg-[#a78bfa]'}`} 
+                        style={{ height: `${Math.min(100, heightPercent)}%` }} 
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Recent Transactions (White List Card) */}
+        <div className="lg:col-span-1 bg-white rounded-[32px] p-6 flex flex-col gap-4 border border-black/5 shadow-xl relative">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-[#0b0c01] flex items-center justify-center text-white shrink-0">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-[#0b0c01] font-extrabold text-base leading-tight">Recent Bookings</h2>
+              <p className="text-muted-foreground text-xs font-medium">Ticket sales</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 flex-1">
+            {recentBookings.length > 0 ? (
+              recentBookings.map((b: any, i: number) => (
+                <div key={i} className="bg-black/5 hover:bg-black/10 transition-colors rounded-2xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-[#0b0c01] text-xs">
+                      {b.client?.user?.firstName?.charAt(0) || "U"}
+                    </div>
+                    <div>
+                      <div className="text-xs font-extrabold text-[#0b0c01]">${b.amount}</div>
+                      <div className="text-[10px] text-muted-foreground font-semibold truncate w-24">{b.event?.title}</div>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm cursor-pointer hover:scale-110 transition-transform">
+                    <ArrowUpRight className="w-3 h-3 text-[#0b0c01]" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-xs font-semibold text-muted-foreground border border-dashed border-black/10 rounded-2xl">
+                No recent transactions
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* BOTTOM ROW */}
+
+        {/* 3. Current Balance (Green Card) */}
+        <div className="lg:col-span-1 bg-[#a0f212] rounded-[32px] p-8 flex flex-col justify-between relative shadow-[0_8px_30px_rgba(160,242,18,0.2)]">
+          <div className="flex justify-between items-start z-10">
+            <h2 className="text-[#0b0c01] font-extrabold text-xl">Current balance</h2>
+            <div className="flex gap-2">
+              <button className="w-8 h-8 rounded-full bg-white/40 hover:bg-white flex items-center justify-center transition-colors text-[#0b0c01]">
+                ←
+              </button>
+              <button className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-[#0b0c01]">
+                →
+              </button>
+            </div>
+          </div>
+
+          {/* Abstract Gauge shape mirroring reference */}
+          <div className="relative mt-12 flex justify-center items-center">
+            <div className="w-48 h-24 overflow-hidden relative">
+              <div className="w-48 h-48 border-[20px] border-[#0b0c01] rounded-full absolute top-0 left-0 border-b-transparent border-r-[#0b0c01]/10 transform -rotate-45" />
+            </div>
+            <div className="absolute bottom-2 text-center">
+              <div className="text-3xl font-black text-[#0b0c01] tracking-tight">${grossRevenue.toLocaleString()}</div>
+              <div className="w-3 h-3 bg-[#a78bfa] rounded-full mx-auto mt-2 border-2 border-[#a0f212]" />
+            </div>
+          </div>
+
+          <div className="mt-8 flex justify-between items-end z-10">
+            <div>
+              <div className="flex items-center gap-1 font-black text-[#0b0c01] text-lg">
+                14% <ArrowUpRight className="w-4 h-4 bg-white rounded-full p-0.5" />
+              </div>
+              <div className="text-[#0b0c01]/60 text-xs font-bold">Avg month score</div>
+            </div>
+            {bankDetails && (
+              <button className="bg-[#0b0c01] text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black/80 transition-colors flex items-center gap-1.5 shadow-xl">
+                <Download className="w-3 h-3" /> Withdraw
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 4. Bank Settings (White Complex Card) */}
+        <div className="lg:col-span-2 xl:col-span-2 bg-white border border-black/5 rounded-[32px] p-6 shadow-xl flex flex-col md:flex-row gap-6">
+          {/* Left Timeline Side */}
+          <div className="w-full md:w-1/3 border-r border-black/5 pr-6 flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-[#a0f212] flex items-center justify-center text-[#0b0c01] shrink-0">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <h2 className="text-[#0b0c01] font-extrabold text-lg leading-tight">Bank<br/>Setup</h2>
+            </div>
+
+            <div className="relative flex-1 ml-4 mt-2 border-l-2 border-black/5 space-y-8 pb-4">
+              <div className="relative pl-6">
+                <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full border-2 ${bankDetails ? 'bg-[#a0f212] border-[#a0f212]' : 'bg-white border-black/20'}`} />
+                <h3 className="text-xs font-extrabold text-[#0b0c01]">Profile Linked</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-1">Host ID generated</p>
+              </div>
+              <div className="relative pl-6">
+                <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full border-2 ${bankDetails ? 'bg-[#a0f212] border-[#a0f212]' : 'bg-white border-black/20'}`} />
+                <h3 className="text-xs font-extrabold text-[#0b0c01]">Bank Details</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-1">Submit your account</p>
+              </div>
+              <div className="relative pl-6">
+                <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full border-2 ${bankDetails ? 'bg-[#a78bfa] border-[#a78bfa]' : 'bg-white border-black/20'}`} />
+                <h3 className="text-xs font-extrabold text-[#0b0c01]">Verification</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold mt-1">Pending admin check</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Form Side */}
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-2xl p-5 relative overflow-hidden group flex-1 flex flex-col justify-center">
+               <BankDetailsForm form={form} isLoading={isLoading} isEdit={isEdit} onChange={handleChange} onSubmit={handleSubmit} />
+            </div>
+          </div>
+        </div>
+
       </div>
-
-      <BankDetailsForm form={form} isLoading={isLoading} isEdit={isEdit} onChange={handleChange} onSubmit={handleSubmit} />
-
-      {bankDetails && (
-        <Card className="border-border/40 rounded-2xl bg-card">
-          <CardHeader>
-            <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-              <History className="h-4 w-4 text-primary" /> Linked Account Summary
-            </CardTitle>
-            <CardDescription className="text-xs">Your current linked bank account on file.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-              <div>
-                <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">Bank</p>
-                <p className="font-bold mt-1">{bankDetails.bankName}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">Profile ID</p>
-                <p className="font-mono font-semibold mt-1 truncate">{bankDetails.hostProfileId}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">Last Updated</p>
-                <p className="font-bold mt-1">{new Date(bankDetails.updatedAt).toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
     </div>
   );
 }

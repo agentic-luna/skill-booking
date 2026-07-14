@@ -396,4 +396,70 @@ export class AdminController {
       next(error);
     }
   }
+
+  static async getEditRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requests = await prisma.editRequest.findMany({
+        where: { status: 'PENDING' },
+        include: {
+          event: true,
+          host: { include: { user: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      return ApiResponse.success(res, requests);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async approveEditRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const editRequest = await prisma.editRequest.findUnique({ where: { id } });
+      
+      if (!editRequest || editRequest.status !== 'PENDING') {
+        throw new BadRequestError('Invalid or already processed edit request.');
+      }
+
+      await prisma.$transaction(async (tx) => {
+        // 1. Mark request as APPROVED
+        await tx.editRequest.update({
+          where: { id },
+          data: { status: 'APPROVED' }
+        });
+
+        // 2. Change Event status back to PENDING so host can edit it
+        await tx.event.update({
+          where: { id: editRequest.eventId },
+          data: { status: 'PENDING' }
+        });
+      });
+
+      return ApiResponse.success(res, { message: 'Edit request approved. Event is now unlocked.' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async rejectEditRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const editRequest = await prisma.editRequest.findUnique({ where: { id } });
+      
+      if (!editRequest || editRequest.status !== 'PENDING') {
+        throw new BadRequestError('Invalid or already processed edit request.');
+      }
+
+      await prisma.editRequest.update({
+        where: { id },
+        data: { status: 'REJECTED' }
+      });
+
+      return ApiResponse.success(res, { message: 'Edit request rejected.' });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+

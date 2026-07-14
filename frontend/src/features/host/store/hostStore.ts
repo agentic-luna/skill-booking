@@ -34,6 +34,7 @@ interface HostState {
   createEvent: (payload: CreateEventPayload) => Promise<CreatedEvent>;
   updateEvent: (id: string, payload: any) => Promise<any>;
   deleteEvent: (id: string) => Promise<any>;
+  requestEditAccess: (eventId: string, reason?: string) => Promise<any>;
   myEvents: any[];
   fetchMyEvents: () => Promise<void>;
 
@@ -172,6 +173,18 @@ export const useHostStore = create<HostState>((set) => ({
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;
+    }
+  },
+
+  requestEditAccess: async (eventId, reason) => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await hostApi.requestEditAccess(eventId, reason);
+      set({ isLoading: false });
+      return data;
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      throw error;
     }
   },
 

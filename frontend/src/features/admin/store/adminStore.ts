@@ -50,6 +50,13 @@ interface AdminState {
   fetchEventQueue: () => Promise<void>;
   approveEvent: (eventId: string, payload: ApproveEventPayload) => Promise<ApproveEventResult>;
   declineEvent: (eventId: string) => Promise<any>;
+  resolveRefund: (refundId: string, action: "approve" | "decline") => Promise<any>;
+
+  // Edit Requests
+  editRequests: any[];
+  fetchEditRequests: () => Promise<void>;
+  approveEditRequest: (id: string) => Promise<any>;
+  rejectEditRequest: (id: string) => Promise<any>;
 
   // Finance & Ledger
   financeLedger: FinanceLedger | null;
@@ -274,6 +281,25 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
   notifyHost: (hostId, subject, bodyContent) => withLoading(set, async () => {
     const result = await api.notifyHost(hostId, { subject, bodyContent });
+    return result;
+  }),
+
+  // ── Edit Requests ──────────────────────────────────────────────────────
+
+  fetchEditRequests: () => withLoading(set, async () => {
+    const requests = await api.getEditRequests();
+    set({ editRequests: requests });
+  }),
+
+  approveEditRequest: (id) => withLoading(set, async () => {
+    const result = await api.approveEditRequest(id);
+    set({ editRequests: get().editRequests.filter((r) => r.id !== id) });
+    return result;
+  }),
+
+  rejectEditRequest: (id) => withLoading(set, async () => {
+    const result = await api.rejectEditRequest(id);
+    set({ editRequests: get().editRequests.filter((r) => r.id !== id) });
     return result;
   }),
 

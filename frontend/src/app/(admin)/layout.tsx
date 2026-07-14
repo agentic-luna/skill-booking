@@ -32,7 +32,7 @@ interface SidebarProps {
 
 function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarProps) {
   return (
-    <div className="flex flex-col h-full bg-[#0b0c01] text-white justify-between py-8 px-6 overflow-y-scroll [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#a0f212]/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-[#a0f212]">
+    <div className="flex flex-col h-full bg-[#0d1e17] text-white justify-between py-8 px-6 overflow-y-scroll [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#a0f212]/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-[#a0f212]">
       <div className="space-y-8 flex flex-col">
 
         {/* Brand / Logo */}

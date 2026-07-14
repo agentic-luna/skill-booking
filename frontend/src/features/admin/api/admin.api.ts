@@ -108,6 +108,15 @@ export const declineEvent = (eventId: string) =>
 export const getRefundRequests = () =>
   request<ApiData<any[]>>("/admin/finance/refund-requests").then(r => r.data);
 
+export const getEditRequests = () =>
+  request<ApiData<any[]>>("/admin/edit-requests").then(r => r.data);
+
+export const approveEditRequest = (id: string) =>
+  request<ApiData<any>>(`/admin/edit-requests/${id}/approve`, { method: "PUT" }).then(r => r.data);
+
+export const rejectEditRequest = (id: string) =>
+  request<ApiData<any>>(`/admin/edit-requests/${id}/reject`, { method: "PUT" }).then(r => r.data);
+
 export const approveRefundRequest = (refundId: string) =>
   request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/approve`, { method: "PUT" }).then(r => r.data);
 

@@ -182,4 +182,52 @@ export class EventsController {
       next(error);
     }
   }
+
+  static async requestEdit(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      // 1. Fetch host profile
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+
+      // 2. Fetch the event
+      const event = await prisma.event.findUnique({
+        where: { id },
+      });
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Event not found.' },
+        });
+      }
+
+      // 3. Verify ownership
+      if (event.hostId !== hostProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { message: 'Access denied. You do not own this event.' },
+        });
+      }
+
+      // 4. Create edit request
+      const editRequest = await prisma.editRequest.create({
+        data: {
+          eventId: event.id,
+          hostId: hostProfile.id,
+          reason: reason || null,
+          status: 'PENDING',
+        }
+      });
+
+      return ApiResponse.success(res, { message: 'Edit request submitted.', editRequest });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

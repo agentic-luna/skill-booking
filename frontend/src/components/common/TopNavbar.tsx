@@ -26,7 +26,7 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
   }, []);
 
   // Check if we should hide the navbar on this route
-  if (hiddenRoutes.includes(pathname) || pathname.startsWith("/admin")) {
+  if (hiddenRoutes.includes(pathname) || pathname.startsWith("/admin") || pathname.startsWith("/host") || pathname.startsWith("/dashboard")) {
     return null;
   }
 

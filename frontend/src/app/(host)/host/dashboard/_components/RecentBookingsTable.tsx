@@ -1,62 +1,113 @@
 import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import type { DashboardStats } from "@/features/host/api/types";
 
 interface RecentBookingsTableProps {
   loading: boolean;
-  bookings: NonNullable<DashboardStats["recentBookings"]>;
+  bookings: any[];
+}
+
+function generateGradient(seed: string) {
+  const hash = Array.from(seed).reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+  const hue1 = Math.abs(hash % 360);
+  const hue2 = (hue1 + 40) % 360;
+  return `linear-gradient(135deg, hsl(${hue1}, 80%, 65%), hsl(${hue2}, 80%, 60%))`;
 }
 
 export default function RecentBookingsTable({ loading, bookings }: RecentBookingsTableProps) {
   return (
-    <Card className="border-border/40 rounded-2xl bg-card">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <div>
-          <CardTitle className="text-sm font-bold">Recent Roster Activity</CardTitle>
-          <CardDescription className="text-xs">Quick review of incoming learner registrations.</CardDescription>
-        </div>
-        <Link href="/host/participants">
-          <Button size="sm" variant="ghost" className="text-xs">
-            Roster Board <ArrowRight className="ml-1 h-3.5 w-3.5" />
-          </Button>
+    <Card className="border border-black/5 rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-6 px-8 pt-8">
+        <CardTitle className="text-xl font-extrabold text-[#0b0c01]">Latest Orders</CardTitle>
+        <Link href="/host/participants" className="text-sm font-bold text-muted-foreground hover:text-[#0b0c01] flex items-center gap-1 transition-colors">
+          View All <ExternalLink className="w-4 h-4 ml-1" />
         </Link>
       </CardHeader>
-      <CardContent className="p-0">
-        {loading ? (
-          <div className="p-6 space-y-3 animate-pulse">
-            {[1, 2, 3].map((i) => <div key={i} className="h-8 bg-muted rounded-lg" />)}
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No bookings recorded yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-t">
-              <thead>
-                <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                  <th className="py-3 px-4">Learner</th>
-                  <th className="py-3 px-4">Workshop</th>
-                  <th className="py-3 px-4">Paid</th>
-                  <th className="py-3 px-4">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.slice(0, 5).map((bk) => (
-                  <tr key={bk.id} className="border-b hover:bg-muted/30">
-                    <td className="py-3 px-4 font-bold">{bk.clientName}</td>
-                    <td className="py-3 px-4 truncate max-w-[200px]">{bk.eventTitle}</td>
-                    <td className="py-3 px-4 font-semibold text-foreground">${bk.amountPaid}</td>
-                    <td className="py-3 px-4 text-muted-foreground">
-                      {new Date(bk.bookingDate).toLocaleDateString()}
+      
+      <CardContent className="px-0 pb-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs uppercase bg-black/[0.02] text-muted-foreground font-extrabold tracking-wider border-y border-black/5">
+              <tr>
+                <th className="px-8 py-5">Learner</th>
+                <th className="px-8 py-5">Workshop</th>
+                <th className="px-8 py-5">Date</th>
+                <th className="px-8 py-5">Amount</th>
+                <th className="px-8 py-5">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                Array(4).fill(0).map((_, i) => (
+                  <tr key={i} className="border-b border-black/5 animate-pulse">
+                    <td className="px-8 py-5 flex items-center space-x-4">
+                      <div className="h-10 w-10 rounded-xl bg-black/5" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-24 bg-black/5 rounded-md" />
+                        <div className="h-3 w-32 bg-black/5 rounded-md" />
+                      </div>
                     </td>
+                    <td className="px-8 py-5"><div className="h-4 w-32 bg-black/5 rounded-md" /></td>
+                    <td className="px-8 py-5"><div className="h-4 w-24 bg-black/5 rounded-md" /></td>
+                    <td className="px-8 py-5"><div className="h-4 w-16 bg-black/5 rounded-md" /></td>
+                    <td className="px-8 py-5"><div className="h-6 w-20 bg-black/5 rounded-full" /></td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              ) : bookings.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-8 py-16 text-center text-muted-foreground font-medium">
+                    No recent bookings found. Your latest orders will appear here.
+                  </td>
+                </tr>
+              ) : (
+                bookings.map((booking) => {
+                  const user = booking.client?.user;
+                  const name = user ? `${user.firstName} ${user.lastName}` : "Unknown User";
+                  const initial = name.charAt(0).toUpperCase();
+                  const event = booking.event;
+                  
+                  return (
+                    <tr key={booking.id} className="border-b border-black/5 hover:bg-black/[0.01] transition-colors group">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center space-x-4">
+                          <div 
+                            className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm transform group-hover:scale-105 transition-transform"
+                            style={{ background: generateGradient(name) }}
+                          >
+                            {initial}
+                          </div>
+                          <div>
+                            <div className="font-bold text-[#0b0c01]">{name}</div>
+                            <div className="text-xs text-muted-foreground font-medium">{user?.email || "No email"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 font-semibold text-[#0b0c01] max-w-[200px] truncate" title={event?.title}>
+                        {event?.title || "Unknown Event"}
+                      </td>
+                      <td className="px-8 py-5 text-muted-foreground font-medium">
+                        {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
+                      </td>
+                      <td className="px-8 py-5 font-extrabold text-[#0b0c01]">
+                        ${booking.amount}
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                          booking.status === "CONFIRMED" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" :
+                          booking.status === "PENDING" ? "bg-amber-500/10 text-amber-600 border border-amber-500/20" :
+                          "bg-red-500/10 text-red-600 border border-red-500/20"
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
   );
