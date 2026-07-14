@@ -28,7 +28,7 @@ export default function PayoutTable({
 }: PayoutTableProps) {
   return (
     <Card className="border-border/40 bg-card rounded-2xl shadow-xs overflow-hidden">
-      <CardHeader className="pb-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <CardHeader className="pb-3 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <CardTitle className="text-sm font-bold">Host Payout Disbursement Control</CardTitle>
           <CardDescription className="text-xs">Payout held ledger balances to registered hosts bank accounts.</CardDescription>
@@ -45,7 +45,7 @@ export default function PayoutTable({
             />
           </div>
           <select
-            className="h-9 rounded-xl border border-border/40 bg-card px-3 text-xs outline-none focus:ring-1 focus:ring-primary/20 text-muted-foreground font-semibold shrink-0 cursor-pointer"
+            className="h-9 rounded-xl border border-black/5 dark:border-white/5 bg-card px-3 text-xs outline-none focus:ring-1 focus:ring-primary/20 text-muted-foreground font-semibold shrink-0 cursor-pointer"
             value={kycFilter}
             onChange={(e) => onKycFilterChange(e.target.value)}
           >
@@ -60,7 +60,7 @@ export default function PayoutTable({
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
             <thead>
-              <tr className="border-b bg-muted/20 font-semibold text-muted-foreground">
+              <tr className="border-b border-black/5 dark:border-white/5 bg-muted/20 font-semibold text-muted-foreground">
                 <th className="py-3 px-4">Host Details</th>
                 <th className="py-3 px-4">Bank Routing Details</th>
                 <th className="py-3 px-4">KYC State</th>
@@ -82,7 +82,7 @@ export default function PayoutTable({
                   const canPayout = !!bank && profile?.kycStatus === "APPROVED";
                   
                   return (
-                    <tr key={host.id} className="border-b hover:bg-muted/10 last:border-none">
+                    <tr key={host.id} className="border-b border-black/5 dark:border-white/5 hover:bg-muted/10 last:border-none">
                       <td className="py-3.5 px-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-foreground">{host.firstName} {host.lastName}</span>
@@ -95,7 +95,7 @@ export default function PayoutTable({
                             <span className="font-semibold text-foreground flex items-center gap-1">
                               <Landmark className="h-3 w-3 text-muted-foreground" /> {bank.bankName}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-mono">
+                            <span className="text-[10px] text-muted-foreground font-mono break-all">
                               A/C: {bank.accountHolderName} | IFSC: {bank.ifscCode}
                             </span>
                           </div>
@@ -116,14 +116,14 @@ export default function PayoutTable({
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <Button 
-                          variant={canPayout ? "default" : "outline"}
+                          variant="default"
                           size="sm"
                           disabled={!canPayout}
                           onClick={() => {
                             onSelectHost(host);
                             onOpenConfirm(true);
                           }}
-                          className="h-8 rounded-xl font-bold text-xs"
+                          className={`h-8 rounded-xl font-bold text-xs ${!canPayout ? "opacity-40 grayscale" : "shadow-md hover:shadow-lg transition-all"}`}
                         >
                           <CreditCard className="h-3.5 w-3.5 mr-1" />
                           Disburse Escrow

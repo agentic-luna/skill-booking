@@ -34,10 +34,14 @@ export default function BookingsPage() {
       router.push("/host/dashboard");
       return;
     }
+    if (user?.role === "admin") {
+      router.push("/dashboard/profile");
+      return;
+    }
     fetchBookings();
   }, [isAuthenticated, user, router, fetchBookings]);
 
-  if (!isAuthenticated || user?.role === "host") {
+  if (!isAuthenticated || user?.role === "host" || user?.role === "admin") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <div className="animate-pulse flex flex-col items-center space-y-4">

@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Landmark, Brush } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Landmark, Brush, Save, Loader2 } from "lucide-react";
 import { useAdminStore } from "@/features/admin/store/adminStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 
@@ -13,7 +9,6 @@ export default function PlatformTab() {
 
   useEffect(() => { fetchPlatformSettings(); }, []);
 
-  // Derive local state from API data
   const findVal = (key: string, fallback: string) =>
     platformSettings.find((s) => s.key === key)?.value ?? fallback;
 
@@ -23,7 +18,6 @@ export default function PlatformTab() {
   const [platformName, setPlatformName] = useState("BookMySkill");
   const [slogan, setSlogan] = useState("Empowering experts, expanding learners.");
 
-  // Sync local state once platform settings arrive
   useEffect(() => {
     if (platformSettings.length === 0) return;
     setCommissionRate(Number(findVal("commissionRate", "15")));
@@ -59,70 +53,140 @@ export default function PlatformTab() {
   return (
     <div className="space-y-6">
 
-      {/* Financials */}
-      <Card className="border-border/40 bg-card rounded-2xl">
-        <form onSubmit={handleSaveFinancials}>
-          <CardHeader>
-            <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-              <Landmark className="h-4 w-4 text-primary" /> Commission & Refund Rules
-            </CardTitle>
-            <CardDescription className="text-xs">Manage transaction payouts and learner ticket refund policies.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <Label>Platform Commission Rate</Label>
-                <span className="text-primary font-bold text-sm">{commissionRate}%</span>
+      {/* Financial Rules Card */}
+      <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/10 transition-all duration-500" />
+        <form onSubmit={handleSaveFinancials} className="relative z-10">
+          {/* Card Header */}
+          <div className="px-8 pt-8 pb-6 border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#0b0c01] p-2.5 rounded-2xl shadow-sm">
+                <Landmark className="h-5 w-5 text-[#a0f212]" />
               </div>
-              <input type="range" min={5} max={30} step={1} value={commissionRate} onChange={(e) => setCommissionRate(Number(e.target.value))} className="w-full accent-primary h-1 bg-muted rounded-lg appearance-none cursor-pointer" />
-              <p className="text-[10px] text-muted-foreground">Marketplace fee deducted from host sales before payout.</p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <Label>Refund Cancellation Window</Label>
-                <span className="text-primary font-bold text-sm">{refundWindow} Hours</span>
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">Commission & Refund Rules</h2>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">Manage transaction payouts and learner ticket refund policies.</p>
               </div>
-              <input type="range" min={12} max={72} step={12} value={refundWindow} onChange={(e) => setRefundWindow(Number(e.target.value))} className="w-full accent-primary h-1 bg-muted rounded-lg appearance-none cursor-pointer" />
-              <p className="text-[10px] text-muted-foreground">Duration prior to class start where students can get full cancel-refunds.</p>
+            </div>
+          </div>
+
+          {/* Card Body */}
+          <div className="px-8 py-6 space-y-8">
+
+            {/* Commission Rate Slider */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-bold text-foreground">Platform Commission Rate</label>
+                <span className="bg-[#0b0c01] text-[#a0f212] font-black text-sm px-4 py-1.5 rounded-full shadow-sm">{commissionRate}%</span>
+              </div>
+              <input
+                type="range" min={5} max={30} step={1} value={commissionRate}
+                onChange={(e) => setCommissionRate(Number(e.target.value))}
+                className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer accent-[#a0f212]"
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
+                <span>5% (Min)</span><span>Marketplace fee from host sales before payout</span><span>30% (Max)</span>
+              </div>
             </div>
 
-            <div className="space-y-1.5 max-w-xs">
-              <Label htmlFor="minPayout" className="text-xs">Minimum Withdrawable Balance (USD)</Label>
-              <Input id="minPayout" type="number" className="h-9 text-xs" value={minPayout} onChange={(e) => setMinPayout(Number(e.target.value))} />
-              <p className="text-[10px] text-muted-foreground">Minimum account balance threshold for payout transfers.</p>
+            {/* Refund Window Slider */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-bold text-foreground">Refund Cancellation Window</label>
+                <span className="bg-[#0b0c01] text-[#a0f212] font-black text-sm px-4 py-1.5 rounded-full shadow-sm">{refundWindow}h</span>
+              </div>
+              <input
+                type="range" min={12} max={72} step={12} value={refundWindow}
+                onChange={(e) => setRefundWindow(Number(e.target.value))}
+                className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer accent-[#a0f212]"
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
+                <span>12h</span><span>Time before class start for full cancel-refund</span><span>72h</span>
+              </div>
             </div>
-          </CardContent>
-          <CardFooter className="justify-end border-t pt-4">
-            <Button type="submit" className="text-xs h-9 rounded-lg px-6" disabled={loading}>{loading ? "Applying..." : "Save Financial Rules"}</Button>
-          </CardFooter>
-        </form>
-      </Card>
 
-      {/* Branding */}
-      <Card className="border-border/40 bg-card rounded-2xl">
-        <form onSubmit={handleSaveBranding}>
-          <CardHeader>
-            <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-              <Brush className="h-4 w-4 text-primary" /> Platform Branding (CMS)
-            </CardTitle>
-            <CardDescription className="text-xs">Configure site assets, landing copy and tags visible to clients.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="platName" className="text-xs">Platform Display Name</Label>
-              <Input id="platName" className="h-9 text-xs" value={platformName} onChange={(e) => setPlatformName(e.target.value)} />
+            {/* Min Payout Input */}
+            <div className="space-y-2 max-w-xs">
+              <label className="text-sm font-bold text-foreground">Min. Withdrawable Balance (USD)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">$</span>
+                <input
+                  type="number"
+                  value={minPayout}
+                  onChange={(e) => setMinPayout(Number(e.target.value))}
+                  className="w-full pl-8 pr-4 h-12 rounded-2xl border border-black/10 dark:border-white/10 bg-muted/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground font-medium">Minimum account balance threshold for payout transfers.</p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="slogan" className="text-xs">Landing Page Slogan</Label>
-              <Input id="slogan" className="h-9 text-xs" value={slogan} onChange={(e) => setSlogan(e.target.value)} />
-            </div>
-          </CardContent>
-          <CardFooter className="justify-end border-t pt-4">
-            <Button type="submit" className="text-xs h-9 rounded-lg px-6" disabled={loading}>{loading ? "Saving..." : "Apply Branding CMS"}</Button>
-          </CardFooter>
+          </div>
+
+          {/* Card Footer */}
+          <div className="px-8 py-5 border-t border-black/5 dark:border-white/5 flex justify-end bg-muted/20 rounded-b-[32px]">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 bg-[#0b0c01] text-white hover:bg-[#1a1c02] px-8 py-3 rounded-full font-bold text-sm shadow-xl transition-all disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Save Financial Rules
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
+
+      {/* Branding Card */}
+      <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-[#a0f212]/5 rounded-full blur-3xl pointer-events-none group-hover:bg-[#a0f212]/10 transition-all duration-500" />
+        <form onSubmit={handleSaveBranding} className="relative z-10">
+          {/* Card Header */}
+          <div className="px-8 pt-8 pb-6 border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#a0f212] p-2.5 rounded-2xl shadow-sm">
+                <Brush className="h-5 w-5 text-[#0b0c01]" />
+              </div>
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">Platform Branding (CMS)</h2>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">Configure site assets, landing copy and tags visible to clients.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Body */}
+          <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">Platform Display Name</label>
+              <input
+                type="text"
+                value={platformName}
+                onChange={(e) => setPlatformName(e.target.value)}
+                className="w-full px-4 h-12 rounded-2xl border border-black/10 dark:border-white/10 bg-muted/30 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">Landing Page Slogan</label>
+              <input
+                type="text"
+                value={slogan}
+                onChange={(e) => setSlogan(e.target.value)}
+                className="w-full px-4 h-12 rounded-2xl border border-black/10 dark:border-white/10 bg-muted/30 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+              />
+            </div>
+          </div>
+
+          {/* Card Footer */}
+          <div className="px-8 py-5 border-t border-black/5 dark:border-white/5 flex justify-end bg-muted/20 rounded-b-[32px]">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 bg-[#0b0c01] text-white hover:bg-[#1a1c02] px-8 py-3 rounded-full font-bold text-sm shadow-xl transition-all disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Apply Branding CMS
+            </button>
+          </div>
+        </form>
+      </div>
 
     </div>
   );

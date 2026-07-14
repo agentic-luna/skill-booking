@@ -80,25 +80,23 @@ export default function FinancePayoutsPage() {
     <div className="space-y-6">
       
       {/* Page Header */}
-      <div className="flex justify-between items-center pb-4 border-b">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-primary" /> Finance & Payouts Ledger
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl lg:text-5xl font-medium tracking-tight text-foreground leading-[1.1]">
+            <span className="inline-flex items-center justify-center bg-card shadow-sm border border-black/5 dark:border-white/5 rounded-full p-2 mx-1 align-middle"><Wallet className="w-6 h-6 text-foreground" /></span> Platform <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a0f212] to-emerald-400 font-bold drop-shadow-[0_0_15px_rgba(160,242,18,0.2)]">Ledger</span>
           </h1>
-          <p className="text-sm text-muted-foreground">Monitor platform financial statistics, refund liability, and release host escrow transfers.</p>
+          <p className="text-muted-foreground font-medium pl-2">Monitor platform financial statistics, refund liability, and release host escrow transfers.</p>
         </div>
         <Button 
-          variant="outline" 
-          size="sm" 
           onClick={() => {
             fetchFinanceLedger();
             fetchHosts();
           }}
-          className="rounded-xl flex items-center gap-1.5"
           disabled={loading}
+          className="rounded-full px-6 py-6 font-bold shadow-xl transition-all duration-300 bg-[#0b0c01] text-white hover:bg-[#1a1c02] border-none flex-shrink-0"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh Stats
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          Sync Ledger
         </Button>
       </div>
 
@@ -113,23 +111,23 @@ export default function FinancePayoutsPage() {
       <LedgerKPIs financeLedger={financeLedger} />
 
       {/* Tabs list toggle switcher */}
-      <div className="flex bg-muted/40 p-1 rounded-xl border border-border/20 w-fit">
+      <div className="flex bg-card p-1 rounded-full border border-black/5 dark:border-white/5 w-fit shadow-sm">
         <button
           onClick={() => setActiveTab("payouts")}
-          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
             activeTab === "payouts" 
-              ? "bg-card text-foreground shadow-xs border border-border/20" 
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-[#0b0c01] text-white shadow-md" 
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
           Payout Disbursements
         </button>
         <button
           onClick={() => setActiveTab("refunds")}
-          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
             activeTab === "refunds" 
-              ? "bg-card text-foreground shadow-xs border border-border/20" 
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-[#0b0c01] text-white shadow-md" 
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
           Refund Requests

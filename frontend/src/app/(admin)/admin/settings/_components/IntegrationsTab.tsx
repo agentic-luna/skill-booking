@@ -1,30 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { KeyRound, Plus, Loader2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { KeyRound, Plus, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useAdminStore } from "@/features/admin/store/adminStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import type { ServiceName } from "@/features/admin/api/types";
 
-const SERVICE_META: Record<ServiceName, { label: string; color: string }> = {
-  TWILIO:   { label: "Twilio SMS",           color: "bg-red-500/10 text-red-600" },
-  SENDGRID: { label: "SendGrid Email",       color: "bg-blue-500/10 text-blue-600" },
-  META_WA:  { label: "Meta WhatsApp",        color: "bg-green-500/10 text-green-600" },
-  RAZORPAY: { label: "Razorpay Payments",    color: "bg-violet-500/10 text-violet-600" },
+const SERVICE_META: Record<ServiceName, { label: string; color: string; bg: string }> = {
+  TWILIO:   { label: "Twilio SMS",        color: "text-red-600",    bg: "bg-red-500/10" },
+  SENDGRID: { label: "SendGrid Email",    color: "text-blue-600",   bg: "bg-blue-500/10" },
+  META_WA:  { label: "Meta WhatsApp",     color: "text-green-700",  bg: "bg-green-500/10" },
+  RAZORPAY: { label: "Razorpay Payments", color: "text-violet-600", bg: "bg-violet-500/10" },
+};
+
+const setupFields: Record<ServiceName, Array<{ key: string; label: string; type?: string }>> = {
+  TWILIO:   [{ key: "accountSid", label: "Account SID" }, { key: "authToken", label: "Auth Token", type: "password" }, { key: "fromNumber", label: "From Number" }],
+  SENDGRID: [{ key: "apiKey", label: "API Key", type: "password" }, { key: "fromEmail", label: "From Email" }, { key: "fromName", label: "From Name" }],
+  META_WA:  [{ key: "accessToken", label: "Access Token", type: "password" }, { key: "phoneNumberId", label: "Phone Number ID" }, { key: "businessAccountId", label: "Business Account ID" }],
+  RAZORPAY: [{ key: "keyId", label: "Key ID" }, { key: "keySecret", label: "Key Secret", type: "password" }, { key: "webhookSecret", label: "Webhook Secret", type: "password" }],
 };
 
 type SetupMode = ServiceName | null;
 
 export default function IntegrationsTab() {
   const showAlert = useAlertStore((s) => s.showAlert);
-  const {
-    integrations, fetchIntegrations, updateIntegration,
-    setupTwilio, setupSendgrid, setupMetaWa, setupRazorpay,
-    loading,
-  } = useAdminStore();
+  const { integrations, fetchIntegrations, updateIntegration, setupTwilio, setupSendgrid, setupMetaWa, setupRazorpay, loading } = useAdminStore();
 
   const [setupMode, setSetupMode] = useState<SetupMode>(null);
   const [form, setForm] = useState<Record<string, string>>({});
@@ -46,18 +45,10 @@ export default function IntegrationsTab() {
     const env = (form.environment as "SANDBOX" | "PRODUCTION") || "SANDBOX";
     try {
       switch (setupMode) {
-        case "TWILIO":
-          await setupTwilio({ environment: env, accountSid: form.accountSid, authToken: form.authToken, fromNumber: form.fromNumber });
-          break;
-        case "SENDGRID":
-          await setupSendgrid({ environment: env, apiKey: form.apiKey, fromEmail: form.fromEmail, fromName: form.fromName });
-          break;
-        case "META_WA":
-          await setupMetaWa({ environment: env, accessToken: form.accessToken, phoneNumberId: form.phoneNumberId, businessAccountId: form.businessAccountId });
-          break;
-        case "RAZORPAY":
-          await setupRazorpay({ environment: env, keyId: form.keyId, keySecret: form.keySecret, webhookSecret: form.webhookSecret });
-          break;
+        case "TWILIO":   await setupTwilio({ environment: env, accountSid: form.accountSid, authToken: form.authToken, fromNumber: form.fromNumber }); break;
+        case "SENDGRID": await setupSendgrid({ environment: env, apiKey: form.apiKey, fromEmail: form.fromEmail, fromName: form.fromName }); break;
+        case "META_WA":  await setupMetaWa({ environment: env, accessToken: form.accessToken, phoneNumberId: form.phoneNumberId, businessAccountId: form.businessAccountId }); break;
+        case "RAZORPAY": await setupRazorpay({ environment: env, keyId: form.keyId, keySecret: form.keySecret, webhookSecret: form.webhookSecret }); break;
       }
       showAlert("Integration Configured", `${SERVICE_META[setupMode].label} credentials saved.`, "success");
       setSetupMode(null);
@@ -65,94 +56,156 @@ export default function IntegrationsTab() {
     } catch { /* store error */ }
   };
 
-  const setupFields: Record<ServiceName, Array<{ key: string; label: string; type?: string }>> = {
-    TWILIO:   [{ key: "accountSid", label: "Account SID" }, { key: "authToken", label: "Auth Token", type: "password" }, { key: "fromNumber", label: "From Number" }],
-    SENDGRID: [{ key: "apiKey", label: "API Key", type: "password" }, { key: "fromEmail", label: "From Email" }, { key: "fromName", label: "From Name" }],
-    META_WA:  [{ key: "accessToken", label: "Access Token", type: "password" }, { key: "phoneNumberId", label: "Phone Number ID" }, { key: "businessAccountId", label: "Business Account ID" }],
-    RAZORPAY: [{ key: "keyId", label: "Key ID" }, { key: "keySecret", label: "Key Secret", type: "password" }, { key: "webhookSecret", label: "Webhook Secret", type: "password" }],
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
 
-      {/* Existing integrations list */}
-      <Card className="border-border/40 bg-card rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-            <KeyRound className="h-4 w-4 text-primary" /> Active Integrations
-          </CardTitle>
-          <CardDescription className="text-xs">Manage third-party service credentials. Secrets are masked.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Active Integrations Card */}
+      <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 px-8 pt-8 pb-6 border-b border-black/5 dark:border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#0b0c01] p-2.5 rounded-2xl shadow-sm">
+              <KeyRound className="h-5 w-5 text-[#a0f212]" />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-foreground">Active Integrations</h2>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Manage third-party service credentials. Secrets are masked.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 px-8 py-6 space-y-3">
           {integrations.length === 0 && !loading && (
-            <div className="py-8 text-center text-sm text-muted-foreground">No integrations configured yet.</div>
+            <div className="py-16 text-center">
+              <KeyRound className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground font-medium">No integrations configured yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Use the form below to add your first integration.</p>
+            </div>
           )}
+
           {integrations.map((cfg) => {
-            const meta = SERVICE_META[cfg.serviceName] ?? { label: cfg.serviceName, color: "bg-muted text-foreground" };
+            const meta = SERVICE_META[cfg.serviceName] ?? { label: cfg.serviceName, color: "text-foreground", bg: "bg-muted" };
             return (
-              <div key={cfg.id} className="flex items-center justify-between border border-border/40 rounded-xl p-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase ${meta.color}`}>{meta.label}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase">{cfg.environment}</span>
+              <div key={cfg.id} className="flex items-center justify-between bg-muted/20 hover:bg-muted/30 border border-black/5 dark:border-white/5 rounded-[20px] px-5 py-4 transition-all">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${meta.bg} ${meta.color}`}>
+                      {meta.label}
+                    </span>
+                    <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase ${cfg.environment === "PRODUCTION" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
+                      {cfg.environment === "PRODUCTION" ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Clock className="h-2.5 w-2.5" />}
+                      {cfg.environment}
+                    </span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Updated: {new Date(cfg.updatedAt).toLocaleString()}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    Updated: {new Date(cfg.updatedAt).toLocaleString()}
+                  </p>
                 </div>
                 <Switch checked={cfg.isActive} onCheckedChange={(v) => handleToggle(cfg.serviceName, v)} />
               </div>
             );
           })}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Setup new integration */}
-      <Card className="border-border/40 bg-card rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-            <Plus className="h-4 w-4 text-primary" /> Setup New Integration
-          </CardTitle>
-          <CardDescription className="text-xs">Select a service and provide credentials to configure a new integration.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Service selector */}
+      {/* Setup New Integration Card */}
+      <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-[#a0f212]/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 px-8 pt-8 pb-6 border-b border-black/5 dark:border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#a0f212] p-2.5 rounded-2xl shadow-sm">
+              <Plus className="h-5 w-5 text-[#0b0c01]" />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-foreground">Setup New Integration</h2>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Select a service and provide credentials to configure a new integration.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 px-8 py-6 space-y-6">
+          {/* Service selector pills */}
           <div className="flex flex-wrap gap-2">
             {(Object.keys(SERVICE_META) as ServiceName[]).map((svc) => (
-              <Button key={svc} type="button" variant={setupMode === svc ? "default" : "outline"} size="sm" className="text-xs h-8 rounded-lg" onClick={() => { setSetupMode(svc); setForm({ environment: "SANDBOX" }); }}>
+              <button
+                key={svc}
+                type="button"
+                onClick={() => { setSetupMode(svc); setForm({ environment: "SANDBOX" }); }}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
+                  setupMode === svc
+                    ? "bg-[#0b0c01] text-white border-transparent shadow-md"
+                    : "bg-muted/30 text-muted-foreground border-black/10 hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
                 {SERVICE_META[svc].label}
-              </Button>
+              </button>
             ))}
           </div>
 
           {setupMode && (
-            <div className="border border-border/40 rounded-xl p-4 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Environment</Label>
+            <div className="rounded-[24px] border border-[#a0f212]/20 bg-[#a0f212]/5 p-6 space-y-5">
+              {/* Environment toggle */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-foreground">Environment</label>
                 <div className="flex gap-2">
                   {(["SANDBOX", "PRODUCTION"] as const).map((env) => (
-                    <Button key={env} type="button" size="sm" variant={form.environment === env ? "default" : "outline"} className="text-xs h-8" onClick={() => handleChange("environment", env)}>
+                    <button
+                      key={env}
+                      type="button"
+                      onClick={() => handleChange("environment", env)}
+                      className={`px-5 py-2 rounded-full text-xs font-bold transition-all border ${
+                        form.environment === env
+                          ? "bg-[#0b0c01] text-white border-transparent shadow-md"
+                          : "bg-white/50 text-muted-foreground border-black/10 hover:text-foreground"
+                      }`}
+                    >
                       {env}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               </div>
-              {setupFields[setupMode].map(({ key, label, type }) => (
-                <div key={key} className="space-y-1.5">
-                  <Label className="text-xs">{label}</Label>
-                  <Input type={type ?? "text"} className="h-9 text-xs" placeholder={label} value={form[key] ?? ""} onChange={(e) => handleChange(key, e.target.value)} />
-                </div>
-              ))}
+
+              {/* Dynamic credential fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {setupFields[setupMode].map(({ key, label, type }) => (
+                  <div key={key} className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">{label}</label>
+                    <input
+                      type={type ?? "text"}
+                      placeholder={label}
+                      value={form[key] ?? ""}
+                      onChange={(e) => handleChange(key, e.target.value)}
+                      className="w-full px-4 h-11 rounded-xl border border-black/10 dark:border-white/10 bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setSetupMode(null); setForm({}); }}
+                  className="px-5 py-2.5 rounded-full text-xs font-bold border border-black/10 hover:bg-muted transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSetup}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-[#0b0c01] text-white hover:bg-[#1a1c02] px-6 py-2.5 rounded-full font-bold text-xs shadow-md transition-all disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                  Configure {SERVICE_META[setupMode].label}
+                </button>
+              </div>
             </div>
           )}
-        </CardContent>
-        {setupMode && (
-          <CardFooter className="justify-end border-t pt-4 gap-2">
-            <Button type="button" variant="outline" className="text-xs h-9" onClick={() => { setSetupMode(null); setForm({}); }}>Cancel</Button>
-            <Button type="button" className="text-xs h-9 px-6 font-semibold" onClick={handleSetup} disabled={loading}>
-              {loading ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Saving...</> : `Configure ${SERVICE_META[setupMode].label}`}
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
+        </div>
+      </div>
 
     </div>
   );

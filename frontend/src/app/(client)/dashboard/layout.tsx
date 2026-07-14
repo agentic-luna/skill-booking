@@ -17,12 +17,21 @@ const DASHBOARD_LINKS = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   if (!mounted) return null;
+
+  const isAdmin = user?.role === "admin";
+
+  const visibleLinks = DASHBOARD_LINKS.filter((link) => {
+    if (isAdmin && (link.name === "Overview" || link.name === "My Tickets" || link.name === "Wishlist")) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] dark:bg-[#0a0a0a] flex flex-col pt-[104px]">
@@ -37,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             
             <nav className="flex flex-col gap-1">
-              {DASHBOARD_LINKS.map((link) => {
+              {visibleLinks.map((link) => {
                 const isActive = pathname === link.href;
                 const Icon = link.icon;
                 

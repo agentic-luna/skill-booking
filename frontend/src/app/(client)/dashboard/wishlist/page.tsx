@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 
 export default function WishlistPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { wishlist, fetchWishlist, removeFromWishlist, loading } = useClientStore();
 
   useEffect(() => {
@@ -21,8 +21,12 @@ export default function WishlistPage() {
       router.push("/login");
       return;
     }
+    if (user?.role === "admin") {
+      router.push("/dashboard/profile");
+      return;
+    }
     fetchWishlist();
-  }, [isAuthenticated, router, fetchWishlist]);
+  }, [isAuthenticated, user, router, fetchWishlist]);
 
   if (!isAuthenticated) {
     return (

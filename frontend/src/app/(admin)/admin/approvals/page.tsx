@@ -112,39 +112,37 @@ export default function AdminApprovalsPage() {
     <div className="space-y-6">
       
       {/* Page Header */}
-      <div className="flex justify-between items-center pb-4 border-b">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-            <CheckSquare className="h-6 w-6 text-primary" /> Program Approvals
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl lg:text-5xl font-medium tracking-tight text-foreground leading-[1.1]">
+            <span className="inline-flex items-center justify-center bg-card shadow-sm border border-black/5 dark:border-white/5 rounded-full p-2 mx-1 align-middle"><CheckSquare className="w-6 h-6 text-foreground" /></span> Program <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a0f212] to-emerald-400 font-bold drop-shadow-[0_0_15px_rgba(160,242,18,0.2)]">Approvals</span>
           </h1>
-          <p className="text-sm text-muted-foreground">Review and approve candidate class programs before they go live on explore feeds.</p>
+          <p className="text-muted-foreground font-medium pl-2">Review and approve candidate class programs before they go live on explore feeds.</p>
         </div>
         <Button 
-          variant="outline" 
-          size="sm" 
           onClick={fetchEventQueue}
-          className="rounded-xl flex items-center gap-1.5"
           disabled={loading}
+          className="rounded-full px-6 py-6 font-bold shadow-xl transition-all duration-300 bg-[#0b0c01] text-white hover:bg-[#1a1c02] border-none flex-shrink-0"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          Sync Queue
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 max-w-lg">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-card border border-black/5 dark:border-white/5 p-4 rounded-3xl shadow-sm">
+        <div className="flex-1 relative w-full">
+          <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search pending programs, trainer, or host..."
-            className="pl-9 h-10 rounded-xl bg-card"
+            className="pl-11 h-12 rounded-full text-sm bg-muted/30 border-none shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <select
-          className="h-10 rounded-xl border border-border/40 bg-card px-3.5 text-xs outline-none focus:ring-1 focus:ring-primary/20 text-muted-foreground font-semibold shrink-0 cursor-pointer"
+          className="h-12 w-full sm:w-auto min-w-[150px] rounded-full border-none bg-muted/30 px-4 text-sm outline-none focus:ring-1 focus:ring-[#a0f212]/50 text-foreground font-semibold shrink-0 cursor-pointer shadow-inner"
           value={modeFilter}
           onChange={(e) => setModeFilter(e.target.value)}
         >

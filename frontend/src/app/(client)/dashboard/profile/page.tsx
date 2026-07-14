@@ -192,10 +192,10 @@ export default function ProfilePage() {
             <div className="md:col-span-3">
               <Tabs defaultValue="details" className="w-full">
                 
-                <TabsList className="grid grid-cols-3 w-full max-w-sm mb-4">
+                <TabsList className={`grid w-full max-w-sm mb-4 ${user?.role === "admin" ? "grid-cols-2" : "grid-cols-3"}`}>
                   <TabsTrigger value="details">My Profile</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
-                  <TabsTrigger value="host">Apply Host</TabsTrigger>
+                  {user?.role !== "admin" && <TabsTrigger value="host">Apply Host</TabsTrigger>}
                 </TabsList>
 
                 {/* TAB 1: PROFILE DETAILS */}
@@ -332,74 +332,76 @@ export default function ProfilePage() {
                 </TabsContent>
 
                 {/* TAB 3: APPLY FOR HOST VERIFICATION */}
-                <TabsContent value="host">
-                  <Card className="border-border/40 rounded-2xl bg-card">
-                    {hostApplied ? (
-                      <div className="p-8 text-center space-y-4">
-                        <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
-                          <CheckCircle className="h-6 w-6" />
+                {user?.role !== "admin" && (
+                  <TabsContent value="host">
+                    <Card className="border-border/40 rounded-2xl bg-card">
+                      {hostApplied ? (
+                        <div className="p-8 text-center space-y-4">
+                          <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
+                            <CheckCircle className="h-6 w-6" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <h3 className="font-bold text-base text-foreground">Application Submitted</h3>
+                            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                              Your application to become a certified host is currently pending verification. Super Admins are reviewing your credentials. We will notify you via email shortly.
+                            </p>
+                          </div>
                         </div>
-                        <div className="space-y-1.5">
-                          <h3 className="font-bold text-base text-foreground">Application Submitted</h3>
-                          <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                            Your application to become a certified host is currently pending verification. Super Admins are reviewing your credentials. We will notify you via email shortly.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <form onSubmit={handleApplyHost}>
-                        <CardHeader>
-                          <CardTitle>Become a Certified Host</CardTitle>
-                          <CardDescription>
-                            Apply to host professional workshops and earn revenue teaching your skill.
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          {user.role === "host" ? (
-                            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-2.5 text-xs text-primary">
-                              <ShieldCheck className="h-5 w-5" />
-                              <span>You are already verified as an Instructor (Host). Head to the Host Dashboard to list new classes!</span>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="space-y-1.5">
-                                <Label htmlFor="expertise">Primary Field of Expertise</Label>
-                                <Input id="expertise" placeholder="e.g., Advanced JavaScript, Culinary Baking" required />
+                      ) : (
+                        <form onSubmit={handleApplyHost}>
+                          <CardHeader>
+                            <CardTitle>Become a Certified Host</CardTitle>
+                            <CardDescription>
+                              Apply to host professional workshops and earn revenue teaching your skill.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {user.role === "host" ? (
+                              <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-2.5 text-xs text-primary">
+                                <ShieldCheck className="h-5 w-5" />
+                                <span>You are already verified as an Instructor (Host). Head to the Host Dashboard to list new classes!</span>
                               </div>
-
-                              <div className="space-y-1.5">
-                                <Label htmlFor="bio">Professional Bio & Credentials</Label>
-                                <textarea
-                                  id="bio"
-                                  rows={4}
-                                  placeholder="Describe your qualifications, teaching experience, and certificates..."
-                                  className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                  required
-                                />
-                              </div>
-
-                              <div className="space-y-1.5">
-                                <Label>Upload Certificates / Proof (PDF/Image)</Label>
-                                <div className="border border-dashed border-border/80 rounded-xl p-6 text-center hover:bg-muted/30 cursor-pointer transition-colors space-y-1.5">
-                                  <Upload className="h-6 w-6 text-muted-foreground mx-auto" />
-                                  <div className="text-xs font-semibold">Click to select files</div>
-                                  <p className="text-[10px] text-muted-foreground">PDF, JPEG, or PNG up to 5MB</p>
+                            ) : (
+                              <>
+                                <div className="space-y-1.5">
+                                  <Label htmlFor="expertise">Primary Field of Expertise</Label>
+                                  <Input id="expertise" placeholder="e.g., Advanced JavaScript, Culinary Baking" required />
                                 </div>
-                              </div>
-                            </>
+
+                                <div className="space-y-1.5">
+                                  <Label htmlFor="bio">Professional Bio & Credentials</Label>
+                                  <textarea
+                                    id="bio"
+                                    rows={4}
+                                    placeholder="Describe your qualifications, teaching experience, and certificates..."
+                                    className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    required
+                                  />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <Label>Upload Certificates / Proof (PDF/Image)</Label>
+                                  <div className="border border-dashed border-border/80 rounded-xl p-6 text-center hover:bg-muted/30 cursor-pointer transition-colors space-y-1.5">
+                                    <Upload className="h-6 w-6 text-muted-foreground mx-auto" />
+                                    <div className="text-xs font-semibold">Click to select files</div>
+                                    <p className="text-[10px] text-muted-foreground">PDF, JPEG, or PNG up to 5MB</p>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </CardContent>
+                          {user.role !== "host" && (
+                            <CardFooter className="justify-end border-t border-border/10 pt-4">
+                              <Button type="submit" className="rounded-lg h-9 text-xs" disabled={submittingHost}>
+                                {submittingHost ? "Submitting..." : "Submit Host Application"}
+                              </Button>
+                            </CardFooter>
                           )}
-                        </CardContent>
-                        {user.role !== "host" && (
-                          <CardFooter className="justify-end border-t border-border/10 pt-4">
-                            <Button type="submit" className="rounded-lg h-9 text-xs" disabled={submittingHost}>
-                              {submittingHost ? "Submitting..." : "Submit Host Application"}
-                            </Button>
-                          </CardFooter>
-                        )}
-                      </form>
-                    )}
-                  </Card>
-                </TabsContent>
+                        </form>
+                      )}
+                    </Card>
+                  </TabsContent>
+                )}
 
               </Tabs>
             </div>
