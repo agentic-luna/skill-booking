@@ -5,26 +5,26 @@ FROM node:20-bookworm AS builder
 
 WORKDIR /app
 
+RUN npm config set registry https://registry.yarnpkg.com/
+
 COPY package*.json ./
 
 RUN npm ci
 
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+
 COPY . .
 
-RUN npx prisma@6.19.3 generate
+RUN npx prisma generate
 
 RUN npm run build
 
 # ============================
 # Runtime Stage
 # ============================
-FROM node:20-bookworm-slim
+FROM node:20-bookworm
 
 WORKDIR /app
-
-RUN apt-get update && \
-    apt-get install -y openssl && \
-    rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 
