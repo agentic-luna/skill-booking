@@ -244,6 +244,8 @@ async function main() {
         totalSeats: 20,
         availableSeats: 18,
         status: 'APPROVED',
+        duration: '2 hours',
+        durationHours: 2.0,
         venueDetails: { meetingLink: 'https://zoom.us/j/987654321' },
       },
     });
@@ -268,6 +270,7 @@ async function main() {
       price: 50.00,
       category: 'cooking',
       duration: '3 hours',
+      durationHours: 3.0,
     },
     {
       title: 'Kalaripayattu Basics - Martial Arts',
@@ -277,6 +280,7 @@ async function main() {
       price: 75.00,
       category: 'fitness',
       duration: '4 hours',
+      durationHours: 4.0,
     },
     {
       title: 'Malayalam Language for Beginners',
@@ -286,6 +290,7 @@ async function main() {
       price: 30.00,
       category: 'languages',
       duration: '2 hours',
+      durationHours: 2.0,
     },
     {
       title: 'Kerala Mural Painting Techniques',
@@ -295,6 +300,7 @@ async function main() {
       price: 60.00,
       category: 'arts',
       duration: '5 hours',
+      durationHours: 5.0,
     }
   ];
 
@@ -311,6 +317,7 @@ async function main() {
           price: evt.price,
           category: evt.category,
           duration: evt.duration,
+          durationHours: evt.durationHours,
           startTime: new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000), 
           totalSeats: 30,
           availableSeats: 25,

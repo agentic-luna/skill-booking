@@ -90,11 +90,10 @@ export default function HostKycPage() {
                 <p className="text-[10px] text-muted-foreground">Verification status of your submission</p>
               </div>
             </div>
-            <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border ${
-              kycStatus === "APPROVED" 
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+            <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border ${kycStatus === "APPROVED"
+                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                 : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-            }`}>
+              }`}>
               {kycStatus}
             </span>
           </div>
@@ -120,9 +119,9 @@ export default function HostKycPage() {
               <Globe className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div className="min-w-0 flex-1">
                 <span className="font-bold text-muted-foreground block text-[10px] uppercase tracking-wider">ID Document URL</span>
-                <a 
-                  href={hostProfile?.govIdUrl} 
-                  target="_blank" 
+                <a
+                  href={hostProfile?.govIdUrl || ""}
+                  target="_blank"
                   rel="noreferrer"
                   className="font-semibold text-primary hover:underline truncate block"
                 >
@@ -143,14 +142,14 @@ export default function HostKycPage() {
           </div>
 
           <div className="flex items-center space-x-3 pt-2">
-            <Button 
-              onClick={() => setIsEditing(true)} 
+            <Button
+              onClick={() => setIsEditing(true)}
               className="flex-1 text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5"
             >
               <Edit className="h-3.5 w-3.5" /> Edit KYC Details
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => router.push("/host/dashboard")}
               className="flex-1 text-xs font-bold py-2.5 rounded-xl"
             >

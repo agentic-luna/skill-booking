@@ -28,7 +28,7 @@ const startServer = async () => {
     // Initialize notification worker queue listener with Clean Architecture dependency injection
     logger.info('[BullMQ] Starting background notification worker...');
     const notificationRepo = new PrismaNotificationRepository();
-    
+
     startNotificationWorker(notificationRepo, commsService);
     logger.info('[BullMQ] Notification worker active.');
 
@@ -44,10 +44,10 @@ const startServer = async () => {
 // Handle graceful shutdown for enterprise readiness
 const gracefulShutdown = async (signal: string) => {
   logger.info(`[Server] Received ${signal}. Initiating graceful shutdown...`);
-  
+
   server.close(async () => {
     logger.info('[Server] HTTP and Socket server closed.');
-    
+
     try {
       await prisma.$disconnect();
       logger.info('[Prisma] Database connection closed.');

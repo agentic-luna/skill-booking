@@ -7,7 +7,7 @@ export type ServiceName = "TWILIO" | "SENDGRID" | "META_WA" | "RAZORPAY";
 export interface IntegrationConfig {
   id: string;
   serviceName: ServiceName;
-  environment: "SANDBOX" | "PRODUCTION";
+  environment: "TEST" | "LIVE";
   credentials: Record<string, string>; // masked values from backend
   isActive: boolean;
   updatedAt: string;
@@ -15,7 +15,7 @@ export interface IntegrationConfig {
 
 // Setup payloads for POST /integrations/*
 export interface TwilioSetupPayload {
-  environment: "SANDBOX" | "PRODUCTION";
+  environment: "LIVE" | "TEST";
   accountSid: string;
   authToken: string;
   fromNumber: string;
@@ -23,7 +23,7 @@ export interface TwilioSetupPayload {
 }
 
 export interface SendgridSetupPayload {
-  environment: "SANDBOX" | "PRODUCTION";
+  environment: "TEST" | "LIVE";
   apiKey: string;
   fromEmail: string;
   fromName: string;
@@ -31,7 +31,7 @@ export interface SendgridSetupPayload {
 }
 
 export interface MetaWaSetupPayload {
-  environment: "SANDBOX" | "PRODUCTION";
+  environment: "TEST" | "LIVE";
   accessToken: string;
   phoneNumberId: string;
   businessAccountId: string;
@@ -39,7 +39,7 @@ export interface MetaWaSetupPayload {
 }
 
 export interface RazorpaySetupPayload {
-  environment: "SANDBOX" | "PRODUCTION";
+  environment: "TEST" | "LIVE";
   keyId: string;
   keySecret: string;
   webhookSecret: string;
@@ -47,7 +47,7 @@ export interface RazorpaySetupPayload {
 }
 
 export interface UpdateIntegrationPayload {
-  environment?: "SANDBOX" | "PRODUCTION";
+  environment?: "TEST" | "LIVE";
   credentials?: Record<string, string>;
   isActive?: boolean;
 }

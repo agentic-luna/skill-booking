@@ -215,6 +215,14 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     return result;
   }),
 
+  resolveRefund: (refundId, action) => withLoading(set, async () => {
+    const result = action === "approve"
+      ? await api.approveRefundRequest(refundId)
+      : await api.declineRefundRequest(refundId);
+    await get().fetchRefundRequests();
+    return result;
+  }),
+
   // ── Finance & Ledger ───────────────────────────────────────────────────
 
   financeLedger: null,
@@ -285,6 +293,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   }),
 
   // ── Edit Requests ──────────────────────────────────────────────────────
+
+  editRequests: [],
 
   fetchEditRequests: () => withLoading(set, async () => {
     const requests = await api.getEditRequests();

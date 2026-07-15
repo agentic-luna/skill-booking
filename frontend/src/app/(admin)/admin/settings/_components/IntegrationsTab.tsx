@@ -42,7 +42,7 @@ export default function IntegrationsTab() {
 
   const handleSetup = async () => {
     if (!setupMode) return;
-    const env = (form.environment as "SANDBOX" | "PRODUCTION") || "SANDBOX";
+    const env = (form.environment as "TEST" | "LIVE") || "TEST";
     try {
       switch (setupMode) {
         case "TWILIO":   await setupTwilio({ environment: env, accountSid: form.accountSid, authToken: form.authToken, fromNumber: form.fromNumber }); break;
@@ -93,8 +93,8 @@ export default function IntegrationsTab() {
                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${meta.bg} ${meta.color}`}>
                       {meta.label}
                     </span>
-                    <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase ${cfg.environment === "PRODUCTION" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
-                      {cfg.environment === "PRODUCTION" ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Clock className="h-2.5 w-2.5" />}
+                    <span className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase ${cfg.environment === "LIVE" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
+                      {cfg.environment === "LIVE" ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Clock className="h-2.5 w-2.5" />}
                       {cfg.environment}
                     </span>
                   </div>
