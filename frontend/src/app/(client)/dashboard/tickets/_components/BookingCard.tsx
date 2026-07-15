@@ -138,7 +138,7 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
               <span className="mx-2">•</span>
               Seats: <span className="font-bold text-foreground">{booking.seatCount}</span>
               <span className="mx-2">•</span>
-              Paid: <span className="font-bold text-foreground">₹{booking.amountPaid}</span>
+              Paid: <span className="font-bold text-foreground">₹{booking.totalAmount ?? booking.amountPaid}</span>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">

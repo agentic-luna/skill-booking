@@ -62,10 +62,12 @@ export interface WishlistItem {
 
 export interface ClientBooking {
   id: string;
-  clientUserId: string;
+  clientUserId?: string;
+  clientId: string;
   eventId: string;
   seatCount: number;
-  amountPaid: number;
+  totalAmount: number;
+  amountPaid?: number;
   status: BookingStatus;
   createdAt: string;
   event: ClientEvent;

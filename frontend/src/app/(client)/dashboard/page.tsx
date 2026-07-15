@@ -240,7 +240,7 @@ export default function DashboardOverviewPage() {
 
                 <div className="pt-6 mt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
                   <div className="text-xl font-black text-[#0b0c01] dark:text-white">
-                    ${prog.venueDetails?.price || "Free"}
+                    ₹{prog.venueDetails?.price || "Free"}
                   </div>
                   <Link href={`/programs/${prog.id}`}>
                     <Button variant="outline" className="rounded-2xl h-10 px-5 text-xs font-bold border-black/10 hover:bg-black/5 dark:hover:bg-white/10">

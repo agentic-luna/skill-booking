@@ -227,6 +227,9 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
         eventId: program.id,
         seatCount: spotsCount,
       });
+      if (!checkoutResult || !checkoutResult.booking) {
+        throw new Error("Could not initialize checkout booking process");
+      }
       const confirmResult = await confirmPayment(checkoutResult.booking.id, {
         paymentMethod: "CARD",
       });
@@ -313,7 +316,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                       <span className="text-[10px] font-bold text-muted-foreground">/ 5.0</span>
                     </div>
                     <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wide">
-                      {program.reviewsCount} Verified Roster Reviews
+                      {program.reviewsCount} Verified Learner Reviews
                     </div>
                   </div>
                 </CardContent>

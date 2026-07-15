@@ -43,7 +43,7 @@ export default function ParticipantDetailPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center p-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="text-xs text-muted-foreground mt-2">Loading event roster...</span>
+        <span className="text-xs text-muted-foreground mt-2">Loading event participants...</span>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export default function ParticipantDetailPage() {
         <p className="text-sm text-muted-foreground">The workshop you&apos;re looking for doesn&apos;t exist.</p>
         <Link href="/host/participants">
           <Button variant="outline" className="rounded-xl text-xs">
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Roster Board
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Participants List
           </Button>
         </Link>
       </div>
@@ -115,7 +115,7 @@ export default function ParticipantDetailPage() {
           </Link>
           <div className="space-y-1">
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-              Roster: {program.title}
+              Participants: {program.title}
               {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -169,7 +169,7 @@ export default function ParticipantDetailPage() {
         </div>
       </Card>
 
-      {/* Roster Area */}
+      {/* Participants Area */}
       <div className="space-y-4">
         <div className="flex items-center space-x-2 text-sm font-bold text-muted-foreground uppercase tracking-wide">
           <ShieldCheck className="h-5 w-5 text-emerald-500" />

@@ -48,14 +48,14 @@ export default function HostParticipantsPage() {
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold tracking-tight text-[#0b0c01] flex items-center gap-3">
             <div className="bg-[#a0f212] p-2 rounded-xl text-[#0b0c01] shadow-sm"><Users className="h-6 w-6" /></div>
-            Learner Roster
+            Participants
             {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground ml-2" />}
           </h1>
           <p className="text-muted-foreground font-medium text-sm">
             Select an active skill workshop to review confirmed learners and ticket payments.
           </p>
         </div>
-        
+
         {/* Search Input */}
         <div className="relative w-full md:w-80">
           <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
@@ -69,14 +69,14 @@ export default function HostParticipantsPage() {
         </div>
       </div>
 
-      {/* Roster Cards List */}
+      {/* Participants Cards List */}
       <div className="space-y-5">
         {filteredPrograms.length > 0 ? (
           filteredPrograms.map((prog) => {
             const fillPercentage = Math.min(100, ((prog.enrolledCount) / (prog.maxSpots || 1)) * 100);
-            
+
             return (
-              <div 
+              <div
                 key={prog.id}
                 className="bg-white rounded-[32px] p-4 flex flex-col lg:flex-row gap-6 shadow-sm border border-black/5 hover:shadow-xl transition-all duration-300 group"
               >
@@ -91,7 +91,7 @@ export default function HostParticipantsPage() {
                 {/* Info Section */}
                 <div className="flex-1 flex flex-col justify-center py-2">
                   <h2 className="text-xl font-extrabold text-[#0b0c01] leading-tight line-clamp-1">{prog.title}</h2>
-                  
+
                   <div className="mt-3 flex items-center gap-4 text-sm font-semibold text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-[#a0f212]" />
@@ -111,9 +111,9 @@ export default function HostParticipantsPage() {
                     <span className="text-sm font-black text-[#0b0c01]">{Math.round(fillPercentage)}%</span>
                   </div>
                   <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-[#a0f212] rounded-full transition-all duration-1000" 
-                      style={{ width: `${fillPercentage}%` }} 
+                    <div
+                      className="h-full bg-[#a0f212] rounded-full transition-all duration-1000"
+                      style={{ width: `${fillPercentage}%` }}
                     />
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-sm font-extrabold text-[#0b0c01]">
@@ -126,7 +126,7 @@ export default function HostParticipantsPage() {
                 <div className="shrink-0 flex items-center justify-center lg:pl-6 lg:border-l border-black/5 py-2 pr-2">
                   <Link href={`/host/participants/${prog.id}`}>
                     <Button className="h-12 px-6 rounded-2xl bg-[#0b0c01] text-[#a0f212] hover:bg-black/80 font-bold shadow-md transition-transform hover:-translate-y-0.5 group/btn">
-                      View Roster
+                      View Participants
                       <ChevronRight className="ml-2 w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
@@ -136,7 +136,7 @@ export default function HostParticipantsPage() {
           })
         ) : (
           <div className="text-center py-20 bg-white/50 rounded-[40px] border border-black/5 text-muted-foreground text-sm font-semibold shadow-sm">
-            No matching programs found in your roster listings.
+            No matching programs found in your workshop listings.
           </div>
         )}
       </div>

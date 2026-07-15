@@ -144,10 +144,10 @@ export default function HostEarningsPage() {
                 <div key={i} className="bg-black/5 hover:bg-black/10 transition-colors rounded-2xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-[#0b0c01] text-xs">
-                      {b.client?.user?.firstName?.charAt(0) || "U"}
+                      {b.client?.firstName?.charAt(0) || "U"}
                     </div>
                     <div>
-                      <div className="text-xs font-extrabold text-[#0b0c01]">₹{b.amount}</div>
+                      <div className="text-xs font-extrabold text-[#0b0c01]">₹{b.totalAmount ?? b.amount}</div>
                       <div className="text-[10px] text-muted-foreground font-semibold truncate w-24">{b.event?.title}</div>
                     </div>
                   </div>
