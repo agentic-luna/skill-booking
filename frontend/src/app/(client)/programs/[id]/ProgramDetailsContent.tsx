@@ -442,7 +442,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               <div className="flex justify-between items-end border-b pb-4">
                 <div>
                   <span className="text-xs text-muted-foreground">Registration Fee</span>
-                  <div className="text-2xl font-extrabold text-foreground">${program.price}</div>
+                  <div className="text-2xl font-extrabold text-foreground">₹{program.price}</div>
                 </div>
                 <div className="text-right">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${

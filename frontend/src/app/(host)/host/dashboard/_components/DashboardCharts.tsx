@@ -36,7 +36,7 @@ export function SalesChartCard({ revenueData }: { revenueData: Array<{ month: st
             <BarChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#000000" opacity={0.05} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} style={AXIS_STYLE} dy={10} />
-              <YAxis tickLine={false} axisLine={false} style={AXIS_STYLE} dx={-10} tickFormatter={(val) => `$${val / 1000}k`} />
+              <YAxis tickLine={false} axisLine={false} style={AXIS_STYLE} dx={-10} tickFormatter={(val) => `₹${val / 1000}k`} />
               <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#0b0c01" }} />
               <Bar dataKey="earnings" radius={[8, 8, 8, 8]} barSize={40}>
                 {revenueData.map((entry, index) => (

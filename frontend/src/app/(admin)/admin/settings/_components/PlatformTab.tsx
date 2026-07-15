@@ -107,9 +107,9 @@ export default function PlatformTab() {
 
             {/* Min Payout Input */}
             <div className="space-y-2 max-w-xs">
-              <label className="text-sm font-bold text-foreground">Min. Withdrawable Balance (USD)</label>
+              <label className="text-sm font-bold text-foreground">Min. Withdrawable Balance (INR)</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">₹</span>
                 <input
                   type="number"
                   value={minPayout}

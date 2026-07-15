@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DollarSign, ArrowUpRight, TrendingUp, Download, Loader2 } from "lucide-react";
+import { IndianRupee, ArrowUpRight, TrendingUp, Download, Loader2 } from "lucide-react";
 import { BarChart, Bar, ResponsiveContainer, Cell } from "recharts";
 import Link from "next/link";
 
@@ -101,7 +101,7 @@ export default function HostEarningsPage() {
                 Gross Revenue <ArrowUpRight className="w-3 h-3 bg-[#a0f212] text-[#0b0c01] rounded-full" />
               </div>
               <div className="text-6xl font-black text-white tracking-tighter">
-                ${grossRevenue.toLocaleString()}
+                ₹{grossRevenue.toLocaleString("en-IN")}
               </div>
             </div>
 
@@ -147,7 +147,7 @@ export default function HostEarningsPage() {
                       {b.client?.user?.firstName?.charAt(0) || "U"}
                     </div>
                     <div>
-                      <div className="text-xs font-extrabold text-[#0b0c01]">${b.amount}</div>
+                      <div className="text-xs font-extrabold text-[#0b0c01]">₹{b.amount}</div>
                       <div className="text-[10px] text-muted-foreground font-semibold truncate w-24">{b.event?.title}</div>
                     </div>
                   </div>
@@ -186,7 +186,7 @@ export default function HostEarningsPage() {
               <div className="w-48 h-48 border-[20px] border-[#0b0c01] rounded-full absolute top-0 left-0 border-b-transparent border-r-[#0b0c01]/10 transform -rotate-45" />
             </div>
             <div className="absolute bottom-2 text-center">
-              <div className="text-3xl font-black text-[#0b0c01] tracking-tight">${grossRevenue.toLocaleString()}</div>
+              <div className="text-3xl font-black text-[#0b0c01] tracking-tight">₹{grossRevenue.toLocaleString("en-IN")}</div>
               <div className="w-3 h-3 bg-[#a78bfa] rounded-full mx-auto mt-2 border-2 border-[#a0f212]" />
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function HostEarningsPage() {
           <div className="w-full md:w-1/3 border-r border-black/5 pr-6 flex flex-col">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-[#a0f212] flex items-center justify-center text-[#0b0c01] shrink-0">
-                <DollarSign className="w-5 h-5" />
+                <IndianRupee className="w-5 h-5" />
               </div>
               <h2 className="text-[#0b0c01] font-extrabold text-lg leading-tight">Bank<br/>Setup</h2>
             </div>

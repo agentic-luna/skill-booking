@@ -93,7 +93,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
         </div>
 
         <div className="flex items-center justify-between border-t border-border/30 pt-4 mt-auto">
-          <div className="text-base font-extrabold text-foreground">${program.price}</div>
+          <div className="text-base font-extrabold text-foreground">₹{program.price}</div>
           <div className="flex items-center space-x-1.5">
             <Link href={`/programs/${program.id}`}>
               <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg animate-hover" title="View details as client">

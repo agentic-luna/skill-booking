@@ -59,7 +59,7 @@ export default function BookingsPage() {
       if (result.success) {
         showAlert(
           "Booking Cancelled",
-          `Your reservation has been successfully cancelled. A dynamic refund of $${result.refundAmount || 0} was processed.`,
+          `Your reservation has been successfully cancelled. A dynamic refund of ₹${result.refundAmount || 0} was processed.`,
           "success"
         );
       } else {

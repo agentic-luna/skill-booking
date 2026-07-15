@@ -42,7 +42,7 @@ export default function FinancePayoutsPage() {
       if (result.success) {
         showAlert(
           "Payout Released",
-          `Escrow funds of $${result.amount || "N/A"} released to Host bank account via Razorpay transfer (Reference: ${result.payoutId || "N/A"}).`,
+          `Escrow funds of ₹${result.amount || "N/A"} released to Host bank account via Razorpay transfer (Reference: ${result.payoutId || "N/A"}).`,
           "success"
         );
       } else {
@@ -60,7 +60,7 @@ export default function FinancePayoutsPage() {
   const handleApproveRefund = (clientName: string, amount: string) => {
     showAlert(
       "Refund Approved",
-      `Ticket payment of $${amount} has been successfully reversed to ${clientName}'s account.`,
+      `Ticket payment of ₹${amount} has been successfully reversed to ${clientName}'s account.`,
       "success"
     );
   };

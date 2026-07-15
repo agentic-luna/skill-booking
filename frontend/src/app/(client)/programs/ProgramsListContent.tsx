@@ -155,7 +155,7 @@ export default function ProgramsListContent() {
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-end">
           <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Max Ticket Price</label>
-          <span className="font-extrabold text-[#0b0c01]">{maxPrice === 0 ? "Any Price" : `$${maxPrice}`}</span>
+          <span className="font-extrabold text-[#0b0c01]">{maxPrice === 0 ? "Any Price" : `₹${maxPrice}`}</span>
         </div>
         <div className="pt-2">
           <input
@@ -168,8 +168,8 @@ export default function ProgramsListContent() {
             className="w-full accent-primary h-1.5 bg-muted rounded-full appearance-none cursor-pointer focus:outline-none"
           />
           <div className="flex justify-between text-[10px] font-semibold text-muted-foreground mt-2">
-            <span>$0</span>
-            <span>$200</span>
+            <span>₹0</span>
+            <span>₹200</span>
           </div>
         </div>
       </div>

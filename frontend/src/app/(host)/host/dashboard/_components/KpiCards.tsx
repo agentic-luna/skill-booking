@@ -1,5 +1,4 @@
-import React from "react";
-import { DollarSign, Users, Calendar, Star, ArrowUpRight } from "lucide-react";
+import { IndianRupee, Users, Calendar, Star, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function EarningsCard({ totalRevenue, heldEscrow = 0 }: { totalRevenue: number; heldEscrow?: number }) {
@@ -12,7 +11,7 @@ export function EarningsCard({ totalRevenue, heldEscrow = 0 }: { totalRevenue: n
       <CardContent className="p-8 h-full flex flex-col justify-between relative z-10">
         <div className="flex items-start justify-between">
           <div className="p-4 rounded-3xl bg-white/30 backdrop-blur-md shadow-sm border border-white/40">
-            <DollarSign className="h-7 w-7 text-[#0b0c01]" />
+            <IndianRupee className="h-7 w-7 text-[#0b0c01]" />
           </div>
           <div className="bg-white/40 backdrop-blur-md border border-white/50 text-[#0b0c01] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
             <ArrowUpRight className="w-3.5 h-3.5" /> Released
@@ -21,10 +20,10 @@ export function EarningsCard({ totalRevenue, heldEscrow = 0 }: { totalRevenue: n
         
         <div className="space-y-1 mt-10">
           <span className="text-sm text-[#0b0c01]/70 font-extrabold uppercase tracking-widest">Total Earnings</span>
-          <div className="text-5xl font-black text-[#0b0c01] tracking-tighter">${totalRevenue.toLocaleString()}</div>
+          <div className="text-5xl font-black text-[#0b0c01] tracking-tighter">₹{totalRevenue.toLocaleString("en-IN")}</div>
           {heldEscrow > 0 && (
             <div className="text-xs text-[#0b0c01]/60 font-semibold pt-1">
-              + ${heldEscrow.toLocaleString()} in escrow
+              + ₹{heldEscrow.toLocaleString("en-IN")} in escrow
             </div>
           )}
         </div>

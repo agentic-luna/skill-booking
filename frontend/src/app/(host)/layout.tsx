@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { 
-  Sparkles, LayoutDashboard, Calendar, Users, DollarSign, 
+  Sparkles, LayoutDashboard, Calendar, Users, IndianRupee, 
   Menu, X, LogOut, UserCheck, ShieldCheck, Lock, CheckCircle2
 } from "lucide-react";
 
@@ -53,7 +53,7 @@ export default function HostLayout({
     { name: "Overview", href: "/host/dashboard", icon: LayoutDashboard },
     { name: "Programs", href: "/host/programs", icon: Calendar },
     { name: "Participants", href: "/host/participants", icon: Users },
-    { name: "Earnings", href: "/host/earnings", icon: DollarSign },
+    { name: "Earnings", href: "/host/earnings", icon: IndianRupee },
     { name: "KYC Verification", href: "/host/kyc", icon: ShieldCheck },
   ];
 

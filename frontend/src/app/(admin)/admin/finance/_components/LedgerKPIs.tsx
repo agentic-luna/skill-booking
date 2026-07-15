@@ -1,5 +1,5 @@
 import React from "react";
-import { Scale, DollarSign, ArrowUpRight, FileText } from "lucide-react";
+import { Scale, IndianRupee, ArrowUpRight, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinanceLedger } from "@/features/admin/api/types";
 
@@ -22,7 +22,7 @@ export default function LedgerKPIs({ financeLedger }: LedgerKPIsProps) {
           <div>
             <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block mb-1">Escrow Liabilities</span>
             <div className="text-4xl font-extrabold text-amber-600 flex items-baseline tracking-tight">
-              ${financeLedger?.totalEscrowLiabilities ?? 0}
+              ₹{financeLedger?.totalEscrowLiabilities ?? 0}
             </div>
           </div>
         </CardContent>
@@ -31,17 +31,17 @@ export default function LedgerKPIs({ financeLedger }: LedgerKPIsProps) {
       {/* Card 2: Realized Earnings (Bento Highlight) */}
       <Card className="col-span-1 lg:col-span-6 border-none bg-[#a0f212] rounded-[32px] shadow-[0_10px_30px_rgba(160,242,18,0.2)] hover:shadow-[0_15px_40px_rgba(160,242,18,0.4)] overflow-hidden relative transition-all duration-300 group">
         <div className="absolute right-0 bottom-0 p-8 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity">
-          <DollarSign className="w-64 h-64 text-[#0b0c01]" />
+          <IndianRupee className="w-64 h-64 text-[#0b0c01]" />
         </div>
         <CardContent className="p-8 relative z-10 flex flex-col justify-between h-full space-y-4">
           <div className="flex justify-between items-start">
-            <div className="bg-black/10 text-[#0b0c01] p-3 rounded-2xl shadow-sm border border-black/10"><DollarSign className="h-6 w-6" /></div>
+            <div className="bg-black/10 text-[#0b0c01] p-3 rounded-2xl shadow-sm border border-black/10"><IndianRupee className="h-6 w-6" /></div>
             <div className="bg-white/80 text-[#0b0c01] px-4 py-1.5 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-widest">Platform Commission</div>
           </div>
           <div>
             <span className="text-sm text-[#0b0c01]/70 font-bold block mb-2">Total Realized Revenue</span>
             <div className="text-6xl font-medium text-[#0b0c01] tracking-tight">
-              ${financeLedger?.totalRealizedRevenue ?? 0}
+              ₹{financeLedger?.totalRealizedRevenue ?? 0}
             </div>
           </div>
         </CardContent>
@@ -54,7 +54,7 @@ export default function LedgerKPIs({ financeLedger }: LedgerKPIsProps) {
             <div>
               <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block mb-1">Total Refunded</span>
               <div className="text-3xl font-extrabold text-destructive flex items-baseline tracking-tight">
-                ${financeLedger?.totalRefunded ?? 0}
+                ₹{financeLedger?.totalRefunded ?? 0}
               </div>
             </div>
             <div className="bg-destructive/10 text-destructive p-3 rounded-2xl shadow-sm border border-destructive/20"><ArrowUpRight className="h-5 w-5 rotate-90" /></div>

@@ -52,7 +52,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
         <div className="flex items-center justify-between pt-4 border-t border-black/10 mt-auto">
           <div>
             <span className="text-xs text-stone-grey">Registration Fee</span>
-            <div className="text-lg font-extrabold text-graphite-ink">${program.price}</div>
+            <div className="text-lg font-extrabold text-graphite-ink">₹{program.price}</div>
           </div>
           <Link href={`/programs/${program.id}`}>
             <Button size="sm">Book Spot</Button>

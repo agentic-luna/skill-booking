@@ -71,7 +71,7 @@ export default function ProgramRowCard({ program, href }: ProgramRowCardProps) {
 
           <div className="flex items-center space-x-3">
             <div className="hidden sm:block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
-              ${program.price} / Seat
+              ₹{program.price} / Seat
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
           </div>

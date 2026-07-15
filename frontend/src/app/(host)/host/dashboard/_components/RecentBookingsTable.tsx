@@ -90,7 +90,7 @@ export default function RecentBookingsTable({ loading, bookings }: RecentBooking
                         {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
                       </td>
                       <td className="px-8 py-5 font-extrabold text-[#0b0c01]">
-                        ${booking.amount}
+                        ₹{booking.amount}
                       </td>
                       <td className="px-8 py-5">
                         <span className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${

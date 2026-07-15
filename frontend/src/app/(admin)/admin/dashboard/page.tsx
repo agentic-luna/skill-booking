@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { 
-  Users, DollarSign, CheckSquare, Landmark, ArrowRight, UserPlus, Scale, RefreshCw, AlertCircle, Sparkles, LayoutDashboard, Settings
+  Users, IndianRupee, CheckSquare, Landmark, ArrowRight, UserPlus, Scale, RefreshCw, AlertCircle, Sparkles, LayoutDashboard, Settings
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -130,12 +130,12 @@ export default function AdminDashboard() {
         <Card className="col-span-1 lg:col-span-4 group relative overflow-hidden border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
            <CardContent className="p-8 flex flex-col justify-between h-full relative z-10 space-y-8">
              <div className="flex justify-between items-start">
-                <div className="bg-primary/10 text-primary p-3 rounded-2xl shadow-sm border border-primary/20"><DollarSign className="h-5 w-5" /></div>
+                <div className="bg-primary/10 text-primary p-3 rounded-2xl shadow-sm border border-primary/20"><IndianRupee className="h-5 w-5" /></div>
                 <div className="bg-muted px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground shadow-sm">Platform Vol.</div>
              </div>
              <div className="space-y-1">
                <span className="text-sm text-muted-foreground font-semibold">Gross Volume</span>
-               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-foreground">${grossSales}</div>
+               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-foreground">₹{grossSales}</div>
              </div>
            </CardContent>
         </Card>
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
              </div>
              <div className="space-y-1">
                <span className="text-sm text-[#0b0c01]/70 font-bold">Realized Net Commission</span>
-               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-[#0b0c01]">${totalCommission}</div>
+               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-[#0b0c01]">₹{totalCommission}</div>
              </div>
            </CardContent>
         </Card>
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
             <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/10 transition-all duration-500"></div>
             <div className="relative z-10">
               <CardHeader className="px-8 pt-8">
-                <CardTitle className="text-lg font-extrabold">Escrow Ledger Breakdown (USD)</CardTitle>
+                <CardTitle className="text-lg font-extrabold">Escrow Ledger Breakdown (INR)</CardTitle>
                 <CardDescription className="text-sm">Platform ledger balances distribution from backend database.</CardDescription>
               </CardHeader>
               <CardContent className="px-8 pb-8 pt-4">
