@@ -22,7 +22,7 @@ class PrismaUserRepository {
         });
     }
     async findProfile(id) {
-        return prisma_1.prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { id },
             select: {
                 id: true,
@@ -34,12 +34,29 @@ class PrismaUserRepository {
                 status: true,
                 createdAt: true,
                 hostProfile: {
-                    include: {
-                        bankDetail: true,
+                    select: {
+                        id: true,
+                        userId: true,
+                        accountType: true,
+                        govIdUrl: true,
+                        gstNumber: true,
+                        kycStatus: true,
+                        bio: true,
+                        updatedAt: true,
+                        bankDetail: {
+                            select: {
+                                id: true,
+                                hostProfileId: true,
+                                bankName: true, // not encrypted
+                                updatedAt: true,
+                                // accountHolderName, accountNumber, ifscCode, upiId are encrypted — excluded
+                            },
+                        },
                     },
                 },
             },
         });
+        return user;
     }
     async findHostProfileByUserId(userId) {
         return prisma_1.prisma.hostProfile.findUnique({ where: { userId } });

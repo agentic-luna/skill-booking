@@ -184,6 +184,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
+  refreshUser: async () => {
+    try {
+      const apiUser = await authApi.getMe();
+      if (apiUser) {
+        const fullUser = mapApiUser(apiUser);
+        saveSession(fullUser);
+        set({ user: fullUser, isAuthenticated: true });
+        return fullUser;
+      }
+    } catch (e) {
+      console.warn("Failed to refresh user:", e);
+    }
+    return undefined;
+  },
+
   clearError: () => set({ error: null }),
 }));
 

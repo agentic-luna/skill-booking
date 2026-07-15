@@ -94,7 +94,7 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 | `title` | String | Event title |
 | `posterUrl` | String | Banner image URL |
 | `mode` | String (Enum) | `ONLINE`, `OFFLINE` |
-| `venueDetails` | JSON | Zoom link or physical address |
+| `venueDetails` | JSON | Zoom link or physical address (dynamically mapped from Venue/Instructor tables) |
 | `startTime` | DateTime | Scheduled start time |
 | `totalSeats` | Integer | Total seat capacity |
 | `availableSeats` | Integer | Currently available seats |
@@ -103,6 +103,30 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 | `price` | Float | Cost per ticket in INR |
 | `duration` | String | Human readable event duration (e.g. `2 hours`) |
 | `category` | String | Specific course category (e.g. `technology`, `culinary`) |
+| `instructorId` | String (UUID) | ID of the instructor (optional) |
+| `venueId` | String (UUID) | ID of the venue (optional) |
+| `instructor` | Object | Instructor details object |
+| `venue` | Object | Venue details object |
+
+### Instructor Entity
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | String (UUID) | Unique instructor identifier |
+| `name` | String | Full name of the instructor |
+| `bio` | String | Biography / information |
+| `photoUrl` | String | Photo URL |
+| `companyName` | String | Associated company or organization name |
+| `facebook` | String | Optional link |
+| `instagram` | String | Optional link |
+| `linkedin` | String | Optional link |
+
+### Venue Entity
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | String (UUID) | Unique venue identifier |
+| `address` | String | Physical address of the venue |
+| `meetingLink` | String | Optional virtual meeting link (e.g. Zoom) |
+
 
 ### Booking Entity
 | Field | Type | Description |
@@ -325,6 +349,59 @@ Partially updates bank account details. Only provided fields are updated. All se
 
 ### 3. Fetch Host Dashboard Analytics
 `GET /api/v1/hosts/dashboard` *(Requires Bearer Header - HOST)*
+
+Retrieves host dashboard financial aggregations, review ratings, monthly revenue trend for the last 6 months, weekly booking flow, and recent bookings.
+
+**Response Example (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "totalEarnings": 1200.50,
+    "heldEscrow": 450.00,
+    "activeTicketSales": 12,
+    "totalRevenue": 1650.50,
+    "grossRevenue": 1650.50,
+    "eventsCount": 4,
+    "averageRating": 4.5,
+    "monthlyRevenue": [
+      { "month": "Jan", "earnings": 200.00 },
+      { "month": "Feb", "earnings": 150.00 },
+      { "month": "Mar", "earnings": 300.00 },
+      { "month": "Apr", "earnings": 100.00 },
+      { "month": "May", "earnings": 250.00 },
+      { "month": "Jun", "earnings": 350.00 }
+    ],
+    "weeklyBookings": [
+      { "day": "Mon", "bookings": 2 },
+      { "day": "Tue", "bookings": 1 },
+      { "day": "Wed", "bookings": 4 },
+      { "day": "Thu", "bookings": 0 },
+      { "day": "Fri", "bookings": 3 },
+      { "day": "Sat", "bookings": 1 },
+      { "day": "Sun", "bookings": 1 }
+    ],
+    "recentBookings": [
+      {
+        "id": "b3e34b12-4c22-4467-bc5b-432d56a23999",
+        "createdAt": "2026-07-15T12:00:00.000Z",
+        "status": "CONFIRMED",
+        "amount": 75.00,
+        "event": {
+          "title": "Kalaripayattu Basics - Martial Arts"
+        },
+        "client": {
+          "user": {
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "email": "client@luna.com"
+          }
+        }
+      }
+    ]
+  }
+}
+```
 
 ---
 

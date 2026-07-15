@@ -233,6 +233,25 @@ async function main() {
   const eventTitle = 'Advanced Next.js 15 & React 19 Sprint';
   let event = await prisma.event.findFirst({ where: { title: eventTitle } });
   if (!event) {
+    const instructor1 = await prisma.instructor.create({
+      data: {
+        name: 'Athul Sabu',
+        bio: 'Senior Software Engineer and Educator',
+        photoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-adjKSmtOGut8RC90yikoWKlgYc0yDGawwBAOGwPz2A&s=10',
+        companyName: 'TechAcademy',
+        facebook: '',
+        instagram: '',
+        linkedin: '',
+      },
+    });
+
+    const venue1 = await prisma.venue.create({
+      data: {
+        address: '',
+        meetingLink: 'https://zoom.us/j/987654321',
+      },
+    });
+
     event = await prisma.event.create({
       data: {
         hostId: hostProfile.id,
@@ -247,6 +266,8 @@ async function main() {
         duration: '2 hours',
         durationHours: 2.0,
         venueDetails: { meetingLink: 'https://zoom.us/j/987654321' },
+        instructorId: instructor1.id,
+        venueId: venue1.id,
       },
     });
 
@@ -307,6 +328,28 @@ async function main() {
   for (const evt of additionalEvents) {
     let existingEvt = await prisma.event.findFirst({ where: { title: evt.title } });
     if (!existingEvt) {
+      const address = evt.mode === 'ONLINE' ? '' : 'Kochi, Kerala';
+      const meetingLink = evt.mode === 'ONLINE' ? 'https://zoom.us/j/123456' : null;
+
+      const inst = await prisma.instructor.create({
+        data: {
+          name: 'Athul Sabu',
+          bio: 'dwef fwrjuqf hwqr',
+          photoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-adjKSmtOGut8RC90yikoWKlgYc0yDGawwBAOGwPz2A&s=10',
+          companyName: 'A',
+          facebook: '',
+          instagram: '',
+          linkedin: '',
+        },
+      });
+
+      const venue = await prisma.venue.create({
+        data: {
+          address,
+          meetingLink,
+        },
+      });
+
       await prisma.event.create({
         data: {
           hostId: hostProfile.id,
@@ -323,6 +366,8 @@ async function main() {
           availableSeats: 25,
           status: 'APPROVED',
           venueDetails: evt.mode === 'ONLINE' ? { meetingLink: 'https://zoom.us/j/123456' } : { address: 'Kochi, Kerala' },
+          instructorId: inst.id,
+          venueId: venue.id,
         },
       });
     }

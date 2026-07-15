@@ -76,6 +76,7 @@ export interface AuthState {
   resetPassword: (resetToken: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => void;
+  refreshUser: () => Promise<User | undefined>;
   clearError: () => void;
 }
 

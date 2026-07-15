@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateEventCommandHandler = exports.CreateEventCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
+const duration_parser_1 = require("../../../utils/duration-parser");
 class CreateEventCommand {
     userId;
     data;
@@ -34,10 +35,11 @@ class CreateEventCommandHandler {
         if (hostProfile.kycStatus !== client_1.KycStatus.APPROVED) {
             throw new errors_1.ForbiddenError('Cannot create events. Your KYC verification is ' + hostProfile.kycStatus + '. Please wait for admin approval.');
         }
+        const durationHours = (0, duration_parser_1.parseDurationToHours)(data.duration);
         const event = await this.eventRepo.create({
             hostId: hostProfile.id,
             title: data.title,
-            posterUrl: data.posterUrl,
+            posterUrl: data.posterUrl || '', // default to empty string if not provided
             mode: data.mode,
             venueDetails: data.venueDetails,
             startTime: new Date(data.startTime),
@@ -47,6 +49,7 @@ class CreateEventCommandHandler {
             version: 1,
             price: data.price,
             duration: data.duration,
+            durationHours,
             description: data.description,
             category: data.category,
         });

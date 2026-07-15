@@ -50,7 +50,37 @@ export const swaggerSpec = {
           version: { type: 'integer', description: 'Optimistic locking version', example: 1 },
           price: { type: 'number', format: 'float', description: 'Ticket price in USD', example: 149.99 },
           duration: { type: 'string', nullable: true, description: 'Workshop duration', example: '3 hours' },
+          durationHours: { type: 'number', format: 'float', description: 'Workshop duration in hours', example: 3.0 },
           category: { type: 'string', nullable: true, description: 'Workshop domain category', example: 'technology' },
+          instructorId: { type: 'string', format: 'uuid', nullable: true },
+          venueId: { type: 'string', format: 'uuid', nullable: true },
+          instructor: { $ref: '#/components/schemas/Instructor', nullable: true },
+          venue: { $ref: '#/components/schemas/Venue', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Instructor: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string', example: 'Athul Sabu' },
+          bio: { type: 'string', example: 'Senior Software Engineer' },
+          photoUrl: { type: 'string', example: 'https://example.com/photo.jpg' },
+          companyName: { type: 'string', example: 'A' },
+          facebook: { type: 'string', nullable: true, example: '' },
+          instagram: { type: 'string', nullable: true, example: '' },
+          linkedin: { type: 'string', nullable: true, example: '' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Venue: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          address: { type: 'string', example: 'Kochi, Kerala' },
+          meetingLink: { type: 'string', nullable: true, example: 'https://zoom.us/j/123456' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },
@@ -853,7 +883,82 @@ export const swaggerSpec = {
         summary: 'Retrieve host dashboard financial aggregations',
         security: [{ bearerAuth: [] }],
         responses: {
-          200: { description: 'Returns total earnings, held escrow, and ticket sales' },
+          200: {
+            description: 'Returns total earnings, held escrow, ticket sales, rating and charts analytics',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        totalEarnings: { type: 'number', example: 1200.50 },
+                        heldEscrow: { type: 'number', example: 450.00 },
+                        activeTicketSales: { type: 'integer', example: 12 },
+                        totalRevenue: { type: 'number', example: 1650.50 },
+                        grossRevenue: { type: 'number', example: 1650.50 },
+                        eventsCount: { type: 'integer', example: 4 },
+                        averageRating: { type: 'number', format: 'float', nullable: true, example: 4.5 },
+                        monthlyRevenue: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              month: { type: 'string', example: 'Jul' },
+                              earnings: { type: 'number', example: 350.00 },
+                            },
+                          },
+                        },
+                        weeklyBookings: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              day: { type: 'string', example: 'Mon' },
+                              bookings: { type: 'integer', example: 2 },
+                            },
+                          },
+                        },
+                        recentBookings: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              id: { type: 'string', format: 'uuid' },
+                              createdAt: { type: 'string', format: 'date-time' },
+                              status: { type: 'string', example: 'CONFIRMED' },
+                              amount: { type: 'number', example: 75.00 },
+                              event: {
+                                type: 'object',
+                                properties: {
+                                  title: { type: 'string', example: 'Malayalam Language' },
+                                },
+                              },
+                              client: {
+                                type: 'object',
+                                properties: {
+                                  user: {
+                                    type: 'object',
+                                    properties: {
+                                      firstName: { type: 'string', example: 'Jane' },
+                                      lastName: { type: 'string', example: 'Smith' },
+                                      email: { type: 'string', example: 'client@luna.com' },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },

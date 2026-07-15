@@ -54,7 +54,7 @@ export default function HostEarningsPage() {
     } catch { /* error shown via banner */ }
   };
 
-  const grossRevenue = dashboard?.grossRevenue ?? 0;
+  const grossRevenue = dashboard?.totalRevenue ?? 0;
   const recentBookings = dashboard?.recentBookings?.slice(0, 3) ?? [];
   const revenueData = dashboard?.monthlyRevenue?.slice(-2) ?? [
     { month: "Prev", earnings: 0 }, { month: "Cur", earnings: 0 }

@@ -6,13 +6,27 @@ const prisma_1 = require("../../../config/prisma");
 function mapEvent(e) {
     if (!e)
         return null;
-    return {
+    const mapped = {
         ...e,
         availableSeats: Number(e.availableSeats),
         totalSeats: Number(e.totalSeats),
         version: Number(e.version),
         commission: e.commission ? mapCommission(e.commission) : null,
     };
+    if (e.instructor || e.venue) {
+        mapped.venueDetails = {
+            address: e.venue?.address || '',
+            meetingLink: e.venue?.meetingLink || '',
+            instructorName: e.instructor?.name || '',
+            companyName: e.instructor?.companyName || '',
+            instructorBio: e.instructor?.bio || '',
+            instructorPhoto: e.instructor?.photoUrl || '',
+            instagram: e.instructor?.instagram || '',
+            linkedin: e.instructor?.linkedin || '',
+            facebook: e.instructor?.facebook || '',
+        };
+    }
+    return mapped;
 }
 function mapCommission(c) {
     if (!c)
@@ -41,6 +55,8 @@ class PrismaEventRepository {
                     },
                 },
                 commission: true,
+                instructor: true,
+                venue: true,
             },
         });
         return mapEvent(e);
@@ -81,6 +97,8 @@ class PrismaEventRepository {
                     },
                 },
                 commission: true,
+                instructor: true,
+                venue: true,
             },
             orderBy: {
                 startTime: 'asc',
@@ -89,13 +107,80 @@ class PrismaEventRepository {
         return events.map(mapEvent);
     }
     async create(data) {
-        const created = await prisma_1.prisma.event.create({ data });
+        let instructorId = null;
+        let venueId = null;
+        if (data.venueDetails && typeof data.venueDetails === 'object') {
+            const details = data.venueDetails;
+            if (details.instructorName) {
+                const inst = await prisma_1.prisma.instructor.create({
+                    data: {
+                        name: details.instructorName,
+                        bio: details.instructorBio || '',
+                        photoUrl: details.instructorPhoto || '',
+                        companyName: details.companyName || '',
+                        facebook: details.facebook || null,
+                        instagram: details.instagram || null,
+                        linkedin: details.linkedin || null,
+                    },
+                });
+                instructorId = inst.id;
+            }
+            const address = details.address || '';
+            const meetingLink = details.meetingLink || null;
+            if (address || meetingLink) {
+                const venue = await prisma_1.prisma.venue.create({
+                    data: {
+                        address: address,
+                        meetingLink: meetingLink,
+                    },
+                });
+                venueId = venue.id;
+            }
+        }
+        const { ...rest } = data;
+        const created = await prisma_1.prisma.event.create({
+            data: {
+                ...rest,
+                instructorId,
+                venueId,
+            },
+            include: {
+                instructor: true,
+                venue: true,
+                commission: true,
+                host: {
+                    select: {
+                        user: {
+                            select: {
+                                firstName: true,
+                                lastName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
         return mapEvent(created);
     }
     async update(id, data) {
         const updated = await prisma_1.prisma.event.update({
             where: { id },
             data,
+            include: {
+                instructor: true,
+                venue: true,
+                commission: true,
+                host: {
+                    select: {
+                        user: {
+                            select: {
+                                firstName: true,
+                                lastName: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
         return mapEvent(updated);
     }
@@ -103,6 +188,8 @@ class PrismaEventRepository {
         const events = await prisma_1.prisma.event.findMany({
             where: { status: client_1.EventStatus.PENDING },
             include: {
+                instructor: true,
+                venue: true,
                 host: {
                     include: {
                         user: {

@@ -15,7 +15,19 @@ export interface IEventRepository {
     title: string;
     posterUrl: string;
     mode: EventMode;
-    venueDetails?: any;
+    venue?: {
+      address: string;
+      meetingLink?: string | null;
+    };
+    instructor?: {
+      name: string;
+      bio?: string;
+      photoUrl?: string;
+      companyName?: string;
+      facebook?: string | null;
+      instagram?: string | null;
+      linkedin?: string | null;
+    };
     startTime: Date;
     totalSeats: number;
     availableSeats: number;
@@ -23,6 +35,7 @@ export interface IEventRepository {
     version?: number;
     price?: number;
     duration?: string;
+    durationHours?: number;
     description?: string;
     category?: string;
   }): Promise<Event>;

@@ -5,13 +5,43 @@ import { prisma } from '../../../config/prisma';
 
 function mapEvent(e: any): any {
   if (!e) return null;
-  return {
+  const mapped = {
     ...e,
     availableSeats: Number(e.availableSeats),
     totalSeats: Number(e.totalSeats),
     version: Number(e.version),
     commission: e.commission ? mapCommission(e.commission) : null,
+    instructor: e.instructor ? {
+      id: e.instructor.id,
+      name: e.instructor.name,
+      bio: e.instructor.bio,
+      photoUrl: e.instructor.photoUrl,
+      companyName: e.instructor.companyName,
+      facebook: e.instructor.facebook,
+      instagram: e.instructor.instagram,
+      linkedin: e.instructor.linkedin,
+    } : null,
+    venue: e.venue ? {
+      id: e.venue.id,
+      address: e.venue.address,
+      meetingLink: e.venue.meetingLink,
+    } : null,
   };
+
+  if (e.instructor || e.venue) {
+    mapped.venueDetails = {
+      address: e.venue?.address || '',
+      meetingLink: e.venue?.meetingLink || '',
+      instructorName: e.instructor?.name || '',
+      companyName: e.instructor?.companyName || '',
+      instructorBio: e.instructor?.bio || '',
+      instructorPhoto: e.instructor?.photoUrl || '',
+      instagram: e.instructor?.instagram || '',
+      linkedin: e.instructor?.linkedin || '',
+      facebook: e.instructor?.facebook || '',
+    };
+  }
+  return mapped;
 }
 
 function mapCommission(c: any): EventCommission {
@@ -41,6 +71,8 @@ export class PrismaEventRepository implements IEventRepository {
           },
         },
         commission: true,
+        instructor: true,
+        venue: true,
       },
     });
     return mapEvent(e);
@@ -94,6 +126,8 @@ export class PrismaEventRepository implements IEventRepository {
           },
         },
         commission: true,
+        instructor: true,
+        venue: true,
       },
       orderBy: {
         startTime: 'asc',
@@ -108,7 +142,19 @@ export class PrismaEventRepository implements IEventRepository {
     title: string;
     posterUrl: string;
     mode: EventMode;
-    venueDetails?: any;
+    venue?: {
+      address: string;
+      meetingLink?: string | null;
+    };
+    instructor?: {
+      name: string;
+      bio?: string;
+      photoUrl?: string;
+      companyName?: string;
+      facebook?: string | null;
+      instagram?: string | null;
+      linkedin?: string | null;
+    };
     startTime: Date;
     totalSeats: number;
     availableSeats: number;
@@ -116,10 +162,61 @@ export class PrismaEventRepository implements IEventRepository {
     version?: number;
     price?: number;
     duration?: string;
+    durationHours?: number;
     description?: string;
     category?: string;
   }): Promise<Event> {
-    const created = await prisma.event.create({ data });
+    let instructorId: string | null = null;
+    let venueId: string | null = null;
+
+    if (data.instructor) {
+      const inst = await prisma.instructor.create({
+        data: {
+          name: data.instructor.name,
+          bio: data.instructor.bio || '',
+          photoUrl: data.instructor.photoUrl || '',
+          companyName: data.instructor.companyName || '',
+          facebook: data.instructor.facebook || null,
+          instagram: data.instructor.instagram || null,
+          linkedin: data.instructor.linkedin || null,
+        },
+      });
+      instructorId = inst.id;
+    }
+
+    if (data.venue) {
+      const venue = await prisma.venue.create({
+        data: {
+          address: data.venue.address || '',
+          meetingLink: data.venue.meetingLink || null,
+        },
+      });
+      venueId = venue.id;
+    }
+
+    const { venue, instructor, ...rest } = data;
+    const created = await prisma.event.create({
+      data: {
+        ...rest,
+        instructorId,
+        venueId,
+      },
+      include: {
+        instructor: true,
+        venue: true,
+        commission: true,
+        host: {
+          select: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+    });
     return mapEvent(created);
   }
 
@@ -127,6 +224,21 @@ export class PrismaEventRepository implements IEventRepository {
     const updated = await prisma.event.update({
       where: { id },
       data,
+      include: {
+        instructor: true,
+        venue: true,
+        commission: true,
+        host: {
+          select: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
     });
     return mapEvent(updated);
   }
@@ -135,6 +247,8 @@ export class PrismaEventRepository implements IEventRepository {
     const events = await prisma.event.findMany({
       where: { status: EventStatus.PENDING },
       include: {
+        instructor: true,
+        venue: true,
         host: {
           include: {
             user: {

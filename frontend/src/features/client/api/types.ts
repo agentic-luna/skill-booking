@@ -35,6 +35,7 @@ export interface ClientEvent {
   status: EventStatus;
   price?: number;
   duration?: string;
+  durationHours?: number;
   category?: string;
   createdAt: string;
   updatedAt: string;

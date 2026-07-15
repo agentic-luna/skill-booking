@@ -90,7 +90,7 @@ export function WeeklyFlowCard({ bookingsTrendData }: { bookingsTrendData: Array
                 stroke="#a0f212" 
                 strokeWidth={4} 
                 dot={{ r: 5, strokeWidth: 0, fill: "#a0f212" }} 
-                activeDot={{ r: 8, strokeWidth: 0, fill: "#0b0c01", stroke: "#a0f212", strokeWidth: 3 }}
+                activeDot={{ r: 8, fill: "#0b0c01", stroke: "#a0f212", strokeWidth: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>

@@ -28,7 +28,11 @@ router.post('/notifications/broadcast', (0, authorize_1.requirePermission)(syste
 // Moderation
 router.get('/events/queue', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_MODERATE), admin_controller_1.AdminController.getEventQueue);
 router.put('/events/:eventId/approve', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.approveEvent);
-router.put('/events/:eventId/decline', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_MODERATE), admin_controller_1.AdminController.declineEvent);
+router.put('/events/:eventId/decline', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.declineEvent);
+// --- Edit Requests ---
+router.get('/edit-requests', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.getEditRequests);
+router.put('/edit-requests/:id/approve', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.approveEditRequest);
+router.put('/edit-requests/:id/reject', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.rejectEditRequest);
 // Escrows & Ledger
 router.get('/finance/ledger', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getFinanceLedger);
 router.put('/finance/payouts/:hostId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.payoutHost);

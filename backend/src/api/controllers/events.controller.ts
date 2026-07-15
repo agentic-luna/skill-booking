@@ -38,12 +38,13 @@ export class EventsController {
 
   static async createEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { title, posterUrl, mode, venueDetails, startTime, totalSeats, price, duration, description, category } = req.body;
+      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category } = req.body;
       const event = await mediator.send(new CreateEventCommand(req.user!.id, {
         title,
         posterUrl,
         mode: mode as EventMode,
-        venueDetails,
+        venue,
+        instructor,
         startTime,
         totalSeats: Number(totalSeats),
         price: price !== undefined ? Number(price) : undefined,
@@ -60,7 +61,7 @@ export class EventsController {
   static async updateEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { title, posterUrl, mode, venueDetails, startTime, totalSeats, price, duration, description } = req.body;
+      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description } = req.body;
 
       // 1. Fetch host profile first to verify ownership
       const hostProfile = await prisma.hostProfile.findUnique({
@@ -95,23 +96,119 @@ export class EventsController {
       }
 
       // 5. Update event
+      let instructorId = event.instructorId;
+      let venueId = event.venueId;
+
+      if (instructor !== undefined && instructor !== null && typeof instructor === 'object') {
+        const details = instructor;
+        if (instructorId) {
+          await prisma.instructor.update({
+            where: { id: instructorId },
+            data: {
+              name: details.name !== undefined ? details.name : undefined,
+              bio: details.bio !== undefined ? details.bio : undefined,
+              photoUrl: details.photoUrl !== undefined ? details.photoUrl : undefined,
+              companyName: details.companyName !== undefined ? details.companyName : undefined,
+              facebook: details.facebook !== undefined ? details.facebook : undefined,
+              instagram: details.instagram !== undefined ? details.instagram : undefined,
+              linkedin: details.linkedin !== undefined ? details.linkedin : undefined,
+            },
+          });
+        } else if (details.name) {
+          const inst = await prisma.instructor.create({
+            data: {
+              name: details.name,
+              bio: details.bio || '',
+              photoUrl: details.photoUrl || '',
+              companyName: details.companyName || '',
+              facebook: details.facebook || null,
+              instagram: details.instagram || null,
+              linkedin: details.linkedin || null,
+            },
+          });
+          instructorId = inst.id;
+        }
+      }
+
+      if (venue !== undefined && venue !== null && typeof venue === 'object') {
+        const address = venue.address;
+        const meetingLink = venue.meetingLink;
+        if (venueId) {
+          await prisma.venue.update({
+            where: { id: venueId },
+            data: {
+              address: address !== undefined ? address : undefined,
+              meetingLink: meetingLink !== undefined ? meetingLink : undefined,
+            },
+          });
+        } else if (address !== undefined || meetingLink !== undefined) {
+          const v = await prisma.venue.create({
+            data: {
+              address: address || '',
+              meetingLink: meetingLink || null,
+            },
+          });
+          venueId = v.id;
+        }
+      }
+
       const updatedEvent = await prisma.event.update({
         where: { id },
         data: {
           title: title !== undefined ? title : event.title,
           posterUrl: posterUrl !== undefined ? posterUrl : event.posterUrl,
           mode: mode !== undefined ? (mode as EventMode) : event.mode,
-          venueDetails: venueDetails !== undefined ? venueDetails : (event.venueDetails as any),
           startTime: startTime !== undefined ? new Date(startTime) : event.startTime,
           totalSeats: totalSeats !== undefined ? Number(totalSeats) : event.totalSeats,
           availableSeats: totalSeats !== undefined ? Number(totalSeats) : event.availableSeats,
           price: price !== undefined ? Number(price) : event.price,
           duration: duration !== undefined ? String(duration) : event.duration,
           description: description !== undefined ? String(description) : event.description,
+          instructorId,
+          venueId,
+        },
+        include: {
+          instructor: true,
+          venue: true,
+          commission: true,
+          host: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+            },
+          },
         },
       });
 
-      return ApiResponse.success(res, updatedEvent);
+      const mappedEvent: any = {
+        ...updatedEvent,
+        availableSeats: Number(updatedEvent.availableSeats),
+        totalSeats: Number(updatedEvent.totalSeats),
+        version: Number(updatedEvent.version),
+      };
+
+      if (updatedEvent.instructor || updatedEvent.venue) {
+        mappedEvent.venueDetails = {
+          address: updatedEvent.venue?.address || '',
+          meetingLink: updatedEvent.venue?.meetingLink || '',
+          instructorName: updatedEvent.instructor?.name || '',
+          companyName: updatedEvent.instructor?.companyName || '',
+          instructorBio: updatedEvent.instructor?.bio || '',
+          instructorPhoto: updatedEvent.instructor?.photoUrl || '',
+          instagram: updatedEvent.instructor?.instagram || '',
+          linkedin: updatedEvent.instructor?.linkedin || '',
+          facebook: updatedEvent.instructor?.facebook || '',
+        };
+      }
+
+      return ApiResponse.success(res, mappedEvent);
     } catch (error) {
       next(error);
     }

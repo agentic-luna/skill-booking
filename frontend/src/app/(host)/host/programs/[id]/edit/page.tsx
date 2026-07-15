@@ -118,15 +118,18 @@ export default function EditProgramPage() {
         title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
         mode: data.mode,          // ← directly from form
-        venueDetails: {
-          address: data.location.trim(),
-          instructorName: data.instructorName.trim(),
+        venue: {
+          address: data.mode === "ONLINE" ? "Online" : data.location.trim(),
+          meetingLink: data.mode === "ONLINE" ? data.location.trim() : null,
+        },
+        instructor: {
+          name: data.instructorName.trim(),
           companyName: data.companyName.trim(),
-          instructorBio: data.instructorBio.trim(),
-          instructorPhoto: data.instructorPhoto.trim(),
-          instagram: data.instagram?.trim() || "",
-          linkedin: data.linkedin?.trim() || "",
-          facebook: data.facebook?.trim() || "",
+          bio: data.instructorBio.trim(),
+          photoUrl: data.instructorPhoto.trim(),
+          instagram: data.instagram?.trim() || null,
+          linkedin: data.linkedin?.trim() || null,
+          facebook: data.facebook?.trim() || null,
         },
         startTime,
         totalSeats: Number(data.maxSpots),

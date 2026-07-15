@@ -19,6 +19,10 @@ export interface Program {
   featured?: boolean;
   mode?: "ONLINE" | "OFFLINE";
   companyName?: string;
+  instructorBio?: string;
+  instagram?: string;
+  linkedin?: string;
+  facebook?: string;
 }
 
 export const MOCK_PROGRAMS: Program[] = [

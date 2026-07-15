@@ -176,9 +176,36 @@ class UsersController {
             }
             const events = await prisma_1.prisma.event.findMany({
                 where: { hostId: hostProfile.id },
+                select: {
+                    id: true,
+                    hostId: true,
+                    title: true,
+                    description: true,
+                    posterUrl: true,
+                    mode: true,
+                    venueDetails: true,
+                    startTime: true,
+                    totalSeats: true,
+                    availableSeats: true,
+                    status: true,
+                    version: true,
+                    price: true,
+                    duration: true,
+                    category: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
                 orderBy: { startTime: 'desc' },
             });
-            return api_response_1.ApiResponse.success(res, events);
+            // Serialize Decimal/BigInt fields to plain JS numbers for JSON
+            const serialized = events.map((e) => ({
+                ...e,
+                price: e.price ? Number(e.price) : null,
+                totalSeats: Number(e.totalSeats),
+                availableSeats: Number(e.availableSeats),
+                version: Number(e.version),
+            }));
+            return api_response_1.ApiResponse.success(res, serialized);
         }
         catch (error) {
             next(error);

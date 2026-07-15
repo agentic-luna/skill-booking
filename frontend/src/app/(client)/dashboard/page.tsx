@@ -13,7 +13,14 @@ export default function DashboardOverviewPage() {
   const router = useRouter();
   const showAlert = useAlertStore((s) => s.showAlert);
   const { user, isAuthenticated } = useAuthStore();
-  const { bookings, fetchBookings, events, fetchEvents } = useClientStore();
+  const { 
+    bookings, 
+    fetchBookings, 
+    events, 
+    fetchEvents, 
+    wishlist, 
+    fetchWishlist 
+  } = useClientStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -26,7 +33,8 @@ export default function DashboardOverviewPage() {
     }
     fetchBookings();
     fetchEvents();
-  }, [isAuthenticated, user, router, fetchBookings, fetchEvents]);
+    fetchWishlist();
+  }, [isAuthenticated, user, router, fetchBookings, fetchEvents, fetchWishlist]);
 
   if (!isAuthenticated || !user) {
     return (
@@ -45,6 +53,10 @@ export default function DashboardOverviewPage() {
   const recommendations = events
     .filter(p => p.status === "APPROVED" && !bookedIds.includes(p.id))
     .slice(0, 3); // Fit 3 nicely in a grid
+
+  const hoursLearned = bookings
+    .filter((b) => b.status === "CONFIRMED")
+    .reduce((sum, b) => sum + (b.event?.durationHours ?? 2.0), 0);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-12">
@@ -104,7 +116,7 @@ export default function DashboardOverviewPage() {
             <Heart className="h-7 w-7" />
           </div>
           <div>
-            <h3 className="text-3xl font-black">--</h3>
+            <h3 className="text-3xl font-black">{wishlist.length}</h3>
             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mt-1">Saved in Wishlist</p>
           </div>
         </div>
@@ -115,7 +127,7 @@ export default function DashboardOverviewPage() {
             <Clock className="h-7 w-7" />
           </div>
           <div>
-            <h3 className="text-3xl font-black">--</h3>
+            <h3 className="text-3xl font-black">{hoursLearned}</h3>
             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mt-1">Hours Learned</p>
           </div>
         </div>

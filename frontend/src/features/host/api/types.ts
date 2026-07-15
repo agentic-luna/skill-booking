@@ -46,7 +46,19 @@ export interface CreateEventPayload {
   title: string;
   posterUrl?: string;
   mode: EventMode;
-  venueDetails?: string;
+  venue?: {
+    address: string;
+    meetingLink?: string | null;
+  };
+  instructor?: {
+    name: string;
+    bio?: string;
+    photoUrl?: string;
+    companyName?: string;
+    facebook?: string | null;
+    instagram?: string | null;
+    linkedin?: string | null;
+  };
   startTime: string; // ISO 8601
   totalSeats: number;
   price?: number;
@@ -59,7 +71,7 @@ export interface CreatedEvent {
   id: string;
   title: string;
   mode: EventMode;
-  venueDetails?: string;
+  venueDetails?: any;
   startTime: string;
   totalSeats: number;
   status: "PENDING" | "APPROVED" | "REJECTED";

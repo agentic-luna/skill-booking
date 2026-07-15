@@ -269,10 +269,6 @@ export default function AdminApprovalsPage() {
       <LockCommissionModal
         isOpen={isApproveOpen}
         onOpenChange={setIsApproveOpen}
-        commissionType={commissionType}
-        onCommissionTypeChange={setCommissionType}
-        platformValue={platformValue}
-        onPlatformValueChange={setPlatformValue}
         onConfirm={handleApproveConfirm}
         onCancel={() => {
           setIsApproveOpen(false);

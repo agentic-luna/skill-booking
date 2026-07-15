@@ -16,7 +16,7 @@ const commonMessage = (msg) => ({
 exports.authLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 30,
-    skip: () => process.env.NODE_ENV === 'test',
+    skip: () => process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
     standardHeaders: true,
     legacyHeaders: false,
     message: commonMessage('Too many authentication attempts. Please try again after 15 minutes.'),
@@ -25,7 +25,7 @@ exports.authLimiter = (0, express_rate_limit_1.default)({
 exports.checkoutLimiter = (0, express_rate_limit_1.default)({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 30,
-    skip: () => process.env.NODE_ENV === 'test',
+    skip: () => process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
     standardHeaders: true,
     legacyHeaders: false,
     message: commonMessage('Too many booking checkout attempts. Please wait a few minutes before trying again.'),
@@ -34,7 +34,7 @@ exports.checkoutLimiter = (0, express_rate_limit_1.default)({
 exports.webhookLimiter = (0, express_rate_limit_1.default)({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 150,
-    skip: () => process.env.NODE_ENV === 'test',
+    skip: () => process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
     standardHeaders: true,
     legacyHeaders: false,
     message: commonMessage('Webhook rate limit exceeded.'),
@@ -43,7 +43,7 @@ exports.webhookLimiter = (0, express_rate_limit_1.default)({
 exports.globalLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 300,
-    skip: () => process.env.NODE_ENV === 'test',
+    skip: () => process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
     standardHeaders: true,
     legacyHeaders: false,
     message: commonMessage('Too many requests from this IP, please try again later.'),

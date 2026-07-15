@@ -24,4 +24,8 @@ export interface Event {
   updatedAt: Date;
   commission?: EventCommission | null;
   host?: any;
+  instructorId?: string | null;
+  venueId?: string | null;
+  instructor?: any;
+  venue?: any;
 }

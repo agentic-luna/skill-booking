@@ -4,6 +4,7 @@ import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ICacheService } from '../../services/cache.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { BadRequestError, ForbiddenError } from '../../common/errors';
+import { parseDurationToHours } from '../../../utils/duration-parser';
 
 export class CreateEventCommand implements IRequest<any> {
   readonly __tag = 'CreateEventCommand';
@@ -13,7 +14,19 @@ export class CreateEventCommand implements IRequest<any> {
       title: string;
       posterUrl?: string;  // optional — defaults to empty string if not provided
       mode: EventMode;
-      venueDetails?: any;
+      venue?: {
+        address: string;
+        meetingLink?: string | null;
+      };
+      instructor?: {
+        name: string;
+        bio?: string;
+        photoUrl?: string;
+        companyName?: string;
+        facebook?: string | null;
+        instagram?: string | null;
+        linkedin?: string | null;
+      };
       startTime: string;
       totalSeats: number;
       price?: number;
@@ -47,12 +60,15 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       throw new ForbiddenError('Cannot create events. Your KYC verification is ' + hostProfile.kycStatus + '. Please wait for admin approval.');
     }
 
+    const durationHours = parseDurationToHours(data.duration);
+
     const event = await this.eventRepo.create({
       hostId: hostProfile.id,
       title: data.title,
       posterUrl: data.posterUrl || '',  // default to empty string if not provided
       mode: data.mode,
-      venueDetails: data.venueDetails,
+      venue: data.venue,
+      instructor: data.instructor,
       startTime: new Date(data.startTime),
       totalSeats: data.totalSeats,
       availableSeats: data.totalSeats,
@@ -60,6 +76,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       version: 1,
       price: data.price,
       duration: data.duration,
+      durationHours,
       description: data.description,
       category: data.category,
     });
