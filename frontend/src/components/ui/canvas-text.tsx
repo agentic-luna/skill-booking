@@ -45,6 +45,7 @@ export function CanvasText({
   const [resolvedColors, setResolvedColors] = useState<string[]>([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [font, setFont] = useState("");
+  const [letterSpacing, setLetterSpacing] = useState("normal");
 
   const updateColors = useCallback(() => {
     if (bgRef.current) {
@@ -75,12 +76,13 @@ export function CanvasText({
       const rect = textEl.getBoundingClientRect();
       const computed = window.getComputedStyle(textEl);
       setDimensions({
-        width: Math.ceil(rect.width) || 400,
+        width: Math.ceil(rect.width) + 10 || 400,
         height: Math.ceil(rect.height) || 200,
       });
       setFont(
         `${computed.fontWeight} ${computed.fontSize} ${computed.fontFamily}`,
       );
+      setLetterSpacing(computed.letterSpacing);
     };
 
     updateDimensions();
@@ -111,10 +113,13 @@ export function CanvasText({
     canvas.height = height * dpr;
 
     ctx.font = font;
+    // @ts-ignore
+    ctx.letterSpacing = letterSpacing;
     const metrics = ctx.measureText(text);
-    const ascent = metrics.actualBoundingBoxAscent;
-    const descent = metrics.actualBoundingBoxDescent;
-    const baselineY = (height + ascent - descent) / 2;
+    // Use global font metrics so the baseline doesn't jump based on word characters
+    const fontAscent = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent;
+    const fontDescent = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent;
+    const baselineY = (height + fontAscent - fontDescent) / 2;
 
     const numLines = Math.floor(height / lineGap) + 10;
     startTimeRef.current = performance.now();
@@ -128,6 +133,8 @@ export function CanvasText({
 
       ctx.globalCompositeOperation = "source-over";
       ctx.font = font;
+      // @ts-ignore
+      ctx.letterSpacing = letterSpacing;
       ctx.textBaseline = "alphabetic";
       ctx.textAlign = "left";
       ctx.fillStyle = "#000";
@@ -172,6 +179,7 @@ export function CanvasText({
   }, [
     text,
     font,
+    letterSpacing,
     bgColor,
     resolvedColors,
     animationDuration,

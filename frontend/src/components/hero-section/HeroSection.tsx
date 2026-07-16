@@ -27,22 +27,22 @@ export default function HeroSection() {
         {/* Search Input Box */}
         <form 
           onSubmit={handleSearchSubmit} 
-          className="flex items-center w-full max-w-2xl mx-auto bg-white p-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative z-20 group transition-all duration-300 ease-out hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] focus-within:shadow-[0_8px_40px_rgb(0,0,0,0.16)] focus-within:-translate-y-1 hover:-translate-y-1"
+          className="flex items-center w-full max-w-2xl mx-auto bg-[#11131A]/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.5)] relative z-20 group transition-all duration-300 ease-out hover:shadow-[0_8px_40px_rgba(160,242,18,0.1)] focus-within:shadow-[0_8px_40px_rgba(160,242,18,0.1)] focus-within:border-[#a0f212]/30 focus-within:-translate-y-1 hover:-translate-y-1 hover:border-white/20"
         >
           <div className="relative flex-1 flex items-center">
             <Input
               type="text"
               placeholder="What skill do you want to learn today?"
-              className="px-6 h-14 w-full text-lg bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-black placeholder:text-gray-400 font-light"
+              className="px-6 h-14 w-full text-lg bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-white placeholder:text-white/40 font-light"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <button 
             type="submit" 
-            className="h-14 w-14 shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-md transition-all duration-300 hover:bg-primary/90 hover:scale-105 active:scale-95 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="h-14 w-14 shrink-0 rounded-full bg-gradient-to-b from-[#a0f212] to-[#8ac90c] hover:from-[#b1f530] hover:to-[#9ad918] flex items-center justify-center text-black shadow-md transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-[0_0_20px_rgba(160,242,18,0.4)] focus:outline-none focus:ring-2 focus:ring-[#a0f212]/50 border border-[#c1f76f]/50"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-5 w-5 stroke-[2.5px]" />
           </button>
         </form>
 

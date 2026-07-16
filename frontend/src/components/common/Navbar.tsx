@@ -49,6 +49,7 @@ export default function Navbar() {
 
   const isHome = pathname === "/";
   const showSearchAndShrink = isScrolled || !isHome;
+  const isSolidNav = isScrolled || !isHome || mobileMenuOpen;
   const unreadNotificationsCount = notifications.filter(n => n.status !== "READ").length;
 
   useEffect(() => {
@@ -59,8 +60,8 @@ export default function Navbar() {
 
   return (
     <div className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] z-[100] transition-all duration-500 ease-out ${showSearchAndShrink ? "max-w-[816px]" : "max-w-[1250px]"}`}>
-      <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${showSearchAndShrink
-        ? "bg-bone-white/80 backdrop-blur-xl border border-clay-shadow/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+      <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${isSolidNav
+        ? "bg-bone-white/95 backdrop-blur-xl border border-clay-shadow/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
         : "bg-transparent border-transparent"
         }`}>
         <div className="px-6 sm:px-8">
@@ -68,7 +69,7 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
-              <span className={`text-lg font-bold tracking-tight transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink" : "text-white"}`}>
+              <span className={`text-lg font-bold tracking-tight transition-colors duration-500 ${isSolidNav ? "text-graphite-ink" : "text-white"}`}>
                 BookMy<span className="text-primary/90">Skill</span>
               </span>
             </Link>
@@ -88,7 +89,7 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Nav Items */}
-            <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
+            <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isSolidNav ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
               <Link 
                 href="/programs" 
                 className={`text-sm font-medium hover:opacity-80 transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${
@@ -109,7 +110,7 @@ export default function Navbar() {
                           variant="ghost" 
                           size="icon" 
                           className={`rounded-full relative transition-all duration-300 ${
-                            isScrolled || !isHome 
+                            isSolidNav 
                               ? "text-graphite-ink hover:bg-graphite-ink/5 hover:drop-shadow-sm" 
                               : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
                           }`}
@@ -149,14 +150,6 @@ export default function Navbar() {
                     </DropdownMenu>
                   )}
 
-                  {/* Wishlist Link */}
-                  {user.role === "client" && (
-                    <Link href="/wishlist">
-                      <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
-                        <Heart className="h-4.5 w-4.5" />
-                      </Button>
-                    </Link>
-                  )}
 
 
 
@@ -215,7 +208,7 @@ export default function Navbar() {
               ) : (
                 <div className="flex items-center space-x-3">
                   <Link href="/login">
-                    <Button variant="ghost" className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}>Sign In</Button>
+                    <Button variant="ghost" className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isSolidNav ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}>Sign In</Button>
                   </Link>
                   <Link href="/register">
                     <Button className="px-6 shadow-lg shadow-primary/20">Get Started</Button>
@@ -229,7 +222,7 @@ export default function Navbar() {
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`rounded-full p-2 transition-colors focus:outline-none ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}
+                className={`rounded-full p-2 transition-colors focus:outline-none ${isSolidNav ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -241,9 +234,8 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border/40 bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
-
-          <div className="flex flex-col space-y-3">
+        <div className="md:hidden fixed inset-0 z-[90] bg-white dark:bg-background pt-[100px] px-6 space-y-6 animate-in slide-in-from-top-4 duration-150 overflow-y-auto pb-8">
+          <div className="flex flex-col space-y-2">
             <Link
               href="/programs"
               onClick={() => setMobileMenuOpen(false)}

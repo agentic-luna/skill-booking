@@ -8,8 +8,6 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { cn } from "@/lib/utils";
 
 const DASHBOARD_LINKS = [
-  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Profile Settings", href: "/dashboard/profile", icon: User },
   { name: "My Tickets", href: "/dashboard/tickets", icon: BookmarkCheck },
   { name: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
 ];
@@ -24,7 +22,7 @@ interface SidebarProps {
 
 function SidebarContent({ pathname, userName, onNavigate, onLogout, isElevated }: SidebarProps) {
   const visibleLinks = DASHBOARD_LINKS.filter((link) => {
-    if (isElevated && (link.name === "Overview" || link.name === "My Tickets" || link.name === "Wishlist")) {
+    if (isElevated && (link.name === "My Tickets" || link.name === "Wishlist")) {
       return false;
     }
     return true;
@@ -87,6 +85,20 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout, isElevated }
 
       {/* Footer */}
       <div className="space-y-2 flex flex-col pt-8 border-t border-white/10">
+        <Link
+          href="/dashboard/profile"
+          onClick={onNavigate}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-full transition-all group font-medium ${
+            pathname === "/dashboard/profile"
+              ? "bg-[#252525] text-white shadow-inner border border-white/5 font-semibold"
+              : "text-white/60 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <User className={`h-5 w-5 transition-colors ${
+            pathname === "/dashboard/profile" ? "text-[#a0f212]" : "text-white/60 group-hover:text-white"
+          }`} />
+          <span className="text-sm tracking-wide">Profile Settings</span>
+        </Link>
         <Link
           href="/programs"
           className="flex items-center gap-3.5 px-4 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all group font-medium"
