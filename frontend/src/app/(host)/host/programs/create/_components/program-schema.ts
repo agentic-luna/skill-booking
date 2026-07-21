@@ -20,6 +20,7 @@ export const programSchema = z.object({
   instagram: z.string().url("Must be a valid Instagram URL").optional().or(z.literal("")),
   linkedin: z.string().url("Must be a valid LinkedIn URL").optional().or(z.literal("")),
   facebook: z.string().url("Must be a valid Facebook URL").optional().or(z.literal("")),
+  additionalImages: z.array(z.object({ url: z.string().url("Must be a valid URL") })).optional(),
   verifiedCorrect: z.boolean().refine(val => val === true, {
     message: "You must confirm that all details are accurate"
   }),

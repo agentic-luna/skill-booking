@@ -42,6 +42,7 @@ export default function EditProgramPage() {
     setValue,
     reset,
     watch,
+    control,
     formState: { errors },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
@@ -87,6 +88,9 @@ export default function EditProgramPage() {
               : details.venueDetails?.address || "",
           description: details.description || "",
           imageUrl: details.posterUrl || "",
+          additionalImages: details.images && details.images.length > 0 
+            ? details.images.map((url: string) => ({ url })) 
+            : [],
           instructorName: details.venueDetails?.instructorName || "",
           companyName: details.venueDetails?.companyName || "",
           instructorBio: details.venueDetails?.instructorBio || "",
@@ -117,6 +121,7 @@ export default function EditProgramPage() {
       await updateEvent(programId, {
         title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
+        images: data.additionalImages ? data.additionalImages.map(img => img.url) : [],
         mode: data.mode,          // ← directly from form
         venue: {
           address: data.mode === "ONLINE" ? "Online" : data.location.trim(),
@@ -295,7 +300,7 @@ export default function EditProgramPage() {
               watch={watch}
             />
             <PricingSection register={register} errors={errors} />
-            <CoverImageSection register={register} errors={errors} />
+            <CoverImageSection register={register} errors={errors} control={control} />
             <InstructorSection register={register} errors={errors} />
             <VerificationSection register={register} errors={errors} />
           </div>

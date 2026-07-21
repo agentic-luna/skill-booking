@@ -47,8 +47,9 @@ export default function Navbar() {
     router.push("/");
   };
 
-  const isHome = pathname === "/";
-  const showSearchAndShrink = isScrolled || !isHome;
+  // We now have a light hero everywhere, so always treat it as not home for color purposes
+  const isHome = false;
+  const showSearchAndShrink = isScrolled || pathname !== "/";
   const unreadNotificationsCount = notifications.filter(n => n.status !== "READ").length;
 
   useEffect(() => {

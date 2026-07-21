@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { CanvasText } from "@/components/ui/canvas-text";
-
 const PHRASES = [
   { prefix: "Build Skills That ", highlight: "Matter." },
   { prefix: "Learn from ", highlight: "Industry Experts." },
@@ -25,36 +23,17 @@ export default function AnimatedHeroText() {
   }, []);
 
   return (
-    <span className="font-sans font-bold tracking-tight text-white select-none whitespace-nowrap">
+    <span className="font-sans font-bold tracking-tight text-gray-900 select-none whitespace-nowrap">
       <AnimatePresence mode="wait">
         <motion.span
           key={phraseIndex}
           initial={{ opacity: 0, filter: "blur(4px)" }}
           animate={{ opacity: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, filter: "blur(4px)" }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          className="inline-block"
+          className="inline-flex flex-col text-left"
         >
-          {PHRASES[phraseIndex].prefix}
-          <CanvasText
-            text={PHRASES[phraseIndex].highlight}
-            className="ml-2"
-            backgroundClassName="bg-white"
-            colors={[
-              "rgba(160, 242, 18, 1)",
-              "rgba(160, 242, 18, 0.9)",
-              "rgba(160, 242, 18, 0.8)",
-              "rgba(171, 242, 130, 0.9)",
-              "rgba(171, 242, 130, 0.8)",
-              "rgba(160, 242, 18, 0.6)",
-              "rgba(160, 242, 18, 0.5)",
-              "rgba(171, 242, 130, 0.4)",
-              "rgba(160, 242, 18, 0.2)",
-              "rgba(171, 242, 130, 0.1)",
-            ]}
-            lineGap={3}
-            animationDuration={15}
-          />
+          <span className="block">{PHRASES[phraseIndex].prefix}</span>
+          <span className="block text-[#a0f212]">{PHRASES[phraseIndex].highlight}</span>
         </motion.span>
       </AnimatePresence>
     </span>

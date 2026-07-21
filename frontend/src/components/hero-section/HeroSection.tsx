@@ -1,67 +1,138 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { HeroGeometric } from "@/components/ui/hero-geometric";
-import AnimatedHeroText from "@/components/hero-section/AnimatedHeroText";
+import React from "react";
+import { CalendarCheck, ThumbsUp, Globe, Headset } from "lucide-react";
+import AnimatedHeroText from "./AnimatedHeroText";
+import AdvancedSearchBar from "./AdvancedSearchBar";
 
 export default function HeroSection() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.push(`/programs?search=${encodeURIComponent(searchQuery)}`);
-  };
-
   return (
-    <HeroGeometric
-      titleComponent={<AnimatedHeroText />}
-    >
-      <div className="w-full flex flex-col items-center space-y-6">
-        {/* Search Input Box */}
-        <form 
-          onSubmit={handleSearchSubmit} 
-          className="flex items-center w-full max-w-2xl mx-auto bg-white p-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative z-20 group transition-all duration-300 ease-out hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] focus-within:shadow-[0_8px_40px_rgb(0,0,0,0.16)] focus-within:-translate-y-1 hover:-translate-y-1"
-        >
-          <div className="relative flex-1 flex items-center">
-            <Input
-              type="text"
-              placeholder="What skill do you want to learn today?"
-              className="px-6 h-14 w-full text-lg bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-black placeholder:text-gray-400 font-light"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <button 
-            type="submit" 
-            className="h-14 w-14 shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-md transition-all duration-300 hover:bg-primary/90 hover:scale-105 active:scale-95 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <Search className="h-5 w-5" />
-          </button>
-        </form>
+    <div className="w-full flex flex-col">
+      {/* Top Hero Area */}
+      <div className="relative w-full bg-[#f2fcf5] pt-20 pb-16">
+        <div className="max-w-[1100px] w-full mx-auto px-6">
+          {/* Top Content: Split Layout */}
+          <div className="w-full flex flex-col lg:flex-row items-center gap-6 lg:gap-8 mb-4 mt-6">
+            {/* Left Text */}
+            <div className="w-full lg:w-[40%] flex flex-col items-start lg:items-start text-left">
+              <h1 className="text-[28px] md:text-[36px] lg:text-[42px] font-extrabold text-gray-900 leading-[1.15] tracking-tight mb-4">
+                <AnimatedHeroText />
+              </h1>
+              <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+                Discover the best handpicked trainings and programs to upgrade your skillset today.
+              </p>
+            </div>
 
-        <Link href="/programs" className="mt-6 md:mt-10 relative group inline-block animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300 fill-mode-both">
-          {/* Animated outer glow ring */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#a0f212]/40 via-[#a0f212]/70 to-[#a0f212]/40 rounded-full opacity-70 group-hover:opacity-100 blur-lg transition-all duration-700 group-hover:duration-300"></div>
+            {/* Right Image Grid */}
+            <div className="w-full lg:w-[60%] grid grid-cols-3 gap-2 h-[260px] md:h-[300px]">
+              {/* Main tall image */}
+              <div className="col-span-1 row-span-2 rounded-2xl overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop"
+                  alt="Hero Main"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Top right */}
+              <div className="col-span-2 rounded-2xl overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=800&auto=format&fit=crop"
+                  alt="Hero 2"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Bottom right */}
+              <div className="col-span-1 rounded-2xl overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=600&auto=format&fit=crop"
+                  alt="Hero 3"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="col-span-1 rounded-2xl overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1531496730074-83b638c0a7ac?q=80&w=600&auto=format&fit=crop"
+                  alt="Hero 4"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Area (Search Bar + Why BookMySkill) */}
+      <div className="relative w-full bg-white pb-16">
+        <div className="max-w-[1100px] w-full mx-auto px-6">
           
-          {/* Main button surface */}
-          <Button 
-            size="lg" 
-            className="relative h-12 md:h-14 px-8 md:px-12 bg-gradient-to-b from-[#a0f212] to-[#8ac90c] hover:from-[#b1f530] hover:to-[#9ad918] text-black border border-[#c1f76f]/50 rounded-full transition-all duration-300 shadow-[0_0_25px_rgba(160,242,18,0.5)] group-hover:shadow-[0_0_40px_rgba(160,242,18,0.7)] font-bold tracking-wide text-sm md:text-base overflow-hidden"
-          >
-            {/* Subtle inner top highlight */}
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-            {/* Inner bottom glow */}
-            <div className="absolute inset-x-4 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-black/10 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500"></div>
-            Explore Skills
-          </Button>
-        </Link>      </div>
-    </HeroGeometric>
+          {/* Search Bar — pulled up slightly over the background transition */}
+          <div className="w-full relative z-30 -mt-8">
+            <AdvancedSearchBar />
+          </div>
+
+          {/* Why BookMySkill? Section */}
+          <div className="mt-14">
+            <h2 className="text-[22px] font-extrabold text-gray-900 mb-5 tracking-tight">Why BookMySkill?</h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              
+              {/* Card 1 */}
+              <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 mb-4 bg-blue-50 rounded-full flex items-center justify-center">
+                  <CalendarCheck className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-snug">
+                  Book now, pay at the session
+                </h3>
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  FREE cancellation on most bookings and classes.
+                </p>
+              </div>
+
+              {/* Card 2 */}
+              <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 mb-4 bg-green-50 rounded-full flex items-center justify-center">
+                  <ThumbsUp className="w-5 h-5 text-green-600" />
+                </div>
+                <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-snug">
+                  Real reviews from fellow learners
+                </h3>
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  Get trusted feedback from users who actually took the classes.
+                </p>
+              </div>
+
+              {/* Card 3 */}
+              <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 mb-4 bg-orange-50 rounded-full flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-orange-600" />
+                </div>
+                <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-snug">
+                  Verified expert trainers
+                </h3>
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  Learn from vetted industry professionals across the globe.
+                </p>
+              </div>
+
+              {/* Card 4 */}
+              <div className="flex flex-col p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 mb-4 bg-purple-50 rounded-full flex items-center justify-center">
+                  <Headset className="w-5 h-5 text-purple-600" />
+                </div>
+                <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-snug">
+                  Trusted customer service you can rely on, 24/7
+                </h3>
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  We're always here to help whenever you need it.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   );
 }

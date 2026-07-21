@@ -31,6 +31,7 @@ export default function CreateProgramPage() {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
@@ -73,6 +74,7 @@ export default function CreateProgramPage() {
       await createEvent({
         title: data.title.trim(),
         posterUrl: data.imageUrl || undefined,
+        images: data.additionalImages ? data.additionalImages.map(img => img.url) : [],
         mode: data.mode,          // ← directly from form; user chose ONLINE or OFFLINE
         venue: {
           address: data.mode === "ONLINE" ? "Online" : data.location.trim(),
@@ -165,7 +167,7 @@ export default function CreateProgramPage() {
               watch={watch}
             />
             <PricingSection register={register} errors={errors} />
-            <CoverImageSection register={register} errors={errors} />
+            <CoverImageSection register={register} errors={errors} control={control} />
             <InstructorSection register={register} errors={errors} />
             <VerificationSection register={register} errors={errors} />
           </div>
