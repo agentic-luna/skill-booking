@@ -44,7 +44,8 @@ class SubmitBankDetailsCommandHandler {
             if (data.upiId !== undefined) {
                 updatePayload.upiId = data.upiId ? this.cryptoService.encrypt(data.upiId) : null;
             }
-            return this.userRepo.updateHostBankDetail(hostProfileId, updatePayload);
+            const updated = await this.userRepo.updateHostBankDetail(hostProfileId, updatePayload);
+            return this.cryptoService.decryptBankDetail(updated);
         }
         // Overwriting or initial submission
         if (!data.accountHolderName || !data.accountNumber || !data.ifscCode || !data.bankName) {
@@ -57,7 +58,8 @@ class SubmitBankDetailsCommandHandler {
             bankName: data.bankName,
             upiId: data.upiId ? this.cryptoService.encrypt(data.upiId) : null,
         };
-        return this.userRepo.upsertHostBankDetail(hostProfileId, payload);
+        const upserted = await this.userRepo.upsertHostBankDetail(hostProfileId, payload);
+        return this.cryptoService.decryptBankDetail(upserted);
     }
 }
 exports.SubmitBankDetailsCommandHandler = SubmitBankDetailsCommandHandler;

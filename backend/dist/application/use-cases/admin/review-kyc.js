@@ -10,14 +10,17 @@ class GetPendingKycHostsQuery {
 exports.GetPendingKycHostsQuery = GetPendingKycHostsQuery;
 class GetPendingKycHostsQueryHandler {
     userRepo;
-    constructor(userRepo) {
+    cryptoService;
+    constructor(userRepo, cryptoService) {
         this.userRepo = userRepo;
+        this.cryptoService = cryptoService;
     }
     async handle(_query) {
         const hosts = await this.userRepo.findPendingKycHosts();
+        const decryptedHosts = hosts.map((h) => this.cryptoService.decryptHost(h));
         return {
-            count: hosts.length,
-            hosts,
+            count: decryptedHosts.length,
+            hosts: decryptedHosts,
         };
     }
 }
@@ -33,15 +36,18 @@ class GetAllHostsQuery {
 exports.GetAllHostsQuery = GetAllHostsQuery;
 class GetAllHostsQueryHandler {
     userRepo;
-    constructor(userRepo) {
+    cryptoService;
+    constructor(userRepo, cryptoService) {
         this.userRepo = userRepo;
+        this.cryptoService = cryptoService;
     }
     async handle(query) {
         const filters = query.kycStatus ? { kycStatus: query.kycStatus } : undefined;
         const hosts = await this.userRepo.findAllHosts(filters);
+        const decryptedHosts = hosts.map((h) => this.cryptoService.decryptHost(h));
         return {
-            count: hosts.length,
-            hosts,
+            count: decryptedHosts.length,
+            hosts: decryptedHosts,
         };
     }
 }
@@ -61,8 +67,10 @@ class ReviewKycCommand {
 exports.ReviewKycCommand = ReviewKycCommand;
 class ReviewKycCommandHandler {
     userRepo;
-    constructor(userRepo) {
+    cryptoService;
+    constructor(userRepo, cryptoService) {
         this.userRepo = userRepo;
+        this.cryptoService = cryptoService;
     }
     async handle(command) {
         const { hostProfileId, decision, rejectionReason } = command;
@@ -82,7 +90,7 @@ class ReviewKycCommandHandler {
         }
         return {
             message: `KYC ${decision === 'APPROVED' ? 'approved' : 'rejected'} successfully`,
-            hostProfile: updated,
+            hostProfile: this.cryptoService.decryptHostProfile(updated),
         };
     }
 }

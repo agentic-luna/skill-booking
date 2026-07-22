@@ -50,7 +50,8 @@ export class SubmitBankDetailsCommandHandler implements IRequestHandler<SubmitBa
         updatePayload.upiId = data.upiId ? this.cryptoService.encrypt(data.upiId) : null;
       }
 
-      return this.userRepo.updateHostBankDetail(hostProfileId, updatePayload);
+      const updated = await this.userRepo.updateHostBankDetail(hostProfileId, updatePayload);
+      return this.cryptoService.decryptBankDetail(updated);
     }
 
     // Overwriting or initial submission
@@ -66,6 +67,7 @@ export class SubmitBankDetailsCommandHandler implements IRequestHandler<SubmitBa
       upiId: data.upiId ? this.cryptoService.encrypt(data.upiId) : null,
     };
 
-    return this.userRepo.upsertHostBankDetail(hostProfileId, payload);
+    const upserted = await this.userRepo.upsertHostBankDetail(hostProfileId, payload);
+    return this.cryptoService.decryptBankDetail(upserted);
   }
 }

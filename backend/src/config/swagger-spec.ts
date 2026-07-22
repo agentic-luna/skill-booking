@@ -109,7 +109,7 @@ export const swaggerSpec = {
           kycStatus: { type: 'string', enum: ['PENDING', 'APPROVED', 'REJECTED'], example: 'PENDING' },
           bio: { type: 'string', nullable: true, description: 'Host public bio / instructor description' },
           updatedAt: { type: 'string', format: 'date-time' },
-          bankDetail: { $ref: '#/components/schemas/HostBankDetailSafe', nullable: true },
+          bankDetail: { $ref: '#/components/schemas/HostBankDetailDecrypted', nullable: true },
         },
       },
       HostBankDetailSafe: {

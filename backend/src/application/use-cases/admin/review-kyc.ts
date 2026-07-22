@@ -1,5 +1,6 @@
 import { KycStatus } from '@prisma/client';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
+import { ICryptoService } from '../../services/crypto.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { BadRequestError, NotFoundError } from '../../../application/common/errors';
 
@@ -10,13 +11,17 @@ export class GetPendingKycHostsQuery implements IRequest<any> {
 }
 
 export class GetPendingKycHostsQueryHandler implements IRequestHandler<GetPendingKycHostsQuery, any> {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(
+    private userRepo: IUserRepository,
+    private cryptoService: ICryptoService
+  ) {}
 
   async handle(_query: GetPendingKycHostsQuery): Promise<any> {
     const hosts = await this.userRepo.findPendingKycHosts();
+    const decryptedHosts = hosts.map((h) => this.cryptoService.decryptHost(h));
     return {
-      count: hosts.length,
-      hosts,
+      count: decryptedHosts.length,
+      hosts: decryptedHosts,
     };
   }
 }
@@ -29,14 +34,18 @@ export class GetAllHostsQuery implements IRequest<any> {
 }
 
 export class GetAllHostsQueryHandler implements IRequestHandler<GetAllHostsQuery, any> {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(
+    private userRepo: IUserRepository,
+    private cryptoService: ICryptoService
+  ) {}
 
   async handle(query: GetAllHostsQuery): Promise<any> {
     const filters = query.kycStatus ? { kycStatus: query.kycStatus as any } : undefined;
     const hosts = await this.userRepo.findAllHosts(filters);
+    const decryptedHosts = hosts.map((h) => this.cryptoService.decryptHost(h));
     return {
-      count: hosts.length,
-      hosts,
+      count: decryptedHosts.length,
+      hosts: decryptedHosts,
     };
   }
 }
@@ -53,7 +62,10 @@ export class ReviewKycCommand implements IRequest<any> {
 }
 
 export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand, any> {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(
+    private userRepo: IUserRepository,
+    private cryptoService: ICryptoService
+  ) {}
 
   async handle(command: ReviewKycCommand): Promise<any> {
     const { hostProfileId, decision, rejectionReason } = command;
@@ -79,7 +91,7 @@ export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand
 
     return {
       message: `KYC ${decision === 'APPROVED' ? 'approved' : 'rejected'} successfully`,
-      hostProfile: updated,
+      hostProfile: this.cryptoService.decryptHostProfile(updated),
     };
   }
 }

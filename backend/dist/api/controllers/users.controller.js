@@ -36,12 +36,7 @@ class UsersController {
             }
             const { accountHolderName, accountNumber, ifscCode, bankName, upiId } = req.body;
             const bankDetails = (await di_container_1.mediator.send(new submit_bank_details_1.SubmitBankDetailsCommand(hostProfile.id, { accountHolderName, accountNumber, ifscCode, bankName, upiId }, false)));
-            return api_response_1.ApiResponse.success(res, {
-                id: bankDetails.id,
-                hostProfileId: bankDetails.hostProfileId,
-                bankName: bankDetails.bankName,
-                updatedAt: bankDetails.updatedAt,
-            });
+            return api_response_1.ApiResponse.success(res, di_container_1.cryptoService.decryptBankDetail(bankDetails), 201);
         }
         catch (error) {
             next(error);
@@ -57,16 +52,7 @@ class UsersController {
             if (!bankDetails) {
                 return api_response_1.ApiResponse.success(res, null);
             }
-            return api_response_1.ApiResponse.success(res, {
-                id: bankDetails.id,
-                hostProfileId: bankDetails.hostProfileId,
-                accountHolderName: di_container_1.cryptoService.decrypt(bankDetails.accountHolderName),
-                accountNumber: di_container_1.cryptoService.decrypt(bankDetails.accountNumber),
-                ifscCode: di_container_1.cryptoService.decrypt(bankDetails.ifscCode),
-                bankName: bankDetails.bankName,
-                upiId: bankDetails.upiId ? di_container_1.cryptoService.decrypt(bankDetails.upiId) : null,
-                updatedAt: bankDetails.updatedAt,
-            });
+            return api_response_1.ApiResponse.success(res, di_container_1.cryptoService.decryptBankDetail(bankDetails));
         }
         catch (error) {
             next(error);
@@ -80,12 +66,7 @@ class UsersController {
             }
             const { accountHolderName, accountNumber, ifscCode, bankName, upiId } = req.body;
             const bankDetails = (await di_container_1.mediator.send(new submit_bank_details_1.SubmitBankDetailsCommand(hostProfile.id, { accountHolderName, accountNumber, ifscCode, bankName, upiId }, true)));
-            return api_response_1.ApiResponse.success(res, {
-                id: bankDetails.id,
-                hostProfileId: bankDetails.hostProfileId,
-                bankName: bankDetails.bankName,
-                updatedAt: bankDetails.updatedAt,
-            });
+            return api_response_1.ApiResponse.success(res, di_container_1.cryptoService.decryptBankDetail(bankDetails));
         }
         catch (error) {
             next(error);

@@ -155,9 +155,9 @@ mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommand
 
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new AdminLoginCommandHandler(userRepo, cacheService));
-mediator.register('GetPendingKycHostsQuery', new GetPendingKycHostsQueryHandler(userRepo));
-mediator.register('GetAllHostsQuery', new GetAllHostsQueryHandler(userRepo));
-mediator.register('ReviewKycCommand', new ReviewKycCommandHandler(userRepo));
+mediator.register('GetPendingKycHostsQuery', new GetPendingKycHostsQueryHandler(userRepo, cryptoService));
+mediator.register('GetAllHostsQuery', new GetAllHostsQueryHandler(userRepo, cryptoService));
+mediator.register('ReviewKycCommand', new ReviewKycCommandHandler(userRepo, cryptoService));
 mediator.register('GetConfigsQuery', new GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('GetTemplatesQuery', new GetTemplatesQueryHandler(configRepo));

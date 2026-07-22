@@ -39,12 +39,7 @@ export class UsersController {
         false
       ))) as any;
 
-      return ApiResponse.success(res, {
-        id: bankDetails.id,
-        hostProfileId: bankDetails.hostProfileId,
-        bankName: bankDetails.bankName,
-        updatedAt: bankDetails.updatedAt,
-      });
+      return ApiResponse.success(res, cryptoService.decryptBankDetail(bankDetails), 201);
     } catch (error) {
       next(error);
     }
@@ -62,16 +57,7 @@ export class UsersController {
         return ApiResponse.success(res, null);
       }
 
-      return ApiResponse.success(res, {
-        id: bankDetails.id,
-        hostProfileId: bankDetails.hostProfileId,
-        accountHolderName: cryptoService.decrypt(bankDetails.accountHolderName),
-        accountNumber: cryptoService.decrypt(bankDetails.accountNumber),
-        ifscCode: cryptoService.decrypt(bankDetails.ifscCode),
-        bankName: bankDetails.bankName,
-        upiId: bankDetails.upiId ? cryptoService.decrypt(bankDetails.upiId) : null,
-        updatedAt: bankDetails.updatedAt,
-      });
+      return ApiResponse.success(res, cryptoService.decryptBankDetail(bankDetails));
     } catch (error) {
       next(error);
     }
@@ -91,12 +77,7 @@ export class UsersController {
         true
       ))) as any;
 
-      return ApiResponse.success(res, {
-        id: bankDetails.id,
-        hostProfileId: bankDetails.hostProfileId,
-        bankName: bankDetails.bankName,
-        updatedAt: bankDetails.updatedAt,
-      });
+      return ApiResponse.success(res, cryptoService.decryptBankDetail(bankDetails));
     } catch (error) {
       next(error);
     }
