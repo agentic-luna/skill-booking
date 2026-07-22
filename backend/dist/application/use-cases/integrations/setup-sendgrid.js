@@ -32,6 +32,9 @@ class SetupSendgridCommandHandler {
     }
     async handle(command) {
         const { environment, apiKey, fromEmail, fromName, isActive, updatedBy } = command;
+        if (!environment || !Object.values(client_1.IntegrationEnvironment).includes(environment)) {
+            throw new errors_1.BadRequestError('Invalid environment. Expected TEST or LIVE');
+        }
         if (!apiKey || !fromEmail || !fromName) {
             throw new errors_1.BadRequestError('Missing required SendGrid credentials');
         }

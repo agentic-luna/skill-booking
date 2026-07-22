@@ -41,7 +41,8 @@ class CreateEventCommandHandler {
             title: data.title,
             posterUrl: data.posterUrl || '', // default to empty string if not provided
             mode: data.mode,
-            venueDetails: data.venueDetails,
+            venue: data.venue,
+            instructor: data.instructor,
             startTime: new Date(data.startTime),
             totalSeats: data.totalSeats,
             availableSeats: data.totalSeats,

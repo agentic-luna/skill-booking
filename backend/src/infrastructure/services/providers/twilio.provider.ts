@@ -13,20 +13,55 @@ export class TwilioSmsProvider implements ISmsProvider {
 
   async sendSms(to: string, message: string): Promise<{ success: boolean; messageId?: string }> {
     const config = await this.configRepo.findIntegration(IntegrationService.TWILIO);
-    let accountSid = 'MOCK_TWILIO_SID';
+
     if (config && config.isActive) {
       try {
         const creds = this.cryptoService.decryptCredentials(config.credentials);
-        accountSid = creds.accountSid || accountSid;
+        const { accountSid, authToken, fromNumber } = creds || {};
+
+        if (accountSid && authToken && fromNumber) {
+          const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+          const body = new URLSearchParams({
+            To: to,
+            From: fromNumber,
+            Body: message,
+          });
+
+          const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+          });
+
+          const data = await response.json() as any;
+
+          if (response.ok && data?.sid) {
+            this.logger.info(`[TwilioSmsProvider] Real SMS sent to ${to} | SID: ${data.sid}`);
+            return {
+              success: true,
+              messageId: data.sid,
+            };
+          }
+
+          this.logger.error('[TwilioSmsProvider] Twilio API request failed', {
+            status: response.status,
+            error: data,
+          });
+          return { success: false };
+        }
       } catch (e) {
-        this.logger.warn('[TwilioSmsProvider] Decryption fallback to mock.', { error: e });
+        this.logger.error('[TwilioSmsProvider] Error processing Twilio SMS send', { error: e });
       }
     }
 
-    this.logger.info(`[Mock Twilio] SMS sent to: ${to} | Body: ${message}`);
+    // Fallback to mock mode if config is inactive, missing or credentials incomplete
+    this.logger.warn(`[Mock Twilio] Active credentials not found. Mock SMS sent to: ${to} | Body: ${message}`);
     return {
       success: true,
-      messageId: `tw_${Math.random().toString(36).substring(2, 10)}`,
+      messageId: `mock_tw_${Math.random().toString(36).substring(2, 10)}`,
     };
   }
 }

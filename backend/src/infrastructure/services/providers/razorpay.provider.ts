@@ -13,7 +13,7 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     private logger: ILoggerService
   ) {}
 
-  private async getRazorpayClient(): Promise<{ client: Razorpay | null; keySecret?: string }> {
+  private async getRazorpayClient(): Promise<{ client: Razorpay | null; keySecret?: string; webhookSecret?: string }> {
     const config = await this.configRepo.findIntegration(IntegrationService.RAZORPAY);
 
     if (!config || !config.isActive) {
@@ -27,7 +27,11 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
           key_id: creds.keyId,
           key_secret: creds.keySecret,
         });
-        return { client, keySecret: creds.keySecret };
+        return {
+          client,
+          keySecret: creds.keySecret,
+          webhookSecret: creds.webhookSecret,
+        };
       }
     } catch (e) {
       this.logger.warn('[RazorpayProvider] Decryption fallback to mock.', { error: e });
@@ -41,7 +45,7 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     receipt: string
   ): Promise<{ id: string; amount: number; currency: string; receipt: string }> {
     const { client } = await this.getRazorpayClient();
-    const orderId = `order_${Math.random().toString(36).substring(2, 15)}`;
+    const mockOrderId = `order_${Math.random().toString(36).substring(2, 15)}`;
 
     if (client) {
       try {
@@ -50,22 +54,33 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
           currency: currency || 'INR',
           receipt,
         });
-        this.logger.info(`[RazorpayProvider] Created order ${order.id} for ${amount} ${currency}`);
-        return { id: order.id, amount, currency, receipt };
+        this.logger.info(`[RazorpayProvider] Created real order ${order.id} for ${amount} ${currency}`);
+        return { id: order.id, amount, currency: currency || 'INR', receipt };
       } catch (err: any) {
         this.logger.error('[RazorpayProvider] Failed to create Razorpay Order via SDK', err);
       }
     }
 
-    this.logger.info(`[Mock Razorpay] Created mock order ${orderId} for amount ${amount} ${currency}`);
-    return { id: orderId, amount, currency, receipt };
+    this.logger.warn(`[Mock Razorpay] Active credentials not found. Created mock order ${mockOrderId} for amount ${amount} ${currency}`);
+    return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
   }
 
-  async verifyWebhookSignature(payload: string | object, signature: string, secret: string): Promise<boolean> {
+  async verifyWebhookSignature(payload: string | object, signature: string, secret?: string): Promise<boolean> {
     try {
+      let activeSecret = secret;
+      if (!activeSecret) {
+        const { webhookSecret, keySecret } = await this.getRazorpayClient();
+        activeSecret = webhookSecret || keySecret;
+      }
+
+      if (!activeSecret) {
+        this.logger.warn('[RazorpayProvider] Webhook secret not found for signature verification');
+        return false;
+      }
+
       const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
       const expectedSignature = crypto
-        .createHmac('sha256', secret)
+        .createHmac('sha256', activeSecret)
         .update(body)
         .digest('hex');
       return expectedSignature === signature;
@@ -89,14 +104,14 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
           amount: Math.round(amount * 100),
           notes,
         });
-        this.logger.info(`[RazorpayProvider] Refund of ${amount} INR processed for payment ${paymentId}`, { refundId: refund.id });
+        this.logger.info(`[RazorpayProvider] Real refund of ${amount} INR processed for payment ${paymentId}`, { refundId: refund.id });
         return { success: true, refundId: refund.id, amount };
       } catch (err: any) {
         this.logger.error(`[RazorpayProvider] Live refund failed for payment ${paymentId}`, err);
       }
     }
 
-    this.logger.info(`[Mock Razorpay] Refund of ${amount} INR processed for payment ${paymentId}`, { refundId: mockRefundId });
+    this.logger.warn(`[Mock Razorpay] Active credentials not found. Refund of ${amount} INR processed for payment ${paymentId}`, { refundId: mockRefundId });
     return { success: true, refundId: mockRefundId, amount };
   }
 
@@ -114,6 +129,15 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
 
     if (client) {
       try {
+        if ((client as any).transfers?.create) {
+          const transfer = await (client as any).transfers.create({
+            account: destinationBankDetail.accountNumber,
+            amount: Math.round(amount * 100),
+            currency: 'INR',
+          });
+          this.logger.info(`[RazorpayProvider] Initiated live transfer ${transfer.id} of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
+          return { success: true, payoutId: transfer.id };
+        }
         this.logger.info(`[RazorpayProvider] Initiated live transfer of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
         return { success: true, payoutId: mockPayoutId };
       } catch (err: any) {
@@ -122,7 +146,7 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
       }
     }
 
-    this.logger.info(`[Mock Razorpay Route] Payout of ${amount} INR initiated to account ${destinationBankDetail.accountNumber} (${destinationBankDetail.bankName})`);
+    this.logger.warn(`[Mock Razorpay Route] Active credentials not found. Payout of ${amount} INR initiated to account ${destinationBankDetail.accountNumber} (${destinationBankDetail.bankName})`);
     return { success: true, payoutId: mockPayoutId };
   }
 }

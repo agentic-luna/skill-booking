@@ -12,6 +12,21 @@ function mapEvent(e) {
         totalSeats: Number(e.totalSeats),
         version: Number(e.version),
         commission: e.commission ? mapCommission(e.commission) : null,
+        instructor: e.instructor ? {
+            id: e.instructor.id,
+            name: e.instructor.name,
+            bio: e.instructor.bio,
+            photoUrl: e.instructor.photoUrl,
+            companyName: e.instructor.companyName,
+            facebook: e.instructor.facebook,
+            instagram: e.instructor.instagram,
+            linkedin: e.instructor.linkedin,
+        } : null,
+        venue: e.venue ? {
+            id: e.venue.id,
+            address: e.venue.address,
+            meetingLink: e.venue.meetingLink,
+        } : null,
     };
     if (e.instructor || e.venue) {
         mapped.venueDetails = {
@@ -109,35 +124,30 @@ class PrismaEventRepository {
     async create(data) {
         let instructorId = null;
         let venueId = null;
-        if (data.venueDetails && typeof data.venueDetails === 'object') {
-            const details = data.venueDetails;
-            if (details.instructorName) {
-                const inst = await prisma_1.prisma.instructor.create({
-                    data: {
-                        name: details.instructorName,
-                        bio: details.instructorBio || '',
-                        photoUrl: details.instructorPhoto || '',
-                        companyName: details.companyName || '',
-                        facebook: details.facebook || null,
-                        instagram: details.instagram || null,
-                        linkedin: details.linkedin || null,
-                    },
-                });
-                instructorId = inst.id;
-            }
-            const address = details.address || '';
-            const meetingLink = details.meetingLink || null;
-            if (address || meetingLink) {
-                const venue = await prisma_1.prisma.venue.create({
-                    data: {
-                        address: address,
-                        meetingLink: meetingLink,
-                    },
-                });
-                venueId = venue.id;
-            }
+        if (data.instructor) {
+            const inst = await prisma_1.prisma.instructor.create({
+                data: {
+                    name: data.instructor.name,
+                    bio: data.instructor.bio || '',
+                    photoUrl: data.instructor.photoUrl || '',
+                    companyName: data.instructor.companyName || '',
+                    facebook: data.instructor.facebook || null,
+                    instagram: data.instructor.instagram || null,
+                    linkedin: data.instructor.linkedin || null,
+                },
+            });
+            instructorId = inst.id;
         }
-        const { ...rest } = data;
+        if (data.venue) {
+            const venue = await prisma_1.prisma.venue.create({
+                data: {
+                    address: data.venue.address || '',
+                    meetingLink: data.venue.meetingLink || null,
+                },
+            });
+            venueId = venue.id;
+        }
+        const { venue, instructor, ...rest } = data;
         const created = await prisma_1.prisma.event.create({
             data: {
                 ...rest,

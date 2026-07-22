@@ -32,6 +32,9 @@ class SetupRazorpayCommandHandler {
     }
     async handle(command) {
         const { environment, keyId, keySecret, webhookSecret, isActive, updatedBy } = command;
+        if (!environment || !Object.values(client_1.IntegrationEnvironment).includes(environment)) {
+            throw new errors_1.BadRequestError('Invalid environment. Expected TEST or LIVE');
+        }
         if (!keyId || !keySecret || !webhookSecret) {
             throw new errors_1.BadRequestError('Missing required Razorpay credentials');
         }

@@ -1363,7 +1363,6 @@ export const swaggerSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['environment', 'credentials', 'isActive'],
                 properties: {
                   environment: { type: 'string', enum: ['TEST', 'LIVE'] },
                   credentials: { type: 'object' },

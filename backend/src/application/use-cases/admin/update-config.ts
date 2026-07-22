@@ -3,6 +3,7 @@ import { IConfigRepository } from '../../../domain/repositories/config.repositor
 import { ICryptoService } from '../../services/crypto.service';
 import { ICacheService } from '../../services/cache.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { BadRequestError } from '../../../api/common/errors';
 
 export class UpdateConfigCommand implements IRequest<any> {
   readonly __tag = 'UpdateConfigCommand';
@@ -24,18 +25,65 @@ export class UpdateConfigCommandHandler implements IRequestHandler<UpdateConfigC
 
   async handle(command: UpdateConfigCommand): Promise<any> {
     const { serviceName, environment, credentials, isActive, updatedBy } = command;
-    const encrypted = this.cryptoService.encryptCredentials(credentials);
+    
+    if (environment && !Object.values(IntegrationEnvironment).includes(environment)) {
+      throw new BadRequestError('Invalid environment. Expected TEST or LIVE');
+    }
+
+    const existing = await this.configRepo.findIntegration(serviceName);
+
+    const updatedEnv = environment || existing?.environment || IntegrationEnvironment.TEST;
+    const updatedIsActive = isActive !== undefined ? isActive : (existing?.isActive ?? true);
+
+    let encryptedCreds = existing?.credentials;
+    if (credentials && typeof credentials === 'object' && Object.keys(credentials).length > 0) {
+      encryptedCreds = this.cryptoService.encryptCredentials(credentials);
+    }
 
     const config = await this.configRepo.upsertIntegration(serviceName, {
-      environment,
-      credentials: encrypted,
-      isActive,
+      environment: updatedEnv,
+      credentials: encryptedCreds || {},
+      isActive: updatedIsActive,
       updatedBy,
     });
 
     // Invalidate Redis integration config cache
     await this.cacheService.del(`configs:integrations:${serviceName}`);
 
-    return config;
+    // Return masked credentials response matching GetConfigsQueryHandler format
+    let maskedCredentials = {};
+    try {
+      if (config.credentials) {
+        const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+        maskedCredentials = this.maskObj(decrypted);
+      }
+    } catch {
+      maskedCredentials = { status: 'Encrypted' };
+    }
+
+    return {
+      ...config,
+      credentials: maskedCredentials,
+    };
+  }
+
+  private maskObj(obj: any): any {
+    if (!obj || typeof obj !== 'object') return obj;
+    const masked: any = {};
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === 'string') {
+        const str = obj[key];
+        if (str.length <= 4) {
+          masked[key] = '****';
+        } else {
+          masked[key] = '****' + str.substring(str.length - 4);
+        }
+      } else if (typeof obj[key] === 'object') {
+        masked[key] = this.maskObj(obj[key]);
+      } else {
+        masked[key] = obj[key];
+      }
+    }
+    return masked;
   }
 }

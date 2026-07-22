@@ -27,6 +27,10 @@ export class SetupSendgridCommandHandler implements IRequestHandler<SetupSendgri
   async handle(command: SetupSendgridCommand): Promise<any> {
     const { environment, apiKey, fromEmail, fromName, isActive, updatedBy } = command;
     
+    if (!environment || !Object.values(IntegrationEnvironment).includes(environment)) {
+      throw new BadRequestError('Invalid environment. Expected TEST or LIVE');
+    }
+
     if (!apiKey || !fromEmail || !fromName) {
         throw new BadRequestError('Missing required SendGrid credentials');
     }

@@ -32,6 +32,9 @@ class SetupTwilioCommandHandler {
     }
     async handle(command) {
         const { environment, accountSid, authToken, fromNumber, isActive, updatedBy } = command;
+        if (!environment || !Object.values(client_1.IntegrationEnvironment).includes(environment)) {
+            throw new errors_1.BadRequestError('Invalid environment. Expected TEST or LIVE');
+        }
         if (!accountSid || !authToken || !fromNumber) {
             throw new errors_1.BadRequestError('Missing required Twilio credentials');
         }

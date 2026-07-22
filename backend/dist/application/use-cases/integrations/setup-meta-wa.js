@@ -32,6 +32,9 @@ class SetupMetaWaCommandHandler {
     }
     async handle(command) {
         const { environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy } = command;
+        if (!environment || !Object.values(client_1.IntegrationEnvironment).includes(environment)) {
+            throw new errors_1.BadRequestError('Invalid environment. Expected TEST or LIVE');
+        }
         if (!accessToken || !phoneNumberId || !businessAccountId) {
             throw new errors_1.BadRequestError('Missing required Meta WhatsApp credentials');
         }

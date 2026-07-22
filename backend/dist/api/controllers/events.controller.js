@@ -37,12 +37,13 @@ class EventsController {
     }
     static async createEvent(req, res, next) {
         try {
-            const { title, posterUrl, mode, venueDetails, startTime, totalSeats, price, duration, description, category } = req.body;
+            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category } = req.body;
             const event = await di_container_1.mediator.send(new create_event_1.CreateEventCommand(req.user.id, {
                 title,
                 posterUrl,
                 mode: mode,
-                venueDetails,
+                venue,
+                instructor,
                 startTime,
                 totalSeats: Number(totalSeats),
                 price: price !== undefined ? Number(price) : undefined,
@@ -59,7 +60,7 @@ class EventsController {
     static async updateEvent(req, res, next) {
         try {
             const { id } = req.params;
-            const { title, posterUrl, mode, venueDetails, startTime, totalSeats, price, duration, description } = req.body;
+            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description } = req.body;
             // 1. Fetch host profile first to verify ownership
             const hostProfile = await prisma_1.prisma.hostProfile.findUnique({
                 where: { userId: req.user.id },
@@ -91,15 +92,15 @@ class EventsController {
             // 5. Update event
             let instructorId = event.instructorId;
             let venueId = event.venueId;
-            if (venueDetails !== undefined && venueDetails !== null && typeof venueDetails === 'object') {
-                const details = venueDetails;
+            if (instructor !== undefined && instructor !== null && typeof instructor === 'object') {
+                const details = instructor;
                 if (instructorId) {
                     await prisma_1.prisma.instructor.update({
                         where: { id: instructorId },
                         data: {
-                            name: details.instructorName !== undefined ? details.instructorName : undefined,
-                            bio: details.instructorBio !== undefined ? details.instructorBio : undefined,
-                            photoUrl: details.instructorPhoto !== undefined ? details.instructorPhoto : undefined,
+                            name: details.name !== undefined ? details.name : undefined,
+                            bio: details.bio !== undefined ? details.bio : undefined,
+                            photoUrl: details.photoUrl !== undefined ? details.photoUrl : undefined,
                             companyName: details.companyName !== undefined ? details.companyName : undefined,
                             facebook: details.facebook !== undefined ? details.facebook : undefined,
                             instagram: details.instagram !== undefined ? details.instagram : undefined,
@@ -107,12 +108,12 @@ class EventsController {
                         },
                     });
                 }
-                else if (details.instructorName) {
+                else if (details.name) {
                     const inst = await prisma_1.prisma.instructor.create({
                         data: {
-                            name: details.instructorName,
-                            bio: details.instructorBio || '',
-                            photoUrl: details.instructorPhoto || '',
+                            name: details.name,
+                            bio: details.bio || '',
+                            photoUrl: details.photoUrl || '',
                             companyName: details.companyName || '',
                             facebook: details.facebook || null,
                             instagram: details.instagram || null,
@@ -121,8 +122,10 @@ class EventsController {
                     });
                     instructorId = inst.id;
                 }
-                const address = details.address;
-                const meetingLink = details.meetingLink;
+            }
+            if (venue !== undefined && venue !== null && typeof venue === 'object') {
+                const address = venue.address;
+                const meetingLink = venue.meetingLink;
                 if (venueId) {
                     await prisma_1.prisma.venue.update({
                         where: { id: venueId },
@@ -133,13 +136,13 @@ class EventsController {
                     });
                 }
                 else if (address !== undefined || meetingLink !== undefined) {
-                    const venue = await prisma_1.prisma.venue.create({
+                    const v = await prisma_1.prisma.venue.create({
                         data: {
                             address: address || '',
                             meetingLink: meetingLink || null,
                         },
                     });
-                    venueId = venue.id;
+                    venueId = v.id;
                 }
             }
             const updatedEvent = await prisma_1.prisma.event.update({
@@ -148,7 +151,6 @@ class EventsController {
                     title: title !== undefined ? title : event.title,
                     posterUrl: posterUrl !== undefined ? posterUrl : event.posterUrl,
                     mode: mode !== undefined ? mode : event.mode,
-                    venueDetails: venueDetails !== undefined ? venueDetails : event.venueDetails,
                     startTime: startTime !== undefined ? new Date(startTime) : event.startTime,
                     totalSeats: totalSeats !== undefined ? Number(totalSeats) : event.totalSeats,
                     availableSeats: totalSeats !== undefined ? Number(totalSeats) : event.availableSeats,

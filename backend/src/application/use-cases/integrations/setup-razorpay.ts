@@ -27,6 +27,10 @@ export class SetupRazorpayCommandHandler implements IRequestHandler<SetupRazorpa
   async handle(command: SetupRazorpayCommand): Promise<any> {
     const { environment, keyId, keySecret, webhookSecret, isActive, updatedBy } = command;
     
+    if (!environment || !Object.values(IntegrationEnvironment).includes(environment)) {
+      throw new BadRequestError('Invalid environment. Expected TEST or LIVE');
+    }
+
     if (!keyId || !keySecret || !webhookSecret) {
         throw new BadRequestError('Missing required Razorpay credentials');
     }
