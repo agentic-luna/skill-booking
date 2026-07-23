@@ -8,6 +8,7 @@ export interface User {
   email: string | null;
   phone: string;
   passwordHash: string;
+  isEmailVerified: boolean;
   role: UserRole;
   status: UserStatus;
   createdAt: Date;

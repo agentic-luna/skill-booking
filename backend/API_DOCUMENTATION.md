@@ -220,11 +220,33 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 **Request Body:**
 ```json
 {
-  "firstName": "John",
+  "firstName": "Jane",
   "lastName": "Doe",
   "phone": "+919947811507",
   "password": "password123",
   "otp": "123456"
+}
+```
+
+### 3d. Client Send Email Verification Magic Link
+`POST /api/v1/auth/client/email/send-verification`
+
+**Headers:** `Authorization: Bearer <jwt_access_token>`
+
+**Request Body:**
+```json
+{
+  "email": "client@example.com"
+}
+```
+
+### 3e. Client Verify Email Magic Link Token
+`POST /api/v1/auth/client/email/verify-link`
+
+**Request Body:**
+```json
+{
+  "token": "4f9d8e7a6b5c4d3e2f1a..."
 }
 ```
 

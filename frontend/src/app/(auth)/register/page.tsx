@@ -15,25 +15,21 @@ import { Label } from "@/components/ui/label";
 import StepIndicator from "./_components/StepIndicator";
 import OtpStep from "./_components/OtpStep";
 
-const infoSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(7, "Enter a valid phone number").regex(/^\+?[0-9\s\-()]+$/, "Enter a valid phone number"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["client", "host"]),
-});
-type InfoFormValues = z.infer<typeof infoSchema>;
+import PhoneInputWithCountry from "@/components/common/PhoneInputWithCountry";
+import PasswordStrengthMeter from "@/components/common/PasswordStrengthMeter";
+import { hostSignupZodSchema } from "@/lib/validation/authValidation";
+
+type InfoFormValues = z.infer<typeof hostSignupZodSchema> & { role?: "host" };
 
 export default function RegisterPage() {
   const router = useRouter();
   const { startRegistration, verifyEmailOtp, verifyPhoneOtpAndSignup, pendingRegistration, isLoading, error, clearError } = useAuthStore();
   const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [selectedRole, setSelectedRole] = useState<"client" | "host">("client");
+  const [passwordValue, setPasswordValue] = useState("");
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<InfoFormValues>({
-    resolver: zodResolver(infoSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", role: "host" },
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<InfoFormValues>({
+    resolver: zodResolver(hostSignupZodSchema),
+    defaultValues: { firstName: "", lastName: "", email: "", phone: "+91", password: "" },
   });
 
   const onInfoSubmit = async (data: InfoFormValues) => {
@@ -81,15 +77,35 @@ export default function RegisterPage() {
               <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input id="email" placeholder="name@example.com" type="email" className="pl-10" {...register("email")} disabled={isLoading} /></div>
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone Number</Label>
-              <div className="relative"><Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input id="phone" placeholder="+1 555 020 1234" type="tel" className="pl-10" {...register("phone")} disabled={isLoading} /></div>
-              {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
-            </div>
+            <PhoneInputWithCountry
+              id="phone"
+              value={watch("phone") || "+91"}
+              onChange={(val) => setValue("phone", val, { shouldValidate: true })}
+              disabled={isLoading}
+              label="Phone Number (with Country Code)"
+              isWhatsApp={false}
+            />
+            {errors.phone && <p className="text-xs text-red-500 font-semibold">{errors.phone.message}</p>}
+
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
-              <div className="relative"><Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input id="password" placeholder="••••••••" type="password" className="pl-10" {...register("password")} disabled={isLoading} /></div>
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="password" 
+                  placeholder="••••••••" 
+                  type="password" 
+                  className="pl-10" 
+                  {...register("password")} 
+                  onChange={(e) => {
+                    register("password").onChange(e);
+                    setPasswordValue(e.target.value);
+                  }}
+                  disabled={isLoading} 
+                />
+              </div>
+              {errors.password && <p className="text-xs text-red-500 font-semibold">{errors.password.message}</p>}
+              <PasswordStrengthMeter password={passwordValue} />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ArrowRight className="h-4 w-4 mr-2" />}

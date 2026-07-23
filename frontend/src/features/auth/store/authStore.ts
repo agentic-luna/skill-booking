@@ -204,6 +204,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  sendEmailMagicLink: async (email) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.sendEmailMagicLink(email);
+      set({ isLoading: false });
+      return res;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  verifyEmailMagicLink: async (token) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.verifyEmailMagicLink(token);
+      const user = mapApiUser(res.user);
+      saveSession(user);
+      set({ user, isAuthenticated: true, isLoading: false });
+      return res;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
   logout: async () => {
     const token = getRefreshToken();
     try {

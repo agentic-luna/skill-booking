@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell } from "lucide-react";
+import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell, CheckCircle2, AlertTriangle } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientStore } from "@/features/client/store/clientStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
+import { useClientEmailModalStore } from "@/features/auth/store/clientEmailModalStore";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { notifications, fetchNotifications, readNotification } = useClientStore();
   const openClientAuthModal = useClientAuthModalStore((s) => s.openModal);
+  const openClientEmailModal = useClientEmailModalStore((s) => s.openModal);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -161,6 +163,25 @@ export default function Navbar() {
                     </Link>
                   )}
 
+                  {/* Enterprise SaaS Email Verification Status Badge */}
+                  {user.role === "client" && (
+                    user.isEmailVerified ? (
+                      <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-sm">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>Verified Email</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openClientEmailModal(user.email || "")}
+                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm animate-pulse"
+                      >
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Verify Email</span>
+                      </button>
+                    )
+                  )}
+
 
 
                   <DropdownMenu>
@@ -280,6 +301,26 @@ export default function Navbar() {
                     >
                       My Bookings
                     </Link>
+                    <div className="py-1">
+                      {user.isEmailVerified ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          Verified Email
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            openClientEmailModal(user.email || "");
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm animate-pulse"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                          Verify Email Address
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
                 {user.role === "host" && (

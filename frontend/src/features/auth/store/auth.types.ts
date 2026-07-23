@@ -26,6 +26,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  isEmailVerified?: boolean;
   role: UserRole;
   status: "ACTIVE" | "SUSPENDED";
   avatarUrl?: string;
@@ -83,6 +84,8 @@ export interface AuthState {
   }) => Promise<User>;
   clientSendOtp: (phone: string) => Promise<any>;
   clientVerifyOtp: (phone: string, otp: string) => Promise<any>;
+  sendEmailMagicLink: (email: string) => Promise<any>;
+  verifyEmailMagicLink: (token: string) => Promise<any>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => void;
   refreshUser: () => Promise<User | undefined>;
@@ -99,6 +102,7 @@ export function mapApiUser(u: any): User {
     name: `${u.firstName} ${u.lastName}`,
     email: u.email,
     phone: u.phone,
+    isEmailVerified: u.isEmailVerified ?? (!!u.email && u.role !== "CLIENT"),
     role:
       u.role === "SUPERADMIN" ? "admin" : (u.role.toLowerCase() as UserRole),
     status: u.status,

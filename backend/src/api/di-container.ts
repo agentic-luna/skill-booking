@@ -42,6 +42,8 @@ import { ResetPasswordCommandHandler } from '../application/use-cases/auth/reset
 import { ClientSendOtpCommandHandler } from '../application/use-cases/auth/client/send-otp';
 import { ClientVerifyOtpCommandHandler } from '../application/use-cases/auth/client/verify-otp';
 import { ClientSignupCommandHandler } from '../application/use-cases/auth/client/signup';
+import { ClientSendEmailVerificationCommandHandler } from '../application/use-cases/auth/client/send-email-verification';
+import { ClientVerifyEmailMagicLinkCommandHandler } from '../application/use-cases/auth/client/verify-email-magic-link';
 
 
 import { SubmitKycCommandHandler } from '../application/use-cases/hosts/submit-kyc';
@@ -137,6 +139,8 @@ mediator.register('ResetPasswordCommand', new ResetPasswordCommandHandler(userRe
 mediator.register('ClientSendOtpCommand', new ClientSendOtpCommandHandler(cacheService, commsService, userRepo, logger));
 mediator.register('ClientVerifyOtpCommand', new ClientVerifyOtpCommandHandler(cacheService, logger));
 mediator.register('ClientSignupCommand', new ClientSignupCommandHandler(userRepo, cacheService));
+mediator.register('ClientSendEmailVerificationCommand', new ClientSendEmailVerificationCommandHandler(userRepo, cacheService, sendGridProvider));
+mediator.register('ClientVerifyEmailMagicLinkCommand', new ClientVerifyEmailMagicLinkCommandHandler(userRepo, cacheService));
 
 
 // 5. Register Host handlers

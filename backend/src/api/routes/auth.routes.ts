@@ -13,6 +13,8 @@ router.post('/signup', authLimiter, AuthController.signup);
 router.post('/client/otp/send', otpSendLimiter, AuthController.clientSendOtp);
 router.post('/client/otp/verify', authLimiter, AuthController.clientVerifyOtp);
 router.post('/client/signup', authLimiter, AuthController.clientSignup);
+router.post('/client/email/send-verification', authenticate as any, AuthController.clientSendEmailVerification as any);
+router.post('/client/email/verify-link', authLimiter, AuthController.clientVerifyEmailMagicLink);
 router.post('/login', authLimiter, AuthController.login);
 
 // Forgot Password Flow

@@ -34,6 +34,13 @@ export class PrismaUserRepository implements IUserRepository {
     });
   }
 
+  async updateEmail(id: string, email: string, isEmailVerified: boolean): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: { email, isEmailVerified },
+    });
+  }
+
   async findProfile(id: string): Promise<any> {
     const user = await prisma.user.findUnique({
       where: { id },
@@ -43,6 +50,7 @@ export class PrismaUserRepository implements IUserRepository {
         lastName: true,
         email: true,
         phone: true,
+        isEmailVerified: true,
         role: true,
         status: true,
         createdAt: true,

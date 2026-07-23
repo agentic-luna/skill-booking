@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
+import { useClientEmailModalStore } from "@/features/auth/store/clientEmailModalStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,9 @@ import {
   Dialog, DialogContent, DialogTitle, DialogDescription 
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import PhoneInputWithCountry from "@/components/common/PhoneInputWithCountry";
+import PasswordStrengthMeter from "@/components/common/PasswordStrengthMeter";
+import { clientSignupZodSchema } from "@/lib/validation/authValidation";
 
 interface ClientAuthModalProps {
   open?: boolean;
@@ -70,12 +74,18 @@ export default function ClientAuthModal({
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     store.setLocalMessage(null);
-    if (!store.firstName || !store.lastName || !store.phone || !store.signupPassword) {
-      store.setLocalMessage("Please fill in all required fields.");
-      return;
-    }
-    if (store.signupPassword.length < 6) {
-      store.setLocalMessage("Password must be at least 6 characters long.");
+    clearError();
+
+    const valResult = clientSignupZodSchema.safeParse({
+      firstName: store.firstName,
+      lastName: store.lastName,
+      phone: store.phone,
+      password: store.signupPassword,
+    });
+
+    if (!valResult.success) {
+      const errMsg = valResult.error.errors[0]?.message || "Invalid input details.";
+      store.setLocalMessage(errMsg);
       return;
     }
 
@@ -109,6 +119,8 @@ export default function ClientAuthModal({
       const cb = propOnSuccess || store.onSuccessCallback;
       store.resetForm();
       cb?.();
+      // Auto open email magic link verification popup
+      useClientEmailModalStore.getState().openModal();
     } catch {
       // Error in store
     }
@@ -265,23 +277,14 @@ export default function ClientAuthModal({
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <Label htmlFor="modal-phone" className="text-xs font-bold">WhatsApp / Mobile Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="modal-phone"
-                        placeholder="+91 9876543210"
-                        type="tel"
-                        className="pl-10 h-10 text-xs rounded-xl"
-                        value={store.phone}
-                        onChange={(e) => store.setPhone(e.target.value)}
-                        disabled={isLoading}
-                        required
-                      />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">OTP verification will be sent to this WhatsApp number.</p>
-                  </div>
+                  <PhoneInputWithCountry
+                    id="modal-phone"
+                    value={store.phone}
+                    onChange={(val) => store.setPhone(val)}
+                    disabled={isLoading}
+                    label="WhatsApp Number (with Country Code)"
+                    isWhatsApp={true}
+                  />
 
                   <div className="space-y-1">
                     <Label htmlFor="modal-signup-password" className="text-xs font-bold">Password</Label>
@@ -306,6 +309,7 @@ export default function ClientAuthModal({
                         {store.showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                    <PasswordStrengthMeter password={store.signupPassword} />
                   </div>
 
                   <Button 

@@ -36,6 +36,24 @@ export async function clientSignup(data: ClientSignupPayload): Promise<AuthRespo
   return res.data;
 }
 
+/** POST /auth/client/email/send-verification — Send magic link email to client */
+export async function sendEmailMagicLink(email: string): Promise<{ message: string; magicLink?: string; token?: string }> {
+  const res = await request<{ success: boolean; data: { message: string; magicLink?: string; token?: string } }>(
+    "/auth/client/email/send-verification",
+    { method: "POST", body: JSON.stringify({ email }) }
+  );
+  return res.data;
+}
+
+/** POST /auth/client/email/verify-link — Verify magic link token */
+export async function verifyEmailMagicLink(token: string): Promise<{ message: string; user: AuthUser }> {
+  const res = await request<{ success: boolean; data: { message: string; user: AuthUser } }>(
+    "/auth/client/email/verify-link",
+    { method: "POST", body: JSON.stringify({ token }) }
+  );
+  return res.data;
+}
+
 /** POST /auth/login — Login with email or phone + password */
 export async function login(
   identifier: string,

@@ -13,6 +13,8 @@ import { ResetPasswordCommand } from '../../application/use-cases/auth/reset-pas
 import { ClientSendOtpCommand } from '../../application/use-cases/auth/client/send-otp';
 import { ClientVerifyOtpCommand } from '../../application/use-cases/auth/client/verify-otp';
 import { ClientSignupCommand } from '../../application/use-cases/auth/client/signup';
+import { ClientSendEmailVerificationCommand } from '../../application/use-cases/auth/client/send-email-verification';
+import { ClientVerifyEmailMagicLinkCommand } from '../../application/use-cases/auth/client/verify-email-magic-link';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { ApiResponse } from '../common/api-response';
 
@@ -90,6 +92,27 @@ export class AuthController {
         otp,
       }));
       return ApiResponse.created(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async clientSendEmailVerification(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user?.id;
+      const { email } = req.body;
+      const result = await mediator.send(new ClientSendEmailVerificationCommand(userId, email));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async clientVerifyEmailMagicLink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = req.body;
+      const result = await mediator.send(new ClientVerifyEmailMagicLinkCommand(token));
+      return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
     }

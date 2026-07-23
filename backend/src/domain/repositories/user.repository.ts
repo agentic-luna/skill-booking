@@ -12,8 +12,10 @@ export interface IUserRepository {
     phone: string;
     passwordHash: string;
     role?: UserRole;
+    isEmailVerified?: boolean;
   }): Promise<User>;
   updatePassword(id: string, passwordHash: string): Promise<User>;
+  updateEmail(id: string, email: string, isEmailVerified: boolean): Promise<User>;
   findProfile(id: string): Promise<any>;
   findHostProfileByUserId(userId: string): Promise<HostProfile | null>;
   upsertHostProfile(

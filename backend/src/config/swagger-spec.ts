@@ -499,6 +499,53 @@ export const swaggerSpec = {
         }
       }
     },
+    '/auth/client/email/send-verification': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Send magic link email verification to authenticated Client',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'client@example.com' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Magic link dispatched to email' }
+        }
+      }
+    },
+    '/auth/client/email/verify-link': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Verify client email via magic link token',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['token'],
+                properties: {
+                  token: { type: 'string', example: 'a1b2c3d4e5f6...' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Email verified successfully and user updated' }
+        }
+      }
+    },
     '/auth/signup': {
       post: {
         tags: ['Authentication'],
