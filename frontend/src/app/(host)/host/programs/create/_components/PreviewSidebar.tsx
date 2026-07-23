@@ -21,6 +21,7 @@ interface PreviewSidebarProps {
   watchedMaxSpots: number;
   watchedDuration: string;
   watchedImageUrl?: string;
+  watchedAdditionalImages?: { url: string }[];
   selectedCategory: string;
   categoryMeta: CategoryMeta | undefined;
   isSubmitting: boolean;
@@ -33,6 +34,7 @@ export default function PreviewSidebar({
   watchedMaxSpots,
   watchedDuration,
   watchedImageUrl,
+  watchedAdditionalImages,
   selectedCategory,
   categoryMeta,
   isSubmitting,
@@ -40,34 +42,52 @@ export default function PreviewSidebar({
 }: PreviewSidebarProps) {
   const [imageError, setImageError] = React.useState(false);
   const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [activeImageIndex, setActiveImageIndex] = React.useState(0);
+
+  const validAdditionalImages = watchedAdditionalImages?.filter(img => img.url.trim() !== "") || [];
+  const allImages = watchedImageUrl ? [watchedImageUrl, ...validAdditionalImages.map(i => i.url)] : validAdditionalImages.map(i => i.url);
+  const totalImages = allImages.length;
 
   React.useEffect(() => {
     setImageError(false);
-  }, [watchedImageUrl]);
+  }, [allImages[activeImageIndex]]);
+  
+  // Reset active image if the selected index is out of bounds due to removals
+  React.useEffect(() => {
+    if (activeImageIndex >= totalImages && totalImages > 0) {
+      setActiveImageIndex(totalImages - 1);
+    } else if (totalImages === 0) {
+      setActiveImageIndex(0);
+    }
+  }, [totalImages, activeImageIndex]);
+
   return (
     <div className="lg:col-span-4 space-y-6">
       {/* Sticky wrapper */}
       <div className="lg:sticky lg:top-24 space-y-6">
 
         {/* Live Preview Card */}
-        <Card className="rounded-2xl border-border/40 bg-card overflow-hidden">
-          <CardHeader className="bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 border-b border-border/30 pb-4">
-            <CardTitle className="text-sm font-bold flex items-center space-x-2">
-              <Sparkles className="h-4 w-4 text-primary" />
+        <Card className="rounded-[32px] border-[6px] border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white/40 backdrop-blur-3xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white/50 to-purple-50/50 -z-10" />
+          <CardHeader className="bg-transparent border-b border-gray-200/40 pb-5 pt-6 px-7">
+            <CardTitle className="text-[16px] font-extrabold flex items-center space-x-2.5 text-gray-900">
+              <div className="bg-gradient-to-tr from-indigo-500 to-purple-500 p-1.5 rounded-full shadow-sm">
+                <Sparkles className="h-3.5 w-3.5 text-white" />
+              </div>
               <span>Live Preview</span>
             </CardTitle>
-            <CardDescription className="text-xs">How your program card will appear.</CardDescription>
+            <CardDescription className="text-[13px] font-medium text-gray-500">How your program card will appear.</CardDescription>
           </CardHeader>
-          <CardContent className="p-4">
-            <div className="rounded-xl border border-border/40 overflow-hidden bg-muted/20">
+          <CardContent className="p-7">
+            <div className="rounded-[20px] border border-gray-200/60 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-500">
               {/* Image placeholder */}
               <div className="aspect-video bg-gradient-to-br from-primary/10 via-muted to-violet-500/10 flex items-center justify-center relative overflow-hidden">
-                {watchedImageUrl && !imageError ? (
+                {allImages.length > 0 && !imageError ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={watchedImageUrl}
+                    src={allImages[activeImageIndex]}
                     alt={watchedTitle || "Program cover"}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-all duration-500"
                     onError={() => setImageError(true)}
                   />
                 ) : (
@@ -78,11 +98,40 @@ export default function PreviewSidebar({
                     {selectedCategory}
                   </div>
                 )}
+                {totalImages > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded-lg font-bold flex items-center space-x-1">
+                    <ImageIcon className="h-3 w-3" />
+                    <span>{activeImageIndex + 1}/{totalImages}</span>
+                  </div>
+                )}
                 <div className="absolute top-2 right-2 bg-amber-500/80 backdrop-blur-sm text-white text-[9px] px-2 py-0.5 rounded-md font-bold uppercase">
                   Pending
                 </div>
               </div>
-              <div className="p-3.5 space-y-2.5">
+
+              {/* Thumbnails */}
+              {totalImages > 1 && (
+                <div className="flex gap-2 p-3 pb-0 overflow-x-auto scrollbar-hide">
+                  {allImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setActiveImageIndex(idx);
+                        setImageError(false);
+                      }}
+                      className={`relative w-12 h-8 rounded-md overflow-hidden shrink-0 border-2 transition-all ${
+                        activeImageIndex === idx ? 'border-indigo-500 opacity-100 shadow-sm' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="p-4 space-y-2.5">
                 <h4 className="font-bold text-xs text-foreground line-clamp-2 leading-tight min-h-[2rem]">
                   {watchedTitle || "Workshop Title Preview"}
                 </h4>
@@ -100,32 +149,32 @@ export default function PreviewSidebar({
         </Card>
 
         {/* Info callout */}
-        <div className="flex items-start space-x-3 text-xs bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 text-amber-600 dark:text-amber-500">
-          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+        <div className="flex items-start space-x-3 text-[13px] bg-white p-5 rounded-[20px] border border-gray-100 shadow-sm text-gray-600">
+          <Info className="h-5 w-5 mt-0.5 shrink-0 text-indigo-400" />
           <div>
-            <div className="font-bold">Approval Required</div>
-            <p className="text-[10px] opacity-90 mt-0.5">
+            <div className="font-extrabold text-gray-900">Approval Required</div>
+            <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">
               All newly created workshops require Super Admin validation before they are visible on the explore listings.
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="space-y-4 pt-2">
           <Button
             type="submit"
             form="create-program-form"
-            className="w-full h-11 rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300"
+            className="w-full h-14 rounded-2xl text-[15px] font-extrabold bg-gradient-to-r from-gray-900 to-black hover:from-black hover:to-gray-900 text-white shadow-xl shadow-gray-900/20 hover:scale-[1.02] transition-all duration-300"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Publishing…
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-2 h-5 w-5 text-indigo-300" />
                 Publish Workshop
               </>
             )}
@@ -136,15 +185,15 @@ export default function PreviewSidebar({
               type="button"
               variant="outline"
               onClick={() => setPreviewOpen(true)}
-              className="w-full h-11 rounded-xl text-sm font-bold border-cyan-500/35 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/5 transition-all duration-200"
+              className="w-full h-12 rounded-[16px] text-[14px] font-bold border-gray-200 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-200"
             >
-              <Eye className="mr-2 h-4 w-4" />
+              <Eye className="mr-2 h-4 w-4 text-gray-400" />
               Preview Client View
             </Button>
           )}
 
-          <Link href="/host/programs" className="block">
-            <Button variant="outline" type="button" className="w-full h-10 rounded-xl text-xs font-semibold">
+          <Link href="/host/programs" className="block pt-1">
+            <Button variant="ghost" type="button" className="w-full h-11 rounded-[16px] text-[13px] font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-100">
               Cancel
             </Button>
           </Link>

@@ -20,7 +20,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const REDIRECT: Record<UserRole, string> = {
-  client: "/programs",
+  client: "/",
   host: "/host/dashboard",
   admin: "/admin/dashboard",
 };
@@ -39,7 +39,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       const user = await login(data.identifier, data.password);
-      router.push(REDIRECT[user.role] ?? "/programs");
+      router.push(REDIRECT[user.role] ?? "/");
     } catch { /* error set in store */ }
   };
 

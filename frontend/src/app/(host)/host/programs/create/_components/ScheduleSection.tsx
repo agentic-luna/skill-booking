@@ -2,7 +2,7 @@
 
 import React from "react";
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import { Calendar, Clock, MapPin, Video, MapPinned } from "lucide-react";
+import { Calendar, Clock, MapPin, Video, MapPinned, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,25 +20,25 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
   const selectedMode = watch("mode");
 
   return (
-    <Card className="rounded-2xl border-border/40 bg-card overflow-hidden">
-      <CardHeader className="bg-muted/30 border-b border-border/30">
-        <div className="flex items-center space-x-2.5">
-          <div className="bg-blue-500/10 text-blue-500 p-2 rounded-lg">
-            <Calendar className="h-4 w-4" />
+    <Card className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white overflow-hidden">
+      <CardHeader className="bg-transparent border-b border-gray-100/50 pb-5 pt-6">
+        <div className="flex items-center space-x-3.5">
+          <div className="bg-purple-50 text-purple-600 p-2.5 rounded-xl shadow-sm">
+            <Calendar className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-sm font-bold">Schedule & Logistics</CardTitle>
-            <CardDescription className="text-xs">Mode, date, time, duration, and venue details.</CardDescription>
+            <CardTitle className="text-[17px] font-extrabold text-gray-900">Schedule & Logistics</CardTitle>
+            <CardDescription className="text-[13px] text-gray-500 font-medium">Mode, date, time, duration, and venue details.</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
+      <CardContent className="p-7 space-y-7">
 
         {/* ── Delivery Mode & Location Address ───────────────────────── */}
-        <div className="space-y-4 bg-muted/20 p-4.5 rounded-xl border border-border/40">
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold flex items-center space-x-1.5">
-              <Video className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="space-y-5 bg-gray-50/50 p-6 rounded-[20px] border border-gray-200/50">
+          <div className="space-y-2.5">
+            <Label className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <Video className="h-4 w-4 text-gray-400" />
               <span>Delivery Mode</span>
             </Label>
             <div className="flex gap-3">
@@ -50,20 +50,21 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
                     type="button"
                     onClick={() => setValue("mode", m, { shouldValidate: true })}
                     className={`
-                      flex items-center gap-2 flex-1 py-2.5 px-4 rounded-xl border text-xs font-bold
-                      transition-all duration-200 select-none
+                      flex items-center gap-2 flex-1 py-3 px-5 rounded-xl border text-[13px] font-bold
+                      transition-all duration-300 select-none
                       ${active
-                        ? m === "ONLINE"
-                          ? "bg-blue-500/10 border-blue-500/40 text-blue-600 dark:text-blue-400 shadow-sm"
-                          : "bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                        : "bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted/70 hover:border-border/70"
+                        ? "bg-emerald-50/50 border-emerald-300 text-emerald-700 shadow-sm ring-1 ring-emerald-500/20"
+                        : "bg-transparent border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300"
                       }
                     `}
                   >
-                    {m === "ONLINE"
-                      ? <Video className="h-3.5 w-3.5 shrink-0" />
-                      : <MapPinned className="h-3.5 w-3.5 shrink-0" />
-                    }
+                    <div className={`p-1.5 rounded-lg transition-colors ${
+                      active 
+                        ? "bg-emerald-100 text-emerald-700" 
+                        : "bg-gray-100 text-gray-400 group-hover:text-gray-600"
+                    }`}>
+                      {m === "ONLINE" ? <Video className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                    </div>
                     <span>{m === "ONLINE" ? "Online / Virtual" : "In-Person / Offline"}</span>
                     {active && (
                       <span className="ml-auto w-1.5 h-1.5 rounded-full bg-current" />
@@ -77,65 +78,65 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
             {errors.mode && <p className="text-[11px] text-destructive font-medium">{errors.mode.message}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="location" className="text-xs font-semibold flex items-center space-x-1.5">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-2.5">
+            <Label htmlFor="location" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <MapPin className="h-4 w-4 text-gray-400" />
               <span>{selectedMode === "ONLINE" ? "Webinar / Stream Link" : "Venue Address / Map Location"}</span>
             </Label>
             <Input
               id="location"
               placeholder={selectedMode === "ONLINE" ? "https://zoom.us/j/..." : "123 Workshop St, City or Google Maps link"}
-              className="h-10 text-sm"
+              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
               {...register("location")}
             />
-            {errors.location && <p className="text-[11px] text-destructive font-medium">{errors.location.message}</p>}
+            {errors.location && <p className="text-[12px] text-red-500 font-semibold">{errors.location.message}</p>}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {/* Date */}
-          <div className="space-y-2">
-            <Label htmlFor="date" className="text-xs font-semibold flex items-center space-x-1.5">
-              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-2.5">
+            <Label htmlFor="date" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <Calendar className="h-4 w-4 text-gray-400" />
               <span>Event Date</span>
             </Label>
             <Input
               id="date"
               type="date"
-              className="h-10 text-sm"
+              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
               {...register("date")}
             />
-            {errors.date && <p className="text-[11px] text-destructive font-medium">{errors.date.message}</p>}
+            {errors.date && <p className="text-[12px] text-red-500 font-semibold">{errors.date.message}</p>}
           </div>
 
           {/* Time */}
-          <div className="space-y-2">
-            <Label htmlFor="time" className="text-xs font-semibold flex items-center space-x-1.5">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-2.5">
+            <Label htmlFor="time" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <Clock className="h-4 w-4 text-gray-400" />
               <span>Start Time</span>
             </Label>
             <Input
               id="time"
               type="time"
-              className="h-10 text-sm"
+              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
               {...register("time")}
             />
-            {errors.time && <p className="text-[11px] text-destructive font-medium">{errors.time.message}</p>}
+            {errors.time && <p className="text-[12px] text-red-500 font-semibold">{errors.time.message}</p>}
           </div>
 
           {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration" className="text-xs font-semibold flex items-center space-x-1.5">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-2.5">
+            <Label htmlFor="duration" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <Clock className="h-4 w-4 text-gray-400" />
               <span>Duration</span>
             </Label>
             <Input
               id="duration"
               placeholder="e.g. 3 hours or 2 days"
-              className="h-10 text-sm"
+              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
               {...register("duration")}
             />
-            {errors.duration && <p className="text-[11px] text-destructive font-medium">{errors.duration.message}</p>}
+            {errors.duration && <p className="text-[12px] text-red-500 font-semibold">{errors.duration.message}</p>}
           </div>
         </div>
       </CardContent>

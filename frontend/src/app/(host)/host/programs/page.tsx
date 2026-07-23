@@ -6,10 +6,12 @@ import { Plus, Loader2, Clock, Users, Calendar, MapPin, Edit2, Trash2 } from "lu
 import { Button } from "@/components/ui/button";
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
+import { RepublishModal } from "./_components/RepublishModal";
 
 export default function HostProgramsPage() {
   const { myEvents, fetchMyEvents, deleteEvent, isLoading } = useHostStore();
   const showAlert = useAlertStore(s => s.showAlert);
+  const [isRepublishOpen, setIsRepublishOpen] = React.useState(false);
 
   useEffect(() => {
     fetchMyEvents();
@@ -123,11 +125,20 @@ export default function HostProgramsPage() {
           </h1>
           <p className="text-muted-foreground font-medium text-sm">Create, edit, and manage all your upcoming skills workshops.</p>
         </div>
-        <Link href="/host/programs/create">
-          <Button className="rounded-2xl h-12 px-6 text-sm font-bold bg-[#0b0c01] text-white hover:bg-black/80 shadow-lg transition-all hover:-translate-y-0.5 duration-300">
-            <Plus className="mr-2 h-5 w-5" /> Create Workshop
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline"
+            onClick={() => setIsRepublishOpen(true)}
+            className="rounded-2xl h-12 px-5 text-sm font-bold bg-white text-[#0b0c01] hover:bg-gray-50 border-gray-200 shadow-sm transition-all hover:-translate-y-0.5 duration-300"
+          >
+            <Clock className="mr-2 h-4 w-4" /> Republish Old Workshop
           </Button>
-        </Link>
+          <Link href="/host/programs/create">
+            <Button className="rounded-2xl h-12 px-6 text-sm font-bold bg-[#0b0c01] text-white hover:bg-black/80 shadow-lg transition-all hover:-translate-y-0.5 duration-300">
+              <Plus className="mr-2 h-5 w-5" /> Create Workshop
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Grid Layout */}
@@ -155,6 +166,12 @@ export default function HostProgramsPage() {
           ))}
         </div>
       )}
+
+      <RepublishModal 
+        open={isRepublishOpen} 
+        onOpenChange={setIsRepublishOpen} 
+        events={myEvents} 
+      />
     </div>
   );
 }

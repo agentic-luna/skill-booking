@@ -204,7 +204,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleWishlistToggle = async () => {
     if (!isAuthenticated) {
-      openClientAuthModal("login");
+      openClientAuthModal("login", () => handleWishlistToggle());
       return;
     }
 

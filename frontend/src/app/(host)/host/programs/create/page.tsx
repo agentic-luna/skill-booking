@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +22,9 @@ import SuccessState from "./_components/SuccessState";
 
 export default function CreateProgramPage() {
   const router = useRouter();
-  const { createEvent, isLoading, error, clearError } = useHostStore();
+  const searchParams = useSearchParams();
+  const templateId = searchParams.get("templateId");
+  const { createEvent, isLoading, error, clearError, myEvents, fetchMyEvents } = useHostStore();
   const [submitted, setSubmitted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("technology");
 
@@ -32,6 +34,7 @@ export default function CreateProgramPage() {
     setValue,
     watch,
     control,
+    reset,
     formState: { errors },
   } = useForm<ProgramFormValues>({
     resolver: zodResolver(programSchema),
@@ -64,6 +67,51 @@ export default function CreateProgramPage() {
   const watchedMaxSpots = watch("maxSpots");
   const watchedDuration = watch("duration");
   const watchedImageUrl = watch("imageUrl");
+  const watchedAdditionalImages = watch("additionalImages");
+
+  useEffect(() => {
+    if (templateId) {
+      if (myEvents.length === 0) {
+        fetchMyEvents();
+      } else {
+        const template = myEvents.find((e: any) => e.id === templateId);
+        if (template) {
+          const cat = template.category || "technology";
+          
+          let formattedTime = "10:00";
+          if (template.startTime) {
+            const dateObj = new Date(template.startTime);
+            formattedTime = dateObj.toTimeString().substring(0, 5);
+          }
+          
+          reset({
+            title: template.title + " (Copy)",
+            category: cat,
+            mode: template.mode || "OFFLINE",
+            price: template.price || 0,
+            duration: template.duration || "",
+            date: template.startTime ? template.startTime.split("T")[0] : new Date().toISOString().split("T")[0],
+            time: formattedTime,
+            maxSpots: template.totalSeats || 15,
+            location: template.mode === "ONLINE" ? (template.venue?.meetingLink || "") : (template.venue?.address || ""),
+            description: template.description || "",
+            imageUrl: template.posterUrl || "",
+            instructorName: template.instructor?.name || "",
+            companyName: template.instructor?.companyName || "",
+            instructorBio: template.instructor?.bio || "",
+            instructorPhoto: template.instructor?.photoUrl || "",
+            instagram: template.instructor?.instagram || "",
+            linkedin: template.instructor?.linkedin || "",
+            facebook: template.instructor?.facebook || "",
+            verifiedCorrect: false,
+            acknowledgedPolicy: false,
+            additionalImages: template.images ? template.images.map((url: string) => ({ url })) : [],
+          });
+          setSelectedCategory(cat);
+        }
+      }
+    }
+  }, [templateId, myEvents, fetchMyEvents, reset]);
 
   const onSubmit = async (data: ProgramFormValues) => {
     clearError();
@@ -111,30 +159,31 @@ export default function CreateProgramPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
-
+    <div className="space-y-10 pb-16 bg-[#fafafa] min-h-screen -mx-8 px-8 pt-8">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-border/40">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-8 border-b border-gray-200/60">
         <div className="flex items-center space-x-4">
           <Link href="/host/programs">
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl shrink-0">
+            <Button variant="outline" size="icon" className="h-10 w-10 rounded-full shrink-0 shadow-sm border-gray-200 hover:bg-white transition-all">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-              Create New Program
+          <div className="space-y-1.5">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              Create New Workshop
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Fill in the details below to publish a new skill workshop.
+            <p className="text-sm text-gray-500 font-medium">
+              Publish a premium skill session. Your progress is saved locally.
             </p>
           </div>
         </div>
 
         {watchedTitle && (
-          <div className="animate-in slide-in-from-right-4 duration-300 hidden sm:flex items-center space-x-2 bg-primary/5 border border-primary/15 text-primary px-4 py-2 rounded-xl">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span className="text-xs font-semibold truncate max-w-[200px]">{watchedTitle}</span>
+          <div className="animate-in slide-in-from-right-4 duration-500 hidden sm:flex items-center space-x-2.5 bg-white shadow-sm border border-gray-100 text-gray-800 px-5 py-2.5 rounded-full">
+            <div className="bg-indigo-50 p-1 rounded-full">
+              <Sparkles className="h-4 w-4 text-indigo-500" />
+            </div>
+            <span className="text-sm font-semibold truncate max-w-[200px]">{watchedTitle}</span>
           </div>
         )}
       </div>
@@ -150,7 +199,7 @@ export default function CreateProgramPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           {/* Left: Form Sections */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-8">
             <BasicInfoSection
               register={register}
               errors={errors}
@@ -179,6 +228,7 @@ export default function CreateProgramPage() {
             watchedMaxSpots={watchedMaxSpots}
             watchedDuration={watchedDuration}
             watchedImageUrl={watchedImageUrl}
+            watchedAdditionalImages={watchedAdditionalImages}
             selectedCategory={selectedCategory}
             categoryMeta={categoryMeta}
             isSubmitting={isLoading}

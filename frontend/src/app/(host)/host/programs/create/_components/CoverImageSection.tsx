@@ -23,51 +23,51 @@ export default function CoverImageSection({ register, errors, control }: CoverIm
   });
 
   return (
-    <Card className="rounded-2xl border-border/40 bg-card overflow-hidden">
-      <CardHeader className="bg-muted/30 border-b border-border/30">
-        <div className="flex items-center space-x-2.5">
-          <div className="bg-cyan-500/10 text-cyan-500 p-2 rounded-lg">
-            <ImageIcon className="h-4 w-4" />
+    <Card className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white overflow-hidden">
+      <CardHeader className="bg-transparent border-b border-gray-100/50 pb-5 pt-6">
+        <div className="flex items-center space-x-3.5">
+          <div className="bg-cyan-50 text-cyan-600 p-2.5 rounded-xl shadow-sm">
+            <ImageIcon className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-sm font-bold">Images</CardTitle>
-            <CardDescription className="text-xs">Provide URLs for the workshop banner and additional images.</CardDescription>
+            <CardTitle className="text-[17px] font-extrabold text-gray-900">Images</CardTitle>
+            <CardDescription className="text-[13px] text-gray-500 font-medium">Provide URLs for the workshop banner and additional images.</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6 space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="imageUrl" className="text-xs font-semibold flex items-center space-x-1.5">
-            <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+      <CardContent className="p-7 space-y-7">
+        <div className="space-y-2.5">
+          <Label htmlFor="imageUrl" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+            <ImageIcon className="h-4 w-4 text-gray-400" />
             <span>Main Cover Image URL</span>
           </Label>
           <Input
             id="imageUrl"
             type="url"
             placeholder="https://images.unsplash.com/photo-..."
-            className="h-10 text-sm"
+            className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
             {...register("imageUrl")}
           />
-          {errors.imageUrl && <p className="text-[11px] text-destructive font-medium">{errors.imageUrl.message}</p>}
+          {errors.imageUrl && <p className="text-[12px] text-red-500 font-semibold">{errors.imageUrl.message}</p>}
         </div>
 
-        <div className="space-y-4">
-          <Label className="text-xs font-semibold flex items-center space-x-1.5">
-            <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="space-y-4 pt-2">
+          <Label className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+            <ImageIcon className="h-4 w-4 text-gray-400" />
             <span>Additional Images (Optional)</span>
           </Label>
           
           {fields.map((field, index) => (
-            <div key={field.id} className="flex gap-2 items-start">
+            <div key={field.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex-1 space-y-1">
                 <Input
                   type="url"
                   placeholder="https://images.unsplash.com/photo-..."
-                  className="h-10 text-sm"
+                  className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
                   {...register(`additionalImages.${index}.url` as const)}
                 />
                 {errors.additionalImages?.[index]?.url && (
-                  <p className="text-[11px] text-destructive font-medium">
+                  <p className="text-[12px] text-red-500 font-semibold">
                     {errors.additionalImages[index]?.url?.message}
                   </p>
                 )}
@@ -77,7 +77,7 @@ export default function CoverImageSection({ register, errors, control }: CoverIm
                 variant="outline"
                 size="icon"
                 onClick={() => remove(index)}
-                className="h-10 w-10 shrink-0 text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
+                className="h-11 w-11 shrink-0 rounded-xl text-red-500 border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -88,7 +88,7 @@ export default function CoverImageSection({ register, errors, control }: CoverIm
             type="button"
             variant="outline"
             onClick={() => append({ url: "" })}
-            className="w-full border-dashed border-2 h-10 text-xs flex items-center justify-center text-muted-foreground hover:text-foreground"
+            className="w-full border-dashed border-2 border-gray-200 h-12 text-[13px] font-bold rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-gray-300 hover:bg-gray-50 transition-all"
           >
             <Plus className="mr-2 h-4 w-4" /> Add Another Image
           </Button>
