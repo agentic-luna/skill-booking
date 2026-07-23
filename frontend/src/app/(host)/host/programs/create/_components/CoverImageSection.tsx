@@ -26,9 +26,6 @@ export default function CoverImageSection({ register, errors, control }: CoverIm
     <Card className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white overflow-hidden">
       <CardHeader className="bg-transparent border-b border-gray-100/50 pb-5 pt-6">
         <div className="flex items-center space-x-3.5">
-          <div className="bg-cyan-50 text-cyan-600 p-2.5 rounded-xl shadow-sm">
-            <ImageIcon className="h-5 w-5" />
-          </div>
           <div>
             <CardTitle className="text-[17px] font-extrabold text-gray-900">Images</CardTitle>
             <CardDescription className="text-[13px] text-gray-500 font-medium">Provide URLs for the workshop banner and additional images.</CardDescription>

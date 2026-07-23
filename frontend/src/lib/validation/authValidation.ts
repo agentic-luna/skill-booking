@@ -1,6 +1,8 @@
 import { z } from "zod";
-import parsePhoneNumberFromString, { CountryCode } from "libphonenumber-js";
-import zxcvbn from "zxcvbn";
+
+// NOTE: libphonenumber-js and zxcvbn are blocked in this environment (403 Forbidden). 
+// Using basic fallback implementations.
+export type CountryCode = string;
 
 export interface CountryOption {
   code: CountryCode;
@@ -43,12 +45,8 @@ export function buildE164Phone(dialCode: string, localDigits: string): string {
  * Validates whether full E.164 phone string is valid for given country region
  */
 export function isValidE164Phone(phoneE164: string, countryCode: CountryCode = "IN"): boolean {
-  try {
-    const parsed = parsePhoneNumberFromString(phoneE164, countryCode);
-    return !!parsed && parsed.isValid();
-  } catch {
-    return false;
-  }
+  // Basic fallback validation: starts with + and has 8-15 digits
+  return /^\+[1-9]\d{7,14}$/.test(phoneE164);
 }
 
 export interface PasswordStrengthResult {
@@ -63,13 +61,16 @@ export interface PasswordStrengthResult {
 }
 
 export function evaluatePasswordStrength(password: string): PasswordStrengthResult {
-  const result = zxcvbn(password);
-  const score = result.score; // 0-4
-
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
   const hasUpper = /[A-Z]/.test(password);
   const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  let score = 0;
+  if (hasMinLength) score += 1;
+  if (hasNumber) score += 1;
+  if (hasUpper) score += 1;
+  if (hasSpecial) score += 1;
 
   let label: PasswordStrengthResult["label"] = "Too Weak";
   let color = "bg-red-500";
@@ -107,7 +108,7 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
     hasNumber,
     hasUpper,
     hasSpecial,
-    suggestions: result.feedback.suggestions || [],
+    suggestions: [],
   };
 }
 

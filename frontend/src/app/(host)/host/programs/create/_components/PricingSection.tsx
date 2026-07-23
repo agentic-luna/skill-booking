@@ -19,9 +19,6 @@ export default function PricingSection({ register, errors }: PricingSectionProps
     <Card className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white overflow-hidden">
       <CardHeader className="bg-transparent border-b border-gray-100/50 pb-5 pt-6">
         <div className="flex items-center space-x-3.5">
-          <div className="bg-emerald-50 text-emerald-600 p-2.5 rounded-xl shadow-sm">
-            <IndianRupee className="h-5 w-5" />
-          </div>
           <div>
             <CardTitle className="text-[17px] font-extrabold text-gray-900">Pricing & Capacity</CardTitle>
             <CardDescription className="text-[13px] text-gray-500 font-medium">Set the enrollment fee and maximum participant slots.</CardDescription>

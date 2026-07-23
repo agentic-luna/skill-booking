@@ -2,7 +2,7 @@
 
 import React from "react";
 import { 
-  Lock, Phone, Mail, User, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles, AlertCircle, AlertTriangle 
+  Lock, Phone, Mail, User, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles, AlertCircle, AlertTriangle, LogIn, UserPlus 
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
@@ -141,18 +141,14 @@ export default function ClientAuthModal({
       <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border border-border/40 shadow-2xl bg-background">
         
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-[#0b0c01] to-[#1a2e05] p-6 text-white relative">
-          <div className="flex items-center space-x-2 text-[#a0f212] mb-1 text-xs font-extrabold tracking-wider uppercase">
-            <Sparkles className="h-4 w-4" />
-            <span>Learner Access</span>
-          </div>
-          <DialogTitle className="text-2xl font-black tracking-tight text-white">
-            {activeTab === "login" ? "Welcome Back" : "Create Client Account"}
+        <div className="p-6 pb-2">
+          <DialogTitle className="text-xl font-bold text-gray-900">
+            {activeTab === "login" ? "Sign in to book" : "Create an account"}
           </DialogTitle>
-          <DialogDescription className="text-white/70 text-xs mt-1">
+          <DialogDescription className="text-sm mt-1">
             {activeTab === "login" 
-              ? "Sign in with your phone or email to book workshops and access tickets." 
-              : "Sign up with your WhatsApp number to start booking live skill training."}
+              ? "Enter your details below to continue." 
+              : "Enter your details below to set up your profile."}
           </DialogDescription>
         </div>
 
@@ -160,11 +156,11 @@ export default function ClientAuthModal({
         <div className="p-6">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid grid-cols-2 w-full mb-6 bg-muted/60 p-1 rounded-xl">
-              <TabsTrigger value="login" className="rounded-lg text-xs font-bold py-2">
-                Sign In
+              <TabsTrigger value="login" className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2 data-[state=active]:border data-[state=active]:border-border/50">
+                <LogIn className="h-4 w-4" /> Sign In
               </TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-lg text-xs font-bold py-2">
-                Sign Up
+              <TabsTrigger value="signup" className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold py-2 data-[state=active]:border data-[state=active]:border-border/50">
+                <UserPlus className="h-4 w-4" /> Sign Up
               </TabsTrigger>
             </TabsList>
 
@@ -231,13 +227,13 @@ export default function ClientAuthModal({
 
                 <Button 
                   type="submit" 
-                  className="w-full h-11 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] transition-all shadow-md mt-2" 
+                  className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-2" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Signing in...</span>
                   ) : (
-                    <span className="flex items-center justify-center">Sign In <ArrowRight className="h-4 w-4 ml-2" /></span>
+                    "Sign In"
                   )}
                 </Button>
               </form>
@@ -314,13 +310,13 @@ export default function ClientAuthModal({
 
                   <Button 
                     type="submit" 
-                    className="w-full h-11 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] transition-all shadow-md mt-3" 
+                    className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-3" 
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Sending OTP...</span>
                     ) : (
-                      <span className="flex items-center justify-center">Send Verification Code <ArrowRight className="h-4 w-4 ml-2" /></span>
+                      "Continue"
                     )}
                   </Button>
                 </form>
@@ -373,13 +369,13 @@ export default function ClientAuthModal({
 
                   <Button 
                     type="submit" 
-                    className="w-full h-11 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] hover:from-[#a0f212] hover:to-[#8ce20b] hover:text-[#0b0c01] transition-all shadow-md" 
+                    className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm" 
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <span className="flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Completing Signup...</span>
+                      <span className="flex items-center justify-center"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Completing...</span>
                     ) : (
-                      <span className="flex items-center justify-center"><CheckCircle2 className="h-4 w-4 mr-2" /> Verify & Complete Registration</span>
+                      "Verify & Complete Registration"
                     )}
                   </Button>
                 </form>

@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuthStore, type UserRole } from "@/features/auth/store/authStore";
-import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +28,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const openClientAuthModal = useClientAuthModalStore((s) => s.openModal);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -84,19 +82,9 @@ export default function LoginPage() {
       </form>
 
       <div className="space-y-3 pt-2 border-t border-border/40">
-        <div className="text-center text-xs text-muted-foreground">
-          Learner/Client?{" "}
-          <button 
-            type="button" 
-            onClick={() => openClientAuthModal("login", () => router.push("/programs"))}
-            className="font-bold text-primary hover:underline"
-          >
-            Open Client Login & Registration Modal
-          </button>
-        </div>
         <div className="text-center text-sm text-muted-foreground">
-          Host / Instructor?{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">Create Host Account</Link>
+          Don&apos;t have an account?{" "}
+          <Link href="/register" className="font-semibold text-primary hover:underline">Register here</Link>
         </div>
         <div className="text-center text-xs text-muted-foreground">
           Are you an administrator?{" "}

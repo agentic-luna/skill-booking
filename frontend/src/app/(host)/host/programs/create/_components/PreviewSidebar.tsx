@@ -71,9 +71,6 @@ export default function PreviewSidebar({
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-white/50 to-purple-50/50 -z-10" />
           <CardHeader className="bg-transparent border-b border-gray-200/40 pb-5 pt-6 px-7">
             <CardTitle className="text-[16px] font-extrabold flex items-center space-x-2.5 text-gray-900">
-              <div className="bg-gradient-to-tr from-indigo-500 to-purple-500 p-1.5 rounded-full shadow-sm">
-                <Sparkles className="h-3.5 w-3.5 text-white" />
-              </div>
               <span>Live Preview</span>
             </CardTitle>
             <CardDescription className="text-[13px] font-medium text-gray-500">How your program card will appear.</CardDescription>

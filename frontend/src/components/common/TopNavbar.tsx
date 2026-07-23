@@ -41,7 +41,7 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
   return (
     <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${bgStyle}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <Link href="/programs" className={`text-2xl font-bold tracking-tight hover:opacity-80 transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]" : "text-white"}`}>
+        <Link href="/" className={`text-2xl font-bold tracking-tight hover:opacity-80 transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]" : "text-white"}`}>
           BookMy<span className="text-[#a0f212]">Skill</span>
         </Link>
         <div className={`hidden md:flex items-center gap-8 text-sm font-semibold transition-colors duration-500 ${isDarkText ? "text-[#0b0c01]/70" : "text-white/80"}`}>
