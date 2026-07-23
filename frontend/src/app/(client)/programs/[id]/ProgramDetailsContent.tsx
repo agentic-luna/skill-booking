@@ -17,6 +17,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
 import BookingModal from "./BookingModal";
+import ClientAuthModal from "@/features/auth/components/ClientAuthModal";
 
 function mapEventToProgram(event: any): Program {
   const hostUser = event.host?.user;
@@ -91,6 +92,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   // States
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -194,7 +196,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleBookClick = () => {
     if (!isAuthenticated) {
-      router.push(`/login?redirect=/programs/${programId}`);
+      setAuthModalOpen(true);
       return;
     }
     setCheckoutOpen(true);
@@ -202,7 +204,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleWishlistToggle = async () => {
     if (!isAuthenticated) {
-      router.push(`/login?redirect=/programs/${programId}`);
+      setAuthModalOpen(true);
       return;
     }
 
@@ -547,6 +549,13 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
           setCheckoutOpen(false);
           setPaymentSuccess(false);
         }}
+      />
+
+      {/* CLIENT AUTH MODAL */}
+      <ClientAuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        onSuccess={() => setCheckoutOpen(true)}
       />
 
     </main>

@@ -11,6 +11,8 @@ import { useAuthStore, type UserRole } from "@/features/auth/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ClientAuthModal from "@/features/auth/components/ClientAuthModal";
+
 const loginSchema = z.object({
   identifier: z.string().min(3, "Enter your email or phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -27,6 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -80,16 +83,32 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="space-y-3">
+      <div className="space-y-3 pt-2 border-t border-border/40">
+        <div className="text-center text-xs text-muted-foreground">
+          Learner/Client?{" "}
+          <button 
+            type="button" 
+            onClick={() => setClientModalOpen(true)}
+            className="font-bold text-primary hover:underline"
+          >
+            Open Client Login & Registration Modal
+          </button>
+        </div>
         <div className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">Register now</Link>
+          Host / Instructor?{" "}
+          <Link href="/register" className="font-semibold text-primary hover:underline">Create Host Account</Link>
         </div>
         <div className="text-center text-xs text-muted-foreground">
           Are you an administrator?{" "}
           <Link href="/admin/login" className="font-medium text-primary hover:underline">Admin Portal</Link>
         </div>
       </div>
+
+      <ClientAuthModal
+        open={clientModalOpen}
+        onOpenChange={setClientModalOpen}
+        onSuccess={() => router.push("/programs")}
+      />
     </div>
   );
 }

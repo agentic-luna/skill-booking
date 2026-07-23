@@ -45,6 +45,7 @@ export type EventMode = "ONLINE" | "OFFLINE" | "HYBRID";
 export interface CreateEventPayload {
   title: string;
   posterUrl?: string;
+  images?: string[];
   mode: EventMode;
   venue?: {
     address: string;

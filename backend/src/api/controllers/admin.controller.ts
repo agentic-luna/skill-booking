@@ -127,7 +127,7 @@ export class AdminController {
     } catch (error) {
       next(error);
     }
-  }
+  } 
 
   static async broadcastNotification(req: Request, res: Response, next: NextFunction) {
     try {

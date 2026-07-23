@@ -33,13 +33,11 @@ export default function RegisterPage() {
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<InfoFormValues>({
     resolver: zodResolver(infoSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", role: "client" },
+    defaultValues: { firstName: "", lastName: "", email: "", phone: "", password: "", role: "host" },
   });
 
-  const handleRoleSelect = (role: "client" | "host") => { setSelectedRole(role); setValue("role", role); clearError(); };
-
   const onInfoSubmit = async (data: InfoFormValues) => {
-    try { await startRegistration(data); setStep(1); } catch { /* error set in store */ }
+    try { await startRegistration({ ...data, role: "host" }); setStep(1); } catch { /* error set in store */ }
   };
 
   const onEmailOtpSubmit = async (otp: string) => {
@@ -60,19 +58,8 @@ export default function RegisterPage() {
       {step === 0 && (
         <div className="space-y-5">
           <div className="space-y-1">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Create an account</h2>
-            <p className="text-sm text-muted-foreground">Enter your details below to set up your profile</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {(["client", "host"] as const).map((role) => (
-              <button key={role} type="button" onClick={() => handleRoleSelect(role)}
-                className={`flex flex-col items-center justify-center py-3 px-3 rounded-xl border text-center transition-all relative ${selectedRole === role ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-muted/50 text-muted-foreground"}`}>
-                {role === "client" ? <User className="h-5 w-5 mb-1.5" /> : <Users className="h-5 w-5 mb-1.5" />}
-                <span className="text-xs font-semibold capitalize">{role === "client" ? "Learner (Client)" : "Instructor (Host)"}</span>
-                {selectedRole === role && <span className="absolute top-2 right-2 bg-primary text-white rounded-full p-0.5"><Check className="h-2 w-2" /></span>}
-              </button>
-            ))}
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Create a Host Account</h2>
+            <p className="text-sm text-muted-foreground">Register as an instructor/host to create and host workshops</p>
           </div>
 
           <form onSubmit={handleSubmit(onInfoSubmit)} className="space-y-4">

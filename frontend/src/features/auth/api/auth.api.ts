@@ -19,6 +19,23 @@ export async function signup(data: SignupPayload): Promise<AuthResponse> {
   return res.data;
 }
 
+export interface ClientSignupPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  password: string;
+  otp?: string;
+}
+
+/** POST /auth/client/signup — Register client account via WhatsApp number */
+export async function clientSignup(data: ClientSignupPayload): Promise<AuthResponse> {
+  const res = await request<{ success: boolean; data: AuthResponse }>(
+    "/auth/client/signup",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+  return res.data;
+}
+
 /** POST /auth/login — Login with email or phone + password */
 export async function login(
   identifier: string,

@@ -165,6 +165,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  clientSendOtp: async (phone) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.clientSendOtp(phone);
+      set({ isLoading: false });
+      return res;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  clientVerifyOtp: async (phone, otp) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await authApi.clientVerifyOtp(phone, otp);
+      set({ isLoading: false });
+      return res;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  clientSignup: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await authApi.clientSignup(data);
+      const user = mapApiUser(response.user);
+      saveTokens(response.accessToken, response.refreshToken);
+      saveSession(user);
+      set({ user, isAuthenticated: true, isLoading: false });
+      return user;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
   logout: async () => {
     const token = getRefreshToken();
     try {

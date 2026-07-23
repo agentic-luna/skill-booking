@@ -74,6 +74,15 @@ export interface AuthState {
   forgotPassword: (identifier: string) => Promise<void>;
   forgotPasswordVerifyOtp: (identifier: string, otp: string) => Promise<string>;
   resetPassword: (resetToken: string, newPassword: string) => Promise<void>;
+  clientSignup: (data: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    password: string;
+    otp?: string;
+  }) => Promise<User>;
+  clientSendOtp: (phone: string) => Promise<any>;
+  clientVerifyOtp: (phone: string, otp: string) => Promise<any>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => void;
   refreshUser: () => Promise<User | undefined>;

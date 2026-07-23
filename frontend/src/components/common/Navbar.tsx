@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ClientAuthModal from "@/features/auth/components/ClientAuthModal";
 
 export default function Navbar() {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "signup">("login");
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -215,12 +218,19 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Link href="/login">
-                    <Button variant="ghost" className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}>Sign In</Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button className="px-6 shadow-lg shadow-primary/20">Get Started</Button>
-                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => { setAuthModalTab("login"); setAuthModalOpen(true); }}
+                    className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    onClick={() => { setAuthModalTab("signup"); setAuthModalOpen(true); }}
+                    className="px-6 shadow-lg shadow-primary/20"
+                  >
+                    Get Started
+                  </Button>
                 </div>
               )}
             </div>
@@ -319,17 +329,31 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex flex-col gap-2 pt-2">
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">Sign In</Button>
-                </Link>
-                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full">Get Started</Button>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => { setMobileMenuOpen(false); setAuthModalTab("login"); setAuthModalOpen(true); }}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => { setMobileMenuOpen(false); setAuthModalTab("signup"); setAuthModalOpen(true); }}
+                >
+                  Get Started
+                </Button>
               </div>
             )}
           </div>
         </div>
       )}
+
+      {/* CLIENT AUTH MODAL */}
+      <ClientAuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        defaultTab={authModalTab}
+      />
     </div>
   );
 }
