@@ -63,7 +63,7 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onInfoSubmit)} className="space-y-4">
-            {error && <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20">{error}</div>}
+            {error && <div className="p-3 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 rounded-xl border border-red-500/30 animate-pulse">{error}</div>}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="firstName">First Name</Label>

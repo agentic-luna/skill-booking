@@ -16,8 +16,8 @@ import { Program, MOCK_PROGRAMS, MOCK_BOOKINGS, Booking } from "@/constants/mock
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
+import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
 import BookingModal from "./BookingModal";
-import ClientAuthModal from "@/features/auth/components/ClientAuthModal";
 
 function mapEventToProgram(event: any): Program {
   const hostUser = event.host?.user;
@@ -92,9 +92,9 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   // States
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const openClientAuthModal = useClientAuthModalStore((s) => s.openModal);
 
   const { 
     fetchEventDetails, 
@@ -196,7 +196,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleBookClick = () => {
     if (!isAuthenticated) {
-      setAuthModalOpen(true);
+      openClientAuthModal("login", () => setCheckoutOpen(true));
       return;
     }
     setCheckoutOpen(true);
@@ -204,7 +204,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleWishlistToggle = async () => {
     if (!isAuthenticated) {
-      setAuthModalOpen(true);
+      openClientAuthModal("login");
       return;
     }
 
@@ -549,13 +549,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
           setCheckoutOpen(false);
           setPaymentSuccess(false);
         }}
-      />
-
-      {/* CLIENT AUTH MODAL */}
-      <ClientAuthModal
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-        onSuccess={() => setCheckoutOpen(true)}
       />
 
     </main>

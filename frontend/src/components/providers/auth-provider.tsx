@@ -3,6 +3,8 @@
 import React, { useEffect } from "react";
 import { initAuth, useAuthStore } from "@/features/auth/store/authStore";
 
+import ClientAuthModal from "@/features/auth/components/ClientAuthModal";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isInitialized = useAuthStore((s) => s.isInitialized);
 
@@ -21,5 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <ClientAuthModal />
+    </>
+  );
 }

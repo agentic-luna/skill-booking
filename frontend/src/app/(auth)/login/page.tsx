@@ -8,10 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuthStore, type UserRole } from "@/features/auth/store/authStore";
+import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import ClientAuthModal from "@/features/auth/components/ClientAuthModal";
 
 const loginSchema = z.object({
   identifier: z.string().min(3, "Enter your email or phone number"),
@@ -29,7 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const [clientModalOpen, setClientModalOpen] = useState(false);
+  const openClientAuthModal = useClientAuthModalStore((s) => s.openModal);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,7 +51,7 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {error && <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20 animate-pulse">{error}</div>}
+        {error && <div className="p-3 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 rounded-xl border border-red-500/30 animate-pulse">{error}</div>}
 
         <div className="space-y-1.5">
           <Label htmlFor="identifier">Email or Phone Number</Label>
@@ -88,7 +88,7 @@ export default function LoginPage() {
           Learner/Client?{" "}
           <button 
             type="button" 
-            onClick={() => setClientModalOpen(true)}
+            onClick={() => openClientAuthModal("login", () => router.push("/programs"))}
             className="font-bold text-primary hover:underline"
           >
             Open Client Login & Registration Modal
@@ -103,12 +103,6 @@ export default function LoginPage() {
           <Link href="/admin/login" className="font-medium text-primary hover:underline">Admin Portal</Link>
         </div>
       </div>
-
-      <ClientAuthModal
-        open={clientModalOpen}
-        onOpenChange={setClientModalOpen}
-        onSuccess={() => router.push("/programs")}
-      />
     </div>
   );
 }

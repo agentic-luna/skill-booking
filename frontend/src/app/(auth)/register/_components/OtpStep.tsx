@@ -59,8 +59,8 @@ export default function OtpStep({
       </div>
 
       {error && (
-        <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
-          {error}
+        <div className="p-3 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 rounded-xl border border-red-500/30 animate-pulse flex items-center gap-2">
+          <span>{error}</span>
         </div>
       )}
 

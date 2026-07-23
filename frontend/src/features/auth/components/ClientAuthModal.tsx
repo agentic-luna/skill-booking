@@ -1,99 +1,89 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { 
-  Lock, Phone, Mail, User, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles 
+  Lock, Phone, Mail, User, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles, AlertCircle, AlertTriangle 
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription 
+  Dialog, DialogContent, DialogTitle, DialogDescription 
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ClientAuthModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
   defaultTab?: "login" | "signup";
 }
 
 export default function ClientAuthModal({
-  open,
-  onOpenChange,
-  onSuccess,
-  defaultTab = "login",
+  open: propOpen,
+  onOpenChange: propOnOpenChange,
+  onSuccess: propOnSuccess,
+  defaultTab,
 }: ClientAuthModalProps) {
   const { login, clientSendOtp, clientSignup, isLoading, error, clearError } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<"login" | "signup">(defaultTab);
+  
+  // Connect to Zustand store
+  const store = useClientAuthModalStore();
 
-  // Login form state
-  const [loginIdentifier, setLoginIdentifier] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const isControlled = propOpen !== undefined;
+  const isOpen = isControlled ? propOpen : store.isOpen;
+  const activeTab = store.activeTab;
+  const signupStep = store.signupStep;
 
-  // Signup form state
-  const [signupStep, setSignupStep] = useState<1 | 2>(1);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [localMessage, setLocalMessage] = useState<string | null>(null);
-
-  const resetForm = () => {
-    setLoginIdentifier("");
-    setLoginPassword("");
-    setFirstName("");
-    setLastName("");
-    setPhone("");
-    setSignupPassword("");
-    setOtp("");
-    setSignupStep(1);
-    setLocalMessage(null);
-    clearError();
+  const handleOpenChange = (val: boolean) => {
+    if (propOnOpenChange) {
+      propOnOpenChange(val);
+    }
+    if (!val) {
+      store.closeModal();
+    }
   };
 
   const handleTabChange = (val: string) => {
-    setActiveTab(val as "login" | "signup");
-    resetForm();
+    store.setActiveTab(val as "login" | "signup");
+    clearError();
   };
 
   // Submit Login
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalMessage(null);
+    store.setLocalMessage(null);
     try {
-      await login(loginIdentifier, loginPassword);
-      onOpenChange(false);
-      resetForm();
-      onSuccess?.();
-    } catch (err: any) {
-      // Error handled by store
+      await login(store.loginIdentifier, store.loginPassword);
+      handleOpenChange(false);
+      const cb = propOnSuccess || store.onSuccessCallback;
+      store.resetForm();
+      cb?.();
+    } catch {
+      // Error in store
     }
   };
 
   // Step 1 Signup: Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalMessage(null);
-    if (!firstName || !lastName || !phone || !signupPassword) {
-      setLocalMessage("Please fill in all required fields.");
+    store.setLocalMessage(null);
+    if (!store.firstName || !store.lastName || !store.phone || !store.signupPassword) {
+      store.setLocalMessage("Please fill in all required fields.");
       return;
     }
-    if (signupPassword.length < 6) {
-      setLocalMessage("Password must be at least 6 characters long.");
+    if (store.signupPassword.length < 6) {
+      store.setLocalMessage("Password must be at least 6 characters long.");
       return;
     }
 
     try {
-      const res = await clientSendOtp(phone);
-      setLocalMessage(res.message || "OTP code sent to your WhatsApp number.");
-      setSignupStep(2);
-    } catch (err: any) {
+      const res = await clientSendOtp(store.phone);
+      store.setLocalMessage(res.message || "OTP code sent to your WhatsApp number.");
+      store.setSignupStep(2);
+    } catch {
       // Error in store
     }
   };
@@ -101,40 +91,41 @@ export default function ClientAuthModal({
   // Step 2 Signup: Complete Signup with OTP
   const handleCompleteSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalMessage(null);
-    if (!otp || otp.trim().length === 0) {
-      setLocalMessage("Please enter the 6-digit OTP code.");
+    store.setLocalMessage(null);
+    if (!store.otp || store.otp.trim().length === 0) {
+      store.setLocalMessage("Please enter the 6-digit OTP code.");
       return;
     }
 
     try {
       await clientSignup({
-        firstName,
-        lastName,
-        phone,
-        password: signupPassword,
-        otp: otp.trim(),
+        firstName: store.firstName,
+        lastName: store.lastName,
+        phone: store.phone,
+        password: store.signupPassword,
+        otp: store.otp.trim(),
       });
-      onOpenChange(false);
-      resetForm();
-      onSuccess?.();
-    } catch (err: any) {
+      handleOpenChange(false);
+      const cb = propOnSuccess || store.onSuccessCallback;
+      store.resetForm();
+      cb?.();
+    } catch {
       // Error in store
     }
   };
 
   const handleResendOtp = async () => {
-    setLocalMessage(null);
+    store.setLocalMessage(null);
     try {
-      const res = await clientSendOtp(phone);
-      setLocalMessage(res.message || "A new OTP code has been sent.");
-    } catch (err: any) {
+      const res = await clientSendOtp(store.phone);
+      store.setLocalMessage(res.message || "A new OTP code has been sent.");
+    } catch {
       // Error in store
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if (!val) resetForm(); }}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border border-border/40 shadow-2xl bg-background">
         
         {/* Modal Header */}
@@ -165,14 +156,19 @@ export default function ClientAuthModal({
               </TabsTrigger>
             </TabsList>
 
-            {/* ERROR / LOCAL MESSAGE DISPLAY */}
-            {(error || localMessage) && (
-              <div className={`p-3 mb-4 text-xs font-semibold rounded-xl border ${
-                error 
-                  ? "bg-destructive/10 border-destructive/20 text-destructive animate-pulse" 
-                  : "bg-[#a0f212]/10 border-[#a0f212]/30 text-[#0b0c01] dark:text-[#a0f212]"
-              }`}>
-                {error || localMessage}
+            {/* ERROR DISPLAY (RED) */}
+            {error && (
+              <div className="p-3 mb-4 text-xs font-semibold rounded-xl border bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 flex items-center gap-2 animate-pulse">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* WARNING / NOTICE DISPLAY (YELLOW / AMBER) */}
+            {!error && store.localMessage && (
+              <div className="p-3 mb-4 text-xs font-semibold rounded-xl border bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+                <span>{store.localMessage}</span>
               </div>
             )}
 
@@ -188,8 +184,8 @@ export default function ClientAuthModal({
                       placeholder="name@example.com or +919947811507"
                       type="text"
                       className="pl-10 h-10 text-xs rounded-xl"
-                      value={loginIdentifier}
-                      onChange={(e) => setLoginIdentifier(e.target.value)}
+                      value={store.loginIdentifier}
+                      onChange={(e) => store.setLoginIdentifier(e.target.value)}
                       disabled={isLoading}
                       required
                     />
@@ -203,20 +199,20 @@ export default function ClientAuthModal({
                     <Input
                       id="modal-password"
                       placeholder="••••••••"
-                      type={showLoginPassword ? "text" : "password"}
+                      type={store.showLoginPassword ? "text" : "password"}
                       className="pl-10 pr-10 h-10 text-xs rounded-xl"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      value={store.loginPassword}
+                      onChange={(e) => store.setLoginPassword(e.target.value)}
                       disabled={isLoading}
                       required
                     />
                     <button
                       type="button"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      onClick={() => store.setShowLoginPassword(!store.showLoginPassword)}
                       className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                       tabIndex={-1}
                     >
-                      {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {store.showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
@@ -248,8 +244,8 @@ export default function ClientAuthModal({
                           id="modal-fname"
                           placeholder="John"
                           className="pl-10 h-10 text-xs rounded-xl"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
+                          value={store.firstName}
+                          onChange={(e) => store.setFirstName(e.target.value)}
                           disabled={isLoading}
                           required
                         />
@@ -261,8 +257,8 @@ export default function ClientAuthModal({
                         id="modal-lname"
                         placeholder="Doe"
                         className="h-10 text-xs rounded-xl"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        value={store.lastName}
+                        onChange={(e) => store.setLastName(e.target.value)}
                         disabled={isLoading}
                         required
                       />
@@ -278,8 +274,8 @@ export default function ClientAuthModal({
                         placeholder="+91 9876543210"
                         type="tel"
                         className="pl-10 h-10 text-xs rounded-xl"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        value={store.phone}
+                        onChange={(e) => store.setPhone(e.target.value)}
                         disabled={isLoading}
                         required
                       />
@@ -294,20 +290,20 @@ export default function ClientAuthModal({
                       <Input
                         id="modal-signup-password"
                         placeholder="••••••••"
-                        type={showSignupPassword ? "text" : "password"}
+                        type={store.showSignupPassword ? "text" : "password"}
                         className="pl-10 pr-10 h-10 text-xs rounded-xl"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
+                        value={store.signupPassword}
+                        onChange={(e) => store.setSignupPassword(e.target.value)}
                         disabled={isLoading}
                         required
                       />
                       <button
                         type="button"
-                        onClick={() => setShowSignupPassword(!showSignupPassword)}
+                        onClick={() => store.setShowSignupPassword(!store.showSignupPassword)}
                         className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                         tabIndex={-1}
                       >
-                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {store.showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
@@ -329,7 +325,7 @@ export default function ClientAuthModal({
                 <form onSubmit={handleCompleteSignup} className="space-y-4">
                   <button 
                     type="button" 
-                    onClick={() => setSignupStep(1)} 
+                    onClick={() => store.setSignupStep(1)} 
                     className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground mb-1"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Back to details
@@ -340,7 +336,7 @@ export default function ClientAuthModal({
                       <ShieldCheck className="h-4 w-4 text-[#a0f212] mr-1.5" /> Verify WhatsApp Number
                     </span>
                     <p className="text-muted-foreground text-[11px]">
-                      Enter the 6-digit verification code sent to <strong className="text-foreground">{phone}</strong>.
+                      Enter the 6-digit verification code sent to <strong className="text-foreground">{store.phone}</strong>.
                     </p>
                   </div>
 
@@ -352,8 +348,8 @@ export default function ClientAuthModal({
                       type="text"
                       maxLength={6}
                       className="h-12 text-center text-lg font-black tracking-widest rounded-xl"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      value={store.otp}
+                      onChange={(e) => store.setOtp(e.target.value)}
                       disabled={isLoading}
                       required
                     />
@@ -364,7 +360,7 @@ export default function ClientAuthModal({
                     <button 
                       type="button" 
                       onClick={handleResendOtp} 
-                      className="font-bold text-primary hover:underline"
+                      className="font-bold text-[#a0f212] hover:underline"
                       disabled={isLoading}
                     >
                       Resend OTP
