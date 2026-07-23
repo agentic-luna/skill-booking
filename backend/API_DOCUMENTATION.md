@@ -193,6 +193,41 @@ Comprehensive health check endpoint reporting database connectivity, process mem
 }
 ```
 
+### 3a. Client Send WhatsApp/Mobile OTP
+`POST /api/v1/auth/client/otp/send`
+
+**Request Body:**
+```json
+{
+  "phone": "+919947811507"
+}
+```
+
+### 3b. Client Verify WhatsApp/Mobile OTP
+`POST /api/v1/auth/client/otp/verify`
+
+**Request Body:**
+```json
+{
+  "phone": "+919947811507",
+  "otp": "123456"
+}
+```
+
+### 3c. Client Sign Up (WhatsApp / Phone based, no email)
+`POST /api/v1/auth/client/signup`
+
+**Request Body:**
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+919947811507",
+  "password": "password123",
+  "otp": "123456"
+}
+```
+
 ### 4. User Login (Email or Mobile Phone)
 `POST /api/v1/auth/login`
 

@@ -34,6 +34,13 @@ class SendOtpCommandHandler {
         const normalizedTarget = normalizedType === client_1.DeliveryChannel.EMAIL
             ? target.toLowerCase().trim()
             : target.trim();
+        // Check rate limit: Maximum 3 OTP requests per hour (3600s)
+        const rateLimitKey = `otp_rate_limit:${normalizedTarget}`;
+        const currentCountVal = await this.cacheService.get(rateLimitKey);
+        const currentCount = currentCountVal ? Number(currentCountVal) : 0;
+        if (currentCount >= 3) {
+            throw new errors_1.TooManyRequestsError('Maximum OTP request limit reached (3 OTPs per hour). Please try again after 1 hour.');
+        }
         if (normalizedType === client_1.DeliveryChannel.EMAIL) {
             const existing = await this.userRepo.findByEmail(normalizedTarget);
             if (existing) {
@@ -52,6 +59,7 @@ class SendOtpCommandHandler {
         const typeKey = normalizedType === client_1.DeliveryChannel.EMAIL ? 'EMAIL' : 'PHONE';
         const cacheKey = `otp:${typeKey}:${normalizedTarget}`;
         await this.cacheService.set(cacheKey, otp, 600);
+        await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
         // Send via provider
         if (normalizedType === client_1.DeliveryChannel.EMAIL) {
             await this.commsService.sendEmail(normalizedTarget, 'Your Registration Verification OTP', `Your OTP for registration verification is: ${otp}. It is valid for 10 minutes.`);

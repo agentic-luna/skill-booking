@@ -12,6 +12,9 @@ const verify_otp_1 = require("../../application/use-cases/auth/verify-otp");
 const send_forgot_password_otp_1 = require("../../application/use-cases/auth/send-forgot-password-otp");
 const verify_forgot_password_otp_1 = require("../../application/use-cases/auth/verify-forgot-password-otp");
 const reset_password_1 = require("../../application/use-cases/auth/reset-password");
+const send_otp_2 = require("../../application/use-cases/auth/client/send-otp");
+const verify_otp_2 = require("../../application/use-cases/auth/client/verify-otp");
+const signup_2 = require("../../application/use-cases/auth/client/signup");
 const api_response_1 = require("../common/api-response");
 class AuthController {
     static async sendOtp(req, res, next) {
@@ -46,6 +49,45 @@ class AuthController {
                 role,
                 emailOtp,
                 phoneOtp,
+            }));
+            return api_response_1.ApiResponse.created(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async clientSendOtp(req, res, next) {
+        try {
+            const { phone, whatsappNumber } = req.body;
+            const targetPhone = phone || whatsappNumber;
+            const result = await di_container_1.mediator.send(new send_otp_2.ClientSendOtpCommand(targetPhone));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async clientVerifyOtp(req, res, next) {
+        try {
+            const { phone, whatsappNumber, otp } = req.body;
+            const targetPhone = phone || whatsappNumber;
+            const result = await di_container_1.mediator.send(new verify_otp_2.ClientVerifyOtpCommand(targetPhone, otp));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async clientSignup(req, res, next) {
+        try {
+            const { firstName, lastName, phone, whatsappNumber, password, otp } = req.body;
+            const targetPhone = phone || whatsappNumber;
+            const result = await di_container_1.mediator.send(new signup_2.ClientSignupCommand({
+                firstName,
+                lastName,
+                phone: targetPhone,
+                passwordText: password,
+                otp,
             }));
             return api_response_1.ApiResponse.created(res, result);
         }

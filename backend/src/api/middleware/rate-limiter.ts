@@ -18,6 +18,15 @@ export const authLimiter = rateLimit({
   message: commonMessage('Too many authentication attempts. Please try again after 15 minutes.'),
 });
 
+// Strict rate limit on OTP generation endpoints: max 3 OTPs per 1 hour window
+export const otpSendLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: commonMessage('Maximum 3 OTP requests allowed per hour. Please try again after 1 hour.'),
+});
+
 // Throttle checkouts to protect seat reservations and prevent spam bots
 export const checkoutLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes

@@ -6,7 +6,7 @@ import { prisma } from '../config/prisma';
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
-    email: string;
+    email: string | null;
     role: 'SUPERADMIN' | 'HOST' | 'CLIENT';
     status: 'ACTIVE' | 'SUSPENDED';
   };

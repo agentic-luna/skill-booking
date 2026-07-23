@@ -4,7 +4,7 @@ import { ICacheService } from '../../services/cache.service';
 import { ICommunicationService } from '../../services/communication.service';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ILoggerService } from '../../services/logger.service';
-import { BadRequestError } from '../../../api/common/errors';
+import { BadRequestError, TooManyRequestsError } from '../../../api/common/errors';
 
 export class SendOtpCommand implements IRequest<any> {
   readonly __tag = 'SendOtpCommand';
@@ -35,6 +35,15 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
       ? target.toLowerCase().trim()
       : target.trim();
 
+    // Check rate limit: Maximum 3 OTP requests per hour (3600s)
+    const rateLimitKey = `otp_rate_limit:${normalizedTarget}`;
+    const currentCountVal = await this.cacheService.get<number | string>(rateLimitKey);
+    const currentCount = currentCountVal ? Number(currentCountVal) : 0;
+
+    if (currentCount >= 3) {
+      throw new TooManyRequestsError('Maximum OTP request limit reached (3 OTPs per hour). Please try again after 1 hour.');
+    }
+
     if (normalizedType === DeliveryChannel.EMAIL) {
       const existing = await this.userRepo.findByEmail(normalizedTarget);
       if (existing) {
@@ -54,6 +63,7 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
     const typeKey = normalizedType === DeliveryChannel.EMAIL ? 'EMAIL' : 'PHONE';
     const cacheKey = `otp:${typeKey}:${normalizedTarget}`;
     await this.cacheService.set(cacheKey, otp, 600);
+    await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
 
     // Send via provider
     if (normalizedType === DeliveryChannel.EMAIL) {

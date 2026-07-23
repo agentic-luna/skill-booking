@@ -343,8 +343,8 @@ export class AdminController {
       }
 
       const host = await prisma.user.findUnique({ where: { id } });
-      if (!host) {
-        throw new BadRequestError('Host not found');
+      if (!host || !host.email) {
+        throw new BadRequestError('Host not found or host does not have an email address');
       }
 
       const log = await prisma.notificationLog.create({

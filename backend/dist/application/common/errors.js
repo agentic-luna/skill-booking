@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConflictError = exports.NotFoundError = exports.ForbiddenError = exports.UnauthorizedError = exports.BadRequestError = exports.AppError = void 0;
+exports.TooManyRequestsError = exports.ConflictError = exports.NotFoundError = exports.ForbiddenError = exports.UnauthorizedError = exports.BadRequestError = exports.AppError = void 0;
 class AppError extends Error {
     message;
     statusCode;
@@ -44,3 +44,9 @@ class ConflictError extends AppError {
     }
 }
 exports.ConflictError = ConflictError;
+class TooManyRequestsError extends AppError {
+    constructor(message = 'Too Many Requests', details) {
+        super(message, 429, details);
+    }
+}
+exports.TooManyRequestsError = TooManyRequestsError;

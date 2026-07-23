@@ -8,7 +8,7 @@ export interface IUserRepository {
   create(data: {
     firstName: string;
     lastName: string;
-    email: string;
+    email?: string | null;
     phone: string;
     passwordHash: string;
     role?: UserRole;

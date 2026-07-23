@@ -39,6 +39,9 @@ import { VerifyOtpCommandHandler } from '../application/use-cases/auth/verify-ot
 import { SendForgotPasswordOtpCommandHandler } from '../application/use-cases/auth/send-forgot-password-otp';
 import { VerifyForgotPasswordOtpCommandHandler } from '../application/use-cases/auth/verify-forgot-password-otp';
 import { ResetPasswordCommandHandler } from '../application/use-cases/auth/reset-password';
+import { ClientSendOtpCommandHandler } from '../application/use-cases/auth/client/send-otp';
+import { ClientVerifyOtpCommandHandler } from '../application/use-cases/auth/client/verify-otp';
+import { ClientSignupCommandHandler } from '../application/use-cases/auth/client/signup';
 
 
 import { SubmitKycCommandHandler } from '../application/use-cases/hosts/submit-kyc';
@@ -131,6 +134,9 @@ mediator.register('VerifyOtpCommand', new VerifyOtpCommandHandler(cacheService, 
 mediator.register('SendForgotPasswordOtpCommand', new SendForgotPasswordOtpCommandHandler(userRepo, cacheService, commsService, logger));
 mediator.register('VerifyForgotPasswordOtpCommand', new VerifyForgotPasswordOtpCommandHandler(userRepo, cacheService, logger));
 mediator.register('ResetPasswordCommand', new ResetPasswordCommandHandler(userRepo, cacheService, logger));
+mediator.register('ClientSendOtpCommand', new ClientSendOtpCommandHandler(cacheService, commsService, userRepo, logger));
+mediator.register('ClientVerifyOtpCommand', new ClientVerifyOtpCommandHandler(cacheService, logger));
+mediator.register('ClientSignupCommand', new ClientSignupCommandHandler(userRepo, cacheService));
 
 
 // 5. Register Host handlers

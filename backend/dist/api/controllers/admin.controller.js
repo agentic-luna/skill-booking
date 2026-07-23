@@ -312,8 +312,8 @@ class AdminController {
                 throw new errors_1.BadRequestError('Subject and message content are required');
             }
             const host = await prisma_1.prisma.user.findUnique({ where: { id } });
-            if (!host) {
-                throw new errors_1.BadRequestError('Host not found');
+            if (!host || !host.email) {
+                throw new errors_1.BadRequestError('Host not found or host does not have an email address');
             }
             const log = await prisma_1.prisma.notificationLog.create({
                 data: {

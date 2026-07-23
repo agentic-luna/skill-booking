@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.globalLimiter = exports.webhookLimiter = exports.checkoutLimiter = exports.authLimiter = void 0;
+exports.globalLimiter = exports.webhookLimiter = exports.checkoutLimiter = exports.otpSendLimiter = exports.authLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const commonMessage = (msg) => ({
     success: false,
@@ -20,6 +20,14 @@ exports.authLimiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
     message: commonMessage('Too many authentication attempts. Please try again after 15 minutes.'),
+});
+// Strict rate limit on OTP generation endpoints: max 3 OTPs per 1 hour window
+exports.otpSendLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: commonMessage('Maximum 3 OTP requests allowed per hour. Please try again after 1 hour.'),
 });
 // Throttle checkouts to protect seat reservations and prevent spam bots
 exports.checkoutLimiter = (0, express_rate_limit_1.default)({

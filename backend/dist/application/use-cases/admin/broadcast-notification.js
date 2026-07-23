@@ -53,6 +53,8 @@ class BroadcastNotificationCommandHandler {
         const createdLogs = [];
         for (const u of users) {
             const recipient = channel === client_1.DeliveryChannel.EMAIL ? u.email : u.phone;
+            if (!recipient)
+                continue;
             const log = await this.notificationRepo.create({
                 userId: u.id,
                 channel,

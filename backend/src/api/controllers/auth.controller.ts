@@ -10,6 +10,9 @@ import { VerifyOtpCommand } from '../../application/use-cases/auth/verify-otp';
 import { SendForgotPasswordOtpCommand } from '../../application/use-cases/auth/send-forgot-password-otp';
 import { VerifyForgotPasswordOtpCommand } from '../../application/use-cases/auth/verify-forgot-password-otp';
 import { ResetPasswordCommand } from '../../application/use-cases/auth/reset-password';
+import { ClientSendOtpCommand } from '../../application/use-cases/auth/client/send-otp';
+import { ClientVerifyOtpCommand } from '../../application/use-cases/auth/client/verify-otp';
+import { ClientSignupCommand } from '../../application/use-cases/auth/client/signup';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { ApiResponse } from '../common/api-response';
 
@@ -46,6 +49,45 @@ export class AuthController {
         role,
         emailOtp,
         phoneOtp,
+      }));
+      return ApiResponse.created(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async clientSendOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { phone, whatsappNumber } = req.body;
+      const targetPhone = phone || whatsappNumber;
+      const result = await mediator.send(new ClientSendOtpCommand(targetPhone));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async clientVerifyOtp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { phone, whatsappNumber, otp } = req.body;
+      const targetPhone = phone || whatsappNumber;
+      const result = await mediator.send(new ClientVerifyOtpCommand(targetPhone, otp));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async clientSignup(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { firstName, lastName, phone, whatsappNumber, password, otp } = req.body;
+      const targetPhone = phone || whatsappNumber;
+      const result = await mediator.send(new ClientSignupCommand({
+        firstName,
+        lastName,
+        phone: targetPhone,
+        passwordText: password,
+        otp,
       }));
       return ApiResponse.created(res, result);
     } catch (error) {

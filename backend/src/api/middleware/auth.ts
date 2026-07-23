@@ -8,7 +8,7 @@ import { getPermissionsForRole } from '../../security/system.roles';
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
-    email: string;
+    email: string | null;
     role: UserRole;
     status: UserStatus;
     permissions: string[];

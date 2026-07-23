@@ -106,7 +106,7 @@ model User {
   role         UserRole   @default(CLIENT)
   firstName    String
   lastName     String
-  email        String     @unique
+  email        String?    @unique
   phone        String     @unique
   passwordHash String
   status       UserStatus @default(ACTIVE)

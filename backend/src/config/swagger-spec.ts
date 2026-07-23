@@ -382,7 +382,7 @@ export const swaggerSpec = {
     '/auth/otp/send': {
       post: {
         tags: ['Authentication'],
-        summary: 'Request OTP verification code for email or phone',
+        summary: 'Request OTP verification code for email or phone (Rate limited: Max 3 OTPs / hour)',
         requestBody: {
           required: true,
           content: {
@@ -422,6 +422,81 @@ export const swaggerSpec = {
           }
         },
         responses: { 200: { description: 'OTP verified successfully' } }
+      }
+    },
+    '/auth/client/otp/send': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Request WhatsApp/SMS OTP verification code for Client registration (Rate limited: Max 3 OTPs / hour)',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['phone'],
+                properties: {
+                  phone: { type: 'string', example: '+919947811507', description: 'Client WhatsApp/mobile number' },
+                  whatsappNumber: { type: 'string', example: '+919947811507', description: 'Alias for phone' }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Client OTP sent successfully' } }
+      }
+    },
+    '/auth/client/otp/verify': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Verify WhatsApp/SMS OTP code for Client registration',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['phone', 'otp'],
+                properties: {
+                  phone: { type: 'string', example: '+919947811507' },
+                  whatsappNumber: { type: 'string', example: '+919947811507' },
+                  otp: { type: 'string', example: '123456' }
+                }
+              }
+            }
+          }
+        },
+        responses: { 200: { description: 'Client OTP verified successfully' } }
+      }
+    },
+    '/auth/client/signup': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Register a new Client account via WhatsApp number without email',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['firstName', 'lastName', 'phone', 'password'],
+                properties: {
+                  firstName: { type: 'string', example: 'Jane' },
+                  lastName: { type: 'string', example: 'Doe' },
+                  phone: { type: 'string', example: '+919947811507' },
+                  whatsappNumber: { type: 'string', example: '+919947811507' },
+                  password: { type: 'string', example: 'password123' },
+                  otp: { type: 'string', example: '123456', description: 'OTP code if not verified in separate step' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: 'Client registered successfully and tokens generated'
+          }
+        }
       }
     },
     '/auth/signup': {

@@ -26,6 +26,14 @@ class SendForgotPasswordOtpCommandHandler {
         if (!identifier) {
             throw new errors_1.BadRequestError('Email address or registered mobile number is required');
         }
+        const normalizedIdentifier = identifier.trim().toLowerCase();
+        // Check rate limit: Maximum 3 OTP requests per hour (3600s)
+        const rateLimitKey = `otp_rate_limit:${normalizedIdentifier}`;
+        const currentCountVal = await this.cacheService.get(rateLimitKey);
+        const currentCount = currentCountVal ? Number(currentCountVal) : 0;
+        if (currentCount >= 3) {
+            throw new errors_1.TooManyRequestsError('Maximum OTP request limit reached (3 OTPs per hour). Please try again after 1 hour.');
+        }
         let user = await this.userRepo.findByEmail(identifier);
         if (!user) {
             user = await this.userRepo.findByPhone(identifier);
@@ -38,20 +46,36 @@ class SendForgotPasswordOtpCommandHandler {
         // Cache in Redis under key forgot_pwd_otp:<userId> for 10 minutes (600s)
         const cacheKey = `forgot_pwd_otp:${user.id}`;
         await this.cacheService.set(cacheKey, otp, 600);
-        // Send OTP to user's registered email
-        await this.commsService.sendEmail(user.email, 'Password Reset OTP Verification', `Hello ${user.firstName},\n\nYour OTP for password reset is: ${otp}. It is valid for 10 minutes. If you did not request a password reset, please ignore this email.`);
-        this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to ${user.email}`);
-        // Mask email for privacy response (e.g., j***n@domain.com)
-        const parts = user.email.split('@');
-        const maskedEmail = parts[0].length > 2
-            ? `${parts[0][0]}***${parts[0][parts[0].length - 1]}@${parts[1]}`
-            : `${parts[0][0]}***@${parts[1]}`;
-        return {
-            success: true,
-            message: `OTP has been sent to your registered email (${maskedEmail})`,
-            expiresInSeconds: 600,
-            ...(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? { devOtp: otp } : {}),
-        };
+        await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
+        // Send OTP to user's registered email or phone
+        const targetEmail = user.email;
+        if (targetEmail) {
+            await this.commsService.sendEmail(targetEmail, 'Password Reset OTP Verification', `Hello ${user.firstName},\n\nYour OTP for password reset is: ${otp}. It is valid for 10 minutes. If you did not request a password reset, please ignore this email.`);
+            this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to ${targetEmail}`);
+            const parts = targetEmail.split('@');
+            const maskedEmail = parts[0].length > 2
+                ? `${parts[0][0]}***${parts[0][parts[0].length - 1]}@${parts[1]}`
+                : `${parts[0][0]}***@${parts[1]}`;
+            return {
+                success: true,
+                message: `OTP has been sent to your registered email (${maskedEmail})`,
+                expiresInSeconds: 600,
+                ...(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? { devOtp: otp } : {}),
+            };
+        }
+        else {
+            await this.commsService.sendSMS(user.phone, `Hello ${user.firstName}, your OTP for password reset is: ${otp}. Valid for 10 minutes.`);
+            this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to mobile ${user.phone}`);
+            const maskedPhone = user.phone.length > 4
+                ? `${user.phone.slice(0, 3)}***${user.phone.slice(-2)}`
+                : user.phone;
+            return {
+                success: true,
+                message: `OTP has been sent to your registered mobile number (${maskedPhone})`,
+                expiresInSeconds: 600,
+                ...(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? { devOtp: otp } : {}),
+            };
+        }
     }
 }
 exports.SendForgotPasswordOtpCommandHandler = SendForgotPasswordOtpCommandHandler;
