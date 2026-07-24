@@ -48,6 +48,7 @@ export default function CreateProgramPage() {
       time: "10:00",
       maxSpots: 15,
       location: "",
+      district: "",
       description: "",
       imageUrl: "",
       instructorName: "",
@@ -94,6 +95,7 @@ export default function CreateProgramPage() {
             time: formattedTime,
             maxSpots: template.totalSeats || 15,
             location: template.mode === "ONLINE" ? (template.venue?.meetingLink || "") : (template.venue?.address || ""),
+            district: (template.venueDetails as any)?.district || "",
             description: template.description || "",
             imageUrl: template.posterUrl || "",
             instructorName: template.instructor?.name || "",
@@ -127,6 +129,7 @@ export default function CreateProgramPage() {
         venue: {
           address: data.mode === "ONLINE" ? "Online" : data.location.trim(),
           meetingLink: data.mode === "ONLINE" ? data.location.trim() : null,
+          district: data.mode === "OFFLINE" ? data.district?.trim() : undefined,
         },
         instructor: {
           name: data.instructorName.trim(),

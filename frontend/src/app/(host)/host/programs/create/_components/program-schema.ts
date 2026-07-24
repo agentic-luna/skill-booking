@@ -11,6 +11,7 @@ export const programSchema = z.object({
   time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Select a valid start time (HH:MM)"),
   maxSpots: z.preprocess((val) => Number(val), z.number().min(1, "Must allow at least 1 spot")),
   location: z.string().min(3, "Location or online webinar links are required"),
+  district: z.string().optional(),
   description: z.string().min(20, "Provide a description of at least 20 characters"),
   imageUrl: z.string().min(1, "Cover image URL is required").url("Must be a valid URL"),
   instructorName: z.string().min(2, "Instructor name must be at least 2 characters"),

@@ -17,6 +17,7 @@ export class CreateEventCommand implements IRequest<any> {
       venue?: {
         address: string;
         meetingLink?: string | null;
+        district?: string;
       };
       instructor?: {
         name: string;
@@ -79,6 +80,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       durationHours,
       description: data.description,
       category: data.category,
+      venueDetails: data.venue?.district ? { district: data.venue.district } : undefined,
     });
 
     // Invalidate event listings caches

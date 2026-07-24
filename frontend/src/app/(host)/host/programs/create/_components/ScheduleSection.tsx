@@ -88,6 +88,22 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
             />
             {errors.location && <p className="text-[12px] text-red-500 font-semibold">{errors.location.message}</p>}
           </div>
+
+          {selectedMode === "OFFLINE" && (
+            <div className="space-y-2.5">
+              <Label htmlFor="district" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <MapPin className="h-4 w-4 text-gray-400" />
+                <span>District / City</span>
+              </Label>
+              <Input
+                id="district"
+                placeholder="e.g. Kochi, Trivandrum, Kozhikode"
+                className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
+                {...register("district")}
+              />
+              {errors.district && <p className="text-[12px] text-red-500 font-semibold">{errors.district.message}</p>}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

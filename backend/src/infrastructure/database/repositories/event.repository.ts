@@ -28,10 +28,11 @@ function mapEvent(e: any): any {
     } : null,
   };
 
-  if (e.instructor || e.venue) {
+  if (e.instructor || e.venue || e.venueDetails) {
     mapped.venueDetails = {
       address: e.venue?.address || '',
       meetingLink: e.venue?.meetingLink || '',
+      district: (e.venueDetails as any)?.district || '',
       instructorName: e.instructor?.name || '',
       companyName: e.instructor?.companyName || '',
       instructorBio: e.instructor?.bio || '',
@@ -165,6 +166,7 @@ export class PrismaEventRepository implements IEventRepository {
     durationHours?: number;
     description?: string;
     category?: string;
+    venueDetails?: any;
   }): Promise<Event> {
     let instructorId: string | null = null;
     let venueId: string | null = null;
@@ -200,6 +202,7 @@ export class PrismaEventRepository implements IEventRepository {
         ...rest,
         instructorId,
         venueId,
+        venueDetails: data.venueDetails || undefined,
       },
       include: {
         instructor: true,

@@ -166,6 +166,7 @@ export class EventsController {
           description: description !== undefined ? String(description) : event.description,
           instructorId,
           venueId,
+          venueDetails: venue?.district ? { district: venue.district } : event.venueDetails,
         },
         include: {
           instructor: true,
@@ -194,10 +195,11 @@ export class EventsController {
         version: Number(updatedEvent.version),
       };
 
-      if (updatedEvent.instructor || updatedEvent.venue) {
+      if (updatedEvent.instructor || updatedEvent.venue || updatedEvent.venueDetails) {
         mappedEvent.venueDetails = {
           address: updatedEvent.venue?.address || '',
           meetingLink: updatedEvent.venue?.meetingLink || '',
+          district: (updatedEvent.venueDetails as any)?.district || '',
           instructorName: updatedEvent.instructor?.name || '',
           companyName: updatedEvent.instructor?.companyName || '',
           instructorBio: updatedEvent.instructor?.bio || '',
