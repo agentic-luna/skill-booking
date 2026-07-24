@@ -18,143 +18,27 @@ import { CanvasText } from "@/components/ui/canvas-text";
 import { useClientStore } from "@/features/client/store/clientStore";
 import type { ClientEvent } from "@/features/client/api/types";
 
-export default function ProgramsListContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+interface FilterSidebarProps {
+  category: string;
+  setCategory: (v: string) => void;
+  localMaxPrice: number;
+  setLocalMaxPrice: (v: number) => void;
+  setMaxPrice: (v: number) => void;
+  minRating: number;
+  setMinRating: (v: number) => void;
+  hideFull: boolean;
+  setHideFull: (v: boolean) => void;
+  handleResetFilters: () => void;
+  categoriesList: { name: string; value: string }[];
+  router: ReturnType<typeof import("next/navigation").useRouter>;
+  sortedCount: number;
+}
 
-  // URL Parameter rehydration
-  const initialCategory = searchParams.get("category") || "all";
-  const initialSearch = searchParams.get("search") || "";
-  const initialLocation = searchParams.get("location") || "";
-  const initialDates = searchParams.get("dates") || "";
-
-  // Filters State
-  const [search, setSearch] = useState(initialSearch);
-  const [category, setCategory] = useState(initialCategory);
-  const [location, setLocation] = useState(initialLocation);
-  const [dates, setDates] = useState(initialDates);
-  const [maxPrice, setMaxPrice] = useState<number>(0); // 0 means "Any Price"
-  const [minRating, setMinRating] = useState<number>(0);
-  const [hideFull, setHideFull] = useState(false);
-  const [sortBy, setSortBy] = useState("popular");
-  const [layout, setLayout] = useState<"grid" | "list">("grid");
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  const { events, fetchEvents, loading } = useClientStore();
-
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Sync Search state if URL parameter changes
-  useEffect(() => {
-    setSearch(initialSearch);
-  }, [initialSearch]);
-
-  useEffect(() => {
-    setCategory(initialCategory);
-  }, [initialCategory]);
-
-  useEffect(() => {
-    setLocation(initialLocation);
-  }, [initialLocation]);
-
-  useEffect(() => {
-    setDates(initialDates);
-  }, [initialDates]);
-
-  // Categories list mapping
-  const categoriesList = [
-    { name: "All Categories", value: "all" },
-    { name: "Technology", value: "technology" },
-    { name: "Culinary Arts", value: "culinary" },
-    { name: "Fitness & Wellness", value: "fitness" },
-    { name: "Design & Arts", value: "design" },
-    { name: "Photography", value: "photography" },
-    { name: "Business", value: "business" },
-  ];
-
-  // Filtering calculations
-  const filteredPrograms = events.filter((prog) => {
-    if (prog.status !== "APPROVED") return false;
-    
-    // Search check
-    const trainerName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
-    const matchesSearch = 
-      prog.title.toLowerCase().includes(search.toLowerCase()) ||
-      (prog.description || "").toLowerCase().includes(search.toLowerCase()) ||
-      trainerName.toLowerCase().includes(search.toLowerCase());
-    
-    // Category check
-    const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category;
-    
-    // Location check
-    const eventLocation = prog.mode === "ONLINE" ? "Online" : prog.venueDetails?.city || prog.venueDetails?.address || "In Person";
-    const matchesLocation = !location || location === "Anywhere" || eventLocation.toLowerCase().includes(location.toLowerCase());
-
-    // Dates check
-    let matchesDates = true;
-    if (dates) {
-      const selectedMonths = dates.split(",");
-      const eventDate = new Date(prog.startTime);
-      if (!isNaN(eventDate.getTime())) {
-        const eventMonth = eventDate.toLocaleString("default", { month: "long" });
-        matchesDates = selectedMonths.includes(eventMonth);
-      } else {
-        // If we can't parse date but dates filter is active, exclude it
-        matchesDates = false;
-      }
-    }
-
-    // Price check
-    const price = prog.price || prog.venueDetails?.price || 0;
-    const matchesPrice = maxPrice === 0 || price <= maxPrice;
-    
-    // Rating check (Mocked to 4.8 for now)
-    const matchesRating = 4.8 >= minRating;
-    
-    // Availability check
-    const matchesAvailability = !hideFull || prog.availableSeats > 0;
-
-    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability;
-  });
-
-  // Sorting calculations
-  const sortedPrograms = [...filteredPrograms].sort((a, b) => {
-    const priceA = a.price || a.venueDetails?.price || 0;
-    const priceB = b.price || b.venueDetails?.price || 0;
-    const likesA = a._count?.likes || 0;
-    const likesB = b._count?.likes || 0;
-
-    if (sortBy === "price-asc") return priceA - priceB;
-    if (sortBy === "price-desc") return priceB - priceA;
-    if (sortBy === "rating") return likesB - likesA; // Fallback to likes
-    // default: popular (likesCount)
-    return likesB - likesA;
-  });
-
-  const handleResetFilters = () => {
-    setSearch("");
-    setCategory("all");
-    setLocation("");
-    setDates("");
-    setMaxPrice(0);
-    setMinRating(0);
-    setHideFull(false);
-    setSortBy("popular");
-    router.push("/programs");
-  };
-
-  const FilterSidebar = () => (
+const FilterSidebar = React.memo(function FilterSidebar({
+  category, setCategory, localMaxPrice, setLocalMaxPrice, setMaxPrice,
+  minRating, setMinRating, hideFull, setHideFull, handleResetFilters, categoriesList, router
+}: FilterSidebarProps) {
+  return (
     <div className="space-y-6">
       {/* Category Select */}
       <div className="space-y-3">
@@ -187,7 +71,7 @@ export default function ProgramsListContent() {
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-end">
           <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Max Ticket Price</label>
-          <span className="font-extrabold text-[#0b0c01]">{maxPrice === 0 ? "Any Price" : `₹${maxPrice}`}</span>
+          <span className="font-extrabold text-[#0b0c01]">{localMaxPrice === 0 ? "Any Price" : `₹${localMaxPrice}`}</span>
         </div>
         <div className="pt-2">
           <input
@@ -195,8 +79,11 @@ export default function ProgramsListContent() {
             min={0}
             max={200}
             step={1}
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(Number(e.target.value))}
+            value={localMaxPrice}
+            onChange={(e) => setLocalMaxPrice(Number(e.target.value))}
+            onMouseUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
+            onTouchEnd={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
+            onKeyUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
             className="w-full accent-primary h-1.5 bg-muted rounded-full appearance-none cursor-pointer focus:outline-none"
           />
           <div className="flex justify-between text-[10px] font-semibold text-muted-foreground mt-2">
@@ -246,6 +133,130 @@ export default function ProgramsListContent() {
       </Button>
     </div>
   );
+});
+
+export default function ProgramsListContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // URL Parameter rehydration
+  const initialCategory = searchParams.get("category") || "all";
+  const initialSearch = searchParams.get("search") || "";
+  const initialLocation = searchParams.get("location") || "";
+  const initialDates = searchParams.get("dates") || "";
+
+  // Filters State
+  const [search, setSearch] = useState(initialSearch);
+  const [category, setCategory] = useState(initialCategory);
+  const [location, setLocation] = useState(initialLocation);
+  const [dates, setDates] = useState(initialDates);
+  const [maxPrice, setMaxPrice] = useState<number>(0); // 0 means "Any Price"
+  const [localMaxPrice, setLocalMaxPrice] = useState<number>(0);
+  const [minRating, setMinRating] = useState<number>(0);
+  const [hideFull, setHideFull] = useState(false);
+  const [sortBy, setSortBy] = useState("popular");
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const { events, fetchEvents, loading } = useClientStore();
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Sync Search state if URL parameter changes
+  useEffect(() => {
+    setSearch(initialSearch);
+  }, [initialSearch]);
+
+  useEffect(() => {
+    setCategory(initialCategory);
+  }, [initialCategory]);
+
+  useEffect(() => {
+    setLocation(initialLocation);
+  }, [initialLocation]);
+
+  useEffect(() => {
+    setDates(initialDates);
+  }, [initialDates]);
+
+  // Sync local slider state when filters are reset
+  useEffect(() => {
+    setLocalMaxPrice(maxPrice);
+  }, [maxPrice]);
+
+  const categoriesList = [
+    { name: "All Categories", value: "all" },
+    { name: "Technology", value: "technology" },
+    { name: "Culinary Arts", value: "culinary" },
+    { name: "Fitness & Wellness", value: "fitness" },
+    { name: "Design & Arts", value: "design" },
+    { name: "Photography", value: "photography" },
+    { name: "Business", value: "business" },
+  ];
+
+  // Filtering calculations
+  const filteredPrograms = events.filter((prog) => {
+    if (prog.status !== "APPROVED") return false;
+    const trainerName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
+    const matchesSearch =
+      prog.title.toLowerCase().includes(search.toLowerCase()) ||
+      (prog.description || "").toLowerCase().includes(search.toLowerCase()) ||
+      trainerName.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category;
+    const eventLocation = prog.mode === "ONLINE" ? "Online" : prog.venueDetails?.city || prog.venueDetails?.address || "In Person";
+    const matchesLocation = !location || location === "Anywhere" || eventLocation.toLowerCase().includes(location.toLowerCase());
+    let matchesDates = true;
+    if (dates) {
+      const selectedMonths = dates.split(",");
+      const eventDate = new Date(prog.startTime);
+      if (!isNaN(eventDate.getTime())) {
+        const eventMonth = eventDate.toLocaleString("default", { month: "long" });
+        matchesDates = selectedMonths.includes(eventMonth);
+      } else {
+        matchesDates = false;
+      }
+    }
+    const price = prog.price || prog.venueDetails?.price || 0;
+    const matchesPrice = maxPrice === 0 || price <= maxPrice;
+    const matchesRating = 4.8 >= minRating;
+    const matchesAvailability = !hideFull || prog.availableSeats > 0;
+    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability;
+  });
+
+  // Sorting calculations
+  const sortedPrograms = [...filteredPrograms].sort((a, b) => {
+    const priceA = a.price || a.venueDetails?.price || 0;
+    const priceB = b.price || b.venueDetails?.price || 0;
+    const likesA = a._count?.likes || 0;
+    const likesB = b._count?.likes || 0;
+    if (sortBy === "price-asc") return priceA - priceB;
+    if (sortBy === "price-desc") return priceB - priceA;
+    if (sortBy === "rating") return likesB - likesA;
+    return likesB - likesA;
+  });
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setCategory("all");
+    setLocation("");
+    setDates("");
+    setMaxPrice(0);
+    setMinRating(0);
+    setHideFull(false);
+    setSortBy("popular");
+    router.push("/programs");
+  };
 
   return (
     <main className="flex-1 bg-[#fcfcfc] dark:bg-[#0a0a0a] min-h-screen pb-16">
@@ -351,7 +362,21 @@ export default function ProgramsListContent() {
           {/* Sidebar filters (Desktop only) */}
           <aside className="hidden md:block md:col-span-3 lg:col-span-3">
             <div className="bg-white/70 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 rounded-[2rem] h-fit sticky top-6">
-              <FilterSidebar />
+              <FilterSidebar
+                category={category}
+                setCategory={setCategory}
+                localMaxPrice={localMaxPrice}
+                setLocalMaxPrice={setLocalMaxPrice}
+                setMaxPrice={setMaxPrice}
+                minRating={minRating}
+                setMinRating={setMinRating}
+                hideFull={hideFull}
+                setHideFull={setHideFull}
+                handleResetFilters={handleResetFilters}
+                categoriesList={categoriesList}
+                router={router}
+                sortedCount={sortedPrograms.length}
+              />
             </div>
           </aside>
 
@@ -513,7 +538,21 @@ export default function ProgramsListContent() {
                 <h3 className="font-extrabold text-lg text-foreground flex items-center"><SlidersHorizontal className="mr-2 h-5 w-5" /> Filters</h3>
                 <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-muted-foreground hover:bg-muted/80 rounded-xl transition-colors"><X className="h-5 w-5" /></button>
               </div>
-              <FilterSidebar />
+              <FilterSidebar
+                category={category}
+                setCategory={setCategory}
+                localMaxPrice={localMaxPrice}
+                setLocalMaxPrice={setLocalMaxPrice}
+                setMaxPrice={setMaxPrice}
+                minRating={minRating}
+                setMinRating={setMinRating}
+                hideFull={hideFull}
+                setHideFull={setHideFull}
+                handleResetFilters={handleResetFilters}
+                categoriesList={categoriesList}
+                router={router}
+                sortedCount={sortedPrograms.length}
+              />
             </div>
             
             <div className="pt-6 border-t border-border/40 mt-6 sticky bottom-0 bg-background pb-2">
