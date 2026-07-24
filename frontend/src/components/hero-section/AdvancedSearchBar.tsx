@@ -18,7 +18,7 @@ const FALLBACK_CATEGORIES = [
 ];
 
 const FALLBACK_LOCATIONS = [
-  "India", "Asia", "Bali", "Thailand", "Nepal", "Vietnam", "Online"
+  "Kochi", "Kozhikode", "Trivandrum", "Kerala", "Online"
 ];
 
 export default function AdvancedSearchBar() {
@@ -39,26 +39,10 @@ export default function AdvancedSearchBar() {
     fetchEvents();
   }, [fetchEvents]);
 
-  // Derive dynamic locations from active events
+  // Use fallback locations (recommended cities) for now to avoid dummy data from db
   const dynamicLocations = useMemo(() => {
-    const locs = new Set<string>();
-    events.forEach(event => {
-      if (event.status !== "APPROVED") return;
-      
-      if (event.mode === "ONLINE") {
-        locs.add("Online");
-      } else if (event.venueDetails?.city) {
-        locs.add(event.venueDetails.city);
-      } else if (event.venueDetails?.address) {
-        // Fallback to address if city isn't specifically defined
-        locs.add(event.venueDetails.address);
-      } else {
-        locs.add("In Person");
-      }
-    });
-    const result = Array.from(locs);
-    return result.length > 0 ? result : FALLBACK_LOCATIONS;
-  }, [events]);
+    return FALLBACK_LOCATIONS;
+  }, []);
 
   // Derive dynamic categories from active events
   const dynamicCategories = useMemo(() => {
@@ -145,7 +129,7 @@ export default function AdvancedSearchBar() {
               <div className="mb-4">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setLocation(""); setActiveTab(null); }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-5 py-2 rounded-full font-medium transition-colors"
+                  className="bg-gray-900 hover:bg-black text-white text-sm px-5 py-2 rounded-full font-medium transition-colors"
                 >
                   Anywhere
                 </button>
@@ -155,8 +139,9 @@ export default function AdvancedSearchBar() {
                   <li 
                     key={loc}
                     onClick={(e) => { e.stopPropagation(); setLocation(loc); setActiveTab(null); }}
-                    className="text-[15px] font-semibold hover:text-blue-500 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 text-[15px] font-semibold text-gray-700 hover:text-gray-900 cursor-pointer transition-colors py-1"
                   >
+                    <MapPin className="w-4 h-4 text-gray-400" />
                     {loc}
                   </li>
                 ))}
@@ -186,7 +171,7 @@ export default function AdvancedSearchBar() {
           {activeTab === "category" && (
             <div className="absolute top-[calc(100%+16px)] left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-[600px] bg-white rounded-3xl shadow-xl border border-gray-100 p-6 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
               <div 
-                className="flex items-center gap-3 bg-gray-50 rounded-full px-5 py-3 mb-6 border border-gray-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all"
+                className="flex items-center gap-3 bg-gray-50 rounded-full px-5 py-3 mb-6 border border-gray-200 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100 transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Search className="w-4 h-4 text-gray-500" />
@@ -212,7 +197,7 @@ export default function AdvancedSearchBar() {
 
               {categorySearchQuery.trim() !== "" && (
                 <div 
-                  className="mb-4 text-center cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold py-3 px-4 rounded-xl transition-colors"
+                  className="mb-4 text-center cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 px-4 rounded-xl transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveTab(null);
@@ -234,7 +219,7 @@ export default function AdvancedSearchBar() {
                       <span 
                         key={cat}
                         onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
-                        className="text-[14px] font-bold text-gray-700 cursor-pointer hover:text-blue-500 transition-colors"
+                        className="text-[14px] font-bold text-gray-700 cursor-pointer hover:text-black transition-colors"
                       >
                         {cat}
                       </span>
@@ -247,9 +232,9 @@ export default function AdvancedSearchBar() {
                     <span 
                       key={`cat-${cat}`} 
                       onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
-                      className="text-[14px] font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer px-3 py-2 rounded-lg transition-colors flex items-center"
+                      className="text-[14px] font-semibold text-gray-800 hover:text-black hover:bg-gray-100 cursor-pointer px-3 py-2 rounded-lg transition-colors flex items-center"
                     >
-                      <Grid2X2 className="w-4 h-4 mr-2 opacity-60" /> {cat}
+                      {cat}
                     </span>
                   ))}
                   
@@ -308,7 +293,7 @@ export default function AdvancedSearchBar() {
                 {selectedDates.length > 0 && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); setSelectedDates([]); }}
-                    className="text-xs font-semibold text-blue-500 hover:text-blue-700 transition-colors mr-2"
+                    className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors mr-2"
                   >
                     Clear dates
                   </button>
@@ -324,7 +309,7 @@ export default function AdvancedSearchBar() {
                       onClick={(e) => { e.stopPropagation(); toggleDate(month); }}
                       className={`text-[13px] py-3 px-2 rounded-xl font-bold transition-all ${
                         isActive 
-                          ? 'bg-blue-500 text-white shadow-[0_2px_10px_rgba(59,130,246,0.3)] border border-blue-500' 
+                          ? 'bg-gray-900 text-white shadow-[0_2px_10px_rgba(0,0,0,0.2)] border border-gray-900' 
                           : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600'
                       }`}
                     >
