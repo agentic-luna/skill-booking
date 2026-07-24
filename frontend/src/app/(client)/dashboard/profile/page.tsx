@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { 
-  User, Settings, ShieldCheck, Mail, ShieldAlert, KeyRound, 
-  BellRing, Award, CheckCircle, ArrowLeft, Upload, Loader2 
+import {
+  User, Settings, ShieldCheck, Mail, ShieldAlert, KeyRound,
+  BellRing, Award, CheckCircle, ArrowLeft, Upload, Loader2
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -45,7 +45,7 @@ export default function ProfilePage() {
   const { user, isAuthenticated, updateProfile } = useAuthStore();
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
-  
+
   // Notification States
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
@@ -132,7 +132,7 @@ export default function ProfilePage() {
     e.preventDefault();
     const expertise = (document.getElementById("expertise") as HTMLInputElement)?.value || "";
     const bio = (document.getElementById("bio") as HTMLTextAreaElement)?.value || "";
-    
+
     setSubmittingHost(true);
     try {
       await clientApi.applyHost({ expertise, bio });
@@ -149,10 +149,10 @@ export default function ProfilePage() {
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
-          
+
           <div className="space-y-1">
-            <Link 
-              href={user?.role === "host" ? "/host/dashboard" : "/home"} 
+            <Link
+              href={user?.role === "host" ? "/host/dashboard" : "/"}
               className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold"
             >
               <ArrowLeft className="h-3 w-3" /> {user?.role === "host" ? "Back to dashboard" : "Back to feed"}
@@ -164,7 +164,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            
+
             {/* Left: Avatar Summary Card */}
             <Card className="col-span-1 border-border/40 rounded-2xl h-fit overflow-hidden bg-card">
               <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
@@ -176,7 +176,7 @@ export default function ProfilePage() {
                     <Upload className="h-4 w-4" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-1">
                   <h3 className="font-bold text-base text-foreground leading-tight">{user.name}</h3>
                   <p className="text-[10px] text-muted-foreground">{user.email}</p>
@@ -191,7 +191,7 @@ export default function ProfilePage() {
             {/* Right: Detailed Settings Tabs */}
             <div className="md:col-span-3">
               <Tabs defaultValue="details" className="w-full">
-                
+
                 <TabsList className={`grid w-full max-w-sm mb-4 ${user?.role === "admin" ? "grid-cols-2" : "grid-cols-3"}`}>
                   <TabsTrigger value="details">My Profile</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>

@@ -11,7 +11,7 @@ interface TopNavbarProps {
   hiddenRoutes?: string[];
 }
 
-export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin", "/login", "/register", "/forgot-password", "/admin/login"] }: TopNavbarProps) {
+export default function TopNavbar({ hiddenRoutes = ["/", "/", "/super-admin", "/login", "/register", "/forgot-password", "/admin/login"] }: TopNavbarProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,7 +33,7 @@ export default function TopNavbar({ hiddenRoutes = ["/", "/home", "/super-admin"
   // Check if we should force dark styling (e.g. on dashboard where background is white)
   const forceDark = pathname.startsWith("/dashboard") || pathname.startsWith("/programs/") || pathname.startsWith("/host") || pathname.startsWith("/admin");
   const isDarkText = isScrolled || forceDark;
-  
+
   const bgStyle = (isScrolled || forceDark)
     ? "bg-white/90 backdrop-blur-xl border-b border-black/5 shadow-sm py-3"
     : "bg-transparent py-6";

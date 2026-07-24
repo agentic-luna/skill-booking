@@ -12,14 +12,14 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 
 // ─── Menu config ──────────────────────────────────────────────────────────────
 const menuItems = [
-  { name: "Overview",           href: "/admin/dashboard",        icon: LayoutDashboard },
-  { name: "Hosts Verification", href: "/admin/hosts",            icon: UserCheck },
-  { name: "Hosts Management",   href: "/admin/hosts-management", icon: Users },
-  { name: "Approvals",          href: "/admin/approvals",        icon: CheckSquare },
-  { name: "Finance & Payouts",  href: "/admin/finance",          icon: Wallet },
-  { name: "Notification Logs",  href: "/admin/notifications",    icon: Bell },
-  { name: "Broadcast Center",   href: "/admin/broadcast",        icon: Radio },
-  { name: "Platform Settings",  href: "/admin/settings",         icon: Settings },
+  { name: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
+  { name: "Hosts Verification", href: "/admin/hosts", icon: UserCheck },
+  { name: "Hosts Management", href: "/admin/hosts-management", icon: Users },
+  { name: "Approvals", href: "/admin/approvals", icon: CheckSquare },
+  { name: "Finance & Payouts", href: "/admin/finance", icon: Wallet },
+  { name: "Notification Logs", href: "/admin/notifications", icon: Bell },
+  { name: "Broadcast Center", href: "/admin/broadcast", icon: Radio },
+  { name: "Platform Settings", href: "/admin/settings", icon: Settings },
 ];
 
 // ─── Sidebar (standalone component — MUST be outside AdminLayout for Fast Refresh) ───
@@ -68,20 +68,18 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
                 key={item.href}
                 href={item.href}
                 onClick={onNavigate}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-full transition-all group relative ${
-                  isActive
+                className={`flex items-center gap-3.5 px-4 py-3 rounded-full transition-all group relative ${isActive
                     ? "bg-[#252525] text-white shadow-inner border border-white/5 font-semibold"
                     : "text-white/60 hover:text-white hover:bg-white/5 font-medium"
-                }`}
+                  }`}
               >
                 <div className="relative shrink-0">
                   {isNotification && (
                     <div className="absolute inset-0 bg-[#a0f212] blur-md rounded-full opacity-50 animate-pulse" />
                   )}
                   <IconComp
-                    className={`h-5 w-5 relative z-10 transition-colors ${
-                      isActive ? "text-[#a0f212]" : "text-white/60 group-hover:text-white"
-                    }`}
+                    className={`h-5 w-5 relative z-10 transition-colors ${isActive ? "text-[#a0f212]" : "text-white/60 group-hover:text-white"
+                      }`}
                   />
                 </div>
                 <span className="text-sm tracking-wide">{item.name}</span>
@@ -124,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isAuthenticated) {
       router.push("/admin/login");
     } else if (user?.role !== "admin") {
-      router.push("/home");
+      router.push("/");
     }
   }, [isInitialized, isAuthenticated, user, router]);
 

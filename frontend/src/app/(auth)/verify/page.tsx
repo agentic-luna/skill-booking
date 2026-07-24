@@ -38,7 +38,7 @@ export default function VerifyPage() {
     const success = await verifyOtp(otpCode);
     if (success) {
       const role = useAuthStore.getState().user?.role;
-      router.push(role === "host" ? "/host/dashboard" : "/home");
+      router.push(role === "host" ? "/host/dashboard" : "/");
     }
   };
 
@@ -46,7 +46,7 @@ export default function VerifyPage() {
     if (!pendingRegistration) return;
     const target = !pendingRegistration.emailVerified ? pendingRegistration.email : pendingRegistration.phone;
     const type = !pendingRegistration.emailVerified ? "EMAIL" : "PHONE";
-    await sendOtp(target, type).catch(() => {});
+    await sendOtp(target, type).catch(() => { });
   };
 
   const target = !pendingRegistration?.emailVerified ? pendingRegistration?.email : pendingRegistration?.phone;

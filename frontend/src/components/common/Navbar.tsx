@@ -92,13 +92,12 @@ export default function Navbar() {
 
             {/* Desktop Nav Items */}
             <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
-              <Link 
-                href="/programs" 
-                className={`text-sm font-medium hover:opacity-80 transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${
-                  showSearchAndShrink 
-                    ? "max-w-0 opacity-0 pointer-events-none" 
+              <Link
+                href="/programs"
+                className={`text-sm font-medium hover:opacity-80 transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${showSearchAndShrink
+                    ? "max-w-0 opacity-0 pointer-events-none"
                     : "max-w-[120px] opacity-100"
-                }`}
+                  }`}
               >
                 Explore Skills
               </Link>
@@ -108,14 +107,13 @@ export default function Navbar() {
                   {user.role === "client" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={`rounded-full relative transition-all duration-300 ${
-                            isScrolled || !isHome 
-                              ? "text-graphite-ink hover:bg-graphite-ink/5 hover:drop-shadow-sm" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`rounded-full relative transition-all duration-300 ${isScrolled || !isHome
+                              ? "text-graphite-ink hover:bg-graphite-ink/5 hover:drop-shadow-sm"
                               : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
-                          }`}
+                            }`}
                         >
                           <Bell className="h-5 w-5" />
                           {unreadNotificationsCount > 0 && (
@@ -154,7 +152,7 @@ export default function Navbar() {
 
                   {/* Wishlist Link */}
                   {user.role === "client" && (
-                    <Link href="/wishlist">
+                    <Link href="/dashboard/wishlist">
                       <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
                         <Heart className="h-4.5 w-4.5" />
                       </Button>
@@ -208,7 +206,7 @@ export default function Navbar() {
                             <BookmarkCheck className="mr-2 h-4 w-4" /> My Bookings
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push("/dashboard/wishlist")}>
-                            <Heart className="mr-2 h-4 w-4 text-rose-500" /> Liked Workshops
+                            <Heart className="mr-2 h-4 w-4 text-rose-500" /> Wishlist
                           </DropdownMenuItem>
                         </>
                       )}
@@ -236,14 +234,14 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={() => router.push("/login")}
                     className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}
                   >
                     Sign In
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => router.push("/register")}
                     className="px-6 shadow-lg shadow-primary/20"
                   >
@@ -286,7 +284,7 @@ export default function Navbar() {
                 {user.role === "client" && (
                   <>
                     <Link
-                      href="/home"
+                      href="/"
                       onClick={() => setMobileMenuOpen(false)}
                       className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5"
                     >
@@ -341,7 +339,7 @@ export default function Navbar() {
                 )}
 
                 <Link
-                  href="/wishlist"
+                  href="/dashboard/wishlist"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5"
                 >
@@ -367,14 +365,14 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex flex-col gap-2 pt-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => { setMobileMenuOpen(false); router.push("/login"); }}
                 >
                   Sign In
                 </Button>
-                <Button 
+                <Button
                   className="w-full"
                   onClick={() => { setMobileMenuOpen(false); router.push("/register"); }}
                 >

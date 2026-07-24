@@ -26,7 +26,7 @@ export default function HostLayout({
     if (!isAuthenticated) {
       router.push("/login");
     } else if (user?.role !== "host") {
-      router.push("/home");
+      router.push("/");
     }
   }, [isAuthenticated, user, router]);
 
@@ -103,10 +103,10 @@ export default function HostLayout({
                   }
                 }}
                 className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${isRestricted
-                    ? "opacity-40 cursor-not-allowed text-[#8a9b93] hover:bg-transparent"
-                    : isActive
-                      ? "bg-[#a0f212] text-[#0d1e17] shadow-lg shadow-[#a0f212]/10"
-                      : "text-[#8a9b93] hover:bg-white/5 hover:text-white"
+                  ? "opacity-40 cursor-not-allowed text-[#8a9b93] hover:bg-transparent"
+                  : isActive
+                    ? "bg-[#a0f212] text-[#0d1e17] shadow-lg shadow-[#a0f212]/10"
+                    : "text-[#8a9b93] hover:bg-white/5 hover:text-white"
                   }`}
               >
                 <div className="flex items-center space-x-3">
@@ -252,16 +252,16 @@ export default function HostLayout({
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center space-x-3">
                         <span className={`w-3 h-3 rounded-full ${isKycApproved ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                            isKycPending ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' :
-                              isKycRejected ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
-                                'bg-amber-500'
+                          isKycPending ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' :
+                            isKycRejected ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
+                              'bg-amber-500'
                           }`} />
                         <span className="font-semibold text-[#0b0c01]">KYC Status</span>
                       </div>
                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${isKycApproved ? 'bg-emerald-500/10 text-emerald-600' :
-                          isKycPending ? 'bg-amber-500/10 text-amber-600' :
-                            isKycRejected ? 'bg-red-500/10 text-red-600' :
-                              'bg-amber-500/10 text-amber-600'
+                        isKycPending ? 'bg-amber-500/10 text-amber-600' :
+                          isKycRejected ? 'bg-red-500/10 text-red-600' :
+                            'bg-amber-500/10 text-amber-600'
                         }`}>
                         {hostProfile?.kycStatus ?? 'Not Submitted'}
                       </span>

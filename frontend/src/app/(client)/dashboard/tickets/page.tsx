@@ -82,7 +82,7 @@ export default function BookingsPage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
 
           <div className="space-y-1">
-            <Link href="/home" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
+            <Link href="/" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
               <ArrowLeft className="h-3 w-3" /> Back to feed
             </Link>
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
