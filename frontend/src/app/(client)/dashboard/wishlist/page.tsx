@@ -82,8 +82,7 @@ export default function WishlistPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
+      <main className="flex-1 py-8 space-y-6">
 
           <div className="space-y-1">
             <Link href="/" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
@@ -96,7 +95,7 @@ export default function WishlistPage() {
           </div>
 
           {wishlist.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {wishlist.map((item) => {
                 const prog = item.event;
                 if (!prog) return null;
@@ -141,7 +140,6 @@ export default function WishlistPage() {
             </div>
           )}
 
-        </div>
       </main>
 
       <Footer />
