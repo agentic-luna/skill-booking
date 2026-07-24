@@ -83,7 +83,7 @@ export default function WishlistPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-8 space-y-6">
-
+        <div className="px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="space-y-1">
             <Link href="/" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
               <ArrowLeft className="h-3 w-3" /> Back to feed
@@ -139,7 +139,7 @@ export default function WishlistPage() {
               </div>
             </div>
           )}
-
+        </div>
       </main>
 
       <Footer />

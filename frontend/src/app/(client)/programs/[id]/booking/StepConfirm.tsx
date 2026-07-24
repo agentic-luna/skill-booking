@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Separator } from "@/components/ui/separator";
+import { Calendar, Clock, Timer, MapPin } from "lucide-react";
 import { SummaryRow } from "./BookingAtoms";
 import { PrimaryParticipant, BookingSummary } from "./types";
 import { Program } from "@/constants/mockData";
@@ -25,11 +26,11 @@ export default function StepConfirm({ program, primary, qty, summary }: StepConf
       <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
         <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workshop</div>
         <div className="font-bold text-sm text-foreground">{program.title}</div>
-        <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground">
-          <span>📅 {program.date}</span>
-          <span>⏰ {program.time}</span>
-          <span>⏱ {program.duration}</span>
-          <span>📍 {program.location.split(",")[0]}</span>
+        <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground mt-2">
+          <span className="flex items-center"><Calendar className="inline h-3 w-3 mr-1.5" /> {program.date}</span>
+          <span className="flex items-center"><Clock className="inline h-3 w-3 mr-1.5" /> {program.time}</span>
+          <span className="flex items-center"><Timer className="inline h-3 w-3 mr-1.5" /> {program.duration}</span>
+          <span className="flex items-center truncate"><MapPin className="inline h-3 w-3 mr-1.5 shrink-0" /> {program.location.split(",")[0]}</span>
         </div>
       </div>
 

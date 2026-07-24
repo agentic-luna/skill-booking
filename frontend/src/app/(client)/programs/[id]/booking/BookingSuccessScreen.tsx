@@ -42,7 +42,7 @@ export default function BookingSuccessScreen({
       </div>
 
       <div className="space-y-1.5">
-        <h3 className="text-xl font-extrabold text-foreground">Booking Confirmed! 🎉</h3>
+        <h3 className="text-xl font-extrabold text-foreground">Booking Confirmed!</h3>
         <p className="text-xs text-muted-foreground max-w-xs">
           Your spot has been reserved. A confirmation email, SMS, and invoice have been dispatched.
         </p>

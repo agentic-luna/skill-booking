@@ -135,7 +135,7 @@ export default function DashboardOverviewPage() {
 
       {/* ─── Upcoming Bookings ─────────────────────────────────────────────────────── */}
       <div className="space-y-6 pt-4">
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between">
           <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
             <div className="bg-[#0b0c01] text-[#a0f212] p-2 rounded-xl"><Calendar className="h-5 w-5" /></div>
             Upcoming Bookings
@@ -223,7 +223,7 @@ export default function DashboardOverviewPage() {
 
       {/* ─── Suggested for You ────────────────────────────────────────────────────── */}
       <div className="space-y-6 pt-6">
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between">
           <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
             <div className="bg-[#a0f212] text-[#0b0c01] p-2 rounded-xl"><Sparkles className="h-5 w-5" /></div>
             Suggested for You

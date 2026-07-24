@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   User, Mail, Phone, Calendar, MapPin, Globe, CreditCard,
   CheckCircle2, Loader2, Plus, Minus, ChevronRight, ChevronLeft,
-  Users, ShieldCheck, Ticket, AlertCircle, Receipt, X, BadgeCheck
+  Users, ShieldCheck, Ticket, AlertCircle, Receipt, X, BadgeCheck, Timer
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -198,7 +198,7 @@ export default function BookingModal({
                 <CheckCircle2 className="h-9 w-9 text-emerald-500" />
               </div>
               <div className="space-y-1.5">
-                <h3 className="text-xl font-extrabold text-foreground">Booking Confirmed! 🎉</h3>
+                <h3 className="text-xl font-extrabold text-foreground">Booking Confirmed!</h3>
                 <p className="text-xs text-muted-foreground max-w-xs">
                   Your spot has been reserved. A confirmation email, SMS, and invoice have been dispatched.
                 </p>
@@ -499,11 +499,11 @@ export default function BookingModal({
                     <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workshop</div>
                       <div className="font-bold text-sm text-foreground">{program.title}</div>
-                      <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground">
-                        <span>📅 {program.date}</span>
-                        <span>⏰ {program.time}</span>
-                        <span>⏱ {program.duration}</span>
-                        <span>📍 {program.location.split(",")[0]}</span>
+                      <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground mt-2">
+                        <span className="flex items-center"><Calendar className="inline h-3 w-3 mr-1.5" /> {program.date}</span>
+                        <span className="flex items-center"><Clock className="inline h-3 w-3 mr-1.5" /> {program.time}</span>
+                        <span className="flex items-center"><Timer className="inline h-3 w-3 mr-1.5" /> {program.duration}</span>
+                        <span className="flex items-center truncate"><MapPin className="inline h-3 w-3 mr-1.5 shrink-0" /> {program.location.split(",")[0]}</span>
                       </div>
                     </div>
 

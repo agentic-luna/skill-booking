@@ -239,7 +239,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
         setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
         setPaymentSuccess(true);
         showAlert(
-          "🎉 Booking Confirmed!",
+          "Booking Confirmed!",
           `Your ${spotsCount} seat${spotsCount > 1 ? "s" : ""} for "${program.title}" have been reserved. Check your email for the confirmation and invoice.`,
           "success"
         );
