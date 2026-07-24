@@ -10,6 +10,39 @@ import { useClientStore } from "@/features/client/store/clientStore";
 import Footer from "@/components/common/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import ProgramCard from "@/components/common/ProgramCard";
+import { Program } from "@/constants/mockData";
+
+function mapEventToProgram(event: any): Program {
+  const hostUser = event.host?.user;
+  const instructorName = event.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : "Instructor");
+  const instructorAvatar = hostUser?.avatarUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face";
+  const locationStr = event.mode === "ONLINE" ? "Online" : (event.venueDetails?.district || event.venueDetails?.address || "In Person");
+  const imageUrlStr = event.posterUrl || event.images?.[0] || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600";
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description || "",
+    instructorName,
+    instructorAvatar,
+    category: event.category || "technology",
+    rating: 4.8,
+    reviewsCount: event._count?.bookings || 12,
+    price: event.price || 0,
+    duration: event.duration || "2 hours",
+    date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
+    time: event.startTime 
+      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
+      : "10:00 AM EST",
+    spotsLeft: event.availableSeats ?? 0,
+    maxSpots: event.totalSeats ?? 20,
+    location: locationStr,
+    imageUrl: imageUrlStr,
+    status: event.status ? event.status.toLowerCase() : "approved",
+    featured: true,
+  };
+}
 
 export default function WishlistPage() {
   const router = useRouter();
@@ -67,66 +100,22 @@ export default function WishlistPage() {
               {wishlist.map((item) => {
                 const prog = item.event;
                 if (!prog) return null;
-                const instructorName = prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host";
-                const price = Number(prog.venueDetails?.price || 0);
-                const formattedDate = new Date(prog.startTime).toLocaleDateString();
+                const programData = mapEventToProgram(prog);
 
                 return (
-                  <div
-                    key={item.id}
-                    className="group flex flex-col border border-border/40 bg-card rounded-2xl overflow-hidden hover:border-primary/20 animate-hover relative"
-                  >
-                    {/* Remove Button overlay */}
+                  <div key={item.id} className="relative group">
+                    {/* Remove Button overlay - placed outside the Link to avoid nested interactivity issues */}
                     <button
-                      onClick={() => handleRemoveFromWishlist(prog.id)}
-                      className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white p-2 rounded-full z-15 active:scale-90 transition-transform"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRemoveFromWishlist(prog.id);
+                      }}
+                      className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-xs text-white p-2 rounded-full z-10 active:scale-90 transition-transform shadow-md"
                       title="Remove from saved list"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
-
-                    <div className="relative aspect-video w-full bg-muted">
-                      <img
-                        src={prog.posterUrl || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=300"}
-                        alt={prog.title}
-                        className="object-cover w-full h-full group-hover:scale-103 transition-transform duration-300"
-                      />
-                    </div>
-
-                    <div className="flex flex-col flex-1 p-5 space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary">
-                          {instructorName.slice(0, 2).toUpperCase()}
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">{instructorName}</span>
-                      </div>
-
-                      <h3 className="font-bold text-sm text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
-                        {prog.title}
-                      </h3>
-
-                      <div className="flex items-center space-x-2 text-[10px] text-muted-foreground">
-                        <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> {formattedDate}</span>
-                        <span>•</span>
-                        <span className="flex items-center"><MapPin className="h-3 w-3 mr-1" /> {prog.mode}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-1.5">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                        <span className="text-xs font-semibold text-foreground">4.8</span>
-                        <span className="text-[10px] text-muted-foreground">({prog.availableSeats} left)</span>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-border/40 mt-auto">
-                        <div>
-                          <span className="text-[10px] text-muted-foreground">Fee</span>
-                          <div className="text-base font-extrabold text-foreground">${price}</div>
-                        </div>
-                        <Link href={`/programs/${prog.id}`}>
-                          <Button size="sm" className="rounded-lg h-8 text-xs">Book Seat</Button>
-                        </Link>
-                      </div>
-                    </div>
+                    <ProgramCard program={programData} />
                   </div>
                 );
               })}

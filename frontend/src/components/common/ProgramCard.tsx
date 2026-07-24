@@ -10,7 +10,8 @@ interface ProgramCardProps {
 
 export default function ProgramCard({ program }: ProgramCardProps) {
   return (
-    <div
+    <Link
+      href={`/programs/${program.id}`}
       className="group flex flex-col border border-black/10 rounded-lg overflow-hidden bg-bone-white hover:border-black/30 transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0"
     >
       <div className="relative aspect-video w-full overflow-hidden =bg-haze">
@@ -54,11 +55,9 @@ export default function ProgramCard({ program }: ProgramCardProps) {
             <span className="text-xs text-stone-grey">Registration Fee</span>
             <div className="text-lg font-extrabold text-graphite-ink">₹{program.price}</div>
           </div>
-          <Link href={`/programs/${program.id}`}>
-            <Button size="sm">Book Spot</Button>
-          </Link>
+          <Button size="sm">Book Spot</Button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
