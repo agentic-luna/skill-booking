@@ -194,10 +194,10 @@ export default function ProgramsListContent() {
             type="range"
             min={0}
             max={200}
-            step={5}
+            step={1}
             value={maxPrice}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full accent-primary h-1.5 bg-muted rounded-full appearance-none cursor-pointer focus:outline-none"
+            className="w-full accent-primary h-1.5 bg-muted rounded-full appearance-none cursor-pointer focus:outline-none transition-all"
           />
           <div className="flex justify-between text-[10px] font-semibold text-muted-foreground mt-2">
             <span>₹0</span>

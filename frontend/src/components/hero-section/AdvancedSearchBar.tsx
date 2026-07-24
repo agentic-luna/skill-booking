@@ -139,7 +139,7 @@ export default function AdvancedSearchBar() {
                   <li 
                     key={loc}
                     onClick={(e) => { e.stopPropagation(); setLocation(loc); setActiveTab(null); }}
-                    className="flex items-center gap-3 text-[15px] font-semibold text-gray-700 hover:text-gray-900 cursor-pointer transition-colors py-1"
+                    className="flex items-center gap-3 text-[15px] font-semibold text-gray-700 hover:text-black hover:bg-gray-50 cursor-pointer px-4 py-2.5 rounded-xl transition-all"
                   >
                     <MapPin className="w-4 h-4 text-gray-400" />
                     {loc}
@@ -214,12 +214,12 @@ export default function AdvancedSearchBar() {
 
               <div className="flex flex-col md:flex-row gap-6">
                 {categorySearchQuery.trim() === "" && (
-                  <div className="w-full md:w-1/3 flex flex-col gap-4 border-r border-gray-100 pr-4">
+                  <div className="w-full md:w-1/3 flex flex-col gap-2 border-r border-gray-100 pr-4">
                     {["Programming", "Design", "Marketing", "Business", "Music"].map(cat => (
                       <span 
                         key={cat}
                         onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
-                        className="text-[14px] font-bold text-gray-700 cursor-pointer hover:text-black transition-colors"
+                        className="text-[14px] font-bold text-gray-700 cursor-pointer hover:text-black hover:bg-gray-50 px-3 py-2 rounded-xl transition-all"
                       >
                         {cat}
                       </span>
@@ -228,15 +228,18 @@ export default function AdvancedSearchBar() {
                 )}
                 
                 <div className={`w-full ${categorySearchQuery.trim() === "" ? 'md:w-2/3' : 'w-full'} flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar`}>
-                  {filteredCategories.length > 0 && filteredCategories.map((cat) => (
-                    <span 
-                      key={`cat-${cat}`} 
-                      onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
-                      className="text-[14px] font-semibold text-gray-800 hover:text-black hover:bg-gray-100 cursor-pointer px-3 py-2 rounded-lg transition-colors flex items-center"
-                    >
-                      {cat}
-                    </span>
-                  ))}
+                  {filteredCategories.length > 0 && filteredCategories.map((cat) => {
+                    const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
+                    return (
+                      <span 
+                        key={`cat-${cat}`} 
+                        onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
+                        className="text-[13px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-gray-50 hover:shadow-sm cursor-pointer px-4 py-2.5 rounded-xl transition-all flex items-center justify-center text-center capitalize"
+                      >
+                        {formattedCat}
+                      </span>
+                    );
+                  })}
                   
                   {categorySearchQuery.trim() !== "" && events
                     .filter(evt => evt.status === "APPROVED" && (
