@@ -25,10 +25,14 @@ export default function ProgramsListContent() {
   // URL Parameter rehydration
   const initialCategory = searchParams.get("category") || "all";
   const initialSearch = searchParams.get("search") || "";
+  const initialLocation = searchParams.get("location") || "";
+  const initialDates = searchParams.get("dates") || "";
 
   // Filters State
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
+  const [location, setLocation] = useState(initialLocation);
+  const [dates, setDates] = useState(initialDates);
   const [maxPrice, setMaxPrice] = useState<number>(0); // 0 means "Any Price"
   const [minRating, setMinRating] = useState<number>(0);
   const [hideFull, setHideFull] = useState(false);
@@ -60,6 +64,14 @@ export default function ProgramsListContent() {
     setCategory(initialCategory);
   }, [initialCategory]);
 
+  useEffect(() => {
+    setLocation(initialLocation);
+  }, [initialLocation]);
+
+  useEffect(() => {
+    setDates(initialDates);
+  }, [initialDates]);
+
   // Categories list mapping
   const categoriesList = [
     { name: "All Categories", value: "all" },
@@ -85,6 +97,24 @@ export default function ProgramsListContent() {
     // Category check
     const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category;
     
+    // Location check
+    const eventLocation = prog.mode === "ONLINE" ? "Online" : prog.venueDetails?.city || prog.venueDetails?.address || "In Person";
+    const matchesLocation = !location || location === "Anywhere" || eventLocation.toLowerCase().includes(location.toLowerCase());
+
+    // Dates check
+    let matchesDates = true;
+    if (dates) {
+      const selectedMonths = dates.split(",");
+      const eventDate = new Date(prog.startTime);
+      if (!isNaN(eventDate.getTime())) {
+        const eventMonth = eventDate.toLocaleString("default", { month: "long" });
+        matchesDates = selectedMonths.includes(eventMonth);
+      } else {
+        // If we can't parse date but dates filter is active, exclude it
+        matchesDates = false;
+      }
+    }
+
     // Price check
     const price = prog.price || prog.venueDetails?.price || 0;
     const matchesPrice = maxPrice === 0 || price <= maxPrice;
@@ -95,7 +125,7 @@ export default function ProgramsListContent() {
     // Availability check
     const matchesAvailability = !hideFull || prog.availableSeats > 0;
 
-    return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesAvailability;
+    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability;
   });
 
   // Sorting calculations
@@ -115,6 +145,8 @@ export default function ProgramsListContent() {
   const handleResetFilters = () => {
     setSearch("");
     setCategory("all");
+    setLocation("");
+    setDates("");
     setMaxPrice(0);
     setMinRating(0);
     setHideFull(false);
