@@ -19,6 +19,7 @@ import { useClientStore } from "@/features/client/store/clientStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
 import { useBookingModalStore } from "@/features/client/store/bookingModalStore";
 import BookingModal from "./BookingModal";
+import BackButton from "@/components/common/BackButton";
 
 function mapEventToProgram(event: any): Program {
   const hostUser = event.host?.user;
@@ -272,9 +273,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Back Link */}
-        <Link href="/programs" className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground gap-1 transition-colors">
-          <ChevronLeft className="h-4 w-4" /> Back to explore
-        </Link>
+        <BackButton href="/programs" label="Back to explore" />
 
         {/* Dynamic Detail layout columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

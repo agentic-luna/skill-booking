@@ -15,7 +15,7 @@ export const CategoryCard = ({ cat }: { cat: CategoryItem }) => {
   return (
     <Link
       href={`/programs?category=${cat.slug}`}
-      className="group relative flex items-center p-4 pr-6 rounded-[2rem] bg-bone-white/60 backdrop-blur-md border border-clay-shadow/40 hover:bg-white hover:border-clay-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-1 overflow-hidden"
+      className="group relative flex items-center p-4 pr-6 rounded-[2rem] bg-transparent border border-clay-shadow/40 hover:bg-white hover:border-clay-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-1 overflow-hidden"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       

@@ -152,7 +152,7 @@ export class EventsController {
         }
       }
 
-      const updatedEvent = await prisma.event.update({
+      const updatedEvent: any = await prisma.event.update({
         where: { id },
         data: {
           title: title !== undefined ? title : event.title,
@@ -166,7 +166,7 @@ export class EventsController {
           description: description !== undefined ? String(description) : event.description,
           instructorId,
           venueId,
-          venueDetails: venue?.district ? { district: venue.district } : event.venueDetails,
+          venueDetails: (venue?.district ? { district: venue.district } : event.venueDetails) as any,
         },
         include: {
           instructor: true,

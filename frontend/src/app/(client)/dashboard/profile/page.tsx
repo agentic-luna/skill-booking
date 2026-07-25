@@ -8,8 +8,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   User, Settings, ShieldCheck, Mail, ShieldAlert, KeyRound,
-  BellRing, Award, CheckCircle, ArrowLeft, Upload, Loader2
+  BellRing, Award, CheckCircle, Upload, Loader2
 } from "lucide-react";
+
+import BackButton from "@/components/common/BackButton";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import * as clientApi from "@/features/client/api/client.api";
@@ -147,16 +149,14 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-1 bg-muted/10 dark:bg-card/5 py-8">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
+      <main className="flex-1 pt-[104px] pb-8 bg-muted/10 dark:bg-card/5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
 
           <div className="space-y-1">
-            <Link
-              href={user?.role === "host" ? "/host/dashboard" : "/"}
-              className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold"
-            >
-              <ArrowLeft className="h-3 w-3" /> {user?.role === "host" ? "Back to dashboard" : "Back to feed"}
-            </Link>
+            <BackButton 
+              href={user?.role === "host" ? "/host/dashboard" : "/"} 
+              label={user?.role === "host" ? "Back to dashboard" : "Back to feed"} 
+            />
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
               <Settings className="h-6 w-6 text-primary" /> Profile & Settings
             </h1>

@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Star, Clock, MapPin, Trash2, ArrowLeft, Ticket, Calendar } from "lucide-react";
+import { Heart, Star, Clock, MapPin, Trash2, Ticket, Calendar } from "lucide-react";
+
+import BackButton from "@/components/common/BackButton";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientStore } from "@/features/client/store/clientStore";
@@ -82,12 +84,10 @@ export default function WishlistPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <main className="flex-1 py-8 space-y-6">
-        <div className="px-4 sm:px-6 lg:px-8 space-y-6">
+      <main className="flex-1 pt-[104px] pb-8 bg-muted/10 dark:bg-card/5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="space-y-1">
-            <Link href="/" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 pb-1 font-semibold">
-              <ArrowLeft className="h-3 w-3" /> Back to feed
-            </Link>
+            <BackButton href="/" label="Back to feed" />
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
               <Heart className="h-6 w-6 text-red-500 fill-red-500" /> My Saved Skills
             </h1>

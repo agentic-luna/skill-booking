@@ -38,6 +38,7 @@ export interface IEventRepository {
     durationHours?: number;
     description?: string;
     category?: string;
+    venueDetails?: any;
   }): Promise<Event>;
   update(id: string, data: any): Promise<Event>;
   findPendingEvents(): Promise<any[]>;

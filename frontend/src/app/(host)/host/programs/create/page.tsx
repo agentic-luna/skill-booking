@@ -27,6 +27,13 @@ export default function CreateProgramPage() {
   const { createEvent, isLoading, error, clearError, myEvents, fetchMyEvents } = useHostStore();
   const [submitted, setSubmitted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("technology");
+  const errorRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
 
   const {
     register,
@@ -193,7 +200,7 @@ export default function CreateProgramPage() {
 
       {/* API error banner */}
       {error && (
-        <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
+        <div ref={errorRef} className="p-4 text-sm font-semibold text-red-600 bg-red-50 rounded-xl border border-red-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
           {error}
         </div>
       )}

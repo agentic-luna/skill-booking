@@ -32,7 +32,7 @@ export default function Navbar() {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 600);
+      setIsScrolled(window.scrollY > 350);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -81,28 +81,13 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Integrated Search Bar (Shows on Scroll) */}
-            <div className={`transition-all duration-500 ease-in-out overflow-hidden flex items-center ${showSearchAndShrink ? "max-w-[280px] mx-4 opacity-100" : "max-w-0 mx-0 opacity-0"}`}>
-              <form onSubmit={handleSearchSubmit} className="relative group w-[280px] shrink-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-grey group-focus-within:text-graphite-ink transition-colors" />
-                <Input
-                  type="text"
-                  placeholder="Search skills..."
-                  className="h-10 pl-10 w-full bg-black/5 border-black/5 text-graphite-ink placeholder:text-gray-500/60 rounded-full focus-visible:ring-1 focus-visible:ring-[#a0f212]/50 focus-visible:bg-white transition-all"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
-            </div>
+
 
             {/* Desktop Nav Items */}
             <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink font-semibold" : "text-white/90"}`}>
               <Link
                 href="/programs"
-                className={`text-sm font-medium hover:opacity-80 transition-all duration-500 ease-in-out overflow-hidden whitespace-nowrap ${showSearchAndShrink
-                    ? "max-w-0 opacity-0 pointer-events-none"
-                    : "max-w-[120px] opacity-100"
-                  }`}
+                className="text-sm font-medium hover:opacity-80 transition-all duration-500 ease-in-out whitespace-nowrap"
               >
                 Explore Skills
               </Link>
