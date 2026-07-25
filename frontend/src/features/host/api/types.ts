@@ -50,6 +50,7 @@ export interface CreateEventPayload {
   venue?: {
     address: string;
     meetingLink?: string | null;
+    district?: string;
   };
   instructor?: {
     name: string;

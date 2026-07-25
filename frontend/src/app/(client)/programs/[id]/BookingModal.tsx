@@ -477,12 +477,12 @@ export default function BookingModal(props: BookingModalProps) {
                     {/* Workshop */}
                     <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workshop</div>
-                      <div className="font-bold text-sm text-foreground">{program.title}</div>
+                      <div className="font-bold text-sm text-foreground">{activeProgram.title}</div>
                       <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground">
-                        <span>📅 {program.date}</span>
-                        <span>⏰ {program.time}</span>
-                        <span>⏱ {program.duration}</span>
-                        <span>📍 {program.location.split(",")[0]}</span>
+                        <span>📅 {activeProgram.date}</span>
+                        <span>⏰ {activeProgram.time}</span>
+                        <span>⏱ {activeProgram.duration}</span>
+                        <span>📍 {activeProgram.location ? activeProgram.location.split(",")[0] : ""}</span>
                       </div>
                       <Separator />
                       <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
