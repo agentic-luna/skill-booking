@@ -159,23 +159,16 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  {/* Enterprise SaaS Email Verification Status Badge */}
-                  {user.role === "client" && (
-                    user.isEmailVerified ? (
-                      <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-sm">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>Verified Email</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => openClientEmailModal(user.email || "")}
-                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm animate-pulse"
-                      >
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                        <span>Verify Email</span>
-                      </button>
-                    )
+                  {/* Enterprise SaaS Email Verification Status Badge — Only render if email is NOT verified */}
+                  {user.role === "client" && !user.isEmailVerified && (
+                    <button
+                      type="button"
+                      onClick={() => openClientEmailModal(user.email || "")}
+                      className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm animate-pulse"
+                    >
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Verify Email</span>
+                    </button>
                   )}
 
 
@@ -297,13 +290,8 @@ export default function Navbar() {
                     >
                       My Bookings
                     </Link>
-                    <div className="py-1">
-                      {user.isEmailVerified ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                          Verified Email
-                        </span>
-                      ) : (
+                    {!user.isEmailVerified && (
+                      <div className="py-1">
                         <button
                           type="button"
                           onClick={() => {
@@ -315,8 +303,8 @@ export default function Navbar() {
                           <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                           Verify Email Address
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </>
                 )}
                 {user.role === "host" && (

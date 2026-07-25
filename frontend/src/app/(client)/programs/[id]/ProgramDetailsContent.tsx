@@ -17,6 +17,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
+import { useBookingModalStore } from "@/features/client/store/bookingModalStore";
 import BookingModal from "./BookingModal";
 
 function mapEventToProgram(event: any): Program {
@@ -196,9 +197,13 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   const handleBookClick = () => {
     if (!isAuthenticated) {
-      openClientAuthModal("login", () => setCheckoutOpen(true));
+      openClientAuthModal("login", () => {
+        useBookingModalStore.getState().openBookingModal(program, useAuthStore.getState().user);
+        setCheckoutOpen(true);
+      });
       return;
     }
+    useBookingModalStore.getState().openBookingModal(program, user);
     setCheckoutOpen(true);
   };
 
