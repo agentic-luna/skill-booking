@@ -11,6 +11,7 @@ interface StepParticipantsProps {
   maxQty: number;
   pricePerSeat: number;
   summary: BookingSummary;
+  platformRate: number;
   onQtyChange: (qty: number) => void;
 }
 
@@ -19,6 +20,7 @@ export default function StepParticipants({
   maxQty,
   pricePerSeat,
   summary,
+  platformRate,
   onQtyChange,
 }: StepParticipantsProps) {
   return (
@@ -63,8 +65,7 @@ export default function StepParticipants({
       {/* Quick Summary */}
       <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
         <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
-        <SummaryRow label="Platform Fee (2.5%)" value={`₹${summary.platformFee.toFixed(2)}`} />
-        <SummaryRow label="Taxes (GST 18%)" value={`₹${summary.taxes.toFixed(2)}`} />
+        <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
         {summary.discount > 0 && (
           <SummaryRow label="Discount" value={`-₹${summary.discount.toFixed(2)}`} accent />
         )}

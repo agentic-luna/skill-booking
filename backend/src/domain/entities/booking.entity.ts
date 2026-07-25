@@ -10,6 +10,8 @@ export interface Booking {
   seatCount: number;
   totalAmount: number;
   status: BookingStatus;
+  commissionType?: string | null;
+  platformValue?: number | null;
   createdAt: Date;
   updatedAt: Date;
   client?: User;

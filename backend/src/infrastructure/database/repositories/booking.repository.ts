@@ -9,6 +9,7 @@ function mapBooking(b: any): any {
     ...b,
     totalAmount: Number(b.totalAmount),
     seatCount: Number(b.seatCount),
+    platformValue: b.platformValue ? Number(b.platformValue) : null,
     event: b.event ? {
       ...b.event,
       availableSeats: Number(b.event.availableSeats),
@@ -76,6 +77,8 @@ export class PrismaBookingRepository implements IBookingRepository {
     seatCount: number;
     totalAmount: number;
     status?: BookingStatus;
+    commissionType?: any;
+    platformValue?: number | null;
   }): Promise<Booking> {
     const created = await prisma.booking.create({ data });
     return mapBooking(created);

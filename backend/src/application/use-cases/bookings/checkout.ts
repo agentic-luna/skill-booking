@@ -61,6 +61,8 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       seatCount,
       totalAmount,
       status: BookingStatus.INITIATED,
+      commissionType: event.commission?.commissionType || null,
+      platformValue: event.commission?.platformValue ? Number(event.commission.platformValue) : null,
     });
 
     // Invalidate event search caches

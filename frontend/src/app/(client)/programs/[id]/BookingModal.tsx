@@ -40,17 +40,12 @@ const STEPS = [
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-const PLATFORM_FEE_RATE = 0.025; // 2.5%
-const TAX_RATE = 0.18; // 18% GST
-
-function calcSummary(price: number, qty: number) {
+function calcSummary(price: number, qty: number, platformRate: number) {
   const programFee = price * qty;
   const discount = 0;
-  const platformFee = Math.round(programFee * PLATFORM_FEE_RATE * 100) / 100;
-  const taxable = programFee - discount + platformFee;
-  const taxes = Math.round(taxable * TAX_RATE * 100) / 100;
-  const total = taxable + taxes;
-  return { programFee, discount, platformFee, taxes, total };
+  const platformFee = Math.round(programFee * platformRate * 100) / 100;
+  const total = programFee - discount + platformFee;
+  return { programFee, discount, platformFee, taxes: 0, total };
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -111,7 +106,11 @@ export default function BookingModal(props: BookingModalProps) {
 
   if (!activeProgram) return null;
 
-  const summary = calcSummary(activeProgram.price, store.qty);
+  const platformRate = activeProgram.commission?.commissionType === "PERCENTAGE"
+    ? Number(activeProgram.commission.platformValue) / 100
+    : 0;
+
+  const summary = calcSummary(activeProgram.price, store.qty, platformRate);
 
   const validatePrimary = () => {
     const errs: Partial<Record<keyof PrimaryParticipant, string>> = {};
@@ -274,8 +273,7 @@ export default function BookingModal(props: BookingModalProps) {
                     {/* Quick Summary */}
                     <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
                       <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
-                      <SummaryRow label={`Platform Fee (2.5%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
-                      <SummaryRow label="Taxes (GST 18%)" value={`₹${summary.taxes.toFixed(2)}`} />
+                      <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
                       {summary.discount > 0 && <SummaryRow label="Discount" value={`-₹${summary.discount.toFixed(2)}`} accent />}
                       <Separator />
                       <SummaryRow label="Total Payable" value={`₹${summary.total.toFixed(2)}`} bold accent />
@@ -484,10 +482,8 @@ export default function BookingModal(props: BookingModalProps) {
                         <span>⏱ {activeProgram?.duration}</span>
                         <span>📍 {activeProgram?.location?.split(",")[0]}</span>
                       </div>
-                      <Separator />
                       <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
-                      <SummaryRow label="Platform Fee (2.5%)" value={`₹${summary.platformFee.toFixed(2)}`} />
-                      <SummaryRow label="GST (18%)" value={`₹${summary.taxes.toFixed(2)}`} />
+                      <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
                       <Separator />
                       <SummaryRow label="Total Amount Due" value={`₹${summary.total.toFixed(2)}`} bold accent />
                     </div>

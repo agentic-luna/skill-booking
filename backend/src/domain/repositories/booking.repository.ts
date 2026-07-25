@@ -12,6 +12,8 @@ export interface IBookingRepository {
     seatCount: number;
     totalAmount: number;
     status?: BookingStatus;
+    commissionType?: string | null;
+    platformValue?: number | null;
   }): Promise<Booking>;
   update(id: string, data: any): Promise<Booking>;
 }

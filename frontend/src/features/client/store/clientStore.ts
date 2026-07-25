@@ -45,12 +45,8 @@ function withLoading<T>(
     .then((result) => { set({ loading: false }); return result; })
     .catch((e: any) => { 
        set({ error: e.message, loading: false }); 
-       // Instead of throwing and causing Next.js to crash on unhandled rejections in useEffects,
-       // we just return a rejected promise but we mark it as handled if possible, or just don't throw.
-       // Actually, returning a rejected promise causes the crash. 
-       // We can return a rejected promise, but let's just return undefined as T to avoid crash.
        console.warn("Store error caught:", e.message);
-       return undefined as unknown as T;
+       throw e;
     });
 }
 

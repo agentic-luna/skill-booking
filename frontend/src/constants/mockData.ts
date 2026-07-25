@@ -23,6 +23,10 @@ export interface Program {
   instagram?: string;
   linkedin?: string;
   facebook?: string;
+  commission?: {
+    commissionType: "FIXED" | "PERCENTAGE";
+    platformValue: number;
+  } | null;
 }
 
 export const MOCK_PROGRAMS: Program[] = [

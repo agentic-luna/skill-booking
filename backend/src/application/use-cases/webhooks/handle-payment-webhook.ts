@@ -53,12 +53,15 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
     const totalAmount = Number(booking.totalAmount);
     let platformRevenue = 0;
 
-    const commission = booking.event.commission;
-    if (commission) {
-      if (commission.commissionType === CommissionType.PERCENTAGE) {
-        platformRevenue = totalAmount * (Number(commission.platformValue) / 100);
+    // Use snapshotted commission on booking if available, otherwise fall back to event commission
+    const commType = booking.commissionType !== undefined ? booking.commissionType : booking.event?.commission?.commissionType;
+    const commValue = booking.platformValue !== undefined ? booking.platformValue : booking.event?.commission?.platformValue;
+
+    if (commType && commValue !== null && commValue !== undefined) {
+      if (commType === CommissionType.PERCENTAGE) {
+        platformRevenue = totalAmount * (Number(commValue) / 100);
       } else {
-        platformRevenue = Number(commission.platformValue);
+        platformRevenue = Number(commValue);
       }
     } else {
       platformRevenue = totalAmount * 0.1;

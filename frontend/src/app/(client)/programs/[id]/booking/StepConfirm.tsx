@@ -57,8 +57,8 @@ export default function StepConfirm({ program, primary, qty, summary }: StepConf
           value={`₹${summary.programFee.toFixed(2)}`}
         />
         <SummaryRow
-          label="Fees & Taxes"
-          value={`₹${(summary.platformFee + summary.taxes).toFixed(2)}`}
+          label="Platform Fee"
+          value={`₹${summary.platformFee.toFixed(2)}`}
         />
         <Separator />
         <SummaryRow label="Total" value={`₹${summary.total.toFixed(2)}`} bold accent />

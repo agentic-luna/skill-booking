@@ -102,18 +102,18 @@ enum NotificationStatus {
 }
 
 model User {
-  id           String     @id @default(uuid()) @db.Uuid
-  role         UserRole   @default(CLIENT)
-  firstName    String
-  lastName     String
-  email        String?    @unique
-  phone        String     @unique
+  id              String     @id @default(uuid()) @db.Uuid
+  role            UserRole   @default(CLIENT)
+  firstName       String
+  lastName        String
+  email           String?    @unique
+  phone           String     @unique
   passwordHash    String
   isEmailVerified Boolean    @default(false)
   status          UserStatus @default(ACTIVE)
-  deletedAt    DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  deletedAt       DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   hostProfile   HostProfile?
   clientProfile ClientProfile?
@@ -131,15 +131,15 @@ model HostProfile {
   id          String      @id @default(uuid()) @db.Uuid
   userId      String      @unique @db.Uuid
   accountType AccountType @default(INDIVIDUAL)
-  govIdUrl    String?     // nullable until host submits KYC
+  govIdUrl    String? // nullable until host submits KYC
   gstNumber   String?
   kycStatus   KycStatus   @default(PENDING)
   bio         String?     @db.Text
   updatedAt   DateTime    @updatedAt
 
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bankDetail HostBankDetail?
-  events     Event[]
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankDetail   HostBankDetail?
+  events       Event[]
   editRequests EditRequest[]
 
   @@map("host_profiles")
@@ -179,11 +179,11 @@ model AdminProfile {
 model HostBankDetail {
   id                String   @id @default(uuid()) @db.Uuid
   hostProfileId     String   @unique @db.Uuid
-  accountHolderName String   // Encrypted at rest in service layer
-  accountNumber     String   // Encrypted at rest in service layer
-  ifscCode          String   // Encrypted at rest in service layer
+  accountHolderName String // Encrypted at rest in service layer
+  accountNumber     String // Encrypted at rest in service layer
+  ifscCode          String // Encrypted at rest in service layer
   bankName          String
-  upiId             String?  // Encrypted at rest in service layer
+  upiId             String? // Encrypted at rest in service layer
   updatedAt         DateTime @updatedAt
 
   hostProfile HostProfile @relation(fields: [hostProfileId], references: [id], onDelete: Cascade)
@@ -192,27 +192,27 @@ model HostBankDetail {
 }
 
 model IntegrationConfig {
-  id           String                 @id @default(uuid()) @db.Uuid
-  serviceName  IntegrationService     @unique
-  environment  IntegrationEnvironment @default(TEST)
-  credentials  Json                   // Encrypted at rest
-  isActive     Boolean                @default(false)
-  updatedBy    String                 @db.Uuid
-  updatedAt    DateTime               @updatedAt
+  id          String                 @id @default(uuid()) @db.Uuid
+  serviceName IntegrationService     @unique
+  environment IntegrationEnvironment @default(TEST)
+  credentials Json // Encrypted at rest
+  isActive    Boolean                @default(false)
+  updatedBy   String                 @db.Uuid
+  updatedAt   DateTime               @updatedAt
 
   @@map("integration_configs")
 }
 
 model MessageTemplate {
-  id            String          @id @default(uuid()) @db.Uuid
-  channel       DeliveryChannel
-  triggerEvent  TriggerEvent
-  subject       String?
-  bodyContent   String          @db.Text
-  variables     Json
-  isActive      Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id           String          @id @default(uuid()) @db.Uuid
+  channel      DeliveryChannel
+  triggerEvent TriggerEvent
+  subject      String?
+  bodyContent  String          @db.Text
+  variables    Json
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@map("message_templates")
 }
@@ -249,12 +249,12 @@ model Event {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  instructorId   String?     @db.Uuid
-  venueId        String?     @db.Uuid
-  instructor     Instructor? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
-  venue          Venue?      @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  instructorId String?     @db.Uuid
+  venueId      String?     @db.Uuid
+  instructor   Instructor? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  venue        Venue?      @relation(fields: [venueId], references: [id], onDelete: SetNull)
 
-  host         HostProfile   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  host         HostProfile      @relation(fields: [hostId], references: [id], onDelete: Cascade)
   commission   EventCommission?
   reviews      Review[]
   bookings     Booking[]
@@ -310,15 +310,17 @@ model Review {
 }
 
 model Booking {
-  id          String        @id @default(uuid()) @db.Uuid
-  bookingRef  String        @unique
-  clientId    String        @db.Uuid
-  eventId     String        @db.Uuid
-  seatCount   Int
-  totalAmount Decimal       @db.Decimal(10, 2)
-  status      BookingStatus @default(INITIATED)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id             String          @id @default(uuid()) @db.Uuid
+  bookingRef     String          @unique
+  clientId       String          @db.Uuid
+  eventId        String          @db.Uuid
+  seatCount      Int
+  totalAmount    Decimal         @db.Decimal(10, 2)
+  status         BookingStatus   @default(INITIATED)
+  commissionType CommissionType?
+  platformValue  Decimal?        @db.Decimal(10, 2)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   client            User                @relation(fields: [clientId], references: [id], onDelete: Cascade)
   event             Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -329,15 +331,15 @@ model Booking {
 }
 
 model TransactionLedger {
-  id               String        @id @default(uuid()) @db.Uuid
-  bookingId        String        @db.Uuid
-  gatewayTxnId     String        @unique
-  type             LedgerTxnType
-  amountCaptured   Decimal       @db.Decimal(10, 2)
-  platformRevenue  Decimal       @db.Decimal(10, 2)
-  hostLiability    Decimal       @db.Decimal(10, 2)
-  status           LedgerStatus  @default(HELD)
-  createdAt        DateTime      @default(now())
+  id              String        @id @default(uuid()) @db.Uuid
+  bookingId       String        @db.Uuid
+  gatewayTxnId    String        @unique
+  type            LedgerTxnType
+  amountCaptured  Decimal       @db.Decimal(10, 2)
+  platformRevenue Decimal       @db.Decimal(10, 2)
+  hostLiability   Decimal       @db.Decimal(10, 2)
+  status          LedgerStatus  @default(HELD)
+  createdAt       DateTime      @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
@@ -434,7 +436,7 @@ model Instructor {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  events      Event[]
+  events Event[]
 
   @@map("instructors")
 }
@@ -446,8 +448,7 @@ model Venue {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  events      Event[]
+  events Event[]
 
   @@map("venues")
 }
-

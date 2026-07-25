@@ -46,18 +46,15 @@ export const BOOKING_STEPS = [
 ] as const;
 
 // ─── Fee constants ─────────────────────────────────────────────────────────────
-export const PLATFORM_FEE_RATE = 0.025; // 2.5%
-export const TAX_RATE = 0.18;           // 18% GST
+export const PLATFORM_FEE_RATE = 0.025; // 2.5% fallback
 
 // ─── Fee calculator ────────────────────────────────────────────────────────────
-export function calcSummary(price: number, qty: number): BookingSummary {
+export function calcSummary(price: number, qty: number, platformRate: number): BookingSummary {
   const programFee = price * qty;
   const discount = 0;
-  const platformFee = Math.round(programFee * PLATFORM_FEE_RATE * 100) / 100;
-  const taxable = programFee - discount + platformFee;
-  const taxes = Math.round(taxable * TAX_RATE * 100) / 100;
-  const total = taxable + taxes;
-  return { programFee, discount, platformFee, taxes, total };
+  const platformFee = Math.round(programFee * platformRate * 100) / 100;
+  const total = programFee - discount + platformFee;
+  return { programFee, discount, platformFee, taxes: 0, total };
 }
 
 // ─── Primary participant validator ─────────────────────────────────────────────

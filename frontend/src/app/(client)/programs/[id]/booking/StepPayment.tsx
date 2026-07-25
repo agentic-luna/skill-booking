@@ -9,6 +9,7 @@ import { BookingSummary } from "./types";
 interface StepPaymentProps {
   qty: number;
   summary: BookingSummary;
+  platformRate: number;
   termsAgreed: boolean;
   cancellationAgreed: boolean;
   notificationsAgreed: boolean;
@@ -22,6 +23,7 @@ interface StepPaymentProps {
 export default function StepPayment({
   qty,
   summary,
+  platformRate,
   termsAgreed,
   cancellationAgreed,
   notificationsAgreed,
@@ -48,8 +50,7 @@ export default function StepPayment({
       <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
         <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
         <SummaryRow label={`Participants (${qty})`} value={`× ${qty}`} />
-        <SummaryRow label="Platform Fee (2.5%)" value={`₹${summary.platformFee.toFixed(2)}`} />
-        <SummaryRow label="Taxes (GST 18%)" value={`₹${summary.taxes.toFixed(2)}`} />
+        <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
         <SummaryRow label="Discount" value="- ₹0.00" />
         <Separator />
         <SummaryRow label="Total Amount Payable" value={`₹${summary.total.toFixed(2)}`} bold accent />

@@ -76,6 +76,7 @@ function mapEventToProgram(event: any): Program {
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
     mode: event.mode,
+    commission: event.commission,
   };
 }
 

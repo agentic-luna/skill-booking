@@ -1201,7 +1201,7 @@ export const swaggerSpec = {
           { name: 'title', in: 'query', schema: { type: 'string' }, description: 'Search term for title' },
           { name: 'mode', in: 'query', schema: { type: 'string', enum: ['ONLINE', 'OFFLINE'] } },
           { name: 'hostId', in: 'query', schema: { type: 'string' } },
-          { name: 'startTimeFrom', in: 'query', schema: { type: 'string', format: 'date' } },
+          { name: 'startTimeFrom', in: 'query', schema: { type: 'string', format: 'date' }, description: 'ISO date string, defaults to current time to show only upcoming events' },
         ],
         responses: {
           200: { description: 'List of events' },
