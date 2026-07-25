@@ -66,6 +66,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // 6. Home and Client Dashboard overview redirects
+  if (pathname === "/home" || (pathname === "/dashboard" && role === "client")) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   return NextResponse.next();
 }
 

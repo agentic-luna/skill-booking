@@ -60,10 +60,15 @@ export default function Navbar() {
     }
   }, [isAuthenticated, user]);
 
+  const hiddenRoutes = ["/super-admin", "/login", "/register", "/forgot-password", "/admin/login"];
+  if (hiddenRoutes.includes(pathname) || pathname.startsWith("/admin") || pathname.startsWith("/host")) {
+    return null;
+  }
+
   return (
     <div className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] z-[100] transition-all duration-500 ease-out ${showSearchAndShrink ? "max-w-[816px]" : "max-w-[1250px]"}`}>
       <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${showSearchAndShrink
-        ? "bg-bone-white/80 backdrop-blur-xl border border-clay-shadow/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+        ? "bg-white/90 backdrop-blur-xl border border-black/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
         : "bg-transparent border-transparent"
         }`}>
         <div className="px-6 sm:px-8">
@@ -83,7 +88,7 @@ export default function Navbar() {
                 <Input
                   type="text"
                   placeholder="Search skills..."
-                  className="h-10 pl-10 w-full bg-graphite-ink/5 border-clay-shadow/40 text-graphite-ink placeholder:text-stone-grey/60 rounded-full focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:bg-white transition-all"
+                  className="h-10 pl-10 w-full bg-black/5 border-black/5 text-graphite-ink placeholder:text-gray-500/60 rounded-full focus-visible:ring-1 focus-visible:ring-[#a0f212]/50 focus-visible:bg-white transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -111,7 +116,7 @@ export default function Navbar() {
                           variant="ghost"
                           size="icon"
                           className={`rounded-full relative transition-all duration-300 ${isScrolled || !isHome
-                              ? "text-graphite-ink hover:bg-graphite-ink/5 hover:drop-shadow-sm"
+                              ? "text-graphite-ink hover:bg-black/5 hover:drop-shadow-sm"
                               : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
                             }`}
                         >
@@ -125,7 +130,7 @@ export default function Navbar() {
                         <DropdownMenuLabel className="font-bold text-xs flex justify-between items-center px-4 py-2.5">
                           <span>Notifications Feed</span>
                           {unreadNotificationsCount > 0 && (
-                            <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">{unreadNotificationsCount} unread</span>
+                            <span className="text-[10px] text-primary bg-[#a0f212]/10 px-2 py-0.5 rounded-full">{unreadNotificationsCount} unread</span>
                           )}
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
@@ -133,7 +138,7 @@ export default function Navbar() {
                           notifications.slice(0, 5).map((notif) => (
                             <DropdownMenuItem
                               key={notif.id}
-                              className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-primary/5 font-semibold" : ""}`}
+                              className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-[#a0f212]/5 font-semibold" : ""}`}
                               onClick={() => {
                                 if (notif.status !== "READ") readNotification(notif.id);
                               }}
@@ -153,7 +158,7 @@ export default function Navbar() {
                   {/* Wishlist Link */}
                   {user.role === "client" && (
                     <Link href="/dashboard/wishlist">
-                      <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
+                      <Button variant="ghost" size="icon" className={`rounded-full transition-colors ${isScrolled || !isHome ? "text-graphite-ink hover:bg-black/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}>
                         <Heart className="h-4.5 w-4.5" />
                       </Button>
                     </Link>
@@ -176,7 +181,7 @@ export default function Navbar() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center space-x-2 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none">
-                        <div className="h-9 w-9 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-xs font-extrabold ring-2 ring-primary/20 tracking-wider shadow-sm">
+                        <div className="h-9 w-9 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-xs font-extrabold ring-2 ring-[#a0f212]/20 tracking-wider shadow-sm">
                           {user.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
                         </div>
                       </button>
@@ -230,13 +235,13 @@ export default function Navbar() {
                   <Button
                     variant="ghost"
                     onClick={() => router.push("/login")}
-                    className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-graphite-ink/5 border-graphite-ink/10 text-graphite-ink hover:bg-graphite-ink/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}
+                    className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-black/5 border-black/10 text-graphite-ink hover:bg-black/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}
                   >
                     Sign In
                   </Button>
                   <Button
                     onClick={() => router.push("/register")}
-                    className="px-6 shadow-lg shadow-primary/20"
+                    className="px-6 shadow-lg shadow-[#a0f212]/20"
                   >
                     Get Started
                   </Button>
@@ -249,7 +254,7 @@ export default function Navbar() {
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`rounded-full p-2 transition-colors focus:outline-none ${isScrolled || !isHome ? "text-graphite-ink hover:bg-graphite-ink/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}
+                className={`rounded-full p-2 transition-colors focus:outline-none ${isScrolled || !isHome ? "text-graphite-ink hover:bg-black/5" : "text-white/80 hover:bg-white/10 hover:text-white"}`}
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -261,7 +266,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border/40 bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
+        <div className="md:hidden border-b border-black/10 bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
 
           <div className="flex flex-col space-y-3">
             <Link
@@ -284,7 +289,7 @@ export default function Navbar() {
                       Home Feed
                     </Link>
                     <Link
-                      href="/bookings"
+                      href="/dashboard/tickets"
                       onClick={() => setMobileMenuOpen(false)}
                       className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5"
                     >
@@ -340,7 +345,7 @@ export default function Navbar() {
                 >
                   Profile Details
                 </Link>
-                <div className="h-[1px] bg-border/40" />
+                <div className="h-[1px] bg-black/10" />
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);

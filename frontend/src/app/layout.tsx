@@ -6,7 +6,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import GlobalAlert from "@/components/common/GlobalAlert";
 
-import TopNavbar from "@/components/common/TopNavbar";
+import Navbar from "@/components/common/Navbar";
 
 const hanken = Hanken_Grotesk({
   subsets: ["latin"],
@@ -36,7 +36,7 @@ export default function RootLayout({
           <ThemeProvider>
             <AuthProvider>
               <div className="relative flex min-h-screen flex-col">
-                <TopNavbar />
+                <Navbar />
                 {children}
               </div>
               <GlobalAlert />
