@@ -51,6 +51,7 @@ export interface CreateEventPayload {
     address: string;
     meetingLink?: string | null;
     district?: string;
+    endDate?: string;
   };
   instructor?: {
     name: string;
