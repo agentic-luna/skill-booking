@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useClientStore } from "@/features/client/store/clientStore";
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June", 
+  "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
@@ -24,7 +24,7 @@ const FALLBACK_LOCATIONS = [
 export default function AdvancedSearchBar() {
   const router = useRouter();
   const { events, fetchEvents } = useClientStore();
-  
+
   const [activeTab, setActiveTab] = useState<"location" | "category" | "dates" | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +32,7 @@ export default function AdvancedSearchBar() {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [categorySearchQuery, setCategorySearchQuery] = useState("");
-  
+
   // Date Range Picker State
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -47,6 +47,9 @@ export default function AdvancedSearchBar() {
   // Dispatch search bar active state globally
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("search-active", { detail: activeTab !== null }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("search-active", { detail: false }));
+    };
   }, [activeTab]);
 
   // Use fallback locations (recommended cities) for now to avoid dummy data from db
@@ -95,21 +98,21 @@ export default function AdvancedSearchBar() {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (location && location !== "Anywhere") params.append("location", location);
-    
+
     // If they typed something but didn't select, use the typed query, otherwise use selected category
     const searchCat = categorySearchQuery || category;
     if (searchCat) params.append("search", searchCat);
-    
+
     if (startDate) {
       const startStr = startDate.toISOString().split("T")[0];
       const endStr = endDate ? endDate.toISOString().split("T")[0] : startStr;
       params.append("dates", `range:${startStr}_${endStr}`);
     }
-    
+
     router.push(`/programs?${params.toString()}`);
   };
 
-  const filteredCategories = dynamicCategories.filter(cat => 
+  const filteredCategories = dynamicCategories.filter(cat =>
     cat.toLowerCase().includes(categorySearchQuery.toLowerCase())
   );
 
@@ -117,19 +120,19 @@ export default function AdvancedSearchBar() {
     <>
       {/* Background Blur Overlay */}
       {activeTab && (
-        <div 
+        <div
           className="fixed inset-0 z-[110] bg-black/10 backdrop-blur-sm transition-all duration-300"
           onClick={() => setActiveTab(null)}
         />
       )}
 
       {/* Main Search Bar Container */}
-      <div 
+      <div
         ref={searchRef}
         className="relative z-[120] w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 p-4 md:p-2 gap-3 md:gap-0"
       >
         {/* Location Section */}
-        <div 
+        <div
           className={`relative flex-1 w-full px-6 py-3 cursor-pointer border border-gray-200 md:border-0 rounded-2xl md:rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'location' ? 'shadow-md bg-white hover:bg-white z-10 border-gray-300' : ''}`}
           onClick={() => setActiveTab(activeTab === "location" ? null : "location")}
         >
@@ -142,12 +145,12 @@ export default function AdvancedSearchBar() {
               </span>
             </div>
           </div>
-          
+
           {/* Location Dropdown */}
           {activeTab === "location" && (
             <div className="absolute top-[calc(100%+16px)] left-0 md:-left-4 w-full md:w-[320px] bg-white rounded-3xl shadow-xl border border-gray-200 p-6 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="mb-4">
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setLocation(""); setActiveTab(null); }}
                   className="bg-gray-900 hover:bg-black text-white text-sm px-5 py-2 rounded-full font-medium transition-colors"
                 >
@@ -156,7 +159,7 @@ export default function AdvancedSearchBar() {
               </div>
               <ul className="space-y-4 mt-6 max-h-[300px] overflow-y-auto custom-scrollbar">
                 {dynamicLocations.map(loc => (
-                  <li 
+                  <li
                     key={loc}
                     onClick={(e) => { e.stopPropagation(); setLocation(loc); setActiveTab(null); }}
                     className="flex items-center gap-3 text-[15px] font-semibold text-gray-700 hover:text-black hover:bg-gray-50 cursor-pointer px-4 py-2.5 rounded-xl transition-all"
@@ -173,14 +176,14 @@ export default function AdvancedSearchBar() {
         <div className="hidden md:block w-px h-12 bg-gray-200" />
 
         {/* Overall Search Section (Formerly Category) */}
-        <div 
+        <div
           className={`relative flex-1 w-full px-6 py-3 cursor-pointer border border-gray-200 md:border-0 rounded-2xl md:rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'category' ? 'shadow-md bg-white hover:bg-white z-10 border-gray-300' : ''}`}
           onClick={() => setActiveTab(activeTab === "category" ? null : "category")}
         >
           <div className="flex items-center gap-3">
             <Search className="w-5 h-5 text-gray-500" />
             <div className="flex flex-col">
-              <span className="text-[13px] font-bold text-gray-800">Search</span>
+              <span className="text-[13px] font-bold text-gray-800">Courses</span>
               <span className={`text-[14px] font-light truncate ${category || categorySearchQuery ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
                 {categorySearchQuery || category || "What do you want to learn?"}
               </span>
@@ -190,13 +193,13 @@ export default function AdvancedSearchBar() {
           {/* Search Dropdown */}
           {activeTab === "category" && (
             <div className="absolute top-[calc(100%+16px)] left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-[600px] bg-white rounded-3xl shadow-xl border border-gray-200 p-6 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
-              <div 
+              <div
                 className="flex items-center gap-3 bg-gray-50 rounded-full px-5 py-3 mb-6 border border-gray-200 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100 transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Search className="w-4 h-4 text-gray-500" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={categorySearchQuery}
                   onChange={(e) => {
                     setCategorySearchQuery(e.target.value);
@@ -216,7 +219,7 @@ export default function AdvancedSearchBar() {
               </div>
 
               {categorySearchQuery.trim() !== "" && (
-                <div 
+                <div
                   className="mb-4 text-center cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 px-4 rounded-xl transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -237,9 +240,9 @@ export default function AdvancedSearchBar() {
                   {categorySearchQuery.trim() === "" && ["Programming", "Design", "Marketing", "Business", "Music"].map((cat) => {
                     if (filteredCategories.some(c => c.toLowerCase() === cat.toLowerCase())) return null; // Avoid duplicates
                     return (
-                      <span 
+                      <span
                         key={`preset-${cat}`}
-                        onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
+                        onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(cat); setActiveTab(null); }}
                         className="text-[13px] font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-white hover:shadow-sm cursor-pointer px-4 py-2 rounded-full transition-all flex items-center justify-center text-center capitalize"
                       >
                         {cat}
@@ -250,29 +253,29 @@ export default function AdvancedSearchBar() {
                   {filteredCategories.length > 0 && filteredCategories.map((cat) => {
                     const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
                     return (
-                      <span 
-                        key={`cat-${cat}`} 
-                        onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
+                      <span
+                        key={`cat-${cat}`}
+                        onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(formattedCat); setActiveTab(null); }}
                         className="text-[13px] font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-white hover:shadow-sm cursor-pointer px-4 py-2 rounded-full transition-all flex items-center justify-center text-center capitalize"
                       >
                         {formattedCat}
                       </span>
                     );
                   })}
-                  
+
                   {categorySearchQuery.trim() !== "" && events
                     .filter(evt => evt.status === "APPROVED" && (
-                      evt.title.toLowerCase().includes(categorySearchQuery.toLowerCase()) || 
+                      evt.title.toLowerCase().includes(categorySearchQuery.toLowerCase()) ||
                       (evt.description || "").toLowerCase().includes(categorySearchQuery.toLowerCase())
                     ))
                     .slice(0, 6)
                     .map(evt => (
-                      <span 
-                        key={`evt-${evt.id}`} 
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          setCategorySearchQuery(evt.title); 
-                          setActiveTab(null); 
+                      <span
+                        key={`evt-${evt.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCategorySearchQuery(evt.title);
+                          setActiveTab(null);
                         }}
                         className="text-[14px] text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer px-3 py-2 rounded-lg transition-colors flex items-center w-full line-clamp-1"
                       >
@@ -292,7 +295,7 @@ export default function AdvancedSearchBar() {
         <div className="hidden md:block w-px h-12 bg-gray-200" />
 
         {/* Dates Section */}
-        <div 
+        <div
           className={`relative flex-1 w-full px-6 py-3 cursor-pointer border border-gray-200 md:border-0 rounded-2xl md:rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'dates' ? 'shadow-md bg-white hover:bg-white z-10 border-gray-300' : ''}`}
           onClick={() => setActiveTab(activeTab === "dates" ? null : "dates")}
         >
@@ -352,19 +355,18 @@ export default function AdvancedSearchBar() {
               const isEnd = endDate && dateObj.toDateString() === endDate.toDateString();
               const isSelected = isStart || isEnd;
               const isBetween = startDate && endDate && dateObj > startDate && dateObj < endDate;
-              
+
               calendarCells.push(
                 <button
                   key={`day-${day}`}
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleDateClick(day); }}
-                  className={`w-9 h-9 text-xs font-bold rounded-full transition-all flex items-center justify-center ${
-                    isSelected 
-                      ? 'bg-[#a0f212] text-black shadow-md shadow-[#a0f212]/20 font-black' 
-                      : isBetween
-                        ? 'bg-[#a0f212]/20 text-black hover:bg-[#a0f212]/30'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-                  }`}
+                  className={`w-9 h-9 text-xs font-bold rounded-full transition-all flex items-center justify-center ${isSelected
+                    ? 'bg-[#a0f212] text-black shadow-md shadow-[#a0f212]/20 font-black'
+                    : isBetween
+                      ? 'bg-[#a0f212]/20 text-black hover:bg-[#a0f212]/30'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                    }`}
                 >
                   {day}
                 </button>
@@ -374,16 +376,16 @@ export default function AdvancedSearchBar() {
             return (
               <div className="absolute top-[calc(100%+16px)] right-0 md:-right-4 w-full md:w-[340px] bg-white rounded-3xl shadow-xl border border-gray-200 p-5 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex items-center justify-between mb-4">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={handlePrevMonth}
                     className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 font-bold"
                   >
                     &larr;
                   </button>
                   <span className="text-[14px] font-bold text-gray-800">{monthName} {currentYear}</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={handleNextMonth}
                     className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 font-bold"
                   >
@@ -401,7 +403,7 @@ export default function AdvancedSearchBar() {
 
                 {startDate && (
                   <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                    <button 
+                    <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setStartDate(null); setEndDate(null); }}
                       className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
@@ -416,7 +418,7 @@ export default function AdvancedSearchBar() {
         </div>
 
         {/* Search Button */}
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
             handleSearch();

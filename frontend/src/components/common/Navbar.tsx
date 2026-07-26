@@ -48,6 +48,10 @@ export default function Navbar() {
     return () => window.removeEventListener("search-active", handleSearchActive);
   }, []);
 
+  useEffect(() => {
+    setIsSearchActive(false);
+  }, [pathname]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;

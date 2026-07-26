@@ -238,7 +238,7 @@ export default function ProgramsListContent() {
       prog.title.toLowerCase().includes(search.toLowerCase()) ||
       (prog.description || "").toLowerCase().includes(search.toLowerCase()) ||
       trainerName.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category;
+    const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category.toLowerCase();
     const eventLocation = prog.mode === "ONLINE" ? "Online" : prog.venueDetails?.city || prog.venueDetails?.address || "In Person";
     const matchesLocation = !location || location === "Anywhere" || eventLocation.toLowerCase().includes(location.toLowerCase());
     let matchesDates = true;
