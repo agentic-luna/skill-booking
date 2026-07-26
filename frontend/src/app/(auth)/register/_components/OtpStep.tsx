@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ interface OtpStepProps {
   error: string | null;
   onSubmit: (otp: string) => Promise<void>;
   onResend: () => void;
+  /** DEV ONLY — auto-fills the inputs when set */
+  devOtp?: string;
 }
 
 export default function OtpStep({
@@ -24,8 +26,16 @@ export default function OtpStep({
   error,
   onSubmit,
   onResend,
+  devOtp,
 }: OtpStepProps) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
+
+  // DEV ONLY: auto-fill digits whenever devOtp arrives or changes
+  useEffect(() => {
+    if (devOtp && devOtp.length === 6) {
+      setDigits(devOtp.split(""));
+    }
+  }, [devOtp]);
 
   const handleChange = (index: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -99,3 +109,4 @@ export default function OtpStep({
     </div>
   );
 }
+

@@ -39,7 +39,15 @@ export default function ForgotPasswordPage() {
   const resetForm = useForm<ResetForm>({ resolver: zodResolver(resetSchema), defaultValues: { newPassword: "", confirmPassword: "" } });
 
   const onSendSubmit = async (data: SendForm) => {
-    try { await forgotPassword(data.identifier); setIdentifier(data.identifier); setStep("otp"); } catch { /* error in store */ }
+    try {
+      const devOtp = await forgotPassword(data.identifier);
+      setIdentifier(data.identifier);
+      setStep("otp");
+      // DEV ONLY: auto-fill OTP digits if backend returned them
+      if (devOtp && devOtp.length === 6) {
+        setOtpDigits(devOtp.split(""));
+      }
+    } catch { /* error in store */ }
   };
 
   const handleOtpChange = (index: number, val: string) => {
@@ -124,7 +132,7 @@ export default function ForgotPasswordPage() {
           </form>
           <div className="flex items-center justify-between text-sm">
             <button type="button" onClick={() => { clearError(); setStep("send"); }} className="inline-flex items-center text-muted-foreground hover:text-foreground gap-1"><ArrowLeft className="h-4 w-4" /> Back</button>
-            <button type="button" onClick={() => forgotPassword(identifier)} className="font-semibold text-primary hover:underline">Resend code</button>
+            <button type="button" onClick={async () => { const devOtp = await forgotPassword(identifier); if (devOtp) setOtpDigits(devOtp.split("")); }} className="font-semibold text-primary hover:underline">Resend code</button>
           </div>
         </>
       )}

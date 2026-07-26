@@ -12,10 +12,11 @@ export async function sendOtp(
   target: string,
   type: OtpType
 ): Promise<OtpSendResponse> {
-  return request<OtpSendResponse>("/auth/otp/send", {
-    method: "POST",
-    body: JSON.stringify({ target, type }),
-  });
+  const res = await request<{ success: boolean; data: OtpSendResponse }>(
+    "/auth/otp/send",
+    { method: "POST", body: JSON.stringify({ target, type }) }
+  );
+  return res.data ?? (res as any);
 }
 
 /** POST /auth/otp/verify — Verify OTP for email or phone (registration) */
@@ -32,10 +33,11 @@ export async function verifyOtp(
 
 /** POST /auth/client/otp/send — Send WhatsApp/SMS OTP for client registration */
 export async function clientSendOtp(phone: string): Promise<OtpSendResponse> {
-  return request<OtpSendResponse>("/auth/client/otp/send", {
-    method: "POST",
-    body: JSON.stringify({ phone }),
-  });
+  const res = await request<{ success: boolean; data: OtpSendResponse }>(
+    "/auth/client/otp/send",
+    { method: "POST", body: JSON.stringify({ phone }) }
+  );
+  return res.data ?? (res as any);
 }
 
 /** POST /auth/client/otp/verify — Verify WhatsApp/SMS OTP for client registration */
@@ -48,3 +50,4 @@ export async function clientVerifyOtp(
     body: JSON.stringify({ phone, otp }),
   });
 }
+

@@ -45,6 +45,10 @@ export interface PendingRegistration {
   phoneOtpSent: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
+  /** DEV ONLY — returned by backend in development/test mode */
+  devEmailOtp?: string;
+  /** DEV ONLY — returned by backend in development/test mode */
+  devPhoneOtp?: string;
 }
 
 export interface AuthState {
@@ -72,7 +76,7 @@ export interface AuthState {
   verifyOtp: (code: string) => Promise<boolean>;
   login: (identifier: string, password: string) => Promise<User>;
   adminLogin: (identifier: string, password: string) => Promise<User>;
-  forgotPassword: (identifier: string) => Promise<void>;
+  forgotPassword: (identifier: string) => Promise<string | undefined>;
   forgotPasswordVerifyOtp: (identifier: string, otp: string) => Promise<string>;
   resetPassword: (resetToken: string, newPassword: string) => Promise<void>;
   clientSignup: (data: {

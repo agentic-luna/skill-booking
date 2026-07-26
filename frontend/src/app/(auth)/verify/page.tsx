@@ -18,6 +18,17 @@ export default function VerifyPage() {
     if (!pendingRegistration) router.push("/register");
   }, [pendingRegistration, router]);
 
+  // DEV ONLY: Auto-fill OTP from backend response when it's available
+  useEffect(() => {
+    if (!pendingRegistration) return;
+    const devOtp = !pendingRegistration.emailVerified
+      ? pendingRegistration.devEmailOtp
+      : pendingRegistration.devPhoneOtp;
+    if (devOtp && devOtp.length === 6) {
+      setCode(devOtp.split(""));
+    }
+  }, [pendingRegistration?.emailVerified, pendingRegistration?.devEmailOtp, pendingRegistration?.devPhoneOtp]);
+
   const handleChange = (index: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
     const next = [...code]; next[index] = val; setCode(next); clearError();

@@ -24,13 +24,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   startRegistration: async ({ firstName, lastName, email, phone, password, role }) => {
     set({ isLoading: true, error: null });
     try {
-      await Promise.all([authApi.sendOtp(email, "EMAIL"), authApi.sendOtp(phone, "PHONE")]);
+      const [emailRes, phoneRes] = await Promise.all([
+        authApi.sendOtp(email, "EMAIL"),
+        authApi.sendOtp(phone, "PHONE"),
+      ]);
       set({
         pendingRegistration: {
           firstName, lastName, email, phone, password,
           role: role.toUpperCase() as "CLIENT" | "HOST",
           emailOtpSent: true, phoneOtpSent: true,
           emailVerified: false, phoneVerified: false,
+          // DEV ONLY: auto-fill OTP from backend response
+          devEmailOtp: emailRes.devOtp,
+          devPhoneOtp: phoneRes.devOtp,
         },
         isVerifying: true,
         isLoading: false,
@@ -132,8 +138,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   forgotPassword: async (identifier) => {
     set({ isLoading: true, error: null });
     try {
-      await authApi.forgotPasswordSendOtp(identifier);
+      const res = await authApi.forgotPasswordSendOtp(identifier);
       set({ isLoading: false });
+      // DEV ONLY: return devOtp so the UI can auto-fill it
+      return res.devOtp;
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;

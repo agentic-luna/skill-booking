@@ -113,10 +113,11 @@ export async function getMe(): Promise<AuthUser | null> {
 export async function forgotPasswordSendOtp(
   identifier: string
 ): Promise<ForgotPasswordSendResponse> {
-  return request<ForgotPasswordSendResponse>(
+  const res = await request<{ success: boolean; data: ForgotPasswordSendResponse }>(
     "/auth/forgot-password/send-otp",
     { method: "POST", body: JSON.stringify({ identifier }) }
   );
+  return res.data ?? (res as any);
 }
 
 /** POST /auth/forgot-password/verify-otp — returns resetToken */

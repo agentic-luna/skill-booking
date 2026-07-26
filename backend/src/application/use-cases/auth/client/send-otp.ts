@@ -30,11 +30,13 @@ export class ClientSendOtpCommandHandler implements IRequestHandler<ClientSendOt
     const normalizedPhone = phone.trim();
 
     // Check rate limit: Maximum 3 OTP requests per hour (3600s)
+    // Rate limiting is disabled in development / test environments
     const rateLimitKey = `otp_rate_limit:${normalizedPhone}`;
     const currentCountVal = await this.cacheService.get<number | string>(rateLimitKey);
     const currentCount = currentCountVal ? Number(currentCountVal) : 0;
+    const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 
-    if (currentCount >= 3) {
+    if (!isDev && currentCount >= 3) {
       throw new TooManyRequestsError('Maximum OTP request limit reached (3 OTPs per hour). Please try again after 1 hour.');
     }
 
