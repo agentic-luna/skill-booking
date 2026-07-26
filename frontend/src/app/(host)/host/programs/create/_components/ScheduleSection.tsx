@@ -29,6 +29,42 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
   const [selectedAddress, setSelectedAddress] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
 
+  const duration = watch("duration") || "";
+
+  // Parse initial duration (e.g. "3 hours" -> value: 3, unit: "hours")
+  const [durationVal, setDurationVal] = useState(() => {
+    const match = duration.match(/^(\d+)\s*(hour|day|week)s?$/i);
+    return match ? match[1] : "3";
+  });
+
+  const [durationUnit, setDurationUnit] = useState(() => {
+    const match = duration.match(/^(\d+)\s*(hour|day|week)s?$/i);
+    return match ? match[2].toLowerCase() + "s" : "hours";
+  });
+
+  // Sync state with form duration changes (e.g. template reset)
+  useEffect(() => {
+    const match = duration.match(/^(\d+)\s*(hour|day|week)s?$/i);
+    if (match) {
+      const parsedVal = match[1];
+      const parsedUnit = match[2].toLowerCase() + "s";
+      if (parsedVal !== durationVal) {
+        setDurationVal(parsedVal);
+      }
+      if (parsedUnit !== durationUnit) {
+        setDurationUnit(parsedUnit);
+      }
+    }
+  }, [duration]);
+
+  // Update form value when local states change
+  useEffect(() => {
+    if (durationVal) {
+      const unit = durationUnit.endsWith("s") ? durationUnit : durationUnit + "s";
+      setValue("duration", `${durationVal} ${unit}`, { shouldValidate: true });
+    }
+  }, [durationVal, durationUnit, setValue]);
+
   useEffect(() => {
     const handleMapMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === "LOCATION_SELECTED") {
@@ -348,7 +384,7 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Start Date */}
           <div className="space-y-2.5">
             <Label htmlFor="date" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
@@ -362,21 +398,6 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
               {...register("date")}
             />
             {errors.date && <p className="text-[12px] text-red-500 font-semibold">{errors.date.message}</p>}
-          </div>
-
-          {/* End Date */}
-          <div className="space-y-2.5">
-            <Label htmlFor="endDate" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
-              <Calendar className="h-4 w-4 text-gray-400" />
-              <span>End Date (Optional)</span>
-            </Label>
-            <Input
-              id="endDate"
-              type="date"
-              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
-              {...register("endDate")}
-            />
-            {errors.endDate && <p className="text-[12px] text-red-500 font-semibold">{errors.endDate.message}</p>}
           </div>
 
           {/* Time */}
@@ -394,18 +415,53 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
             {errors.time && <p className="text-[12px] text-red-500 font-semibold">{errors.time.message}</p>}
           </div>
 
+          {/* End Date */}
+          <div className="space-y-2.5">
+            <Label htmlFor="endDate" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <span>End Date (Optional)</span>
+            </Label>
+            <Input
+              id="endDate"
+              type="date"
+              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
+              {...register("endDate")}
+            />
+            {errors.endDate && <p className="text-[12px] text-red-500 font-semibold">{errors.endDate.message}</p>}
+          </div>
+
           {/* Duration */}
           <div className="space-y-2.5">
-            <Label htmlFor="duration" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+            <Label className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
               <Clock className="h-4 w-4 text-gray-400" />
               <span>Duration</span>
             </Label>
-            <Input
-              id="duration"
-              placeholder="e.g. 3 hours or 2 days"
-              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
-              {...register("duration")}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min="1"
+                value={durationVal}
+                onChange={(e) => setDurationVal(e.target.value)}
+                placeholder="e.g. 4"
+                className="w-[100px] h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm font-semibold text-center"
+              />
+              <div className="relative flex-1">
+                <select
+                  value={durationUnit}
+                  onChange={(e) => setDurationUnit(e.target.value)}
+                  className="w-full h-11 pl-4 pr-10 text-[14px] bg-emerald-50/30 border border-emerald-100 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm appearance-none bg-no-repeat bg-[right_16px_center] bg-[length:16px_16px] text-gray-800 font-semibold cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E")`
+                  }}
+                >
+                  <option value="hours">Hours</option>
+                  <option value="days">Days</option>
+                  <option value="weeks">Weeks</option>
+                </select>
+              </div>
+            </div>
+            {/* Hidden Input to register with react-hook-form */}
+            <input type="hidden" {...register("duration")} />
             {errors.duration && <p className="text-[12px] text-red-500 font-semibold">{errors.duration.message}</p>}
           </div>
         </div>
