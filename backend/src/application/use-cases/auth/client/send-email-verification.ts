@@ -10,7 +10,7 @@ export class ClientSendEmailVerificationCommand implements IRequest<any> {
   constructor(
     public readonly userId: string,
     public readonly email: string
-  ) {}
+  ) { }
 }
 
 export class ClientSendEmailVerificationCommandHandler implements IRequestHandler<ClientSendEmailVerificationCommand, any> {
@@ -18,7 +18,7 @@ export class ClientSendEmailVerificationCommandHandler implements IRequestHandle
     private userRepo: IUserRepository,
     private cacheService: ICacheService,
     private emailProvider: IEmailProvider
-  ) {}
+  ) { }
 
   async handle(command: ClientSendEmailVerificationCommand): Promise<{ message: string; magicLink?: string; token?: string }> {
     const { userId, email } = command;

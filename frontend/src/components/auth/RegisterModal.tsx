@@ -158,7 +158,27 @@ export function RegisterModal({ open, onOpenChange, onSuccess, onSwitchToLogin }
               <button type="button" onClick={() => { clearError(); setStep(0); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
-              <OtpStep idPrefix="reg-email-otp" title="Verify your email" description={`We sent a 6-digit code to ${pendingRegistration?.email ?? "your email"}`} isLoading={isLoading} error={error} onSubmit={onEmailOtpSubmit} onResend={() => pendingRegistration && sendOtp(pendingRegistration.email, "EMAIL").catch(() => {})} />
+              <OtpStep 
+                idPrefix="reg-email-otp" 
+                title="Verify your email" 
+                description={`We sent a 6-digit code to ${pendingRegistration?.email ?? "your email"}`} 
+                isLoading={isLoading} 
+                error={error} 
+                devOtp={pendingRegistration?.devEmailOtp}
+                onSubmit={onEmailOtpSubmit} 
+                onResend={async () => {
+                  if (pendingRegistration) {
+                    try {
+                      const res = await sendOtp(pendingRegistration.email, "EMAIL");
+                      useAuthStore.setState((s) => ({
+                        pendingRegistration: s.pendingRegistration
+                          ? { ...s.pendingRegistration, devEmailOtp: (res as any).data?.devOtp || res.devOtp }
+                          : null
+                      }));
+                    } catch {}
+                  }
+                }} 
+              />
             </div>
           )}
 
@@ -167,7 +187,27 @@ export function RegisterModal({ open, onOpenChange, onSuccess, onSwitchToLogin }
               <button type="button" onClick={() => { clearError(); setStep(1); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
-              <OtpStep idPrefix="reg-phone-otp" title="Verify your phone" description={`We sent a 6-digit code to ${pendingRegistration?.phone ?? "your phone"}`} isLoading={isLoading} error={error} onSubmit={onPhoneOtpSubmit} onResend={() => pendingRegistration && sendOtp(pendingRegistration.phone, "PHONE").catch(() => {})} />
+              <OtpStep 
+                idPrefix="reg-phone-otp" 
+                title="Verify your phone" 
+                description={`We sent a 6-digit code to ${pendingRegistration?.phone ?? "your phone"}`} 
+                isLoading={isLoading} 
+                error={error} 
+                devOtp={pendingRegistration?.devPhoneOtp}
+                onSubmit={onPhoneOtpSubmit} 
+                onResend={async () => {
+                  if (pendingRegistration) {
+                    try {
+                      const res = await sendOtp(pendingRegistration.phone, "PHONE");
+                      useAuthStore.setState((s) => ({
+                        pendingRegistration: s.pendingRegistration
+                          ? { ...s.pendingRegistration, devPhoneOtp: (res as any).data?.devOtp || res.devOtp }
+                          : null
+                      }));
+                    } catch {}
+                  }
+                }} 
+              />
             </div>
           )}
         </div>
