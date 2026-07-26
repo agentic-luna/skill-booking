@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -34,36 +34,13 @@ export default function ForgotPasswordPage() {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [devOtp, setDevOtp] = useState<string | undefined>();
 
   const sendForm = useForm<SendForm>({ resolver: zodResolver(sendSchema), defaultValues: { identifier: "" } });
   const resetForm = useForm<ResetForm>({ resolver: zodResolver(resetSchema), defaultValues: { newPassword: "", confirmPassword: "" } });
 
   const onSendSubmit = async (data: SendForm) => {
-    try {
-      const res = await forgotPassword(data.identifier);
-      setDevOtp(res?.devOtp);
-      setIdentifier(data.identifier);
-      setStep("otp");
-    } catch { /* error in store */ }
+    try { await forgotPassword(data.identifier); setIdentifier(data.identifier); setStep("otp"); } catch { /* error in store */ }
   };
-
-  // DEV: auto-fill and submit OTP when devOtp arrives
-  useEffect(() => {
-    if (!devOtp || devOtp.length !== 6 || step !== "otp") return;
-    setOtpDigits(devOtp.split(""));
-    const timer = setTimeout(async () => {
-      try {
-        const token = await forgotPasswordVerifyOtp(identifier, devOtp);
-        setResetToken(token);
-        setStep("reset");
-      } catch {
-        setOtpError("Invalid or expired OTP. Please try again.");
-      }
-    }, 600);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devOtp, step]);
 
   const handleOtpChange = (index: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -130,13 +107,6 @@ export default function ForgotPasswordPage() {
             <p className="text-sm text-muted-foreground">We sent a 6-digit code for <span className="font-semibold text-foreground">{identifier}</span></p>
           </div>
           {(otpError || error) && <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20">{otpError ?? error}</div>}
-          {/* DEV banner */}
-          {devOtp && (
-            <div className="p-2.5 text-xs font-mono font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 rounded-xl border border-amber-500/30 flex items-center gap-2">
-              <span>🔧 DEV</span>
-              <span>Auto-filling OTP: <strong>{devOtp}</strong></span>
-            </div>
-          )}
           <form onSubmit={onOtpSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label className="text-center block text-sm">Enter 6-digit code</Label>

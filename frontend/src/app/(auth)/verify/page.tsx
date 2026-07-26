@@ -13,35 +13,10 @@ export default function VerifyPage() {
   const router = useRouter();
   const { verifyOtp, pendingRegistration, isLoading, error, clearError } = useAuthStore();
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
-  const [devOtp, setDevOtp] = useState<string | undefined>();
 
   useEffect(() => {
     if (!pendingRegistration) router.push("/register");
   }, [pendingRegistration, router]);
-
-  // DEV: read devOtp from sessionStorage if available
-  useEffect(() => {
-    const stored = sessionStorage.getItem("dev_otp");
-    if (stored) {
-      setDevOtp(stored);
-      sessionStorage.removeItem("dev_otp");
-    }
-  }, []);
-
-  // DEV: auto-fill and submit when devOtp is set
-  useEffect(() => {
-    if (!devOtp || devOtp.length !== 6) return;
-    setCode(devOtp.split(""));
-    const timer = setTimeout(async () => {
-      const success = await verifyOtp(devOtp);
-      if (success) {
-        const role = useAuthStore.getState().user?.role;
-        router.push(role === "host" ? "/host/dashboard" : "/");
-      }
-    }, 600);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devOtp]);
 
   const handleChange = (index: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
