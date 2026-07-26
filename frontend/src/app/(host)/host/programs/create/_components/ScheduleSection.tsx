@@ -348,12 +348,12 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Date */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+          {/* Start Date */}
           <div className="space-y-2.5">
             <Label htmlFor="date" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <span>Event Date</span>
+              <span>Start Date</span>
             </Label>
             <Input
               id="date"
@@ -362,6 +362,21 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
               {...register("date")}
             />
             {errors.date && <p className="text-[12px] text-red-500 font-semibold">{errors.date.message}</p>}
+          </div>
+
+          {/* End Date */}
+          <div className="space-y-2.5">
+            <Label htmlFor="endDate" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <span>End Date (Optional)</span>
+            </Label>
+            <Input
+              id="endDate"
+              type="date"
+              className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm hover:shadow-md hover:shadow-emerald-900/5"
+              {...register("endDate")}
+            />
+            {errors.endDate && <p className="text-[12px] text-red-500 font-semibold">{errors.endDate.message}</p>}
           </div>
 
           {/* Time */}

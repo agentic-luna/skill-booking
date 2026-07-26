@@ -8,6 +8,7 @@ export const programSchema = z.object({
   price: z.preprocess((val) => Number(val), z.number().min(0, "Price must be non-negative")),
   duration: z.string().min(2, "Duration is required (e.g. 4 hours)"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date format must be YYYY-MM-DD"),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date format must be YYYY-MM-DD").optional().or(z.literal("")),
   time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "Select a valid start time (HH:MM)"),
   maxSpots: z.preprocess((val) => Number(val), z.number().min(1, "Must allow at least 1 spot")),
   location: z.string().min(3, "Location or online webinar links are required"),

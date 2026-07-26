@@ -33,6 +33,7 @@ function mapEvent(e: any): any {
       address: e.venue?.address || '',
       meetingLink: e.venue?.meetingLink || '',
       district: (e.venueDetails as any)?.district || '',
+      endDate: (e.venueDetails as any)?.endDate || '',
       instructorName: e.instructor?.name || '',
       companyName: e.instructor?.companyName || '',
       instructorBio: e.instructor?.bio || '',

@@ -244,11 +244,11 @@ export default function ProgramsListContent() {
     if (!matchesLocation && location) {
       const locLower = location.toLowerCase();
       const eventLocLower = eventLocation.toLowerCase();
-      if (locLower === "ernakulam") {
+      if (locLower.includes("ernakulam") || locLower.includes("kochi")) {
         matchesLocation = eventLocLower.includes("ernakulam") || eventLocLower.includes("kochi");
-      } else if (locLower === "thiruvananthapuram") {
+      } else if (locLower.includes("thiruvananthapuram") || locLower.includes("trivandrum")) {
         matchesLocation = eventLocLower.includes("thiruvananthapuram") || eventLocLower.includes("trivandrum");
-      } else if (locLower === "kozhikode") {
+      } else if (locLower.includes("kozhikode") || locLower.includes("calicut")) {
         matchesLocation = eventLocLower.includes("kozhikode") || eventLocLower.includes("calicut");
       } else {
         matchesLocation = eventLocLower.includes(locLower);
@@ -256,24 +256,28 @@ export default function ProgramsListContent() {
     }
     let matchesDates = true;
     if (dates) {
+      const eventStartDate = new Date(prog.startTime);
+      const eventEndDateVal = (prog.venueDetails as any)?.endDate;
+      const eventEndDate = eventEndDateVal ? new Date(eventEndDateVal) : eventStartDate;
+      
       if (dates.startsWith("range:")) {
         const [startStr, endStr] = dates.replace("range:", "").split("_");
         const startDate = new Date(startStr);
         const endDate = new Date(endStr);
-        // Set end of day for the end boundary
         endDate.setHours(23, 59, 59, 999);
-        const eventDate = new Date(prog.startTime);
-        if (!isNaN(eventDate.getTime())) {
-          matchesDates = eventDate >= startDate && eventDate <= endDate;
+        eventEndDate.setHours(23, 59, 59, 999);
+        
+        if (!isNaN(eventStartDate.getTime()) && !isNaN(eventEndDate.getTime())) {
+          matchesDates = eventStartDate <= endDate && eventEndDate >= startDate;
         } else {
           matchesDates = false;
         }
       } else {
         const selectedMonths = dates.split(",");
-        const eventDate = new Date(prog.startTime);
-        if (!isNaN(eventDate.getTime())) {
-          const eventMonth = eventDate.toLocaleString("default", { month: "long" });
-          matchesDates = selectedMonths.includes(eventMonth);
+        if (!isNaN(eventStartDate.getTime())) {
+          const startMonth = eventStartDate.toLocaleString("default", { month: "long" });
+          const endMonth = eventEndDate.toLocaleString("default", { month: "long" });
+          matchesDates = selectedMonths.includes(startMonth) || selectedMonths.includes(endMonth);
         } else {
           matchesDates = false;
         }

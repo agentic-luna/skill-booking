@@ -25,7 +25,15 @@ function mapEventToProgram(event: any): Program {
     reviewsCount: event._count?.bookings || 12,
     price: event.price || 0,
     duration: event.duration || "2 hours",
-    date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
+    date: (() => {
+      if (!event.startTime) return "2026-07-12";
+      const startStr = event.startTime.split("T")[0];
+      const endDateVal = (event.venueDetails as any)?.endDate;
+      if (endDateVal && endDateVal !== startStr) {
+        return `${startStr} to ${endDateVal}`;
+      }
+      return startStr;
+    })(),
     time: event.startTime 
       ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
       : "10:00 AM EST",

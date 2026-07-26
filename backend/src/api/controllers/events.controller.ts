@@ -166,7 +166,10 @@ export class EventsController {
           description: description !== undefined ? String(description) : event.description,
           instructorId,
           venueId,
-          venueDetails: (venue?.district ? { district: venue.district } : event.venueDetails) as any,
+          venueDetails: {
+            district: venue?.district !== undefined ? venue.district : (event.venueDetails as any)?.district,
+            endDate: venue?.endDate !== undefined ? venue.endDate : (event.venueDetails as any)?.endDate,
+          } as any,
         },
         include: {
           instructor: true,
@@ -200,6 +203,7 @@ export class EventsController {
           address: updatedEvent.venue?.address || '',
           meetingLink: updatedEvent.venue?.meetingLink || '',
           district: (updatedEvent.venueDetails as any)?.district || '',
+          endDate: (updatedEvent.venueDetails as any)?.endDate || '',
           instructorName: updatedEvent.instructor?.name || '',
           companyName: updatedEvent.instructor?.companyName || '',
           instructorBio: updatedEvent.instructor?.bio || '',

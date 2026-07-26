@@ -17,9 +17,7 @@ const FALLBACK_CATEGORIES = [
   "Financial Modeling", "Public Speaking", "Photography"
 ];
 
-const FALLBACK_LOCATIONS = [
-  "Kochi", "Kozhikode", "Trivandrum", "Kerala", "Online"
-];
+
 
 export default function AdvancedSearchBar() {
   const router = useRouter();
@@ -69,9 +67,9 @@ export default function AdvancedSearchBar() {
     });
 
     const presets = [
-      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", 
-      "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", 
-      "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad", "Online"
+      "Alappuzha", "Ernakulam (Kochi)", "Idukki", "Kannur", "Kasaragod",
+      "Kollam", "Kottayam", "Kozhikode (Calicut)", "Malappuram", "Palakkad",
+      "Pathanamthitta", "Thiruvananthapuram (Trivandrum)", "Thrissur", "Wayanad", "Online"
     ];
     presets.forEach(p => {
       if (!Array.from(locs).some(c => c.toLowerCase() === p.toLowerCase())) {
@@ -82,7 +80,7 @@ export default function AdvancedSearchBar() {
   }, [events]);
 
   const filteredLocations = useMemo(() => {
-    return dynamicLocations.filter(loc => 
+    return dynamicLocations.filter(loc =>
       loc.toLowerCase().includes(locationSearchQuery.toLowerCase())
     );
   }, [dynamicLocations, locationSearchQuery]);
@@ -150,7 +148,7 @@ export default function AdvancedSearchBar() {
     if (categorySearchQuery.trim() !== "") {
       return filteredCategories.slice(0, 6);
     }
-    
+
     // Combine presets and dynamic categories, removing duplicates
     const list = ["Programming", "Design", "Marketing", "Business", "Music"];
     dynamicCategories.forEach(cat => {
@@ -195,13 +193,13 @@ export default function AdvancedSearchBar() {
           {activeTab === "location" && (
             <div className="absolute top-[calc(100%+16px)] left-0 md:-left-4 w-full md:w-[320px] bg-white rounded-3xl shadow-xl border border-gray-200 p-6 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
               {/* Location Search Input */}
-              <div 
+              <div
                 className="flex items-center gap-3 bg-gray-50 rounded-full px-4 py-2.5 mb-4 border border-gray-200 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100 transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Search className="w-4 h-4 text-gray-500" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={locationSearchQuery}
                   onChange={(e) => setLocationSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
@@ -219,7 +217,7 @@ export default function AdvancedSearchBar() {
               </div>
 
               <div className="mb-4">
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setLocation(""); setLocationSearchQuery(""); setActiveTab(null); }}
                   className="bg-gray-900 hover:bg-black text-white text-xs px-4 py-1.5 rounded-full font-medium transition-colors"
                 >
@@ -228,7 +226,7 @@ export default function AdvancedSearchBar() {
               </div>
               <ul className="space-y-2 mt-4 max-h-[220px] overflow-y-auto custom-scrollbar">
                 {filteredLocations.map(loc => (
-                  <li 
+                  <li
                     key={loc}
                     onClick={(e) => { e.stopPropagation(); setLocation(loc); setLocationSearchQuery(loc); setActiveTab(null); }}
                     className="flex items-center gap-3 text-[14px] font-semibold text-gray-700 hover:text-black hover:bg-gray-50 cursor-pointer px-3 py-2 rounded-xl transition-all"

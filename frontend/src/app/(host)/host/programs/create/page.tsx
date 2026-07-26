@@ -52,6 +52,7 @@ export default function CreateProgramPage() {
       price: 49,
       duration: "3 hours",
       date: new Date().toISOString().split("T")[0],
+      endDate: "",
       time: "10:00",
       maxSpots: 15,
       location: "",
@@ -103,6 +104,7 @@ export default function CreateProgramPage() {
             maxSpots: template.totalSeats || 15,
             location: template.mode === "ONLINE" ? (template.venue?.meetingLink || "") : (template.venue?.address || ""),
             district: (template.venueDetails as any)?.district || "",
+            endDate: (template.venueDetails as any)?.endDate || "",
             description: template.description || "",
             imageUrl: template.posterUrl || "",
             instructorName: template.instructor?.name || "",
@@ -137,6 +139,7 @@ export default function CreateProgramPage() {
           address: data.mode === "ONLINE" ? "Online" : data.location.trim(),
           meetingLink: data.mode === "ONLINE" ? data.location.trim() : null,
           district: data.mode === "OFFLINE" ? data.district?.trim() : undefined,
+          endDate: data.endDate || undefined,
         },
         instructor: {
           name: data.instructorName.trim(),

@@ -80,12 +80,14 @@ export default function EditProgramPage() {
           price: details.price ?? 0,
           duration: details.duration || "2 hours",
           date: dateStr,
+          endDate: details.venueDetails?.endDate || "",
           time: timeStr,
           maxSpots: details.totalSeats || 10,
           location:
             typeof details.venueDetails === "string"
               ? details.venueDetails
               : details.venueDetails?.address || "",
+          district: details.venueDetails?.district || "",
           description: details.description || "",
           imageUrl: details.posterUrl || "",
           additionalImages: details.images && details.images.length > 0 
@@ -126,6 +128,8 @@ export default function EditProgramPage() {
         venue: {
           address: data.mode === "ONLINE" ? "Online" : data.location.trim(),
           meetingLink: data.mode === "ONLINE" ? data.location.trim() : null,
+          district: data.mode === "OFFLINE" ? data.district?.trim() : undefined,
+          endDate: data.endDate || undefined,
         },
         instructor: {
           name: data.instructorName.trim(),

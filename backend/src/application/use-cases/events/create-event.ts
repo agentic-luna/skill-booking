@@ -20,6 +20,7 @@ export class CreateEventCommand implements IRequest<any> {
         address: string;
         meetingLink?: string | null;
         district?: string;
+        endDate?: string;
       };
       instructor?: {
         name: string;
@@ -37,7 +38,7 @@ export class CreateEventCommand implements IRequest<any> {
       description?: string;
       category?: string;
     }
-  ) {}
+  ) { }
 }
 
 export class CreateEventCommandHandler implements IRequestHandler<CreateEventCommand, any> {
@@ -46,7 +47,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
     private userRepo: IUserRepository,
     private cacheService: ICacheService,
     private configRepo: IConfigRepository
-  ) {}
+  ) { }
 
   async handle(command: CreateEventCommand): Promise<any> {
     const { userId, data } = command;
@@ -95,7 +96,10 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       durationHours,
       description: data.description,
       category: data.category,
-      venueDetails: data.venue?.district ? { district: data.venue.district } : undefined,
+      venueDetails: {
+        district: data.venue?.district || undefined,
+        endDate: data.venue?.endDate || undefined,
+      },
       commissionType,
       platformValue,
     });
