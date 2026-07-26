@@ -9,6 +9,7 @@ function mapBooking(b) {
         ...b,
         totalAmount: Number(b.totalAmount),
         seatCount: Number(b.seatCount),
+        platformValue: b.platformValue ? Number(b.platformValue) : null,
         event: b.event ? {
             ...b.event,
             availableSeats: Number(b.event.availableSeats),

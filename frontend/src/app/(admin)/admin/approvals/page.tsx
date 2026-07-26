@@ -50,21 +50,15 @@ export default function AdminApprovalsPage() {
 
   const handleApproveConfirm = async () => {
     if (!approveTargetId) return;
-    
-    const val = parseFloat(platformValue);
-    if (isNaN(val) || val < 0) {
-      showAlert("Invalid Commission", "Please enter a valid non-negative platform value.", "destructive");
-      return;
-    }
 
     try {
-      await approveEvent(approveTargetId, {
-        commissionType,
-        platformValue: val
-      });
+      const result = await approveEvent(approveTargetId, {});
+      const appliedType = result.commission?.commissionType;
+      const appliedVal = result.commission?.platformValue;
+
       showAlert(
         "Listing Approved",
-        `Workshop listing status has been successfully set to: APPROVED with ${commissionType === "PERCENTAGE" ? platformValue + "%" : platformValue} commission.`,
+        `Workshop listing status has been successfully set to: APPROVED with ${appliedType === "PERCENTAGE" ? appliedVal + "%" : appliedVal} commission.`,
         "success"
       );
       setIsApproveOpen(false);

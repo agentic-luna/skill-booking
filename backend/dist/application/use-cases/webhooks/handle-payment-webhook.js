@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HandlePaymentWebhookCommandHandler = exports.HandlePaymentWebhookCommand = void 0;
 const client_1 = require("@prisma/client");
+const commission_parser_1 = require("../../../utils/commission-parser");
 class HandlePaymentWebhookCommand {
     payload;
     __tag = 'HandlePaymentWebhookCommand';
@@ -25,39 +26,53 @@ class HandlePaymentWebhookCommandHandler {
     }
     async handle(command) {
         const { payload } = command;
-        const { event: eventType, payload: eventPayload } = payload;
-        if (eventType !== 'payment.captured') {
-            return { status: 'ignored', message: `Unhandled event trigger: ${eventType}` };
-        }
-        const payment = eventPayload.payment.entity;
-        const bookingRef = payment.notes?.bookingRef || payment.description || payment.order_id;
+        // Retrieve and verify booking
+        const gatewayTxnId = payload.paymentId || payload.razorpay_payment_id;
+        const bookingRef = payload.bookingRef || payload.razorpay_order_id;
         if (!bookingRef) {
-            throw new Error('Could not extract booking reference from transaction metadata.');
+            throw new Error('Booking reference not provided in payload');
         }
-        const gatewayTxnId = payment.id || `pay_${Math.random().toString(36).substring(2, 9)}`;
         const booking = await this.bookingRepo.findFirstByRef(bookingRef);
         if (!booking) {
-            throw new Error(`Booking record not found for ref: ${bookingRef}`);
+            throw new Error(`Booking not found for reference: ${bookingRef}`);
         }
         if (booking.status === client_1.BookingStatus.CONFIRMED) {
-            return { status: 'processed', bookingId: booking.id, gatewayTxnId };
+            return booking; // Already processed
         }
-        // 1. Confirm booking
+        // 1. Update Booking status to CONFIRMED
         await this.bookingRepo.update(booking.id, { status: client_1.BookingStatus.CONFIRMED });
         // 2. Platform revenue vs host liability
         const totalAmount = Number(booking.totalAmount);
         let platformRevenue = 0;
-        const commission = booking.event.commission;
-        if (commission) {
-            if (commission.commissionType === client_1.CommissionType.PERCENTAGE) {
-                platformRevenue = totalAmount * (Number(commission.platformValue) / 100);
+        // Use snapshotted commission on booking if available, otherwise fall back to event commission
+        const commType = booking.commissionType !== undefined ? booking.commissionType : booking.event?.commission?.commissionType;
+        const commValue = booking.platformValue !== undefined ? booking.platformValue : booking.event?.commission?.platformValue;
+        if (commType && commValue !== null && commValue !== undefined) {
+            if (commType === client_1.CommissionType.PERCENTAGE) {
+                platformRevenue = totalAmount * (Number(commValue) / 100);
             }
             else {
-                platformRevenue = Number(commission.platformValue);
+                platformRevenue = Number(commValue);
             }
         }
         else {
-            platformRevenue = totalAmount * 0.1;
+            let fallbackType = client_1.CommissionType.PERCENTAGE;
+            let fallbackValue = 15;
+            try {
+                const setting = await this.configRepo.findPlatformSetting('commissionRate');
+                const parsed = (0, commission_parser_1.parseCommissionRate)(setting?.value);
+                fallbackType = parsed.commissionType;
+                fallbackValue = parsed.platformValue;
+            }
+            catch (err) {
+                // use default PERCENTAGE 15
+            }
+            if (fallbackType === client_1.CommissionType.PERCENTAGE) {
+                platformRevenue = totalAmount * (fallbackValue / 100);
+            }
+            else {
+                platformRevenue = fallbackValue;
+            }
         }
         const hostLiability = totalAmount - platformRevenue;
         // 3. Write Payment capture to Ledger

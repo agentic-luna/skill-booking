@@ -4,6 +4,7 @@ import http from 'http';
 import { UserRole, KycStatus, EventMode, EventStatus, CommissionType, DeliveryChannel, BookingStatus, LedgerStatus } from '@prisma/client';
 import app from '../app';
 import { prisma } from '../config/prisma';
+import { redis } from '../infrastructure/cache/redis.cache';
 import { NodeCryptoService } from '../infrastructure/security/node.crypto';
 import { startNotificationWorker } from '../infrastructure/queue/bull.queue';
 import { PrismaNotificationRepository } from '../infrastructure/database/repositories/notification.repository';
@@ -24,8 +25,9 @@ async function runTests() {
   console.log('==================================================\n');
 
   try {
-    // 1. Database Cleanup
-    console.log('[Test] Cleaning test accounts and logs from database...');
+    // 1. Database & Cache Cleanup
+    console.log('[Test] Cleaning test accounts and logs from database & Redis cache...');
+    await redis.flushall();
     await prisma.notificationLog.deleteMany({});
     await prisma.transactionLedger.deleteMany({});
     await prisma.booking.deleteMany({});
@@ -35,7 +37,10 @@ async function runTests() {
     await prisma.hostProfile.deleteMany({});
     await prisma.user.deleteMany({
       where: {
-        email: { in: ['client@luna.com', 'host@luna.com'] },
+        OR: [
+          { email: { in: ['client@luna.com', 'host@luna.com'] } },
+          { phone: { in: ['+15550201', '+15550202'] } },
+        ],
       },
     });
 

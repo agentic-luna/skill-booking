@@ -15,6 +15,8 @@ const reset_password_1 = require("../../application/use-cases/auth/reset-passwor
 const send_otp_2 = require("../../application/use-cases/auth/client/send-otp");
 const verify_otp_2 = require("../../application/use-cases/auth/client/verify-otp");
 const signup_2 = require("../../application/use-cases/auth/client/signup");
+const send_email_verification_1 = require("../../application/use-cases/auth/client/send-email-verification");
+const verify_email_magic_link_1 = require("../../application/use-cases/auth/client/verify-email-magic-link");
 const api_response_1 = require("../common/api-response");
 class AuthController {
     static async sendOtp(req, res, next) {
@@ -90,6 +92,27 @@ class AuthController {
                 otp,
             }));
             return api_response_1.ApiResponse.created(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async clientSendEmailVerification(req, res, next) {
+        try {
+            const userId = req.user?.id;
+            const { email } = req.body;
+            const result = await di_container_1.mediator.send(new send_email_verification_1.ClientSendEmailVerificationCommand(userId, email));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async clientVerifyEmailMagicLink(req, res, next) {
+        try {
+            const { token } = req.body;
+            const result = await di_container_1.mediator.send(new verify_email_magic_link_1.ClientVerifyEmailMagicLinkCommand(token));
+            return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
             next(error);

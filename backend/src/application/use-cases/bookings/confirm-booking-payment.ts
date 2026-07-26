@@ -6,6 +6,7 @@ import { INotificationRepository } from '../../../domain/repositories/notificati
 import { IQueueService } from '../../services/queue.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { NotFoundError, BadRequestError } from '../../common/errors';
+import { parseCommissionRate } from '../../../utils/commission-parser';
 
 export class ConfirmBookingPaymentCommand implements IRequest<any> {
   readonly __tag = 'ConfirmBookingPaymentCommand';
@@ -13,7 +14,7 @@ export class ConfirmBookingPaymentCommand implements IRequest<any> {
     public readonly bookingId: string,
     public readonly clientId: string,
     public readonly paymentMethod?: string
-  ) {}
+  ) { }
 }
 
 export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<ConfirmBookingPaymentCommand, any> {
@@ -23,7 +24,7 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
     private configRepo: IConfigRepository,
     private notificationRepo: INotificationRepository,
     private queueService: IQueueService
-  ) {}
+  ) { }
 
   async handle(command: ConfirmBookingPaymentCommand): Promise<any> {
     const { bookingId, clientId, paymentMethod } = command;
@@ -66,7 +67,22 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
         platformRevenue = Number(commValue);
       }
     } else {
-      platformRevenue = totalAmount * 0.1;
+      let fallbackType: CommissionType = CommissionType.PERCENTAGE;
+      let fallbackValue = 15;
+      try {
+        const setting = await this.configRepo.findPlatformSetting('commissionRate');
+        const parsed = parseCommissionRate(setting?.value);
+        fallbackType = parsed.commissionType;
+        fallbackValue = parsed.platformValue;
+      } catch (err) {
+        // use default PERCENTAGE 15
+      }
+
+      if (fallbackType === CommissionType.PERCENTAGE) {
+        platformRevenue = totalAmount * (fallbackValue / 100);
+      } else {
+        platformRevenue = fallbackValue;
+      }
     }
 
     const hostLiability = totalAmount - platformRevenue;

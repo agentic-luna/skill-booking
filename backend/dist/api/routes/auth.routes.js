@@ -12,6 +12,8 @@ router.post('/signup', rate_limiter_1.authLimiter, auth_controller_1.AuthControl
 router.post('/client/otp/send', rate_limiter_1.otpSendLimiter, auth_controller_1.AuthController.clientSendOtp);
 router.post('/client/otp/verify', rate_limiter_1.authLimiter, auth_controller_1.AuthController.clientVerifyOtp);
 router.post('/client/signup', rate_limiter_1.authLimiter, auth_controller_1.AuthController.clientSignup);
+router.post('/client/email/send-verification', auth_1.authenticate, auth_controller_1.AuthController.clientSendEmailVerification);
+router.post('/client/email/verify-link', rate_limiter_1.authLimiter, auth_controller_1.AuthController.clientVerifyEmailMagicLink);
 router.post('/login', rate_limiter_1.authLimiter, auth_controller_1.AuthController.login);
 // Forgot Password Flow
 router.post('/forgot-password/send-otp', rate_limiter_1.otpSendLimiter, auth_controller_1.AuthController.forgotPasswordSendOtp);

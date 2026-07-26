@@ -501,6 +501,53 @@ exports.swaggerSpec = {
                 }
             }
         },
+        '/auth/client/email/send-verification': {
+            post: {
+                tags: ['Authentication'],
+                summary: 'Send magic link email verification to authenticated Client',
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['email'],
+                                properties: {
+                                    email: { type: 'string', format: 'email', example: 'client@example.com' }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: { description: 'Magic link dispatched to email' }
+                }
+            }
+        },
+        '/auth/client/email/verify-link': {
+            post: {
+                tags: ['Authentication'],
+                summary: 'Verify client email via magic link token',
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['token'],
+                                properties: {
+                                    token: { type: 'string', example: 'a1b2c3d4e5f6...' }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: { description: 'Email verified successfully and user updated' }
+                }
+            }
+        },
         '/auth/signup': {
             post: {
                 tags: ['Authentication'],
@@ -1156,7 +1203,7 @@ exports.swaggerSpec = {
                     { name: 'title', in: 'query', schema: { type: 'string' }, description: 'Search term for title' },
                     { name: 'mode', in: 'query', schema: { type: 'string', enum: ['ONLINE', 'OFFLINE'] } },
                     { name: 'hostId', in: 'query', schema: { type: 'string' } },
-                    { name: 'startTimeFrom', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'startTimeFrom', in: 'query', schema: { type: 'string', format: 'date' }, description: 'ISO date string, defaults to current time to show only upcoming events' },
                 ],
                 responses: {
                     200: { description: 'List of events' },

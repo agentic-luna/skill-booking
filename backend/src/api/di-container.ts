@@ -151,8 +151,8 @@ mediator.register('GetHostDashboardQuery', new GetHostDashboardQueryHandler(even
 // 6. Register Event handlers
 mediator.register('SearchEventsQuery', new SearchEventsQueryHandler(eventRepo, cacheService));
 mediator.register('GetEventDetailsQuery', new GetEventDetailsQueryHandler(eventRepo));
-mediator.register('CreateEventCommand', new CreateEventCommandHandler(eventRepo, userRepo, cacheService));
-mediator.register('ApproveEventCommand', new ApproveEventCommandHandler(eventRepo, cacheService));
+mediator.register('CreateEventCommand', new CreateEventCommandHandler(eventRepo, userRepo, cacheService, configRepo));
+mediator.register('ApproveEventCommand', new ApproveEventCommandHandler(eventRepo, cacheService, configRepo));
 
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));

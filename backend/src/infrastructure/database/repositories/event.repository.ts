@@ -167,6 +167,8 @@ export class PrismaEventRepository implements IEventRepository {
     description?: string;
     category?: string;
     venueDetails?: any;
+    commissionType?: CommissionType;
+    platformValue?: number;
   }): Promise<Event> {
     let instructorId: string | null = null;
     let venueId: string | null = null;
@@ -196,13 +198,19 @@ export class PrismaEventRepository implements IEventRepository {
       venueId = venue.id;
     }
 
-    const { venue, instructor, ...rest } = data;
+    const { venue, instructor, commissionType, platformValue, ...rest } = data;
     const created = await prisma.event.create({
       data: {
         ...rest,
         instructorId,
         venueId,
         venueDetails: data.venueDetails || undefined,
+        commission: commissionType ? {
+          create: {
+            commissionType,
+            platformValue: platformValue || 0,
+          }
+        } : undefined,
       },
       include: {
         instructor: true,

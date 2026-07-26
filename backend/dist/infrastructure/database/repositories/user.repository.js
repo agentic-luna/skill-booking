@@ -21,6 +21,12 @@ class PrismaUserRepository {
             data: { passwordHash },
         });
     }
+    async updateEmail(id, email, isEmailVerified) {
+        return prisma_1.prisma.user.update({
+            where: { id },
+            data: { email, isEmailVerified },
+        });
+    }
     async findProfile(id) {
         const user = await prisma_1.prisma.user.findUnique({
             where: { id },
@@ -30,6 +36,7 @@ class PrismaUserRepository {
                 lastName: true,
                 email: true,
                 phone: true,
+                isEmailVerified: true,
                 role: true,
                 status: true,
                 createdAt: true,

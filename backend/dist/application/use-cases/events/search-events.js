@@ -20,7 +20,9 @@ class SearchEventsQueryHandler {
     }
     async handle(query) {
         const { filters } = query;
-        const cacheKey = `events:search:title:${filters.title || ''}:mode:${filters.mode || ''}:host:${filters.hostId || ''}:from:${filters.startTimeFrom || ''}`;
+        const nowStr = new Date().toISOString();
+        const startTimeFrom = filters.startTimeFrom || nowStr;
+        const cacheKey = `events:search:title:${filters.title || ''}:mode:${filters.mode || ''}:host:${filters.hostId || ''}:from:${startTimeFrom}`;
         const cached = await this.cacheService.get(cacheKey);
         if (cached) {
             di_container_1.logger.info(`[EventsQuery] Search Cache HIT for key: ${cacheKey}`);
@@ -29,6 +31,7 @@ class SearchEventsQueryHandler {
         di_container_1.logger.info(`[EventsQuery] Search Cache MISS for key: ${cacheKey}`);
         const events = await this.eventRepo.findMany({
             ...filters,
+            startTimeFrom,
             status: client_1.EventStatus.APPROVED,
         });
         await this.cacheService.set(cacheKey, events, 300);

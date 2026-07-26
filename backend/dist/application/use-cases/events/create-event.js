@@ -4,6 +4,7 @@ exports.CreateEventCommandHandler = exports.CreateEventCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
 const duration_parser_1 = require("../../../utils/duration-parser");
+const commission_parser_1 = require("../../../utils/commission-parser");
 class CreateEventCommand {
     userId;
     data;
@@ -18,10 +19,12 @@ class CreateEventCommandHandler {
     eventRepo;
     userRepo;
     cacheService;
-    constructor(eventRepo, userRepo, cacheService) {
+    configRepo;
+    constructor(eventRepo, userRepo, cacheService, configRepo) {
         this.eventRepo = eventRepo;
         this.userRepo = userRepo;
         this.cacheService = cacheService;
+        this.configRepo = configRepo;
     }
     async handle(command) {
         const { userId, data } = command;
@@ -36,6 +39,18 @@ class CreateEventCommandHandler {
             throw new errors_1.ForbiddenError('Cannot create events. Your KYC verification is ' + hostProfile.kycStatus + '. Please wait for admin approval.');
         }
         const durationHours = (0, duration_parser_1.parseDurationToHours)(data.duration);
+        // Retrieve initial commission based on Platform Settings commissionRate
+        let commissionType = client_1.CommissionType.PERCENTAGE;
+        let platformValue = 15;
+        try {
+            const setting = await this.configRepo.findPlatformSetting('commissionRate');
+            const parsed = (0, commission_parser_1.parseCommissionRate)(setting?.value);
+            commissionType = parsed.commissionType;
+            platformValue = parsed.platformValue;
+        }
+        catch (err) {
+            // Default fallback in case of errors
+        }
         const event = await this.eventRepo.create({
             hostId: hostProfile.id,
             title: data.title,
@@ -53,6 +68,9 @@ class CreateEventCommandHandler {
             durationHours,
             description: data.description,
             category: data.category,
+            venueDetails: data.venue?.district ? { district: data.venue.district } : undefined,
+            commissionType,
+            platformValue,
         });
         // Invalidate event listings caches
         await this.cacheService.delPattern('events:search:*');

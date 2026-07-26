@@ -40,6 +40,8 @@ const reset_password_1 = require("../application/use-cases/auth/reset-password")
 const send_otp_2 = require("../application/use-cases/auth/client/send-otp");
 const verify_otp_2 = require("../application/use-cases/auth/client/verify-otp");
 const signup_2 = require("../application/use-cases/auth/client/signup");
+const send_email_verification_1 = require("../application/use-cases/auth/client/send-email-verification");
+const verify_email_magic_link_1 = require("../application/use-cases/auth/client/verify-email-magic-link");
 const submit_kyc_1 = require("../application/use-cases/hosts/submit-kyc");
 const submit_bank_details_1 = require("../application/use-cases/hosts/submit-bank-details");
 const get_dashboard_1 = require("../application/use-cases/hosts/get-dashboard");
@@ -136,6 +138,8 @@ mediator.register('ResetPasswordCommand', new reset_password_1.ResetPasswordComm
 mediator.register('ClientSendOtpCommand', new send_otp_2.ClientSendOtpCommandHandler(cacheService, commsService, userRepo, logger));
 mediator.register('ClientVerifyOtpCommand', new verify_otp_2.ClientVerifyOtpCommandHandler(cacheService, logger));
 mediator.register('ClientSignupCommand', new signup_2.ClientSignupCommandHandler(userRepo, cacheService));
+mediator.register('ClientSendEmailVerificationCommand', new send_email_verification_1.ClientSendEmailVerificationCommandHandler(userRepo, cacheService, sendGridProvider));
+mediator.register('ClientVerifyEmailMagicLinkCommand', new verify_email_magic_link_1.ClientVerifyEmailMagicLinkCommandHandler(userRepo, cacheService));
 // 5. Register Host handlers
 mediator.register('SubmitKycCommand', new submit_kyc_1.SubmitKycCommandHandler(userRepo));
 mediator.register('SubmitBankDetailsCommand', new submit_bank_details_1.SubmitBankDetailsCommandHandler(userRepo, cryptoService));
@@ -143,8 +147,8 @@ mediator.register('GetHostDashboardQuery', new get_dashboard_1.GetHostDashboardQ
 // 6. Register Event handlers
 mediator.register('SearchEventsQuery', new search_events_1.SearchEventsQueryHandler(eventRepo, cacheService));
 mediator.register('GetEventDetailsQuery', new get_event_details_1.GetEventDetailsQueryHandler(eventRepo));
-mediator.register('CreateEventCommand', new create_event_1.CreateEventCommandHandler(eventRepo, userRepo, cacheService));
-mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommandHandler(eventRepo, cacheService));
+mediator.register('CreateEventCommand', new create_event_1.CreateEventCommandHandler(eventRepo, userRepo, cacheService, configRepo));
+mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommandHandler(eventRepo, cacheService, configRepo));
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new checkout_1.CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
 mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider));

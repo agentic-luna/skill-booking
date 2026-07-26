@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConfirmBookingPaymentCommandHandler = exports.ConfirmBookingPaymentCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
+const commission_parser_1 = require("../../../utils/commission-parser");
 class ConfirmBookingPaymentCommand {
     bookingId;
     clientId;
@@ -51,17 +52,35 @@ class ConfirmBookingPaymentCommandHandler {
         // 2. Compute platform revenue vs host liability
         const totalAmount = Number(booking.totalAmount);
         let platformRevenue = 0;
-        const commission = booking.event?.commission;
-        if (commission) {
-            if (commission.commissionType === client_1.CommissionType.PERCENTAGE) {
-                platformRevenue = totalAmount * (Number(commission.platformValue) / 100);
+        // Use snapshotted commission on booking if available, otherwise fall back to event commission
+        const commType = booking.commissionType !== undefined ? booking.commissionType : booking.event?.commission?.commissionType;
+        const commValue = booking.platformValue !== undefined ? booking.platformValue : booking.event?.commission?.platformValue;
+        if (commType && commValue !== null && commValue !== undefined) {
+            if (commType === client_1.CommissionType.PERCENTAGE) {
+                platformRevenue = totalAmount * (Number(commValue) / 100);
             }
             else {
-                platformRevenue = Number(commission.platformValue);
+                platformRevenue = Number(commValue);
             }
         }
         else {
-            platformRevenue = totalAmount * 0.1;
+            let fallbackType = client_1.CommissionType.PERCENTAGE;
+            let fallbackValue = 15;
+            try {
+                const setting = await this.configRepo.findPlatformSetting('commissionRate');
+                const parsed = (0, commission_parser_1.parseCommissionRate)(setting?.value);
+                fallbackType = parsed.commissionType;
+                fallbackValue = parsed.platformValue;
+            }
+            catch (err) {
+                // use default PERCENTAGE 15
+            }
+            if (fallbackType === client_1.CommissionType.PERCENTAGE) {
+                platformRevenue = totalAmount * (fallbackValue / 100);
+            }
+            else {
+                platformRevenue = fallbackValue;
+            }
         }
         const hostLiability = totalAmount - platformRevenue;
         // 3. Write Payment capture entry to Transaction Ledger

@@ -8,6 +8,7 @@ const http_1 = __importDefault(require("http"));
 const client_1 = require("@prisma/client");
 const app_1 = __importDefault(require("../app"));
 const prisma_1 = require("../config/prisma");
+const redis_cache_1 = require("../infrastructure/cache/redis.cache");
 const node_crypto_1 = require("../infrastructure/security/node.crypto");
 const bull_queue_1 = require("../infrastructure/queue/bull.queue");
 const notification_repository_1 = require("../infrastructure/database/repositories/notification.repository");
@@ -21,8 +22,9 @@ async function runTests() {
     console.log('   STARTING INTEGRATION VERIFICATION TEST SUITE   ');
     console.log('==================================================\n');
     try {
-        // 1. Database Cleanup
-        console.log('[Test] Cleaning test accounts and logs from database...');
+        // 1. Database & Cache Cleanup
+        console.log('[Test] Cleaning test accounts and logs from database & Redis cache...');
+        await redis_cache_1.redis.flushall();
         await prisma_1.prisma.notificationLog.deleteMany({});
         await prisma_1.prisma.transactionLedger.deleteMany({});
         await prisma_1.prisma.booking.deleteMany({});
@@ -32,7 +34,10 @@ async function runTests() {
         await prisma_1.prisma.hostProfile.deleteMany({});
         await prisma_1.prisma.user.deleteMany({
             where: {
-                email: { in: ['client@luna.com', 'host@luna.com'] },
+                OR: [
+                    { email: { in: ['client@luna.com', 'host@luna.com'] } },
+                    { phone: { in: ['+15550201', '+15550202'] } },
+                ],
             },
         });
         // 2. Authentication Test

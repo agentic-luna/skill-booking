@@ -1,10 +1,12 @@
-import { EventMode, EventStatus, KycStatus } from '@prisma/client';
+import { EventMode, EventStatus, KycStatus, CommissionType } from '@prisma/client';
 import { IEventRepository } from '../../../domain/repositories/event.repository';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
+import { IConfigRepository } from '../../../domain/repositories/config.repository';
 import { ICacheService } from '../../services/cache.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { BadRequestError, ForbiddenError } from '../../common/errors';
 import { parseDurationToHours } from '../../../utils/duration-parser';
+import { parseCommissionRate } from '../../../utils/commission-parser';
 
 export class CreateEventCommand implements IRequest<any> {
   readonly __tag = 'CreateEventCommand';
@@ -42,7 +44,8 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
   constructor(
     private eventRepo: IEventRepository,
     private userRepo: IUserRepository,
-    private cacheService: ICacheService
+    private cacheService: ICacheService,
+    private configRepo: IConfigRepository
   ) {}
 
   async handle(command: CreateEventCommand): Promise<any> {
@@ -63,6 +66,18 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
 
     const durationHours = parseDurationToHours(data.duration);
 
+    // Retrieve initial commission based on Platform Settings commissionRate
+    let commissionType: CommissionType = CommissionType.PERCENTAGE;
+    let platformValue = 15;
+    try {
+      const setting = await this.configRepo.findPlatformSetting('commissionRate');
+      const parsed = parseCommissionRate(setting?.value);
+      commissionType = parsed.commissionType;
+      platformValue = parsed.platformValue;
+    } catch (err) {
+      // Default fallback in case of errors
+    }
+
     const event = await this.eventRepo.create({
       hostId: hostProfile.id,
       title: data.title,
@@ -81,6 +96,8 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       description: data.description,
       category: data.category,
       venueDetails: data.venue?.district ? { district: data.venue.district } : undefined,
+      commissionType,
+      platformValue,
     });
 
     // Invalidate event listings caches

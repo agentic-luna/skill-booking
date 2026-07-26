@@ -168,8 +168,8 @@ export interface PendingEvent {
 }
 
 export interface ApproveEventPayload {
-  commissionType: CommissionType;
-  platformValue: number;
+  commissionType?: CommissionType;
+  platformValue?: number;
 }
 
 export interface ApproveEventResult {

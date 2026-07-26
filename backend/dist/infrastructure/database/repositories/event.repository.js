@@ -28,10 +28,11 @@ function mapEvent(e) {
             meetingLink: e.venue.meetingLink,
         } : null,
     };
-    if (e.instructor || e.venue) {
+    if (e.instructor || e.venue || e.venueDetails) {
         mapped.venueDetails = {
             address: e.venue?.address || '',
             meetingLink: e.venue?.meetingLink || '',
+            district: e.venueDetails?.district || '',
             instructorName: e.instructor?.name || '',
             companyName: e.instructor?.companyName || '',
             instructorBio: e.instructor?.bio || '',
@@ -147,12 +148,19 @@ class PrismaEventRepository {
             });
             venueId = venue.id;
         }
-        const { venue, instructor, ...rest } = data;
+        const { venue, instructor, commissionType, platformValue, ...rest } = data;
         const created = await prisma_1.prisma.event.create({
             data: {
                 ...rest,
                 instructorId,
                 venueId,
+                venueDetails: data.venueDetails || undefined,
+                commission: commissionType ? {
+                    create: {
+                        commissionType,
+                        platformValue: platformValue || 0,
+                    }
+                } : undefined,
             },
             include: {
                 instructor: true,

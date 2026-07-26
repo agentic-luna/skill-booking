@@ -5,6 +5,7 @@ import { IConfigRepository } from '../../../domain/repositories/config.repositor
 import { INotificationRepository } from '../../../domain/repositories/notification.repository';
 import { IQueueService } from '../../services/queue.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { parseCommissionRate } from '../../../utils/commission-parser';
 
 export class HandlePaymentWebhookCommand implements IRequest<any> {
   readonly __tag = 'HandlePaymentWebhookCommand';
@@ -22,31 +23,25 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
 
   async handle(command: HandlePaymentWebhookCommand): Promise<any> {
     const { payload } = command;
-    const { event: eventType, payload: eventPayload } = payload;
 
-    if (eventType !== 'payment.captured') {
-      return { status: 'ignored', message: `Unhandled event trigger: ${eventType}` };
-    }
-
-    const payment = eventPayload.payment.entity;
-
-    const bookingRef = payment.notes?.bookingRef || payment.description || payment.order_id;
+    // Retrieve and verify booking
+    const gatewayTxnId = payload.paymentId || payload.razorpay_payment_id;
+    const bookingRef = payload.bookingRef || payload.razorpay_order_id;
+    
     if (!bookingRef) {
-      throw new Error('Could not extract booking reference from transaction metadata.');
+      throw new Error('Booking reference not provided in payload');
     }
-
-    const gatewayTxnId = payment.id || `pay_${Math.random().toString(36).substring(2, 9)}`;
 
     const booking = await this.bookingRepo.findFirstByRef(bookingRef);
     if (!booking) {
-      throw new Error(`Booking record not found for ref: ${bookingRef}`);
+      throw new Error(`Booking not found for reference: ${bookingRef}`);
     }
 
     if (booking.status === BookingStatus.CONFIRMED) {
-      return { status: 'processed', bookingId: booking.id, gatewayTxnId };
+      return booking; // Already processed
     }
 
-    // 1. Confirm booking
+    // 1. Update Booking status to CONFIRMED
     await this.bookingRepo.update(booking.id, { status: BookingStatus.CONFIRMED });
 
     // 2. Platform revenue vs host liability
@@ -64,7 +59,22 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
         platformRevenue = Number(commValue);
       }
     } else {
-      platformRevenue = totalAmount * 0.1;
+      let fallbackType: CommissionType = CommissionType.PERCENTAGE;
+      let fallbackValue = 15;
+      try {
+        const setting = await this.configRepo.findPlatformSetting('commissionRate');
+        const parsed = parseCommissionRate(setting?.value);
+        fallbackType = parsed.commissionType;
+        fallbackValue = parsed.platformValue;
+      } catch (err) {
+        // use default PERCENTAGE 15
+      }
+
+      if (fallbackType === CommissionType.PERCENTAGE) {
+        platformRevenue = totalAmount * (fallbackValue / 100);
+      } else {
+        platformRevenue = fallbackValue;
+      }
     }
 
     const hostLiability = totalAmount - platformRevenue;

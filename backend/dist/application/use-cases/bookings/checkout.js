@@ -58,6 +58,8 @@ class CheckoutCommandHandler {
             seatCount,
             totalAmount,
             status: client_1.BookingStatus.INITIATED,
+            commissionType: event.commission?.commissionType || null,
+            platformValue: event.commission?.platformValue ? Number(event.commission.platformValue) : null,
         });
         // Invalidate event search caches
         await this.cacheService.delPattern('events:search:*');

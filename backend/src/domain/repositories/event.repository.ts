@@ -39,6 +39,8 @@ export interface IEventRepository {
     description?: string;
     category?: string;
     venueDetails?: any;
+    commissionType?: CommissionType;
+    platformValue?: number;
   }): Promise<Event>;
   update(id: string, data: any): Promise<Event>;
   findPendingEvents(): Promise<any[]>;
