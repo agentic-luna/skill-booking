@@ -16,6 +16,14 @@ router.post('/login', authLimiter, AdminController.adminLogin as any);
 router.use(authenticate as any);
 router.use(requireRole(UserRole.SUPERADMIN) as any);
 
+// Disable browser caching for secure admin actions
+router.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // Integration configs
 router.get('/configs/integrations', requirePermission(SystemPermissions.ADMIN_CONFIGS_MANAGE) as any, AdminController.getIntegrationConfigs);
 router.put('/configs/integrations/:serviceName', requirePermission(SystemPermissions.ADMIN_CONFIGS_MANAGE) as any, AdminController.updateIntegrationConfig as any);

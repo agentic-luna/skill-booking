@@ -27,6 +27,7 @@ import { EmailCommunicationService } from '../infrastructure/services/comms/emai
 import { SmsCommunicationService } from '../infrastructure/services/comms/sms.communication';
 import { WhatsAppCommunicationService } from '../infrastructure/services/comms/whatsapp.communication';
 import { CommunicationGateway } from '../infrastructure/services/comms.gateway';
+import { TicketGenerationService } from '../infrastructure/services/ticket-generation.service';
 
 // Handlers
 import { SignupCommandHandler } from '../application/use-cases/auth/signup';
@@ -121,6 +122,8 @@ const commsService = new CommunicationGateway(
   whatsappService,
   paymentGatewayProvider
 );
+
+const ticketGenService = new TicketGenerationService();
 
 // 3. Initialize mediator bus
 const mediator = new Mediator();
@@ -224,4 +227,5 @@ export {
   smsService,
   whatsappService,
   commsService,
+  ticketGenService,
 };

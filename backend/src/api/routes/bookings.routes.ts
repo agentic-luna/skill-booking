@@ -8,11 +8,14 @@ import { bookingRepo } from '../di-container';
 
 const router = Router();
 
+router.get('/:bookingId/verify', BookingsController.verifyBooking as any);
+
 router.use(authenticate as any);
 
 router.get('/my-bookings', requirePermission(SystemPermissions.CLIENT_BOOKINGS_READ_OWN) as any, BookingsController.getMyBookings as any);
 router.get('/mybookings', requirePermission(SystemPermissions.CLIENT_BOOKINGS_READ_OWN) as any, BookingsController.getMyBookings as any);
 router.get('/:bookingId/invoice', BookingsController.downloadInvoice as any);
+router.get('/:bookingId/ticket', BookingsController.downloadTicket as any);
 
 router.post('/checkout', checkoutLimiter, requirePermission(SystemPermissions.CLIENT_BOOKINGS_CREATE) as any, BookingsController.checkout as any);
 

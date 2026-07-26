@@ -113,3 +113,7 @@ export const applyHost = (payload: { expertise: string; bio: string }) =>
 export const getInvoiceUrl = (bookingId: string) => {
   return `${API_BASE_URL}/bookings/${bookingId}/invoice`;
 };
+
+export const getTicketUrl = (bookingId: string) => {
+  return `${API_BASE_URL}/bookings/${bookingId}/ticket`;
+};
