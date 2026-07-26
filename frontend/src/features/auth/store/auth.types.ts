@@ -66,13 +66,13 @@ export interface AuthState {
     phone: string;
     password: string;
     role: "client" | "host";
-  }) => Promise<void>;
+  }) => Promise<{ devEmailOtp?: string; devPhoneOtp?: string }>;
   verifyEmailOtp: (otp: string) => Promise<void>;
   verifyPhoneOtpAndSignup: (otp: string) => Promise<User>;
   verifyOtp: (code: string) => Promise<boolean>;
   login: (identifier: string, password: string) => Promise<User>;
   adminLogin: (identifier: string, password: string) => Promise<User>;
-  forgotPassword: (identifier: string) => Promise<void>;
+  forgotPassword: (identifier: string) => Promise<{ devOtp?: string } | undefined>;
   forgotPasswordVerifyOtp: (identifier: string, otp: string) => Promise<string>;
   resetPassword: (resetToken: string, newPassword: string) => Promise<void>;
   clientSignup: (data: {

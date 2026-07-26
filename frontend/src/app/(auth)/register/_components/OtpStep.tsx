@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ interface OtpStepProps {
   error: string | null;
   onSubmit: (otp: string) => Promise<void>;
   onResend: () => void;
+  /** DEV ONLY: auto-fill this OTP when provided */
+  devOtp?: string;
 }
 
 export default function OtpStep({
@@ -24,8 +26,22 @@ export default function OtpStep({
   error,
   onSubmit,
   onResend,
+  devOtp,
 }: OtpStepProps) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
+
+  // DEV: auto-fill OTP digits when devOtp is provided
+  useEffect(() => {
+    if (!devOtp || devOtp.length !== 6) return;
+    const split = devOtp.split("");
+    setDigits(split);
+    // Auto-submit after a brief visual delay so developer can see it fill
+    const timer = setTimeout(() => {
+      onSubmit(devOtp);
+    }, 600);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devOtp]);
 
   const handleChange = (index: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
