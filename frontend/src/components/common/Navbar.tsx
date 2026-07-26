@@ -38,6 +38,16 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const [isSearchActive, setIsSearchActive] = useState(false);
+
+  useEffect(() => {
+    const handleSearchActive = (e: Event) => {
+      setIsSearchActive((e as CustomEvent).detail);
+    };
+    window.addEventListener("search-active", handleSearchActive);
+    return () => window.removeEventListener("search-active", handleSearchActive);
+  }, []);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -66,7 +76,11 @@ export default function Navbar() {
   }
 
   return (
-    <div className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] z-[100] transition-all duration-500 ease-out ${showSearchAndShrink ? "max-w-[816px]" : "max-w-[1250px]"}`}>
+    <div className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] transition-all duration-500 ease-out ${showSearchAndShrink ? "max-w-[816px]" : "max-w-[1250px]"} ${
+      isSearchActive 
+        ? "z-30 opacity-20 pointer-events-none blur-[2px] scale-[0.98]" 
+        : "z-[100] opacity-100"
+    }`}>
       <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${showSearchAndShrink
         ? "bg-white/90 backdrop-blur-xl border border-black/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
         : "bg-transparent border-transparent"

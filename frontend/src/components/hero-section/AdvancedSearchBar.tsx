@@ -32,12 +32,22 @@ export default function AdvancedSearchBar() {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [categorySearchQuery, setCategorySearchQuery] = useState("");
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  
+  // Date Range Picker State
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
   // Fetch real events data from API to populate dynamic dropdowns
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Dispatch search bar active state globally
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("search-active", { detail: activeTab !== null }));
+  }, [activeTab]);
 
   // Use fallback locations (recommended cities) for now to avoid dummy data from db
   const dynamicLocations = useMemo(() => {
@@ -70,10 +80,16 @@ export default function AdvancedSearchBar() {
     };
   }, [searchRef]);
 
-  const toggleDate = (month: string) => {
-    setSelectedDates(prev => 
-      prev.includes(month) ? prev.filter(d => d !== month) : [...prev, month]
-    );
+  const handleDateClick = (day: number) => {
+    const clickedDate = new Date(currentYear, currentMonth, day);
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(clickedDate);
+      setEndDate(null);
+    } else if (clickedDate < startDate) {
+      setStartDate(clickedDate);
+    } else {
+      setEndDate(clickedDate);
+    }
   };
 
   const handleSearch = () => {
@@ -84,7 +100,11 @@ export default function AdvancedSearchBar() {
     const searchCat = categorySearchQuery || category;
     if (searchCat) params.append("search", searchCat);
     
-    if (selectedDates.length > 0) params.append("dates", selectedDates.join(","));
+    if (startDate) {
+      const startStr = startDate.toISOString().split("T")[0];
+      const endStr = endDate ? endDate.toISOString().split("T")[0] : startStr;
+      params.append("dates", `range:${startStr}_${endStr}`);
+    }
     
     router.push(`/programs?${params.toString()}`);
   };
@@ -98,7 +118,7 @@ export default function AdvancedSearchBar() {
       {/* Background Blur Overlay */}
       {activeTab && (
         <div 
-          className="fixed inset-0 z-40 bg-black/10 backdrop-blur-sm transition-all duration-300"
+          className="fixed inset-0 z-[110] bg-black/10 backdrop-blur-sm transition-all duration-300"
           onClick={() => setActiveTab(null)}
         />
       )}
@@ -106,11 +126,11 @@ export default function AdvancedSearchBar() {
       {/* Main Search Bar Container */}
       <div 
         ref={searchRef}
-        className="relative z-50 w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 p-2 md:p-2"
+        className="relative z-[120] w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 p-4 md:p-2 gap-3 md:gap-0"
       >
         {/* Location Section */}
         <div 
-          className={`relative flex-1 w-full px-6 py-3 cursor-pointer rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'location' ? 'shadow-md bg-white hover:bg-white z-10' : ''}`}
+          className={`relative flex-1 w-full px-6 py-3 cursor-pointer border border-gray-200 md:border-0 rounded-2xl md:rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'location' ? 'shadow-md bg-white hover:bg-white z-10 border-gray-300' : ''}`}
           onClick={() => setActiveTab(activeTab === "location" ? null : "location")}
         >
           <div className="flex items-center gap-3">
@@ -125,7 +145,7 @@ export default function AdvancedSearchBar() {
           
           {/* Location Dropdown */}
           {activeTab === "location" && (
-            <div className="absolute top-[calc(100%+16px)] left-0 md:-left-4 w-full md:w-[320px] bg-white rounded-3xl shadow-xl border border-gray-100 p-6 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-[calc(100%+16px)] left-0 md:-left-4 w-full md:w-[320px] bg-white rounded-3xl shadow-xl border border-gray-200 p-6 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="mb-4">
                 <button 
                   onClick={(e) => { e.stopPropagation(); setLocation(""); setActiveTab(null); }}
@@ -154,7 +174,7 @@ export default function AdvancedSearchBar() {
 
         {/* Overall Search Section (Formerly Category) */}
         <div 
-          className={`relative flex-1 w-full px-6 py-3 cursor-pointer rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'category' ? 'shadow-md bg-white hover:bg-white z-10' : ''}`}
+          className={`relative flex-1 w-full px-6 py-3 cursor-pointer border border-gray-200 md:border-0 rounded-2xl md:rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'category' ? 'shadow-md bg-white hover:bg-white z-10 border-gray-300' : ''}`}
           onClick={() => setActiveTab(activeTab === "category" ? null : "category")}
         >
           <div className="flex items-center gap-3">
@@ -169,7 +189,7 @@ export default function AdvancedSearchBar() {
 
           {/* Search Dropdown */}
           {activeTab === "category" && (
-            <div className="absolute top-[calc(100%+16px)] left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-[600px] bg-white rounded-3xl shadow-xl border border-gray-100 p-6 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-[calc(100%+16px)] left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-[600px] bg-white rounded-3xl shadow-xl border border-gray-200 p-6 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
               <div 
                 className="flex items-center gap-3 bg-gray-50 rounded-full px-5 py-3 mb-6 border border-gray-200 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100 transition-all"
                 onClick={(e) => e.stopPropagation()}
@@ -273,54 +293,126 @@ export default function AdvancedSearchBar() {
 
         {/* Dates Section */}
         <div 
-          className={`relative flex-1 w-full px-6 py-3 cursor-pointer rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'dates' ? 'shadow-md bg-white hover:bg-white z-10' : ''}`}
+          className={`relative flex-1 w-full px-6 py-3 cursor-pointer border border-gray-200 md:border-0 rounded-2xl md:rounded-full transition-colors hover:bg-gray-100 ${activeTab === 'dates' ? 'shadow-md bg-white hover:bg-white z-10 border-gray-300' : ''}`}
           onClick={() => setActiveTab(activeTab === "dates" ? null : "dates")}
         >
           <div className="flex items-center gap-3">
             <CalendarDays className="w-5 h-5 text-gray-500" />
             <div className="flex flex-col">
               <span className="text-[13px] font-bold text-gray-800">Dates</span>
-              <span className={`text-[14px] font-light truncate ${selectedDates.length > 0 ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-                {selectedDates.length > 0 ? selectedDates.join(", ") : "When are you going?"}
+              <span className={`text-[14px] font-light truncate ${startDate ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
+                {startDate ? (
+                  endDate ? (
+                    `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                  ) : (
+                    startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  )
+                ) : (
+                  "When are you going?"
+                )}
               </span>
             </div>
           </div>
 
           {/* Dates Dropdown */}
-          {activeTab === "dates" && (
-            <div className="absolute top-[calc(100%+16px)] right-0 md:-right-4 w-full md:w-[420px] bg-white rounded-3xl shadow-xl border border-gray-100 p-6 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-[15px] font-bold text-gray-800 ml-4">2026</span>
-                {selectedDates.length > 0 && (
+          {activeTab === "dates" && (() => {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const monthName = MONTHS[currentMonth];
+
+            const handlePrevMonth = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (currentMonth === 0) {
+                setCurrentMonth(11);
+                setCurrentYear(prev => prev - 1);
+              } else {
+                setCurrentMonth(prev => prev - 1);
+              }
+            };
+
+            const handleNextMonth = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (currentMonth === 11) {
+                setCurrentMonth(0);
+                setCurrentYear(prev => prev + 1);
+              } else {
+                setCurrentMonth(prev => prev + 1);
+              }
+            };
+
+            const calendarCells = [];
+            // Offset blank cells
+            for (let i = 0; i < firstDayIndex; i++) {
+              calendarCells.push(<div key={`empty-${i}`} className="w-9 h-9" />);
+            }
+            // Real days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+              const dateObj = new Date(currentYear, currentMonth, day);
+              const isStart = startDate && dateObj.toDateString() === startDate.toDateString();
+              const isEnd = endDate && dateObj.toDateString() === endDate.toDateString();
+              const isSelected = isStart || isEnd;
+              const isBetween = startDate && endDate && dateObj > startDate && dateObj < endDate;
+              
+              calendarCells.push(
+                <button
+                  key={`day-${day}`}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleDateClick(day); }}
+                  className={`w-9 h-9 text-xs font-bold rounded-full transition-all flex items-center justify-center ${
+                    isSelected 
+                      ? 'bg-[#a0f212] text-black shadow-md shadow-[#a0f212]/20 font-black' 
+                      : isBetween
+                        ? 'bg-[#a0f212]/20 text-black hover:bg-[#a0f212]/30'
+                        : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            }
+
+            return (
+              <div className="absolute top-[calc(100%+16px)] right-0 md:-right-4 w-full md:w-[340px] bg-white rounded-3xl shadow-xl border border-gray-200 p-5 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center justify-between mb-4">
                   <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedDates([]); }}
-                    className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors mr-2"
+                    type="button" 
+                    onClick={handlePrevMonth}
+                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 font-bold"
                   >
-                    Clear dates
+                    &larr;
                   </button>
+                  <span className="text-[14px] font-bold text-gray-800">{monthName} {currentYear}</span>
+                  <button 
+                    type="button" 
+                    onClick={handleNextMonth}
+                    className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 font-bold"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarCells}
+                </div>
+
+                {startDate && (
+                  <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setStartDate(null); setEndDate(null); }}
+                      className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+                    >
+                      Clear Dates
+                    </button>
+                  </div>
                 )}
               </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                {MONTHS.map((month) => {
-                  const isActive = selectedDates.includes(month);
-                  return (
-                    <button 
-                      key={month} 
-                      onClick={(e) => { e.stopPropagation(); toggleDate(month); }}
-                      className={`text-[13px] py-3 px-2 rounded-xl font-bold transition-all ${
-                        isActive 
-                          ? 'bg-gray-900 text-white shadow-[0_2px_10px_rgba(0,0,0,0.2)] border border-gray-900' 
-                          : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600'
-                      }`}
-                    >
-                      {month}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Search Button */}
@@ -329,9 +421,10 @@ export default function AdvancedSearchBar() {
             e.stopPropagation();
             handleSearch();
           }}
-          className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-[#a0f212] hover:bg-[#8ac90c] text-black flex items-center justify-center transition-all ml-2 mr-1 flex-shrink-0 shadow-md focus:outline-none focus:ring-4 focus:ring-[#a0f212]/30 active:scale-95"
+          className="w-full md:w-16 h-12 md:h-16 rounded-2xl md:rounded-full bg-[#a0f212] hover:bg-[#8ac90c] text-black flex items-center justify-center gap-2 transition-all md:ml-2 md:mr-1 flex-shrink-0 shadow-md focus:outline-none focus:ring-4 focus:ring-[#a0f212]/30 active:scale-95 font-bold text-sm"
         >
-          <Search className="w-6 h-6 stroke-[2.5]" />
+          <Search className="w-5 h-5 md:w-6 md:h-6 stroke-[2.5]" />
+          <span className="md:hidden">Search</span>
         </button>
 
       </div>

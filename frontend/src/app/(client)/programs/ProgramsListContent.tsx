@@ -243,13 +243,27 @@ export default function ProgramsListContent() {
     const matchesLocation = !location || location === "Anywhere" || eventLocation.toLowerCase().includes(location.toLowerCase());
     let matchesDates = true;
     if (dates) {
-      const selectedMonths = dates.split(",");
-      const eventDate = new Date(prog.startTime);
-      if (!isNaN(eventDate.getTime())) {
-        const eventMonth = eventDate.toLocaleString("default", { month: "long" });
-        matchesDates = selectedMonths.includes(eventMonth);
+      if (dates.startsWith("range:")) {
+        const [startStr, endStr] = dates.replace("range:", "").split("_");
+        const startDate = new Date(startStr);
+        const endDate = new Date(endStr);
+        // Set end of day for the end boundary
+        endDate.setHours(23, 59, 59, 999);
+        const eventDate = new Date(prog.startTime);
+        if (!isNaN(eventDate.getTime())) {
+          matchesDates = eventDate >= startDate && eventDate <= endDate;
+        } else {
+          matchesDates = false;
+        }
       } else {
-        matchesDates = false;
+        const selectedMonths = dates.split(",");
+        const eventDate = new Date(prog.startTime);
+        if (!isNaN(eventDate.getTime())) {
+          const eventMonth = eventDate.toLocaleString("default", { month: "long" });
+          matchesDates = selectedMonths.includes(eventMonth);
+        } else {
+          matchesDates = false;
+        }
       }
     }
     const price = prog.price || prog.venueDetails?.price || 0;
