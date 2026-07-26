@@ -168,7 +168,7 @@ export default function HostLayout({
   const shouldBlock = !isKycApproved && isRestrictedPath;
 
   return (
-    <div className="flex min-h-screen bg-[#9ea99f] dark:bg-[#121614] p-4 lg:p-6 gap-6 font-sans selection:bg-[#a0f212]/30 text-[#0b0c01]">
+    <div className="flex min-h-screen bg-[#9ea99f] dark:bg-[#121614]  lg:p-6 gap-6 font-sans selection:bg-[#a0f212]/30 text-[#0b0c01]">
 
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:block w-72 shrink-0 h-[calc(100vh-48px)] sticky top-6 z-40 rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
@@ -176,7 +176,7 @@ export default function HostLayout({
       </aside>
 
       {/* Main content body */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-background rounded-[40px] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden h-[calc(100vh-48px)] relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-background lg:rounded-[30px] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden h-[calc(100vh-48px)] relative">
 
         {/* Subtle background flair */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#a0f212]/5 rounded-full blur-[100px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
