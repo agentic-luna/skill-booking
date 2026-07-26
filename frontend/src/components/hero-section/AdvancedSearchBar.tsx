@@ -69,10 +69,9 @@ export default function AdvancedSearchBar() {
     });
 
     const presets = [
-      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kochi", 
+      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", 
       "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", 
-      "Pathanamthitta", "Thiruvananthapuram", "Trivandrum", "Thrissur", 
-      "Wayanad", "Online"
+      "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad", "Online"
     ];
     presets.forEach(p => {
       if (!Array.from(locs).some(c => c.toLowerCase() === p.toLowerCase())) {

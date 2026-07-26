@@ -240,7 +240,20 @@ export default function ProgramsListContent() {
       trainerName.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category.toLowerCase();
     const eventLocation = prog.mode === "ONLINE" ? "Online" : prog.venueDetails?.city || prog.venueDetails?.address || "In Person";
-    const matchesLocation = !location || location === "Anywhere" || eventLocation.toLowerCase().includes(location.toLowerCase());
+    let matchesLocation = !location || location === "Anywhere";
+    if (!matchesLocation && location) {
+      const locLower = location.toLowerCase();
+      const eventLocLower = eventLocation.toLowerCase();
+      if (locLower === "ernakulam") {
+        matchesLocation = eventLocLower.includes("ernakulam") || eventLocLower.includes("kochi");
+      } else if (locLower === "thiruvananthapuram") {
+        matchesLocation = eventLocLower.includes("thiruvananthapuram") || eventLocLower.includes("trivandrum");
+      } else if (locLower === "kozhikode") {
+        matchesLocation = eventLocLower.includes("kozhikode") || eventLocLower.includes("calicut");
+      } else {
+        matchesLocation = eventLocLower.includes(locLower);
+      }
+    }
     let matchesDates = true;
     if (dates) {
       if (dates.startsWith("range:")) {
