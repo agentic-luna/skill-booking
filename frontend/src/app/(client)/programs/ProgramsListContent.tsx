@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  Search, SlidersHorizontal, LayoutGrid, List, X, Star, Clock, MapPin, 
+import {
+  Search, SlidersHorizontal, LayoutGrid, List, X, Star, Clock, MapPin,
   ChevronRight, Calendar, AlertCircle, RefreshCw, User
 } from "lucide-react";
 
@@ -42,7 +42,7 @@ const FilterSidebar = React.memo(function FilterSidebar({
     <div className="space-y-6">
       {/* Category Select */}
       <div className="space-y-3">
-        <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Categories</label>
+        <label className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">Categories</label>
         <div className="space-y-1.5 pt-1">
           {categoriesList.map((cat) => {
             const isActive = category === cat.value;
@@ -53,11 +53,10 @@ const FilterSidebar = React.memo(function FilterSidebar({
                   setCategory(cat.value);
                   router.push(`/programs?category=${cat.value}`);
                 }}
-                className={`group flex items-center w-full justify-between text-left text-sm py-2 px-3 rounded-xl transition-colors duration-200 ${
-                  isActive
-                    ? "bg-[#a0f212]/20 text-foreground font-bold shadow-[inset_3px_0_0_0_#a0f212]"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                }`}
+                className={`group flex items-center w-full justify-between text-left text-sm py-2 px-3 rounded-xl transition-colors duration-200 ${isActive
+                  ? "bg-[#a0f212]/10 text-[#a0f212] font-bold shadow-[inset_3px_0_0_0_#a0f212]"
+                  : "text-white/70 hover:bg-white/5 hover:text-white"
+                  }`}
               >
                 <span className="truncate">{cat.name}</span>
                 <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-300 ${isActive ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 group-hover:opacity-40 group-hover:translate-x-0"}`} />
@@ -70,8 +69,8 @@ const FilterSidebar = React.memo(function FilterSidebar({
       {/* Price Slider */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-end">
-          <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Max Ticket Price</label>
-          <span className="font-extrabold text-[#0b0c01]">{localMaxPrice === 0 ? "Any Price" : `₹${localMaxPrice}`}</span>
+          <label className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">Max Ticket Price</label>
+          <span className="font-extrabold text-white">{localMaxPrice === 0 ? "Any Price" : `₹${localMaxPrice}`}</span>
         </div>
         <div className="pt-2">
           <input
@@ -84,9 +83,9 @@ const FilterSidebar = React.memo(function FilterSidebar({
             onMouseUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
             onTouchEnd={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
             onKeyUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
-            className="w-full accent-primary h-1.5 bg-muted rounded-full appearance-none cursor-pointer focus:outline-none"
+            className="w-full accent-[#a0f212] h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer focus:outline-none"
           />
-          <div className="flex justify-between text-[10px] font-semibold text-muted-foreground mt-2">
+          <div className="flex justify-between text-[10px] font-semibold text-white/40 mt-2">
             <span>₹0</span>
             <span>₹200</span>
           </div>
@@ -95,7 +94,7 @@ const FilterSidebar = React.memo(function FilterSidebar({
 
       {/* Minimum Rating */}
       <div className="space-y-3 pt-2">
-        <label className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/80">Rating</label>
+        <label className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">Rating</label>
         <div className="space-y-1.5">
           {[
             { label: "Any Rating", value: 0 },
@@ -105,12 +104,11 @@ const FilterSidebar = React.memo(function FilterSidebar({
             <button
               key={item.value}
               onClick={() => setMinRating(item.value)}
-              className={`flex items-center space-x-3 text-sm w-full text-left py-1.5 px-2 rounded-xl transition-all ${
-                minRating === item.value ? "text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`flex items-center space-x-3 text-sm w-full text-left py-1.5 px-2 rounded-xl transition-all ${minRating === item.value ? "text-[#a0f212] font-bold" : "text-white/70 hover:text-white"
+                }`}
             >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center p-0.5 transition-colors ${minRating === item.value ? "border-primary" : "border-muted-foreground/30"}`}>
-                {minRating === item.value && <div className="w-2 h-2 bg-primary rounded-full animate-in zoom-in duration-200" />}
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center p-0.5 transition-colors ${minRating === item.value ? "border-[#a0f212]" : "border-white/30"}`}>
+                {minRating === item.value && <div className="w-2 h-2 bg-[#a0f212] rounded-full animate-in zoom-in duration-200" />}
               </div>
               <span>{item.label}</span>
             </button>
@@ -119,16 +117,16 @@ const FilterSidebar = React.memo(function FilterSidebar({
       </div>
 
       {/* Hide Fully Booked Toggle */}
-      <div className="flex items-center justify-between pt-6 border-t border-border/40">
+      <div className="flex items-center justify-between pt-6 border-t border-white/10">
         <div className="flex flex-col space-y-1 pr-4">
-          <span className="text-xs font-bold text-foreground">Available Only</span>
-          <span className="text-[10px] text-muted-foreground leading-tight">Hide fully booked sessions</span>
+          <span className="text-xs font-bold text-white">Available Only</span>
+          <span className="text-[10px] text-white/50 leading-tight">Hide fully booked sessions</span>
         </div>
-        <Switch checked={hideFull} onCheckedChange={setHideFull} className="data-[state=checked]:bg-primary" />
+        <Switch checked={hideFull} onCheckedChange={setHideFull} className="data-[state=checked]:bg-[#a0f212]" />
       </div>
 
       {/* Reset Button */}
-      <Button variant="outline" className="w-full h-11 text-xs font-bold rounded-xl border-[#0b0c01]/20 text-[#0b0c01] hover:bg-[#0b0c01] hover:text-white transition-all shadow-sm" onClick={handleResetFilters}>
+      <Button variant="outline" className="w-full h-11 text-xs font-bold rounded-xl border-white/10 text-white hover:bg-white/5 hover:text-white transition-all shadow-sm" onClick={handleResetFilters}>
         <RefreshCw className="mr-2 h-3.5 w-3.5" /> Clear All Filters
       </Button>
     </div>
@@ -208,7 +206,7 @@ export default function ProgramsListContent() {
   // Filtering calculations
   const filteredPrograms = events.filter((prog) => {
     if (prog.status !== "APPROVED") return false;
-    
+
     // Filter out past events
     const isFuture = new Date(prog.startTime) >= new Date();
     if (!isFuture) return false;
@@ -270,13 +268,13 @@ export default function ProgramsListContent() {
         {/* Ambient background glows */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a0f212]/20 rounded-full blur-[100px] pointer-events-none transform -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-1/4 w-[30rem] h-[30rem] bg-[#a0f212]/10 rounded-full blur-[120px] pointer-events-none transform translate-y-1/3"></div>
-        
+
         {/* Subtle grid pattern for texture */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col items-center text-center space-y-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight max-w-3xl">
-            Find Your Next <br className="hidden md:block"/> 
+            Find Your Next <br className="hidden md:block" />
             <CanvasText
               text="Expert Workshop"
               backgroundClassName="bg-white"
@@ -301,10 +299,10 @@ export default function ProgramsListContent() {
 
       {/* Main Content Area */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-        
+
         {/* Action Bar (Sorting & Layout) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white/80 backdrop-blur-xl border border-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-4">
-          
+
           {/* Search Input in Action Bar */}
           <div className="relative group w-full flex-1">
             <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground group-focus-within:text-[#0b0c01] transition-colors" />
@@ -363,7 +361,7 @@ export default function ProgramsListContent() {
 
         {/* Master Content Layout Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pt-8">
-          
+
           {/* Sidebar filters (Desktop only) */}
           <aside className="hidden md:block md:col-span-3 lg:col-span-3">
             <div className="bg-white/70 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 rounded-[2rem] h-fit sticky top-6">
@@ -394,7 +392,7 @@ export default function ProgramsListContent() {
                   {sortedPrograms.map((prog) => {
                     const instructorName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
                     const price = prog.price || prog.venueDetails?.price || 0;
-                    
+
                     return (
                       <Link
                         key={prog.id}
@@ -409,7 +407,7 @@ export default function ProgramsListContent() {
                           />
                           {/* Elegant Glassmorphic Overlay Gradient */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                          
+
                           {/* Premium Glass Badge */}
                           <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
                             {prog.category || "General"}
@@ -532,16 +530,16 @@ export default function ProgramsListContent() {
 
       {/* MOBILE DRAWER FILTERS SHEET */}
       {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end md:hidden">
+        <div className="fixed inset-0 z-[120] flex justify-end md:hidden">
           {/* Overlay background */}
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setMobileFiltersOpen(false)} />
-          
+
           {/* Drawer sheet panel */}
-          <div className="relative w-80 bg-background/95 backdrop-blur-xl h-full p-6 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300 border-l border-white/20">
+          <div className="relative w-80 bg-[#0d1e17]/95 backdrop-blur-xl h-full p-6 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300 border-l border-white/10">
             <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-border/40">
-                <h3 className="font-extrabold text-lg text-foreground flex items-center"><SlidersHorizontal className="mr-2 h-5 w-5" /> Filters</h3>
-                <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-muted-foreground hover:bg-muted/80 rounded-xl transition-colors"><X className="h-5 w-5" /></button>
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <h3 className="font-extrabold text-lg text-white flex items-center"><SlidersHorizontal className="mr-2 h-5 w-5 text-[#a0f212]" /> Filters</h3>
+                <button onClick={() => setMobileFiltersOpen(false)} className="p-2 text-white/70 hover:bg-white/10 hover:text-white rounded-xl transition-colors"><X className="h-5 w-5" /></button>
               </div>
               <FilterSidebar
                 category={category}
@@ -559,9 +557,9 @@ export default function ProgramsListContent() {
                 sortedCount={sortedPrograms.length}
               />
             </div>
-            
-            <div className="pt-6 border-t border-border/40 mt-6 sticky bottom-0 bg-background pb-2">
-              <Button className="w-full rounded-xl h-12 font-bold bg-[#0b0c01] text-white shadow-lg" onClick={() => setMobileFiltersOpen(false)}>
+
+            <div className="pt-6 border-t border-white/10 mt-6 sticky bottom-0 bg-[#0d1e17]/85 backdrop-blur-md pb-2">
+              <Button className="w-full rounded-xl h-12 font-bold bg-[#a0f212] text-black hover:bg-[#8ac90c] shadow-lg shadow-[#a0f212]/20" onClick={() => setMobileFiltersOpen(false)}>
                 Show {sortedPrograms.length} Results
               </Button>
             </div>
