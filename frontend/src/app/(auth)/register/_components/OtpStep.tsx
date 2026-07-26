@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { Loader2, Sparkles, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ interface OtpStepProps {
   description: string;
   isLoading: boolean;
   error: string | null;
+  devOtp?: string;
   onSubmit: (otp: string) => Promise<void>;
   onResend: () => void;
   /** DEV ONLY — auto-fills the inputs when set */
@@ -24,18 +25,20 @@ export default function OtpStep({
   description,
   isLoading,
   error,
+  devOtp,
   onSubmit,
   onResend,
   devOtp,
 }: OtpStepProps) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
+  const [copied, setCopied] = useState(false);
 
-  // DEV ONLY: auto-fill digits whenever devOtp arrives or changes
-  useEffect(() => {
-    if (devOtp && devOtp.length === 6) {
-      setDigits(devOtp.split(""));
-    }
-  }, [devOtp]);
+  const handleCopy = () => {
+    if (!devOtp) return;
+    navigator.clipboard.writeText(devOtp);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleChange = (index: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -54,6 +57,24 @@ export default function OtpStep({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text");
+    const cleanDigits = pastedData.replace(/\D/g, "").slice(0, 6).split("");
+    if (cleanDigits.length === 0) return;
+
+    const next = [...digits];
+    for (let i = 0; i < 6; i++) {
+      if (cleanDigits[i] !== undefined) {
+        next[i] = cleanDigits[i];
+      }
+    }
+    setDigits(next);
+
+    const targetIndex = Math.min(cleanDigits.length, 5);
+    document.getElementById(`${idPrefix}-${targetIndex}`)?.focus();
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otp = digits.join("");
@@ -67,6 +88,39 @@ export default function OtpStep({
         <h2 className="text-xl font-bold tracking-tight text-foreground">{title}</h2>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
+
+      {devOtp && (
+        <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex items-center gap-2 text-xs font-semibold text-primary mb-2">
+            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+            <span>Development Mode OTP Code</span>
+          </div>
+          <div className="flex items-center justify-between bg-background/50 px-3 py-2 rounded-lg border border-border/50">
+            <code className="text-xl font-mono font-bold tracking-widest text-foreground">
+              {devOtp}
+            </code>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCopy}
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                  <span className="text-green-500 font-semibold">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  <span>Copy</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="p-3 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 rounded-xl border border-red-500/30 animate-pulse flex items-center gap-2">
@@ -88,6 +142,7 @@ export default function OtpStep({
                 value={d}
                 onChange={(e) => handleChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
+                onPaste={handlePaste}
                 className="w-10 h-12 text-center text-lg font-bold p-0 rounded-lg focus-visible:ring-2 focus-visible:ring-primary"
                 disabled={isLoading}
               />

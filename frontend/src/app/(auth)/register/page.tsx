@@ -31,7 +31,7 @@ export default function RegisterPage() {
   const [activeTab, setActiveTab] = useState<"client" | "host">(defaultTab);
 
   const { startRegistration, verifyEmailOtp, verifyPhoneOtpAndSignup, clientSendOtp, clientSignup, pendingRegistration, isLoading, error, clearError } = useAuthStore();
-  
+
   // Host state
   const [hostStep, setHostStep] = useState<0 | 1 | 2>(0);
   const [hostPasswordValue, setHostPasswordValue] = useState("");
@@ -40,11 +40,7 @@ export default function RegisterPage() {
   const [clientStep, setClientStep] = useState<0 | 1>(0);
   const [clientPasswordValue, setClientPasswordValue] = useState("");
   const [clientPendingData, setClientPendingData] = useState<ClientInfoFormValues | null>(null);
-  const [clientDevOtp, setClientDevOtp] = useState<string | undefined>();
-
-  // Host OTP dev auto-fill
-  const [hostEmailDevOtp, setHostEmailDevOtp] = useState<string | undefined>();
-  const [hostPhoneDevOtp, setHostPhoneDevOtp] = useState<string | undefined>();
+  const [clientDevOtp, setClientDevOtp] = useState<string | undefined>(undefined);
 
   // Forms
   const { register: registerHost, handleSubmit: handleSubmitHost, setValue: setValueHost, watch: watchHost, formState: { errors: errorsHost } } = useForm<HostInfoFormValues>({
@@ -81,12 +77,12 @@ export default function RegisterPage() {
   const onClientInfoSubmit = async (data: ClientInfoFormValues) => {
     try {
       const res = await clientSendOtp(data.phone);
-      setClientDevOtp(res?.devOtp);
+      setClientDevOtp(res?.data?.devOtp || res?.devOtp);
       setClientPendingData(data);
       setClientStep(1);
     } catch { /* error set in store */ }
   };
-  
+
   const onClientPhoneOtpSubmit = async (otp: string) => {
     if (!clientPendingData) return;
     try {
@@ -144,7 +140,7 @@ export default function RegisterPage() {
                     {errorsClient.lastName && <p className="text-xs text-destructive">{errorsClient.lastName.message}</p>}
                   </div>
                 </div>
-                
+
                 <PhoneInputWithCountry
                   id="c-phone"
                   value={watchClient("phone") || "+91"}
@@ -159,17 +155,17 @@ export default function RegisterPage() {
                   <Label htmlFor="c-password">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="c-password" 
-                      placeholder="••••••••" 
-                      type="password" 
-                      className="pl-10 pr-10" 
-                      {...registerClient("password")} 
+                    <Input
+                      id="c-password"
+                      placeholder="••••••••"
+                      type="password"
+                      className="pl-10 pr-10"
+                      {...registerClient("password")}
                       onChange={(e) => {
                         registerClient("password").onChange(e);
                         setClientPasswordValue(e.target.value);
                       }}
-                      disabled={isLoading} 
+                      disabled={isLoading}
                     />
                   </div>
                   {errorsClient.password && <p className="text-xs text-red-500 font-semibold">{errorsClient.password.message}</p>}
@@ -189,15 +185,22 @@ export default function RegisterPage() {
               <button type="button" onClick={() => { clearError(); setClientStep(0); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
-              <OtpStep 
-                idPrefix="client-reg-phone-otp" 
-                title="Verify your WhatsApp" 
-                description={`We sent a 6-digit code to ${clientPendingData?.phone ?? "your phone"}`} 
-                isLoading={isLoading} 
-                error={error} 
-                onSubmit={onClientPhoneOtpSubmit}
+              <OtpStep
+                idPrefix="client-reg-phone-otp"
+                title="Verify your WhatsApp"
+                description={`We sent a 6-digit code to ${clientPendingData?.phone ?? "your phone"}`}
+                isLoading={isLoading}
+                error={error}
                 devOtp={clientDevOtp}
-                onResend={async () => { if (clientPendingData) { const r = await clientSendOtp(clientPendingData.phone).catch(() => undefined); setClientDevOtp((r as any)?.devOtp); } }}
+                onSubmit={onClientPhoneOtpSubmit}
+                onResend={async () => {
+                  if (clientPendingData) {
+                    try {
+                      const res = await clientSendOtp(clientPendingData.phone);
+                      setClientDevOtp(res?.data?.devOtp || res?.devOtp);
+                    } catch { }
+                  }
+                }}
               />
             </>
           )}
@@ -245,17 +248,17 @@ export default function RegisterPage() {
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="password" 
-                      placeholder="••••••••" 
-                      type="password" 
-                      className="pl-10 pr-10" 
-                      {...registerHost("password")} 
+                    <Input
+                      id="password"
+                      placeholder="••••••••"
+                      type="password"
+                      className="pl-10 pr-10"
+                      {...registerHost("password")}
                       onChange={(e) => {
                         registerHost("password").onChange(e);
                         setHostPasswordValue(e.target.value);
                       }}
-                      disabled={isLoading} 
+                      disabled={isLoading}
                     />
                   </div>
                   {errorsHost.password && <p className="text-xs text-red-500 font-semibold">{errorsHost.password.message}</p>}
@@ -275,7 +278,27 @@ export default function RegisterPage() {
               <button type="button" onClick={() => { clearError(); setHostStep(0); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
-              <OtpStep idPrefix="reg-email-otp" title="Verify your email" description={`We sent a 6-digit code to ${pendingRegistration?.email ?? "your email"}`} isLoading={isLoading} error={error} onSubmit={onHostEmailOtpSubmit} devOtp={hostEmailDevOtp} onResend={async () => { if (pendingRegistration) { const r = await sendOtp(pendingRegistration.email, "EMAIL").catch(() => undefined); setHostEmailDevOtp((r as any)?.devOtp); } }} />
+              <OtpStep
+                idPrefix="reg-email-otp"
+                title="Verify your email"
+                description={`We sent a 6-digit code to ${pendingRegistration?.email ?? "your email"}`}
+                isLoading={isLoading}
+                error={error}
+                devOtp={pendingRegistration?.devEmailOtp}
+                onSubmit={onHostEmailOtpSubmit}
+                onResend={async () => {
+                  if (pendingRegistration) {
+                    try {
+                      const res = await sendOtp(pendingRegistration.email, "EMAIL");
+                      useAuthStore.setState((s) => ({
+                        pendingRegistration: s.pendingRegistration
+                          ? { ...s.pendingRegistration, devEmailOtp: (res as any).data?.devOtp || res.devOtp }
+                          : null
+                      }));
+                    } catch { }
+                  }
+                }}
+              />
             </>
           )}
 
@@ -284,7 +307,27 @@ export default function RegisterPage() {
               <button type="button" onClick={() => { clearError(); setHostStep(1); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
-              <OtpStep idPrefix="reg-phone-otp" title="Verify your phone" description={`We sent a 6-digit code to ${pendingRegistration?.phone ?? "your phone"}`} isLoading={isLoading} error={error} onSubmit={onHostPhoneOtpSubmit} devOtp={hostPhoneDevOtp} onResend={async () => { if (pendingRegistration) { const r = await sendOtp(pendingRegistration.phone, "PHONE").catch(() => undefined); setHostPhoneDevOtp((r as any)?.devOtp); } }} />
+              <OtpStep
+                idPrefix="reg-phone-otp"
+                title="Verify your phone"
+                description={`We sent a 6-digit code to ${pendingRegistration?.phone ?? "your phone"}`}
+                isLoading={isLoading}
+                error={error}
+                devOtp={pendingRegistration?.devPhoneOtp}
+                onSubmit={onHostPhoneOtpSubmit}
+                onResend={async () => {
+                  if (pendingRegistration) {
+                    try {
+                      const res = await sendOtp(pendingRegistration.phone, "PHONE");
+                      useAuthStore.setState((s) => ({
+                        pendingRegistration: s.pendingRegistration
+                          ? { ...s.pendingRegistration, devPhoneOtp: (res as any).data?.devOtp || res.devOtp }
+                          : null
+                      }));
+                    } catch { }
+                  }
+                }}
+              />
             </>
           )}
         </TabsContent>

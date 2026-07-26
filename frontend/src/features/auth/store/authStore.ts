@@ -26,7 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const [emailRes, phoneRes] = await Promise.all([
         authApi.sendOtp(email, "EMAIL"),
-        authApi.sendOtp(phone, "PHONE"),
+        authApi.sendOtp(phone, "PHONE")
       ]);
       set({
         pendingRegistration: {
@@ -34,9 +34,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           role: role.toUpperCase() as "CLIENT" | "HOST",
           emailOtpSent: true, phoneOtpSent: true,
           emailVerified: false, phoneVerified: false,
-          // DEV ONLY: auto-fill OTP from backend response
-          devEmailOtp: emailRes.devOtp,
-          devPhoneOtp: phoneRes.devOtp,
+          devEmailOtp: (emailRes as any).data?.devOtp || emailRes.devOtp,
+          devPhoneOtp: (phoneRes as any).data?.devOtp || phoneRes.devOtp,
         },
         isVerifying: true,
         isLoading: false,
@@ -337,7 +336,7 @@ export const initAuth = async () => {
             saveSession(fullUser);
             useAuthStore.setState({ user: fullUser });
           }
-        }).catch(() => {});
+        }).catch(() => { });
       }
     } else {
       // Fetch user from backend if both session and JWT decoding failed

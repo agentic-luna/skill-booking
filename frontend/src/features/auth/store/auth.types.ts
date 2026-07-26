@@ -45,9 +45,7 @@ export interface PendingRegistration {
   phoneOtpSent: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
-  /** DEV ONLY — returned by backend in development/test mode */
   devEmailOtp?: string;
-  /** DEV ONLY — returned by backend in development/test mode */
   devPhoneOtp?: string;
 }
 
