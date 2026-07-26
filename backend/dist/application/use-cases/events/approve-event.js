@@ -38,21 +38,15 @@ class ApproveEventCommandHandler {
             finalValue = platformValue;
         }
         else {
-            if (event.commission) {
-                finalType = event.commission.commissionType;
-                finalValue = Number(event.commission.platformValue);
+            try {
+                const setting = await this.configRepo.findPlatformSetting('commissionRate');
+                const parsed = (0, commission_parser_1.parseCommissionRate)(setting?.value);
+                finalType = parsed.commissionType;
+                finalValue = parsed.platformValue;
             }
-            else {
-                try {
-                    const setting = await this.configRepo.findPlatformSetting('commissionRate');
-                    const parsed = (0, commission_parser_1.parseCommissionRate)(setting?.value);
-                    finalType = parsed.commissionType;
-                    finalValue = parsed.platformValue;
-                }
-                catch (err) {
-                    finalType = client_1.CommissionType.PERCENTAGE;
-                    finalValue = 15;
-                }
+            catch (err) {
+                finalType = client_1.CommissionType.PERCENTAGE;
+                finalValue = 15;
             }
         }
         const commission = await this.eventRepo.upsertCommission(eventId, finalType, finalValue);
