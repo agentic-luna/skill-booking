@@ -70,7 +70,7 @@ export default function HostLayout({
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#0d1e17] text-white p-6 justify-between">
+    <div className="flex flex-col h-full bg-[#0d1e17] text-white p-6 justify-between overflow-y-auto [&::-webkit-scrollbar]:hidden">
       <div className="space-y-10">
 
         {/* Logo */}
