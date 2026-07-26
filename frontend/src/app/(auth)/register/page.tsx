@@ -57,9 +57,6 @@ export default function RegisterPage() {
   const onHostInfoSubmit = async (data: HostInfoFormValues) => {
     try {
       await startRegistration({ ...data, role: "host" });
-      // DEV: devEmailOtp / devPhoneOtp are now stored in pendingRegistration by the store
-      setHostEmailDevOtp(useAuthStore.getState().pendingRegistration?.devEmailOtp);
-      setHostPhoneDevOtp(useAuthStore.getState().pendingRegistration?.devPhoneOtp);
       setHostStep(1);
     } catch { /* error set in store */ }
   };

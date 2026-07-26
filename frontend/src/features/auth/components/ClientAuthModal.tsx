@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import { 
-  Lock, Phone, Mail, User, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles, AlertCircle, AlertTriangle, LogIn, UserPlus 
+import React, { useState } from "react";
+import {
+  Lock, Phone, Mail, User, Eye, EyeOff, Loader2, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles, AlertCircle, AlertTriangle, LogIn, UserPlus, Copy, Check
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
@@ -10,8 +10,8 @@ import { useClientEmailModalStore } from "@/features/auth/store/clientEmailModal
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Dialog, DialogContent, DialogTitle, DialogDescription 
+import {
+  Dialog, DialogContent, DialogTitle, DialogDescription
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PhoneInputWithCountry from "@/components/common/PhoneInputWithCountry";
@@ -32,9 +32,19 @@ export default function ClientAuthModal({
   defaultTab,
 }: ClientAuthModalProps) {
   const { login, clientSendOtp, clientSignup, isLoading, error, clearError } = useAuthStore();
-  
+
   // Connect to Zustand store
   const store = useClientAuthModalStore();
+
+  const [devOtp, setDevOtp] = useState<string | undefined>(undefined);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!devOtp) return;
+    navigator.clipboard.writeText(devOtp);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const isControlled = propOpen !== undefined;
   const isOpen = isControlled ? propOpen : store.isOpen;
@@ -91,6 +101,7 @@ export default function ClientAuthModal({
 
     try {
       const res = await clientSendOtp(store.phone);
+      setDevOtp(res?.data?.devOtp || res?.devOtp);
       store.setLocalMessage(res.message || "OTP code sent to your WhatsApp number.");
       store.setSignupStep(2);
     } catch {
@@ -130,6 +141,7 @@ export default function ClientAuthModal({
     store.setLocalMessage(null);
     try {
       const res = await clientSendOtp(store.phone);
+      setDevOtp(res?.data?.devOtp || res?.devOtp);
       store.setLocalMessage(res.message || "A new OTP code has been sent.");
     } catch {
       // Error in store
@@ -139,15 +151,15 @@ export default function ClientAuthModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border border-border/40 shadow-2xl bg-background">
-        
+
         {/* Modal Header */}
         <div className="p-6 pb-2">
           <DialogTitle className="text-xl font-bold text-gray-900">
             {activeTab === "login" ? "Sign in to book" : "Create an account"}
           </DialogTitle>
           <DialogDescription className="text-sm mt-1">
-            {activeTab === "login" 
-              ? "Enter your details below to continue." 
+            {activeTab === "login"
+              ? "Enter your details below to continue."
               : "Enter your details below to set up your profile."}
           </DialogDescription>
         </div>
@@ -225,9 +237,9 @@ export default function ClientAuthModal({
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-2" 
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-2"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -308,9 +320,9 @@ export default function ClientAuthModal({
                     <PasswordStrengthMeter password={store.signupPassword} />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-3" 
+                  <Button
+                    type="submit"
+                    className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-3"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -323,9 +335,9 @@ export default function ClientAuthModal({
               ) : (
                 /* Step 2: Enter OTP & Complete Signup */
                 <form onSubmit={handleCompleteSignup} className="space-y-4">
-                  <button 
-                    type="button" 
-                    onClick={() => store.setSignupStep(1)} 
+                  <button
+                    type="button"
+                    onClick={() => store.setSignupStep(1)}
                     className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground mb-1"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" /> Back to details
@@ -340,16 +352,52 @@ export default function ClientAuthModal({
                     </p>
                   </div>
 
+                  {devOtp && (
+                    <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-primary mb-2">
+                        <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                        <span>Development Mode OTP Code</span>
+                      </div>
+                      <div className="flex items-center justify-between bg-background/50 px-3 py-2 rounded-lg border border-border/50">
+                        <code className="text-xl font-mono font-bold tracking-widest text-foreground">
+                          {devOtp}
+                        </code>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCopy}
+                          className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+                        >
+                          {copied ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 text-green-500" />
+                              <span className="text-green-500 font-semibold">Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3.5 w-3.5" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-1.5">
                     <Label htmlFor="modal-otp" className="text-xs font-bold">6-Digit OTP Code</Label>
                     <Input
                       id="modal-otp"
-                      placeholder="123456"
+                      placeholder=""
                       type="text"
                       maxLength={6}
                       className="h-12 text-center text-lg font-black tracking-widest rounded-xl"
                       value={store.otp}
-                      onChange={(e) => store.setOtp(e.target.value)}
+                      onChange={(e) => {
+                        const clean = e.target.value.replace(/\D/g, "").slice(0, 6);
+                        store.setOtp(clean);
+                      }}
                       disabled={isLoading}
                       required
                     />
@@ -357,9 +405,9 @@ export default function ClientAuthModal({
 
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Didn&apos;t receive code?</span>
-                    <button 
-                      type="button" 
-                      onClick={handleResendOtp} 
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
                       className="font-bold text-[#a0f212] hover:underline"
                       disabled={isLoading}
                     >
@@ -367,9 +415,9 @@ export default function ClientAuthModal({
                     </button>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm" 
+                  <Button
+                    type="submit"
+                    className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm"
                     disabled={isLoading}
                   >
                     {isLoading ? (

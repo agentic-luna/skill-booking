@@ -33,6 +33,7 @@ export function RegisterModal({ open, onOpenChange, onSuccess, onSwitchToLogin }
   const { startRegistration, verifyEmailOtp, verifyPhoneOtpAndSignup, pendingRegistration, isLoading, error, clearError } = useAuthStore();
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [selectedRole, setSelectedRole] = useState<"client" | "host">("client");
+  console.log('[RegisterModal] step:', step, 'pendingRegistration:', pendingRegistration);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<InfoFormValues>({
     resolver: zodResolver(infoSchema),

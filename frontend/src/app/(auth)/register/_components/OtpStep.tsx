@@ -15,8 +15,6 @@ interface OtpStepProps {
   devOtp?: string;
   onSubmit: (otp: string) => Promise<void>;
   onResend: () => void;
-  /** DEV ONLY — auto-fills the inputs when set */
-  devOtp?: string;
 }
 
 export default function OtpStep({
@@ -28,7 +26,6 @@ export default function OtpStep({
   devOtp,
   onSubmit,
   onResend,
-  devOtp,
 }: OtpStepProps) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [copied, setCopied] = useState(false);
