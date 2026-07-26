@@ -62,8 +62,8 @@ export default function RecentBookingsTable({ loading, bookings }: RecentBooking
                 </tr>
               ) : (
                 bookings.map((booking) => {
-                  const user = booking.client;
-                  const name = user ? `${user.firstName} ${user.lastName}` : "Unknown User";
+                  const clientUser = booking.client?.user;
+                  const name = clientUser ? `${clientUser.firstName} ${clientUser.lastName}` : "Unknown User";
                   const initial = name.charAt(0).toUpperCase();
                   const event = booking.event;
                   
@@ -79,7 +79,7 @@ export default function RecentBookingsTable({ loading, bookings }: RecentBooking
                           </div>
                           <div>
                             <div className="font-bold text-[#0b0c01]">{name}</div>
-                            <div className="text-xs text-muted-foreground font-medium">{user?.email || "No email"}</div>
+                            <div className="text-xs text-muted-foreground font-medium">{clientUser?.email || "No email"}</div>
                           </div>
                         </div>
                       </td>
