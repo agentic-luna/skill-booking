@@ -208,6 +208,11 @@ export default function ProgramsListContent() {
   // Filtering calculations
   const filteredPrograms = events.filter((prog) => {
     if (prog.status !== "APPROVED") return false;
+    
+    // Filter out past events
+    const isFuture = new Date(prog.startTime) >= new Date();
+    if (!isFuture) return false;
+
     const trainerName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
     const matchesSearch =
       prog.title.toLowerCase().includes(search.toLowerCase()) ||

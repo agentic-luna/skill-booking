@@ -251,7 +251,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-black/10 bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
+        <div className="md:hidden border-b border-black/10 bg-white px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-150">
 
           <div className="flex flex-col space-y-3">
             <Link

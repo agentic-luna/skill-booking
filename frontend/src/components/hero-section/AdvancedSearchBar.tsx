@@ -212,29 +212,28 @@ export default function AdvancedSearchBar() {
                 {categorySearchQuery.trim() === "" ? "OR BROWSE CATEGORIES" : "MATCHING CATEGORIES & SKILLS"}
               </div>
 
-              <div className="flex flex-col md:flex-row gap-6">
-                {categorySearchQuery.trim() === "" && (
-                  <div className="w-full md:w-1/3 flex flex-col gap-2 border-r border-gray-100 pr-4">
-                    {["Programming", "Design", "Marketing", "Business", "Music"].map(cat => (
+              <div className="flex flex-col gap-4">
+                <div className="w-full flex flex-wrap gap-2 max-h-[220px] overflow-y-auto custom-scrollbar">
+                  {categorySearchQuery.trim() === "" && ["Programming", "Design", "Marketing", "Business", "Music"].map((cat) => {
+                    if (filteredCategories.some(c => c.toLowerCase() === cat.toLowerCase())) return null; // Avoid duplicates
+                    return (
                       <span 
-                        key={cat}
+                        key={`preset-${cat}`}
                         onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
-                        className="text-[14px] font-bold text-gray-700 cursor-pointer hover:text-black hover:bg-gray-50 px-3 py-2 rounded-xl transition-all"
+                        className="text-[13px] font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-white hover:shadow-sm cursor-pointer px-4 py-2 rounded-full transition-all flex items-center justify-center text-center capitalize"
                       >
                         {cat}
                       </span>
-                    ))}
-                  </div>
-                )}
-                
-                <div className={`w-full ${categorySearchQuery.trim() === "" ? 'md:w-2/3' : 'w-full'} flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-2 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar`}>
+                    );
+                  })}
+
                   {filteredCategories.length > 0 && filteredCategories.map((cat) => {
                     const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
                     return (
                       <span 
                         key={`cat-${cat}`} 
                         onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(""); setActiveTab(null); }}
-                        className="text-[13px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-gray-50 hover:shadow-sm cursor-pointer px-4 py-2.5 rounded-xl transition-all flex items-center justify-center text-center capitalize"
+                        className="text-[13px] font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-white hover:shadow-sm cursor-pointer px-4 py-2 rounded-full transition-all flex items-center justify-center text-center capitalize"
                       >
                         {formattedCat}
                       </span>
@@ -254,16 +253,15 @@ export default function AdvancedSearchBar() {
                           e.stopPropagation(); 
                           setCategorySearchQuery(evt.title); 
                           setActiveTab(null); 
-                          // Optionally, directly navigate to the search with this title
                         }}
-                        className="text-[14px] text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer px-3 py-2 rounded-lg transition-colors flex items-center col-span-1 sm:col-span-2 line-clamp-1"
+                        className="text-[14px] text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer px-3 py-2 rounded-lg transition-colors flex items-center w-full line-clamp-1"
                       >
                         <Search className="w-4 h-4 mr-2 text-gray-400 shrink-0" /> <span className="truncate">{evt.title}</span>
                       </span>
                     ))}
 
                   {filteredCategories.length === 0 && (!events.some(evt => evt.status === "APPROVED" && (evt.title.toLowerCase().includes(categorySearchQuery.toLowerCase()) || (evt.description || "").toLowerCase().includes(categorySearchQuery.toLowerCase())))) && (
-                    <span className="text-[14px] text-gray-400 col-span-2 text-center py-4">No specific matches found. Press enter to search everywhere.</span>
+                    <span className="text-[14px] text-gray-400 w-full text-center py-4">No specific matches found. Press enter to search everywhere.</span>
                   )}
                 </div>
               </div>

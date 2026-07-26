@@ -274,7 +274,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
         
         {/* Back Link */}
-        <BackButton href="/programs" label="Back to explore" />
+        <BackButton href="/" label="Back to explore" />
 
         {/* Dynamic Detail layout columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

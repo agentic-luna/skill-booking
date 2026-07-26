@@ -9,10 +9,10 @@ interface LedgerKPIsProps {
 
 export default function LedgerKPIs({ financeLedger }: LedgerKPIsProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6 md:grid-flow-row-dense xl:grid-flow-row">
       
       {/* Card 1: Escrow Liabilities */}
-      <Card className="col-span-1 lg:col-span-3 border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md overflow-hidden relative transition-all duration-300">
+      <Card className="col-span-1 md:col-span-1 xl:col-span-3 border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md overflow-hidden relative transition-all duration-300">
         <div className="absolute -left-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full space-y-4">
           <div className="flex justify-between items-start">
@@ -29,7 +29,7 @@ export default function LedgerKPIs({ financeLedger }: LedgerKPIsProps) {
       </Card>
 
       {/* Card 2: Realized Earnings (Bento Highlight) */}
-      <Card className="col-span-1 lg:col-span-6 border-none bg-[#a0f212] rounded-[32px] shadow-[0_10px_30px_rgba(160,242,18,0.2)] hover:shadow-[0_15px_40px_rgba(160,242,18,0.4)] overflow-hidden relative transition-all duration-300 group">
+      <Card className="col-span-1 md:col-span-2 xl:col-span-6 border-none bg-[#a0f212] rounded-[32px] shadow-[0_10px_30px_rgba(160,242,18,0.2)] hover:shadow-[0_15px_40px_rgba(160,242,18,0.4)] overflow-hidden relative transition-all duration-300 group">
         <div className="absolute right-0 bottom-0 p-8 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity">
           <IndianRupee className="w-64 h-64 text-[#0b0c01]" />
         </div>
@@ -48,7 +48,7 @@ export default function LedgerKPIs({ financeLedger }: LedgerKPIsProps) {
       </Card>
 
       {/* Card 3: Refund Metrics Stack */}
-      <div className="col-span-1 lg:col-span-3 flex flex-col gap-6">
+      <div className="col-span-1 md:col-span-1 xl:col-span-3 flex flex-col gap-6">
         <Card className="flex-1 border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md overflow-hidden relative transition-all duration-300">
           <CardContent className="p-6 relative z-10 flex items-center justify-between h-full">
             <div>

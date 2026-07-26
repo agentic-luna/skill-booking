@@ -116,7 +116,7 @@ export default function HostProgramsPage() {
   return (
     <div className="h-full flex flex-col space-y-8 pb-10">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 px-2">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold tracking-tight text-[#0b0c01] flex items-center gap-3">
             <div className="bg-[#a0f212] p-2 rounded-xl text-[#0b0c01] shadow-sm"><Calendar className="h-6 w-6" /></div>
@@ -125,17 +125,17 @@ export default function HostProgramsPage() {
           </h1>
           <p className="text-muted-foreground font-medium text-sm">Create, edit, and manage all your upcoming skills workshops.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
           <Button 
             variant="outline"
             onClick={() => setIsRepublishOpen(true)}
-            className="rounded-2xl h-12 px-5 text-sm font-bold bg-white text-[#0b0c01] hover:bg-gray-50 border-gray-200 shadow-sm transition-all hover:-translate-y-0.5 duration-300"
+            className="rounded-2xl h-12 px-5 text-sm font-bold bg-white text-[#0b0c01] hover:bg-gray-50 border-gray-200 shadow-sm transition-all hover:-translate-y-0.5 duration-300 w-full sm:w-auto justify-center"
           >
-            <Clock className="mr-2 h-4 w-4" /> Republish Old Workshop
+            <Clock className="mr-2 h-4 w-4 shrink-0" /> Republish Old Workshop
           </Button>
-          <Link href="/host/programs/create">
-            <Button className="rounded-2xl h-12 px-6 text-sm font-bold bg-[#0b0c01] text-white hover:bg-black/80 shadow-lg transition-all hover:-translate-y-0.5 duration-300">
-              <Plus className="mr-2 h-5 w-5" /> Create Workshop
+          <Link href="/host/programs/create" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto justify-center rounded-2xl h-12 px-6 text-sm font-bold bg-[#0b0c01] text-white hover:bg-black/80 shadow-lg transition-all hover:-translate-y-0.5 duration-300">
+              <Plus className="mr-2 h-5 w-5 shrink-0" /> Create Workshop
             </Button>
           </Link>
         </div>

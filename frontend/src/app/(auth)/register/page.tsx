@@ -27,8 +27,14 @@ type ClientInfoFormValues = z.infer<typeof clientSignupZodSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get("role") === "host" ? "host" : "client";
+  const defaultTab = searchParams?.get("role") === "host" ? "host" : "client";
   const [activeTab, setActiveTab] = useState<"client" | "host">(defaultTab);
+
+  React.useEffect(() => {
+    const role = searchParams?.get("role");
+    if (role === "host") setActiveTab("host");
+    else if (role === "client") setActiveTab("client");
+  }, [searchParams]);
 
   const { startRegistration, verifyEmailOtp, verifyPhoneOtpAndSignup, clientSendOtp, clientSignup, pendingRegistration, isLoading, error, clearError } = useAuthStore();
   

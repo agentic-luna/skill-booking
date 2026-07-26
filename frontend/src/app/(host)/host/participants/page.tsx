@@ -78,10 +78,10 @@ export default function HostParticipantsPage() {
             return (
               <div
                 key={prog.id}
-                className="bg-white rounded-[32px] p-4 flex flex-col lg:flex-row gap-6 shadow-sm border border-black/5 hover:shadow-xl transition-all duration-300 group"
+                className="bg-white rounded-[32px] p-4 flex flex-col xl:flex-row gap-6 shadow-sm border border-black/5 hover:shadow-xl transition-all duration-300 group"
               >
                 {/* Image Section */}
-                <div className="h-32 lg:w-48 shrink-0 rounded-2xl overflow-hidden relative shadow-inner">
+                <div className="h-32 xl:w-48 shrink-0 rounded-2xl overflow-hidden relative shadow-inner">
                   <img src={prog.imageUrl} alt={prog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <div className="absolute top-2 left-2 bg-[#0b0c01]/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-[#a0f212]">
                     {prog.category}
@@ -89,8 +89,8 @@ export default function HostParticipantsPage() {
                 </div>
 
                 {/* Info Section */}
-                <div className="flex-1 flex flex-col justify-center py-2">
-                  <h2 className="text-xl font-extrabold text-[#0b0c01] leading-tight line-clamp-1">{prog.title}</h2>
+                <div className="flex-1 min-w-0 flex flex-col justify-center py-2">
+                  <h2 className="text-xl font-extrabold text-[#0b0c01] leading-tight truncate">{prog.title}</h2>
 
                   <div className="mt-3 flex items-center gap-4 text-sm font-semibold text-muted-foreground">
                     <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export default function HostParticipantsPage() {
                 </div>
 
                 {/* Utilization Section */}
-                <div className="lg:w-64 shrink-0 flex flex-col justify-center py-2 border-l border-black/5 lg:pl-6 lg:ml-2">
+                <div className="xl:w-64 shrink-0 flex flex-col justify-center py-2 border-t xl:border-t-0 xl:border-l border-black/5 pt-4 xl:pt-2 xl:pl-6 xl:ml-2">
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Fill Rate</span>
                     <span className="text-sm font-black text-[#0b0c01]">{Math.round(fillPercentage)}%</span>
@@ -123,9 +123,9 @@ export default function HostParticipantsPage() {
                 </div>
 
                 {/* Action Section */}
-                <div className="shrink-0 flex items-center justify-center lg:pl-6 lg:border-l border-black/5 py-2 pr-2">
-                  <Link href={`/host/participants/${prog.id}`}>
-                    <Button className="h-12 px-6 rounded-2xl bg-[#0b0c01] text-[#a0f212] hover:bg-black/80 font-bold shadow-md transition-transform hover:-translate-y-0.5 group/btn">
+                <div className="shrink-0 flex items-center justify-center pt-4 xl:pt-2 xl:pl-6 xl:border-l border-black/5 py-2 pr-2">
+                  <Link href={`/host/participants/${prog.id}`} className="w-full xl:w-auto">
+                    <Button className="w-full xl:w-auto h-12 px-6 rounded-2xl bg-[#0b0c01] text-[#a0f212] hover:bg-black/80 font-bold shadow-md transition-transform hover:-translate-y-0.5 group/btn">
                       View Participants
                       <ChevronRight className="ml-2 w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                     </Button>
