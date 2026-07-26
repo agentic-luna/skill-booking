@@ -45,6 +45,8 @@ export interface PendingRegistration {
   phoneOtpSent: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
+  devEmailOtp?: string;
+  devPhoneOtp?: string;
 }
 
 export interface AuthState {

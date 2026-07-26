@@ -24,13 +24,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   startRegistration: async ({ firstName, lastName, email, phone, password, role }) => {
     set({ isLoading: true, error: null });
     try {
-      await Promise.all([authApi.sendOtp(email, "EMAIL"), authApi.sendOtp(phone, "PHONE")]);
+      const [emailRes, phoneRes] = await Promise.all([
+        authApi.sendOtp(email, "EMAIL"),
+        authApi.sendOtp(phone, "PHONE")
+      ]);
       set({
         pendingRegistration: {
           firstName, lastName, email, phone, password,
           role: role.toUpperCase() as "CLIENT" | "HOST",
           emailOtpSent: true, phoneOtpSent: true,
           emailVerified: false, phoneVerified: false,
+          devEmailOtp: (emailRes as any).data?.devOtp || emailRes.devOtp,
+          devPhoneOtp: (phoneRes as any).data?.devOtp || phoneRes.devOtp,
         },
         isVerifying: true,
         isLoading: false,
