@@ -32,17 +32,19 @@ interface FilterSidebarProps {
   categoriesList: { name: string; value: string }[];
   router: ReturnType<typeof import("next/navigation").useRouter>;
   sortedCount: number;
+  isDark?: boolean;
 }
 
 const FilterSidebar = React.memo(function FilterSidebar({
   category, setCategory, localMaxPrice, setLocalMaxPrice, setMaxPrice,
-  minRating, setMinRating, hideFull, setHideFull, handleResetFilters, categoriesList, router
+  minRating, setMinRating, hideFull, setHideFull, handleResetFilters, categoriesList, router,
+  isDark = false
 }: FilterSidebarProps) {
   return (
     <div className="space-y-6">
       {/* Category Select */}
       <div className="space-y-3">
-        <label className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">Categories</label>
+        <label className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? "text-white/50" : "text-muted-foreground/80"}`}>Categories</label>
         <div className="space-y-1.5 pt-1">
           {categoriesList.map((cat) => {
             const isActive = category === cat.value;
@@ -54,8 +56,12 @@ const FilterSidebar = React.memo(function FilterSidebar({
                   router.push(`/programs?category=${cat.value}`);
                 }}
                 className={`group flex items-center w-full justify-between text-left text-sm py-2 px-3 rounded-xl transition-colors duration-200 ${isActive
-                  ? "bg-[#a0f212]/10 text-[#a0f212] font-bold shadow-[inset_3px_0_0_0_#a0f212]"
-                  : "text-white/70 hover:bg-white/5 hover:text-white"
+                  ? isDark
+                    ? "bg-[#a0f212]/10 text-[#a0f212] font-bold shadow-[inset_3px_0_0_0_#a0f212]"
+                    : "bg-[#a0f212]/20 text-foreground font-bold shadow-[inset_3px_0_0_0_#a0f212]"
+                  : isDark
+                    ? "text-white/70 hover:bg-white/5 hover:text-white"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   }`}
               >
                 <span className="truncate">{cat.name}</span>
@@ -69,8 +75,8 @@ const FilterSidebar = React.memo(function FilterSidebar({
       {/* Price Slider */}
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-end">
-          <label className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">Max Ticket Price</label>
-          <span className="font-extrabold text-white">{localMaxPrice === 0 ? "Any Price" : `₹${localMaxPrice}`}</span>
+          <label className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? "text-white/50" : "text-muted-foreground/80"}`}>Max Ticket Price</label>
+          <span className={`font-extrabold ${isDark ? "text-white" : "text-[#0b0c01]"}`}>{localMaxPrice === 0 ? "Any Price" : `₹${localMaxPrice}`}</span>
         </div>
         <div className="pt-2">
           <input
@@ -83,9 +89,9 @@ const FilterSidebar = React.memo(function FilterSidebar({
             onMouseUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
             onTouchEnd={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
             onKeyUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
-            className="w-full accent-[#a0f212] h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer focus:outline-none"
+            className={`w-full h-1.5 rounded-full appearance-none cursor-pointer focus:outline-none ${isDark ? "accent-[#a0f212] bg-white/10" : "accent-primary bg-muted"}`}
           />
-          <div className="flex justify-between text-[10px] font-semibold text-white/40 mt-2">
+          <div className={`flex justify-between text-[10px] font-semibold mt-2 ${isDark ? "text-white/40" : "text-muted-foreground"}`}>
             <span>₹0</span>
             <span>₹200</span>
           </div>
@@ -94,7 +100,7 @@ const FilterSidebar = React.memo(function FilterSidebar({
 
       {/* Minimum Rating */}
       <div className="space-y-3 pt-2">
-        <label className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">Rating</label>
+        <label className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? "text-white/50" : "text-muted-foreground/80"}`}>Rating</label>
         <div className="space-y-1.5">
           {[
             { label: "Any Rating", value: 0 },
@@ -104,10 +110,19 @@ const FilterSidebar = React.memo(function FilterSidebar({
             <button
               key={item.value}
               onClick={() => setMinRating(item.value)}
-              className={`flex items-center space-x-3 text-sm w-full text-left py-1.5 px-2 rounded-xl transition-all ${minRating === item.value ? "text-[#a0f212] font-bold" : "text-white/70 hover:text-white"
+              className={`flex items-center space-x-3 text-sm w-full text-left py-1.5 px-2 rounded-xl transition-all ${minRating === item.value
+                ? "text-[#a0f212] font-bold"
+                : isDark
+                  ? "text-white/70 hover:text-white"
+                  : "text-muted-foreground hover:text-foreground"
                 }`}
             >
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center p-0.5 transition-colors ${minRating === item.value ? "border-[#a0f212]" : "border-white/30"}`}>
+              <div className={`w-4 h-4 rounded-full border flex items-center justify-center p-0.5 transition-colors ${minRating === item.value
+                ? "border-[#a0f212]"
+                : isDark
+                  ? "border-white/30"
+                  : "border-muted-foreground/30"
+                }`}>
                 {minRating === item.value && <div className="w-2 h-2 bg-[#a0f212] rounded-full animate-in zoom-in duration-200" />}
               </div>
               <span>{item.label}</span>
@@ -117,16 +132,23 @@ const FilterSidebar = React.memo(function FilterSidebar({
       </div>
 
       {/* Hide Fully Booked Toggle */}
-      <div className="flex items-center justify-between pt-6 border-t border-white/10">
+      <div className={`flex items-center justify-between pt-6 border-t ${isDark ? "border-white/10" : "border-border/40"}`}>
         <div className="flex flex-col space-y-1 pr-4">
-          <span className="text-xs font-bold text-white">Available Only</span>
-          <span className="text-[10px] text-white/50 leading-tight">Hide fully booked sessions</span>
+          <span className={`text-xs font-bold ${isDark ? "text-white" : "text-foreground"}`}>Available Only</span>
+          <span className={`text-[10px] leading-tight ${isDark ? "text-white/50" : "text-muted-foreground"}`}>Hide fully booked sessions</span>
         </div>
         <Switch checked={hideFull} onCheckedChange={setHideFull} className="data-[state=checked]:bg-[#a0f212]" />
       </div>
 
       {/* Reset Button */}
-      <Button variant="outline" className="w-full h-11 text-xs font-bold rounded-xl border-white/10 text-white hover:bg-white/5 hover:text-white transition-all shadow-sm" onClick={handleResetFilters}>
+      <Button
+        variant="outline"
+        className={`w-full h-11 text-xs font-bold rounded-xl transition-all shadow-sm ${isDark
+          ? "border-white/10 text-white hover:bg-white/5"
+          : "border-[#0b0c01]/20 text-[#0b0c01] hover:bg-[#0b0c01] hover:text-white"
+          }`}
+        onClick={handleResetFilters}
+      >
         <RefreshCw className="mr-2 h-3.5 w-3.5" /> Clear All Filters
       </Button>
     </div>
@@ -351,7 +373,7 @@ export default function ProgramsListContent() {
             {/* Mobile Filters Trigger */}
             <Button
               variant="outline"
-              className="md:hidden h-11 rounded-xl bg-white border-border/40 shadow-sm font-semibold"
+              className="min-[840px]:hidden h-11 rounded-xl bg-white border-border/40 shadow-sm font-semibold"
               onClick={() => setMobileFiltersOpen(true)}
             >
               <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
@@ -362,8 +384,8 @@ export default function ProgramsListContent() {
         {/* Master Content Layout Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pt-8">
 
-          {/* Sidebar filters (Desktop only) */}
-          <aside className="hidden md:block md:col-span-3 lg:col-span-3">
+          {/* Sidebar filters (Desktop inline, visible above 840px) */}
+          <aside className="hidden min-[840px]:block min-[840px]:col-span-3 lg:col-span-3">
             <div className="bg-white/70 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 rounded-[2rem] h-fit sticky top-6">
               <FilterSidebar
                 category={category}
@@ -384,7 +406,7 @@ export default function ProgramsListContent() {
           </aside>
 
           {/* Catalog results container */}
-          <section className="md:col-span-9 lg:col-span-9">
+          <section className="col-span-12 min-[840px]:col-span-9 lg:col-span-9">
             {sortedPrograms.length > 0 ? (
               layout === "grid" ? (
                 // PREMIUM GRID LAYOUT
@@ -530,7 +552,7 @@ export default function ProgramsListContent() {
 
       {/* MOBILE DRAWER FILTERS SHEET */}
       {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-[120] flex justify-end md:hidden">
+        <div className="fixed inset-0 z-[120] flex justify-end min-[840px]:hidden">
           {/* Overlay background */}
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setMobileFiltersOpen(false)} />
 
@@ -555,6 +577,7 @@ export default function ProgramsListContent() {
                 categoriesList={categoriesList}
                 router={router}
                 sortedCount={sortedPrograms.length}
+                isDark={true}
               />
             </div>
 
