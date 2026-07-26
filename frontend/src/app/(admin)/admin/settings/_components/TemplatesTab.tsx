@@ -18,6 +18,8 @@ export default function TemplatesTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSubject, setEditSubject] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [selectedTrigger, setSelectedTrigger] = useState<string>("ALL");
+  const [selectedChannel, setSelectedChannel] = useState<string>("ALL");
 
   useEffect(() => { fetchTemplates(); }, []);
 
@@ -42,6 +44,14 @@ export default function TemplatesTab() {
     } catch { /* error in store */ }
   };
 
+  const triggerEvents = Array.from(new Set(templates.map((t) => t.triggerEvent)));
+
+  const filteredTemplates = templates.filter((t) => {
+    const matchesTrigger = selectedTrigger === "ALL" || t.triggerEvent === selectedTrigger;
+    const matchesChannel = selectedChannel === "ALL" || t.channel === selectedChannel;
+    return matchesTrigger && matchesChannel;
+  });
+
   return (
     <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">
       <div className="absolute -left-10 -top-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -59,16 +69,75 @@ export default function TemplatesTab() {
         </div>
       </div>
 
+      {/* Event Filters */}
+      <div className="relative z-10 px-8 py-4 border-b border-black/5 dark:border-white/5 bg-muted/10">
+        <label className="text-[10px] uppercase tracking-wider font-extrabold text-muted-foreground block mb-2.5">
+          Filter by Event
+        </label>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <button
+            onClick={() => setSelectedTrigger("ALL")}
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 shrink-0 ${
+              selectedTrigger === "ALL"
+                ? "bg-[#0b0c01] text-white shadow-sm"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            All Events
+          </button>
+          {triggerEvents.map((evt) => (
+            <button
+              key={evt}
+              onClick={() => setSelectedTrigger(evt)}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 shrink-0 ${
+                selectedTrigger === evt
+                  ? "bg-[#0b0c01] text-white shadow-sm"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              {evt.replace(/_/g, " ")}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Channel Filters */}
+      <div className="relative z-10 px-8 py-3.5 border-b border-black/5 dark:border-white/5 bg-muted/5 flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider font-extrabold text-muted-foreground">
+            Channel:
+          </span>
+          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-xl border border-black/5 dark:border-white/5">
+            {["ALL", "EMAIL", "SMS", "WHATSAPP", "IN_APP"].map((ch) => (
+              <button
+                key={ch}
+                onClick={() => setSelectedChannel(ch)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all duration-200 ${
+                  selectedChannel === ch
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {ch}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="text-[10px] font-bold text-muted-foreground">
+          Showing {filteredTemplates.length} of {templates.length} templates
+        </div>
+      </div>
+
       {/* Template list */}
       <div className="relative z-10 px-8 py-6 space-y-4">
-        {templates.length === 0 && !loading && (
+        {filteredTemplates.length === 0 && !loading && (
           <div className="py-16 text-center">
             <Mail className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground font-medium">No templates found.</p>
+            <p className="text-sm text-muted-foreground font-medium">No templates found matching this filter.</p>
           </div>
         )}
 
-        {templates.map((t) => {
+        {filteredTemplates.map((t) => {
           const ch = channelConfig[t.channel] ?? { label: t.channel, icon: null, bg: "bg-muted", text: "text-foreground" };
           const isEditing = editingId === t.id;
 

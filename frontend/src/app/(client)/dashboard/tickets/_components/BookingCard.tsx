@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Calendar, Clock, MapPin, PlayCircle,
-  FileText, Trash2, MessageSquare, Wifi, Timer
+  FileText, Trash2, MessageSquare, Wifi, Timer, Ticket
 } from "lucide-react";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import type { ClientBooking } from "@/features/client/api/types";
@@ -175,6 +175,102 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
               >
                 <FileText className="h-3.5 w-3.5 mr-1" /> Invoice
               </Button>
+
+              {/* Ticket PDF */}
+              {(booking.status === "CONFIRMED" || booking.status === "COMPLETED") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs rounded-lg border-primary/20 text-primary hover:bg-primary/5"
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem("bms_access_token");
+                      const { getTicketUrl } = await import("@/features/client/api/client.api");
+                      const ticketUrl = `${getTicketUrl(booking.id)}?format=pdf`;
+                      const res = await fetch(ticketUrl, {
+                        headers: token ? { Authorization: `Bearer ${token}` } : {},
+                      });
+                      if (!res.ok) throw new Error("Failed to generate and download PDF ticket");
+                      const blob = await res.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.style.display = "none";
+                      a.href = url;
+                      a.download = `ticket_${booking.id.slice(0, 8).toUpperCase()}.pdf`;
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      window.URL.revokeObjectURL(url);
+                      showAlert("PDF Ticket Downloaded", "Your admission ticket PDF has been downloaded.", "success");
+                    } catch (err: any) {
+                      showAlert("Download Failed", err.message || "Failed to download PDF ticket.", "destructive");
+                    }
+                  }}
+                >
+                  <Ticket className="h-3.5 w-3.5 mr-1" /> Ticket (PDF)
+                </Button>
+              )}
+
+              {/* Ticket PNG */}
+              {(booking.status === "CONFIRMED" || booking.status === "COMPLETED") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs rounded-lg border-primary/20 text-primary hover:bg-primary/5"
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem("bms_access_token");
+                      const { getTicketUrl } = await import("@/features/client/api/client.api");
+                      const ticketUrl = `${getTicketUrl(booking.id)}?format=svg`;
+                      const res = await fetch(ticketUrl, {
+                        headers: token ? { Authorization: `Bearer ${token}` } : {},
+                      });
+                      if (!res.ok) throw new Error("Failed to generate ticket graphics");
+                      const svgText = await res.text();
+                      
+                      // Convert SVG text to PNG in-browser using HTML5 Canvas
+                      const img = new Image();
+                      const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+                      const url = window.URL.createObjectURL(svgBlob);
+                      
+                      img.onload = () => {
+                        const scale = 4;
+                        const canvas = document.createElement("canvas");
+                        canvas.width = 400 * scale;
+                        canvas.height = 600 * scale;
+                        const ctx = canvas.getContext("2d");
+                        if (ctx) {
+                          ctx.scale(scale, scale);
+                          ctx.drawImage(img, 0, 0);
+                          const pngUrl = canvas.toDataURL("image/png");
+                          const a = document.createElement("a");
+                          a.style.display = "none";
+                          a.href = pngUrl;
+                          a.download = `ticket_${booking.id.slice(0, 8).toUpperCase()}.png`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          showAlert("PNG Ticket Downloaded", "Your admission ticket PNG has been downloaded.", "success");
+                        } else {
+                          showAlert("Download Failed", "Could not initialize canvas context.", "destructive");
+                        }
+                        window.URL.revokeObjectURL(url);
+                      };
+                      
+                      img.onerror = () => {
+                        window.URL.revokeObjectURL(url);
+                        showAlert("Download Failed", "Failed to render ticket PNG.", "destructive");
+                      };
+                      
+                      img.src = url;
+                    } catch (err: any) {
+                      showAlert("Download Failed", err.message || "Failed to download PNG ticket.", "destructive");
+                    }
+                  }}
+                >
+                  <Ticket className="h-3.5 w-3.5 mr-1" /> Ticket (PNG)
+                </Button>
+              )}
 
               {/* Leave Review – completed only */}
               {booking.status === "COMPLETED" && (
