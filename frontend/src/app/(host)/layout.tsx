@@ -176,7 +176,7 @@ export default function HostLayout({
       </aside>
 
       {/* Main content body */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-background lg:rounded-[30px] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden h-[calc(100vh-48px)] relative">
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-background lg:rounded-[30px] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden h-screen lg:h-[calc(100vh-48px)] relative">
 
         {/* Subtle background flair */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#a0f212]/5 rounded-full blur-[100px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>

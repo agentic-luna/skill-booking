@@ -171,7 +171,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main content canvas */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background lg:rounded-[40px] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden h-[calc(100vh-48px)]">
+      <div className="flex-1 flex flex-col min-w-0 bg-background lg:rounded-[40px] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden h-screen lg:h-[calc(100vh-48px)]">
 
         {/* Mobile top bar */}
         <header className="lg:hidden flex items-center justify-between h-16 px-6 bg-background border-b border-border/40 sticky top-0 z-40">
