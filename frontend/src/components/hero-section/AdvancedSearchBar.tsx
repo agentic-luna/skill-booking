@@ -32,6 +32,7 @@ export default function AdvancedSearchBar() {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [categorySearchQuery, setCategorySearchQuery] = useState("");
+  const [locationSearchQuery, setLocationSearchQuery] = useState("");
 
   // Date Range Picker State
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -52,10 +53,40 @@ export default function AdvancedSearchBar() {
     };
   }, [activeTab]);
 
-  // Use fallback locations (recommended cities) for now to avoid dummy data from db
+  // Derive dynamic locations from active events, fallback to Kerala districts presets
   const dynamicLocations = useMemo(() => {
-    return FALLBACK_LOCATIONS;
-  }, []);
+    const locs = new Set<string>();
+    events.forEach(event => {
+      if (event.status !== "APPROVED") return;
+      if (event.mode === "ONLINE") {
+        locs.add("Online");
+      } else {
+        const city = event.venueDetails?.city;
+        if (city) {
+          locs.add(city.trim().charAt(0).toUpperCase() + city.trim().slice(1).toLowerCase());
+        }
+      }
+    });
+
+    const presets = [
+      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kochi", 
+      "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", 
+      "Pathanamthitta", "Thiruvananthapuram", "Trivandrum", "Thrissur", 
+      "Wayanad", "Online"
+    ];
+    presets.forEach(p => {
+      if (!Array.from(locs).some(c => c.toLowerCase() === p.toLowerCase())) {
+        locs.add(p);
+      }
+    });
+    return Array.from(locs);
+  }, [events]);
+
+  const filteredLocations = useMemo(() => {
+    return dynamicLocations.filter(loc => 
+      loc.toLowerCase().includes(locationSearchQuery.toLowerCase())
+    );
+  }, [dynamicLocations, locationSearchQuery]);
 
   // Derive dynamic categories from active events
   const dynamicCategories = useMemo(() => {
@@ -116,6 +147,21 @@ export default function AdvancedSearchBar() {
     cat.toLowerCase().includes(categorySearchQuery.toLowerCase())
   );
 
+  const categoriesToDisplay = useMemo(() => {
+    if (categorySearchQuery.trim() !== "") {
+      return filteredCategories.slice(0, 6);
+    }
+    
+    // Combine presets and dynamic categories, removing duplicates
+    const list = ["Programming", "Design", "Marketing", "Business", "Music"];
+    dynamicCategories.forEach(cat => {
+      if (!list.some(item => item.toLowerCase() === cat.toLowerCase())) {
+        list.push(cat);
+      }
+    });
+    return list.slice(0, 6);
+  }, [filteredCategories, dynamicCategories, categorySearchQuery]);
+
   return (
     <>
       {/* Background Blur Overlay */}
@@ -140,8 +186,8 @@ export default function AdvancedSearchBar() {
             <MapPin className="w-5 h-5 text-gray-500" />
             <div className="flex flex-col">
               <span className="text-[13px] font-bold text-gray-800">Location</span>
-              <span className={`text-[14px] font-light truncate ${location ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-                {location || "Where are you going?"}
+              <span className={`text-[14px] font-light truncate ${location || locationSearchQuery ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
+                {locationSearchQuery || location || "Where are you going?"}
               </span>
             </div>
           </div>
@@ -149,25 +195,52 @@ export default function AdvancedSearchBar() {
           {/* Location Dropdown */}
           {activeTab === "location" && (
             <div className="absolute top-[calc(100%+16px)] left-0 md:-left-4 w-full md:w-[320px] bg-white rounded-3xl shadow-xl border border-gray-200 p-6 z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
+              {/* Location Search Input */}
+              <div 
+                className="flex items-center gap-3 bg-gray-50 rounded-full px-4 py-2.5 mb-4 border border-gray-200 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100 transition-all"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Search className="w-4 h-4 text-gray-500" />
+                <input 
+                  type="text" 
+                  value={locationSearchQuery}
+                  onChange={(e) => setLocationSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.stopPropagation();
+                      setLocation(locationSearchQuery);
+                      setActiveTab(null);
+                      handleSearch();
+                    }
+                  }}
+                  placeholder="Search city or online..."
+                  className="bg-transparent border-none outline-none text-sm w-full text-gray-800 placeholder:text-gray-400 focus:ring-0"
+                  autoFocus
+                />
+              </div>
+
               <div className="mb-4">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setLocation(""); setActiveTab(null); }}
-                  className="bg-gray-900 hover:bg-black text-white text-sm px-5 py-2 rounded-full font-medium transition-colors"
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setLocation(""); setLocationSearchQuery(""); setActiveTab(null); }}
+                  className="bg-gray-900 hover:bg-black text-white text-xs px-4 py-1.5 rounded-full font-medium transition-colors"
                 >
                   Anywhere
                 </button>
               </div>
-              <ul className="space-y-4 mt-6 max-h-[300px] overflow-y-auto custom-scrollbar">
-                {dynamicLocations.map(loc => (
-                  <li
+              <ul className="space-y-2 mt-4 max-h-[220px] overflow-y-auto custom-scrollbar">
+                {filteredLocations.map(loc => (
+                  <li 
                     key={loc}
-                    onClick={(e) => { e.stopPropagation(); setLocation(loc); setActiveTab(null); }}
-                    className="flex items-center gap-3 text-[15px] font-semibold text-gray-700 hover:text-black hover:bg-gray-50 cursor-pointer px-4 py-2.5 rounded-xl transition-all"
+                    onClick={(e) => { e.stopPropagation(); setLocation(loc); setLocationSearchQuery(loc); setActiveTab(null); }}
+                    className="flex items-center gap-3 text-[14px] font-semibold text-gray-700 hover:text-black hover:bg-gray-50 cursor-pointer px-3 py-2 rounded-xl transition-all"
                   >
                     <MapPin className="w-4 h-4 text-gray-400" />
                     {loc}
                   </li>
                 ))}
+                {filteredLocations.length === 0 && (
+                  <li className="text-xs text-gray-400 text-center py-4">No matching locations found</li>
+                )}
               </ul>
             </div>
           )}
@@ -237,20 +310,7 @@ export default function AdvancedSearchBar() {
 
               <div className="flex flex-col gap-4">
                 <div className="w-full flex flex-wrap gap-2 max-h-[220px] overflow-y-auto custom-scrollbar">
-                  {categorySearchQuery.trim() === "" && ["Programming", "Design", "Marketing", "Business", "Music"].map((cat) => {
-                    if (filteredCategories.some(c => c.toLowerCase() === cat.toLowerCase())) return null; // Avoid duplicates
-                    return (
-                      <span
-                        key={`preset-${cat}`}
-                        onClick={(e) => { e.stopPropagation(); setCategory(cat); setCategorySearchQuery(cat); setActiveTab(null); }}
-                        className="text-[13px] font-semibold text-gray-700 bg-gray-50 border border-gray-200 hover:border-gray-400 hover:text-black hover:bg-white hover:shadow-sm cursor-pointer px-4 py-2 rounded-full transition-all flex items-center justify-center text-center capitalize"
-                      >
-                        {cat}
-                      </span>
-                    );
-                  })}
-
-                  {filteredCategories.length > 0 && filteredCategories.map((cat) => {
+                  {categoriesToDisplay.map((cat) => {
                     const formattedCat = cat.charAt(0).toUpperCase() + cat.slice(1);
                     return (
                       <span
