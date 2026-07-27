@@ -135,7 +135,7 @@ export default function AdminDashboard() {
              </div>
              <div className="space-y-1">
                <span className="text-sm text-muted-foreground font-semibold">Gross Volume</span>
-               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-foreground">₹{grossSales}</div>
+               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-foreground">₹{grossSales.toFixed(2)}</div>
              </div>
            </CardContent>
         </Card>
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
              </div>
              <div className="space-y-1">
                <span className="text-sm text-[#0b0c01]/70 font-bold">Realized Net Commission</span>
-               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-[#0b0c01]">₹{totalCommission}</div>
+               <div className="text-5xl lg:text-6xl font-medium tracking-tight text-[#0b0c01]">₹{totalCommission.toFixed(2)}</div>
              </div>
            </CardContent>
         </Card>

@@ -17,7 +17,6 @@ const menuItems = [
   { name: "Hosts Management", href: "/admin/hosts-management", icon: Users },
   { name: "Approvals", href: "/admin/approvals", icon: CheckSquare },
   { name: "Finance & Payouts", href: "/admin/finance", icon: Wallet },
-  { name: "Notification Logs", href: "/admin/notifications", icon: Bell },
   { name: "Broadcast Center", href: "/admin/broadcast", icon: Radio },
   { name: "Platform Settings", href: "/admin/settings", icon: Settings },
 ];
@@ -62,7 +61,6 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
           {menuItems.map((item) => {
             const IconComp = item.icon;
             const isActive = pathname === item.href;
-            const isNotification = item.name === "Notification Logs";
             return (
               <Link
                 key={item.href}
@@ -74,11 +72,8 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
                   }`}
               >
                 <div className="relative shrink-0">
-                  {isNotification && (
-                    <div className="absolute inset-0 bg-[#a0f212] blur-md rounded-full opacity-50 animate-pulse" />
-                  )}
                   <IconComp
-                    className={`h-5 w-5 relative z-10 transition-colors ${isActive ? "text-[#a0f212]" : "text-white/60 group-hover:text-white"
+                    className={`h-5 w-5 relative z-10 transition-colors ${isActive ? "text-[#a0f212]" : "text-white/40 group-hover:text-white"
                       }`}
                   />
                 </div>

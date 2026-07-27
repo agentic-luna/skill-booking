@@ -505,10 +505,10 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
               {/* Action Buttons */}
               <div className="space-y-2 pt-2">
-                {user?.role === "host" ? (
+                {user?.role === "host" || user?.role === "admin" ? (
                   <div className="space-y-2.5">
                     <div className="text-center p-3 bg-muted/30 rounded-xl border text-[11px] text-muted-foreground font-bold">
-                      Booking disabled for Host accounts
+                      Booking disabled for {user.role === "admin" ? "Admin" : "Host"} accounts
                     </div>
                     <Button variant="outline" className="w-full rounded-xl h-11 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm" onClick={handleShareClick}>
                       <Share2 className="mr-1.5 h-4 w-4" /> Share Event

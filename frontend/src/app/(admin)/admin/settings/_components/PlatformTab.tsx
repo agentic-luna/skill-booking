@@ -80,12 +80,12 @@ export default function PlatformTab() {
                 <span className="bg-[#0b0c01] text-[#a0f212] font-black text-sm px-4 py-1.5 rounded-full shadow-sm">{commissionRate}%</span>
               </div>
               <input
-                type="range" min={5} max={30} step={1} value={commissionRate}
+                type="range" min={0.5} max={30} step={0.5} value={commissionRate}
                 onChange={(e) => setCommissionRate(Number(e.target.value))}
                 className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer accent-[#a0f212]"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
-                <span>5% (Min)</span><span>Marketplace fee from host sales before payout</span><span>30% (Max)</span>
+                <span>0.5% (Min)</span><span>Marketplace fee from host sales before payout</span><span>30% (Max)</span>
               </div>
             </div>
 
