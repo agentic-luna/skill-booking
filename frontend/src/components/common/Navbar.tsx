@@ -95,7 +95,7 @@ export default function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
               <span className={`text-lg font-bold tracking-tight transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink" : "text-white"}`}>
-                BookMy<span className="text-primary/90">Skill</span>
+                BookMy<span className="text-primary/90">Training</span>
               </span>
             </Link>
 

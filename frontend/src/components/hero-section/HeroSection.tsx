@@ -74,7 +74,7 @@ export default function HeroSection() {
           {/* Why BookMySkill? Section */}
           <div className="mt-12 md:mt-16 mb-8">
             <h2 className="text-[26px] md:text-[32px] font-bold text-gray-900 mb-8 text-center tracking-tight">
-              Why BookMySkill?
+              Why BookMyTraining?
             </h2>
             
             <motion.div 
@@ -154,7 +154,7 @@ export default function HeroSection() {
                   />
                 </div>
                 <div className="pt-5 pb-4 px-2">
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-1.5 group-hover:text-[#a0f212] transition-colors">
                     Real reviews from fellow learners
                   </h3>
                   <p className="text-[14px] text-gray-500 leading-relaxed">
@@ -180,7 +180,7 @@ export default function HeroSection() {
                   />
                 </div>
                 <div className="pt-5 pb-4 px-2">
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-1.5 group-hover:text-[#a0f212] transition-colors">
                     Verified expert trainers
                   </h3>
                   <p className="text-[14px] text-gray-500 leading-relaxed">
@@ -206,7 +206,7 @@ export default function HeroSection() {
                   />
                 </div>
                 <div className="pt-5 pb-4 px-2">
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-1.5 group-hover:text-[#a0f212] transition-colors">
                     Trusted customer service
                   </h3>
                   <p className="text-[14px] text-gray-500 leading-relaxed">

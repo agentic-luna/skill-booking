@@ -40,9 +40,9 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
           <div className="bg-[#a0f212] p-2.5 rounded-2xl text-[#0b0c01] shadow-[0_0_20px_rgba(160,242,18,0.4)]">
             <Sparkles className="h-6 w-6 animate-pulse" />
           </div>
-          <div>
-            <h2 className="text-2xl font-black tracking-tight text-white leading-none">BookMySkill</h2>
-            <p className="text-[10px] text-[#a0f212] uppercase font-bold tracking-widest mt-1">Admin Portal</p>
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-black tracking-tight text-white leading-none">BookMyTraining</h2>
+            <span className="text-[10px] font-bold text-primary tracking-widest uppercase mt-0.5">Admin Portal</span>
           </div>
         </div>
 

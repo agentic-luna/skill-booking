@@ -52,9 +52,28 @@ export default function HostProgramsPage() {
         <img src={prog.imageUrl} alt={prog.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" />
         
         {/* Status Badge */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider text-[#0b0c01] shadow-sm">
-          {prog.status === 'approved' ? 'Live' : 'Pending'}
-        </div>
+        {(() => {
+          const isPast = prog.startDate < new Date();
+          let displayStatus = "";
+          let badgeColors = "";
+
+          if (isPast) {
+            displayStatus = "Past";
+            badgeColors = "bg-red-500/90 text-white";
+          } else if (prog.status === 'approved') {
+            displayStatus = "Live";
+            badgeColors = "bg-emerald-500/90 text-white";
+          } else {
+            displayStatus = "Pending";
+            badgeColors = "bg-blue-500/90 text-white";
+          }
+
+          return (
+            <div className={`absolute top-4 left-4 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-sm ${badgeColors}`}>
+              {displayStatus}
+            </div>
+          );
+        })()}
         
         {/* Category Badge */}
         <div className="absolute top-4 right-4 bg-[#0b0c01]/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-white shadow-sm">

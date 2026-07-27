@@ -14,8 +14,8 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "BookMySkill | Skill Training & Event Booking Marketplace",
-  description: "High-fidelity platform to discover, book, and host skill-building events and professional training courses.",
+  title: "BookMyTraining | Skill Training & Event Booking Marketplace",
+  description: "Marketplace for physical and online skill training workshops, book, and host skill-building events and professional training courses.",
   keywords: ["skills", "events", "courses", "booking", "training", "marketplace"],
 };
 

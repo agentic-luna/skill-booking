@@ -79,7 +79,7 @@ export default function HostLayout({
             <Sparkles className="h-5 w-5" />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
-            BookMy<span className="text-[#a0f212]">Skill</span>
+            BookMy<span className="text-[#a0f212]">Training</span>
             <span className="text-[#8a9b93] text-xs ml-2 tracking-normal font-medium">Host</span>
           </span>
         </Link>

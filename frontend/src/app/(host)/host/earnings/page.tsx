@@ -18,6 +18,7 @@ export default function HostEarningsPage() {
   const showAlert = useAlertStore((s) => s.showAlert);
   const { bankDetails, fetchBankDetails, submitBankDetails, updateBankDetails, isLoading, error, clearError, dashboard, fetchDashboard } = useHostStore();
   const [form, setForm] = useState<BankDetailsPayload>(EMPTY_FORM);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(-1);
   const isEdit = !!bankDetails;
 
   useEffect(() => {
@@ -59,6 +60,21 @@ export default function HostEarningsPage() {
   const revenueData = dashboard?.monthlyRevenue?.slice(-2) ?? [
     { month: "Prev", earnings: 0 }, { month: "Cur", earnings: 0 }
   ];
+
+  const revenueDataFull = dashboard?.monthlyRevenue ?? [];
+  const activeMonthIdx = selectedMonthIndex === -1 
+    ? Math.max(0, revenueDataFull.length - 1) 
+    : selectedMonthIndex;
+  const selectedMonthData = revenueDataFull[activeMonthIdx] || { month: "Current", earnings: 0 };
+  const selectedEarnings = selectedMonthData.earnings;
+
+  const handlePrevMonth = () => {
+    if (activeMonthIdx > 0) setSelectedMonthIndex(activeMonthIdx - 1);
+  };
+  const handleNextMonth = () => {
+    if (activeMonthIdx < revenueDataFull.length - 1) setSelectedMonthIndex(activeMonthIdx + 1);
+  };
+
 
   return (
     <div className="space-y-6 pb-10">
@@ -169,12 +185,22 @@ export default function HostEarningsPage() {
         {/* 3. Current Balance (Green Card) */}
         <div className="lg:col-span-1 bg-[#a0f212] rounded-[32px] p-8 flex flex-col justify-between relative shadow-[0_8px_30px_rgba(160,242,18,0.2)]">
           <div className="flex justify-between items-start z-10">
-            <h2 className="text-[#0b0c01] font-extrabold text-xl">Current balance</h2>
+            <h2 className="text-[#0b0c01] font-extrabold text-xl">
+              Balance - {selectedMonthData.month}
+            </h2>
             <div className="flex gap-2">
-              <button className="w-8 h-8 rounded-full bg-white/40 hover:bg-white flex items-center justify-center transition-colors text-[#0b0c01]">
+              <button 
+                onClick={handlePrevMonth}
+                disabled={activeMonthIdx <= 0}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors text-[#0b0c01] ${activeMonthIdx <= 0 ? 'bg-white/20 cursor-not-allowed text-black/20' : 'bg-white/40 hover:bg-white cursor-pointer'}`}
+              >
                 ←
               </button>
-              <button className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-[#0b0c01]">
+              <button 
+                onClick={handleNextMonth}
+                disabled={activeMonthIdx >= revenueDataFull.length - 1}
+                className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-[#0b0c01] ${activeMonthIdx >= revenueDataFull.length - 1 ? 'bg-white/20 cursor-not-allowed text-black/20' : 'bg-white hover:bg-white/90 cursor-pointer'}`}
+              >
                 →
               </button>
             </div>
@@ -186,7 +212,7 @@ export default function HostEarningsPage() {
               <div className="w-48 h-48 border-[20px] border-[#0b0c01] rounded-full absolute top-0 left-0 border-b-transparent border-r-[#0b0c01]/10 transform -rotate-45" />
             </div>
             <div className="absolute bottom-2 text-center">
-              <div className="text-3xl font-black text-[#0b0c01] tracking-tight">₹{grossRevenue.toLocaleString("en-IN")}</div>
+              <div className="text-3xl font-black text-[#0b0c01] tracking-tight">₹{selectedEarnings.toLocaleString("en-IN")}</div>
               <div className="w-3 h-3 bg-[#a78bfa] rounded-full mx-auto mt-2 border-2 border-[#a0f212]" />
             </div>
           </div>
