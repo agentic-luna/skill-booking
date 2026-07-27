@@ -61,4 +61,5 @@ export interface IUserRepository {
   findPendingKycHosts(): Promise<any[]>;
   findAllHosts(filters?: { kycStatus?: KycStatus }): Promise<any[]>;
   updateKycStatus(hostProfileId: string, status: KycStatus, rejectionReason?: string): Promise<HostProfile>;
+  updateKycUnlockStatus(hostProfileId: string, kycStatus: KycStatus, unlockRequested: boolean, rejectionReason?: string): Promise<HostProfile>;
 }

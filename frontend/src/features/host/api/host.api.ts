@@ -20,6 +20,15 @@ export async function submitKyc(payload: SubmitKycPayload): Promise<KycResponse>
   return res.data;
 }
 
+/** POST /hosts/kyc/request-unlock — Request admin to unlock KYC edits */
+export async function requestKycUnlock(): Promise<any> {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    "/hosts/kyc/request-unlock",
+    { method: "POST" }
+  );
+  return res.data;
+}
+
 // ── Bank Details ──────────────────────────────────────────────────────────
 
 /** GET /hosts/bank-details — Retrieve host bank account details (decrypted) */

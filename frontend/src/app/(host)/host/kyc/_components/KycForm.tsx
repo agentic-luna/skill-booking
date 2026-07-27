@@ -19,12 +19,14 @@ interface KycFormProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  hideButtons?: boolean;
 }
 
-export default function KycForm({ form, isLoading, onChange, onSubmit, onCancel }: KycFormProps) {
+export default function KycForm({ form, isLoading, onChange, onSubmit, onCancel, hideButtons }: KycFormProps) {
+  const FormComponent = hideButtons ? "div" : "form";
   return (
     <Card className="border-border/40 rounded-2xl bg-card">
-      <form onSubmit={onSubmit}>
+      <FormComponent onSubmit={hideButtons ? undefined : onSubmit}>
         <CardHeader>
           <CardTitle className="text-sm font-bold flex items-center gap-1.5">
             <FileText className="h-4 w-4 text-primary" /> Identity & Profile Details
@@ -73,17 +75,19 @@ export default function KycForm({ form, isLoading, onChange, onSubmit, onCancel 
           </div>
 
         </CardContent>
-        <CardFooter className="justify-end border-t pt-4 gap-3">
-          <Button type="button" variant="outline" className="text-xs h-9" onClick={onCancel} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button type="submit" className="text-xs font-semibold h-9 px-6" disabled={isLoading}>
-            {isLoading
-              ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting...</>
-              : "Submit KYC Documents"}
-          </Button>
-        </CardFooter>
-      </form>
+        {!hideButtons && (
+          <CardFooter className="justify-end border-t pt-4 gap-3">
+            <Button type="button" variant="outline" className="text-xs h-9" onClick={onCancel} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button type="submit" className="text-xs font-semibold h-9 px-6" disabled={isLoading}>
+              {isLoading
+                ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting...</>
+                : "Submit KYC Documents"}
+            </Button>
+          </CardFooter>
+        )}
+      </FormComponent>
     </Card>
   );
 }

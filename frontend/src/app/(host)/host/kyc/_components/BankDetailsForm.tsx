@@ -10,11 +10,13 @@ interface BankDetailsFormProps {
   isEdit: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
+  hideButtons?: boolean;
 }
 
-export default function BankDetailsForm({ form, isLoading, isEdit, onChange, onSubmit }: BankDetailsFormProps) {
+export default function BankDetailsForm({ form, isLoading, isEdit, onChange, onSubmit, hideButtons }: BankDetailsFormProps) {
+  const FormComponent = hideButtons ? "div" : "form";
   return (
-    <form onSubmit={onSubmit} className="flex flex-col h-full">
+    <FormComponent onSubmit={hideButtons ? undefined : onSubmit} className="flex flex-col h-full">
       <div className="mb-4">
         <h3 className="text-[#0b0c01] font-extrabold text-sm mb-1">
           {isEdit ? "Update Bank Account" : "Link Bank Account"}
@@ -57,11 +59,13 @@ export default function BankDetailsForm({ form, isLoading, isEdit, onChange, onS
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end">
-        <Button type="submit" className="text-[11px] font-bold rounded-lg h-8 px-6 bg-[#0b0c01] hover:bg-black/80 text-white shadow-sm" disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Details"}
-        </Button>
-      </div>
-    </form>
+      {!hideButtons && (
+        <div className="mt-4 flex justify-end">
+          <Button type="submit" className="text-[11px] font-bold rounded-lg h-8 px-6 bg-[#0b0c01] hover:bg-black/80 text-white shadow-sm" disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Details"}
+          </Button>
+        </div>
+      )}
+    </FormComponent>
   );
 }

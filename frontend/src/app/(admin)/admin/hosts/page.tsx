@@ -38,21 +38,21 @@ export default function HostVerificationPage() {
     }
   }, [activeTab, fetchPendingKycHosts, fetchHosts]);
 
-  const handleKycDecision = async (hostProfileId: string, decision: "APPROVED" | "REJECTED") => {
-    if (decision === "REJECTED" && !rejectionReason.trim()) {
-      showAlert("Error", "Rejection reason is required", "destructive");
-      return;
-    }
-
+  const handleKycDecision = async (profileId: string, decision: "APPROVED" | "REJECTED" | "ACCEPT_UNLOCK" | "REJECT_UNLOCK", overrideReason?: string) => {
     try {
-      await reviewKyc(hostProfileId, {
-        decision,
-        rejectionReason: decision === "REJECTED" ? rejectionReason : undefined
+      await reviewKyc(profileId, { 
+        decision: decision as any, 
+        rejectionReason: (decision === "REJECTED" || decision === "ACCEPT_UNLOCK") ? (overrideReason || rejectionReason) : undefined 
       });
+
+      let successMessage = `Host profile KYC status has been successfully set to: ${decision}`;
+      if (decision === "ACCEPT_UNLOCK") successMessage = "Unlock request accepted. Host can now edit details.";
+      if (decision === "REJECT_UNLOCK") successMessage = "Unlock request denied. Details remain locked.";
+
       showAlert(
-        decision === "APPROVED" ? "KYC Approved" : "KYC Rejected",
-        `Host profile KYC status has been successfully set to: ${decision}`,
-        decision === "APPROVED" ? "success" : "destructive"
+        decision === "APPROVED" ? "KYC Approved" : decision === "REJECTED" ? "KYC Rejected" : "Request Processed",
+        successMessage,
+        (decision === "APPROVED" || decision === "ACCEPT_UNLOCK") ? "success" : "destructive"
       );
       setSelectedHost(null);
       setIsRejectOpen(false);
@@ -167,6 +167,9 @@ export default function HostVerificationPage() {
         onClose={() => setSelectedHost(null)}
         onApprove={(profileId) => handleKycDecision(profileId, "APPROVED")}
         onRejectTrigger={() => setIsRejectOpen(true)}
+        onUnlock={(profileId) => handleKycDecision(profileId, "ACCEPT_UNLOCK", "Unlocked by Admin for details update")}
+        onAcceptUnlockRequest={(profileId) => handleKycDecision(profileId, "ACCEPT_UNLOCK", "Unlocked for edits")}
+        onRevokeUnlockRequest={(profileId) => handleKycDecision(profileId, "REJECT_UNLOCK", "Unlock request denied")}
       />
 
       {/* REJECTION REASON DIALOG */}

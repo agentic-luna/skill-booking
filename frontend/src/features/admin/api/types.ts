@@ -229,6 +229,7 @@ export interface HostProfile {
   govIdUrl?: string;
   gstNumber?: string;
   kycStatus: KycStatus;
+  kycUnlockRequested?: boolean;
   bio?: string;
   updatedAt: string;
   bankDetail?: HostBankDetail;

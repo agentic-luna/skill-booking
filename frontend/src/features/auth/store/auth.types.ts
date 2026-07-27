@@ -11,6 +11,7 @@ export interface HostProfile {
   govIdUrl?: string | null;
   gstNumber?: string | null;
   kycStatus: "PENDING" | "APPROVED" | "REJECTED";
+  kycUnlockRequested?: boolean;
   bio?: string | null;
   bankDetail?: {
     id: string;

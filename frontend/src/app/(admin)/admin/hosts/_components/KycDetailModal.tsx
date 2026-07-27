@@ -1,5 +1,5 @@
 import React from "react";
-import { UserCheck, FileText, ExternalLink, X, Check } from "lucide-react";
+import { UserCheck, FileText, ExternalLink, X, Check, LockOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -8,13 +8,19 @@ interface KycDetailModalProps {
   onClose: () => void;
   onApprove: (hostProfileId: string) => void;
   onRejectTrigger: () => void;
+  onUnlock?: (hostProfileId: string) => void;
+  onAcceptUnlockRequest?: (hostProfileId: string) => void;
+  onRevokeUnlockRequest?: (hostProfileId: string) => void;
 }
 
 export default function KycDetailModal({
   selectedHost,
   onClose,
   onApprove,
-  onRejectTrigger
+  onRejectTrigger,
+  onUnlock,
+  onAcceptUnlockRequest,
+  onRevokeUnlockRequest
 }: KycDetailModalProps) {
   if (!selectedHost) return null;
 
@@ -29,6 +35,23 @@ export default function KycDetailModal({
             Examine credentials, bank listings, and government documents submitted.
           </DialogDescription>
         </DialogHeader>
+
+        {selectedHost.hostProfile?.kycUnlockRequested && (
+          <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-center justify-between text-xs mt-2 mx-1">
+            <div className="flex items-center gap-2 text-blue-700 font-semibold">
+              <LockOpen className="h-4 w-4" />
+              Host has requested to unlock edit access.
+            </div>
+            <div className="flex gap-2 shrink-0 ml-4">
+              <Button size="sm" variant="outline" className="h-7 text-[10px] text-destructive hover:bg-destructive/10" onClick={() => onRevokeUnlockRequest?.(selectedHost.hostProfile.id)}>
+                Revoke
+              </Button>
+              <Button size="sm" className="h-7 text-[10px]" onClick={() => onAcceptUnlockRequest?.(selectedHost.hostProfile.id)}>
+                Accept Request
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4 py-2 text-xs">
           {/* Host Contact Info */}

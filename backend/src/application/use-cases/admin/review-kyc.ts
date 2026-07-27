@@ -56,7 +56,7 @@ export class ReviewKycCommand implements IRequest<any> {
   readonly __tag = 'ReviewKycCommand';
   constructor(
     public readonly hostProfileId: string,
-    public readonly decision: 'APPROVED' | 'REJECTED',
+    public readonly decision: 'APPROVED' | 'REJECTED' | 'ACCEPT_UNLOCK' | 'REJECT_UNLOCK',
     public readonly rejectionReason?: string
   ) {}
 }
@@ -74,16 +74,23 @@ export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand
       throw new BadRequestError('Host profile ID is required');
     }
 
-    if (!['APPROVED', 'REJECTED'].includes(decision)) {
-      throw new BadRequestError('Decision must be either APPROVED or REJECTED');
+    if (!['APPROVED', 'REJECTED', 'ACCEPT_UNLOCK', 'REJECT_UNLOCK'].includes(decision)) {
+      throw new BadRequestError('Decision must be APPROVED, REJECTED, ACCEPT_UNLOCK, or REJECT_UNLOCK');
     }
 
     if (decision === 'REJECTED' && !rejectionReason) {
       throw new BadRequestError('A rejection reason is required when rejecting a KYC submission');
     }
 
-    const newStatus = decision === 'APPROVED' ? KycStatus.APPROVED : KycStatus.REJECTED;
-    const updated = await this.userRepo.updateKycStatus(hostProfileId, newStatus, rejectionReason);
+    let updated;
+    if (decision === 'ACCEPT_UNLOCK') {
+      updated = await this.userRepo.updateKycUnlockStatus(hostProfileId, KycStatus.REJECTED, false, rejectionReason || 'Unlocked for edits');
+    } else if (decision === 'REJECT_UNLOCK') {
+      updated = await this.userRepo.updateKycUnlockStatus(hostProfileId, KycStatus.APPROVED, false, 'Unlock request denied');
+    } else {
+      const newStatus = decision === 'APPROVED' ? KycStatus.APPROVED : KycStatus.REJECTED;
+      updated = await this.userRepo.updateKycStatus(hostProfileId, newStatus, rejectionReason);
+    }
 
     if (!updated) {
       throw new NotFoundError('Host profile not found');

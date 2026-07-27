@@ -7,53 +7,15 @@ import Link from "next/link";
 
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
-import type { BankDetailsPayload } from "@/features/host/api/types";
-import BankDetailsForm from "./_components/BankDetailsForm";
-
-const EMPTY_FORM: BankDetailsPayload = {
-  accountHolderName: "", accountNumber: "", ifscCode: "", bankName: "", upiId: "",
-};
 
 export default function HostEarningsPage() {
   const showAlert = useAlertStore((s) => s.showAlert);
-  const { bankDetails, fetchBankDetails, submitBankDetails, updateBankDetails, isLoading, error, clearError, dashboard, fetchDashboard } = useHostStore();
-  const [form, setForm] = useState<BankDetailsPayload>(EMPTY_FORM);
+  const { bankDetails, dashboard, fetchDashboard } = useHostStore();
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(-1);
-  const isEdit = !!bankDetails;
 
   useEffect(() => {
-    fetchBankDetails();
     fetchDashboard();
-  }, [fetchBankDetails, fetchDashboard]);
-
-  useEffect(() => {
-    if (bankDetails) {
-      setForm({
-        accountHolderName: bankDetails.accountHolderName || "",
-        accountNumber: bankDetails.accountNumber || "",
-        ifscCode: bankDetails.ifscCode || "",
-        bankName: bankDetails.bankName || "",
-        upiId: bankDetails.upiId || "",
-      });
-    }
-  }, [bankDetails]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
-    try {
-      if (isEdit) {
-        await updateBankDetails(form);
-        showAlert("Bank Details Updated", `Bank account at ${form.bankName} updated successfully.`, "success");
-      } else {
-        await submitBankDetails(form);
-        showAlert("Bank Details Saved", `Bank account at ${form.bankName} linked to your host profile.`, "success");
-      }
-    } catch { /* error shown via banner */ }
-  };
+  }, [fetchDashboard]);
 
   const grossRevenue = dashboard?.totalRevenue ?? 0;
   const recentBookings = dashboard?.recentBookings?.slice(0, 3) ?? [];
@@ -86,10 +48,6 @@ export default function HostEarningsPage() {
         </h1>
         <p className="text-muted-foreground font-medium">Manage your finances, track revenue, and update withdrawal settings.</p>
       </div>
-
-      {error && (
-        <div className="p-3 text-xs font-bold text-red-600 bg-red-50 rounded-xl border border-red-100">{error}</div>
-      )}
 
       {/* Mixed-Bento Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -232,42 +190,20 @@ export default function HostEarningsPage() {
           </div>
         </div>
 
-        {/* 4. Bank Settings (White Complex Card) */}
-        <div className="lg:col-span-2 xl:col-span-2 bg-white border border-black/5 rounded-[32px] p-6 shadow-xl flex flex-col md:flex-row gap-6">
-          {/* Left Timeline Side */}
-          <div className="w-full md:w-1/3 border-r border-black/5 pr-6 flex flex-col">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-[#a0f212] flex items-center justify-center text-[#0b0c01] shrink-0">
-                <IndianRupee className="w-5 h-5" />
-              </div>
-              <h2 className="text-[#0b0c01] font-extrabold text-lg leading-tight">Bank<br/>Setup</h2>
-            </div>
-
-            <div className="relative flex-1 ml-4 mt-2 border-l-2 border-black/5 space-y-8 pb-4">
-              <div className="relative pl-6">
-                <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full border-2 ${bankDetails ? 'bg-[#a0f212] border-[#a0f212]' : 'bg-white border-black/20'}`} />
-                <h3 className="text-xs font-extrabold text-[#0b0c01]">Profile Linked</h3>
-                <p className="text-[10px] text-muted-foreground font-semibold mt-1">Host ID generated</p>
-              </div>
-              <div className="relative pl-6">
-                <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full border-2 ${bankDetails ? 'bg-[#a0f212] border-[#a0f212]' : 'bg-white border-black/20'}`} />
-                <h3 className="text-xs font-extrabold text-[#0b0c01]">Bank Details</h3>
-                <p className="text-[10px] text-muted-foreground font-semibold mt-1">Submit your account</p>
-              </div>
-              <div className="relative pl-6">
-                <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full border-2 ${bankDetails ? 'bg-[#a78bfa] border-[#a78bfa]' : 'bg-white border-black/20'}`} />
-                <h3 className="text-xs font-extrabold text-[#0b0c01]">Verification</h3>
-                <p className="text-[10px] text-muted-foreground font-semibold mt-1">Pending admin check</p>
-              </div>
-            </div>
+        {/* 4. Bank Settings CTA (White Card) */}
+        <div className="lg:col-span-2 xl:col-span-2 bg-white border border-black/5 rounded-[32px] p-8 shadow-xl flex flex-col justify-center items-center text-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-[#a0f212]/10 flex items-center justify-center text-[#0b0c01] mb-2">
+            <IndianRupee className="w-8 h-8" />
           </div>
-
-          {/* Right Form Side */}
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-2xl p-5 relative overflow-hidden group flex-1 flex flex-col justify-center">
-               <BankDetailsForm form={form} isLoading={isLoading} isEdit={isEdit} onChange={handleChange} onSubmit={handleSubmit} />
-            </div>
-          </div>
+          <h2 className="text-[#0b0c01] font-extrabold text-2xl">Bank & KYC Settings</h2>
+          <p className="text-muted-foreground text-sm max-w-md">
+            To ensure secure payouts, your bank details are now managed alongside your identity verification documents in the KYC center.
+          </p>
+          <Link href="/host/kyc">
+            <button className="mt-4 bg-[#0b0c01] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors shadow-xl">
+              Go to KYC Center
+            </button>
+          </Link>
         </div>
 
       </div>

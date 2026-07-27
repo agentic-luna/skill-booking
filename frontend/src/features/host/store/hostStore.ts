@@ -22,6 +22,7 @@ interface HostState {
   // KYC
   kyc: KycResponse | null;
   submitKyc: (payload: SubmitKycPayload) => Promise<KycResponse>;
+  requestKycUnlock: () => Promise<any>;
 
   // Bank details
   bankDetails: any | null;
@@ -90,6 +91,33 @@ export const useHostStore = create<HostState>((set) => ({
       }
 
       return kyc;
+    } catch (e: any) {
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
+  },
+
+  requestKycUnlock: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await hostApi.requestKycUnlock();
+      
+      // Update local state and auth context
+      const authUser = useAuthStore.getState().user;
+      if (authUser) {
+        const updatedUser = {
+          ...authUser,
+          hostProfile: {
+            ...(authUser.hostProfile || {}),
+            kycUnlockRequested: true,
+          },
+        } as any;
+        useAuthStore.setState({ user: updatedUser });
+        saveSession(updatedUser);
+      }
+      
+      set({ isLoading: false });
+      return response;
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
       throw e;

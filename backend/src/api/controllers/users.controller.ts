@@ -25,6 +25,25 @@ export class UsersController {
     }
   }
 
+  static async requestKycUnlock(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const hostProfile = await userRepo.findHostProfileByUserId(req.user!.id);
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+      if (hostProfile.kycStatus !== 'APPROVED') {
+        throw new BadRequestError('KYC is not locked.');
+      }
+      const updated = await prisma.hostProfile.update({
+        where: { id: hostProfile.id },
+        data: { kycUnlockRequested: true },
+      });
+      return ApiResponse.success(res, updated);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async submitBankDetails(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const hostProfile = await userRepo.findHostProfileByUserId(req.user!.id);

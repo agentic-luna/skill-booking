@@ -23,6 +23,7 @@ router.get('/participants', UsersController.getHostParticipants as any);
 router.get('/events/:eventId/bookings', UsersController.getEventBookings as any);
 
 router.post('/kyc', requirePermission(SystemPermissions.HOST_KYC_SUBMIT) as any, UsersController.submitKyc as any);
+router.post('/kyc/request-unlock', requirePermission(SystemPermissions.HOST_KYC_SUBMIT) as any, UsersController.requestKycUnlock as any);
 router.post('/bank-details', requirePermission(SystemPermissions.HOST_BANK_UPDATE) as any, UsersController.submitBankDetails as any);
 router.put('/bank-details', requirePermission(SystemPermissions.HOST_BANK_UPDATE) as any, UsersController.updateBankDetails as any);
 router.get('/bank-details', requirePermission(SystemPermissions.HOST_BANK_UPDATE) as any, UsersController.getBankDetails as any);

@@ -201,30 +201,24 @@ export default function HostLayout({
         </header>
 
         {/* Verification Status Header Banner */}
-        {hasKycSubmitted && !isFullyVerified && (
-          <div className="px-8 py-3 bg-white border-b border-black/5 text-xs flex flex-wrap gap-4 items-center justify-between">
-            {isKycApproved ? (
-              <div className="flex items-center space-x-3">
-                <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase border border-emerald-500/20 tracking-wider">
-                  KYC Verified
-                </span>
-                {hasBankDetailsSubmitted && (
-                  <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase border border-emerald-500/20 tracking-wider">
-                    Bank Details Verified
-                  </span>
-                )}
-              </div>
+        {!isFullyVerified && (
+          <div className="relative z-20 px-8 py-3 bg-amber-50/50 border-b border-amber-200/50 text-xs flex flex-wrap gap-4 items-center justify-between">
+            {(!hasKycSubmitted || !hasBankDetailsSubmitted) ? (
+               <div className="text-amber-700 font-bold flex items-center gap-2 animate-pulse text-xs tracking-wide">
+                 <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                 Please complete your KYC and Bank Details as soon as possible to unlock host features.
+               </div>
             ) : isKycPending ? (
-              <div className="text-amber-600 font-bold flex items-center gap-2 animate-pulse text-xs tracking-wide">
+              <div className="text-amber-700 font-bold flex items-center gap-2 animate-pulse text-xs tracking-wide">
                 <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                Status will be approved soon, please wait...
+                KYC and Bank Details pending review. Please wait for administrators to approve.
               </div>
-            ) : (
+            ) : isKycRejected ? (
               <div className="text-red-600 font-bold flex items-center gap-2 text-xs tracking-wide">
                 <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                 KYC Verification Rejected. Please resubmit valid details.
               </div>
-            )}
+            ) : null}
           </div>
         )}
 

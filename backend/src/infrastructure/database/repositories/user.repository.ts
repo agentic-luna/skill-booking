@@ -207,6 +207,7 @@ export class PrismaUserRepository implements IUserRepository {
             govIdUrl: true,
             gstNumber: true,
             kycStatus: true,
+            kycUnlockRequested: true,
             bio: true,
             updatedAt: true,
             bankDetail: true,
@@ -243,6 +244,7 @@ export class PrismaUserRepository implements IUserRepository {
             govIdUrl: true,
             gstNumber: true,
             kycStatus: true,
+            kycUnlockRequested: true,
             bio: true,
             updatedAt: true,
             bankDetail: {
@@ -275,10 +277,22 @@ export class PrismaUserRepository implements IUserRepository {
     return users;
   }
 
-  async updateKycStatus(hostProfileId: string, status: KycStatus, _rejectionReason?: string): Promise<any> {
+  async updateKycStatus(hostProfileId: string, status: KycStatus, rejectionReason?: string): Promise<HostProfile> {
     return prisma.hostProfile.update({
       where: { id: hostProfileId },
-      data: { kycStatus: status },
+      data: {
+        kycStatus: status,
+      },
+    });
+  }
+
+  async updateKycUnlockStatus(hostProfileId: string, kycStatus: KycStatus, unlockRequested: boolean, rejectionReason?: string): Promise<HostProfile> {
+    return prisma.hostProfile.update({
+      where: { id: hostProfileId },
+      data: {
+        kycStatus,
+        kycUnlockRequested: unlockRequested,
+      },
     });
   }
 }
