@@ -56,7 +56,7 @@ export default function PlatformTab() {
         "15": Number(boostPricing["15"]),
         "30": Number(boostPricing["30"]),
       };
-      await upsertPlatformSetting({ key: "BOOST_PRICING", value: numericPricing });
+      await upsertPlatformSetting({ key: "BOOST_PRICING", value: JSON.stringify(numericPricing) });
       showAlert("Boost Pricing Updated", "Event boost pricing updated successfully.", "success");
     } catch { /* error in store */ }
   };

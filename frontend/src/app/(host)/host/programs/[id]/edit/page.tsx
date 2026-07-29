@@ -149,7 +149,7 @@ export default function EditProgramPage() {
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
-        videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter(Boolean),
+        videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter((url): url is string => Boolean(url)),
       });
 
       showAlert("Program Updated", "Your changes have been saved successfully.", "success");

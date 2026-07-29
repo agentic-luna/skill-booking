@@ -23,6 +23,8 @@ export interface ClientEvent {
   title: string;
   description?: string;
   images: string[];
+  videoUrls?: string[];
+  boostedEvent?: any;
   trainerName?: string;
   trainerInfo?: string;
   trainerBio?: string;

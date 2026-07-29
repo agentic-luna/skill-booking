@@ -46,6 +46,7 @@ export interface CreateEventPayload {
   title: string;
   posterUrl?: string;
   images?: string[];
+  videoUrls?: string[];
   mode: EventMode;
   venue?: {
     address: string;

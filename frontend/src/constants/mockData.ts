@@ -17,6 +17,8 @@ export interface Program {
   imageUrl: string;
   status: "approved" | "pending" | "rejected";
   featured?: boolean;
+  isBoosted?: boolean;
+  videoUrls?: string[];
   mode?: "ONLINE" | "OFFLINE";
   companyName?: string;
   instructorBio?: string;
