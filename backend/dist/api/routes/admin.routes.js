@@ -13,6 +13,13 @@ router.post('/login', rate_limiter_1.authLimiter, admin_controller_1.AdminContro
 // Secure all subsequent admin routes to SUPERADMIN
 router.use(auth_1.authenticate);
 router.use((0, authorize_1.requireRole)(client_1.UserRole.SUPERADMIN));
+// Disable browser caching for secure admin actions
+router.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
 // Integration configs
 router.get('/configs/integrations', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.getIntegrationConfigs);
 router.put('/configs/integrations/:serviceName', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.updateIntegrationConfig);

@@ -32,11 +32,16 @@ interface HostState {
   // Events
   latestCreatedEvent: CreatedEvent | null;
   createEvent: (payload: CreateEventPayload) => Promise<CreatedEvent>;
+  requestBoost: (eventId: string, durationDays: number) => Promise<any>;
+  verifyBoostPayment: (payload: { boostId: string, razorpayPaymentId: string, razorpayOrderId: string, razorpaySignature: string }) => Promise<any>;
   updateEvent: (id: string, payload: any) => Promise<any>;
   deleteEvent: (id: string) => Promise<any>;
   requestEditAccess: (eventId: string, reason?: string) => Promise<any>;
   myEvents: any[];
   fetchMyEvents: () => Promise<void>;
+  
+  boostPricing: Record<string, number> | null;
+  fetchBoostPricing: () => Promise<void>;
 
   // Roster Board
   participants: any[];
@@ -62,6 +67,7 @@ export const useHostStore = create<HostState>((set) => ({
   bankDetails: null,
   latestCreatedEvent: null,
   myEvents: [],
+  boostPricing: null,
   participants: [],
   eventBookings: {},
   dashboard: null,
@@ -164,6 +170,38 @@ export const useHostStore = create<HostState>((set) => ({
 
   // ── Events ──────────────────────────────────────────────────────────────
 
+  verifyBoostPayment: async (payload) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await hostApi.verifyBoostPayment(payload);
+      set({ isLoading: false });
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to verify boost payment';
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+  requestBoost: async (eventId, durationDays) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await hostApi.requestBoost(eventId, durationDays);
+      set({ isLoading: false });
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to request boost';
+      set({ error: message, isLoading: false });
+      throw new Error(message);
+    }
+  },
+  fetchBoostPricing: async () => {
+    try {
+      const pricing = await hostApi.getBoostPricing();
+      set({ boostPricing: pricing });
+    } catch (error: any) {
+      console.error("Failed to fetch boost pricing", error);
+    }
+  },
   createEvent: async (payload) => {
     set({ isLoading: true, error: null });
     try {

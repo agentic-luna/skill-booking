@@ -17,6 +17,7 @@ export default function PlatformTab() {
   const [minPayout, setMinPayout] = useState(50);
   const [platformName, setPlatformName] = useState("BookMySkill");
   const [slogan, setSlogan] = useState("Empowering experts, expanding learners.");
+  const [boostPricing, setBoostPricing] = useState<Record<string, number | string>>({ "7": 500, "15": 900, "30": 1500 });
 
   useEffect(() => {
     if (platformSettings.length === 0) return;
@@ -25,6 +26,14 @@ export default function PlatformTab() {
     setMinPayout(Number(findVal("minPayout", "50")));
     setPlatformName(findVal("platformName", "BookMySkill"));
     setSlogan(findVal("slogan", "Empowering experts, expanding learners."));
+    const pricingVal = findVal("BOOST_PRICING", "");
+    if (pricingVal) {
+      try {
+        setBoostPricing(typeof pricingVal === 'string' ? JSON.parse(pricingVal) : pricingVal);
+      } catch (e) {
+        console.error("Failed to parse boost pricing", e);
+      }
+    }
   }, [platformSettings]);
 
   const handleSaveFinancials = async (e: React.FormEvent) => {
@@ -36,6 +45,19 @@ export default function PlatformTab() {
         upsertPlatformSetting({ key: "minPayout", value: String(minPayout) }),
       ]);
       showAlert("Financial Rules Saved", "Commission, refund, and payout settings applied globally.", "success");
+    } catch { /* error in store */ }
+  };
+
+  const handleSaveBoostPricing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const numericPricing = {
+        "7": Number(boostPricing["7"]),
+        "15": Number(boostPricing["15"]),
+        "30": Number(boostPricing["30"]),
+      };
+      await upsertPlatformSetting({ key: "BOOST_PRICING", value: numericPricing });
+      showAlert("Boost Pricing Updated", "Event boost pricing updated successfully.", "success");
     } catch { /* error in store */ }
   };
 
@@ -134,6 +156,79 @@ export default function PlatformTab() {
           </div>
         </form>
       </div>
+
+      
+      {/* Boost Pricing Card */}
+      <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/10 transition-all duration-500" />
+        <form onSubmit={handleSaveBoostPricing} className="relative z-10">
+          {/* Card Header */}
+          <div className="px-8 pt-8 pb-6 border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#0b0c01] p-2.5 rounded-2xl shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-rocket h-5 w-5 text-blue-400"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+              </div>
+              <div>
+                <h2 className="text-base font-extrabold text-foreground">Event Boost Pricing (INR)</h2>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">Configure how much it costs for hosts to boost their events to the top of search.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card Body */}
+          <div className="px-8 py-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">7 Days</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">₹</span>
+                <input
+                  type="number"
+                  value={boostPricing["7"]}
+                  onChange={(e) => setBoostPricing({...boostPricing, "7": e.target.value})}
+                  className="w-full pl-8 pr-4 h-12 rounded-2xl border border-black/10 dark:border-white/10 bg-muted/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">15 Days</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">₹</span>
+                <input
+                  type="number"
+                  value={boostPricing["15"]}
+                  onChange={(e) => setBoostPricing({...boostPricing, "15": e.target.value})}
+                  className="w-full pl-8 pr-4 h-12 rounded-2xl border border-black/10 dark:border-white/10 bg-muted/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">30 Days</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">₹</span>
+                <input
+                  type="number"
+                  value={boostPricing["30"]}
+                  onChange={(e) => setBoostPricing({...boostPricing, "30": e.target.value})}
+                  className="w-full pl-8 pr-4 h-12 rounded-2xl border border-black/10 dark:border-white/10 bg-muted/30 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#a0f212]/40"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Card Footer */}
+          <div className="px-8 py-5 border-t border-black/5 dark:border-white/5 flex justify-end bg-muted/20 rounded-b-[32px]">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 bg-[#0b0c01] text-white hover:bg-[#1a1c02] px-8 py-3 rounded-full font-bold text-sm shadow-xl transition-all disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Save Pricing
+            </button>
+          </div>
+        </form>
+      </div>
+
 
       {/* Branding Card */}
       <div className="group relative overflow-hidden border border-black/5 dark:border-white/5 bg-card rounded-[32px] shadow-sm hover:shadow-md transition-all duration-300">

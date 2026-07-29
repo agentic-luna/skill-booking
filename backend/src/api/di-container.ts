@@ -84,6 +84,11 @@ import { ToggleEventLikeCommandHandler, GetUserLikedEventsQueryHandler } from '.
 
 import { BoostEventCommandHandler } from '../application/use-cases/boosted-events/boost-event';
 import { GetBoostedEventsQueryHandler } from '../application/use-cases/boosted-events/get-boosted-events';
+import { RequestBoostCommandHandler } from '../application/use-cases/boosted-events/request-boost';
+import { UpdateBoostStatusCommandHandler } from '../application/use-cases/boosted-events/update-boost-status';
+import { GetBoostRequestsQueryHandler } from '../application/use-cases/boosted-events/get-boost-requests';
+import { VerifyBoostPaymentCommandHandler } from '../application/use-cases/boosted-events/verify-boost-payment';
+import { GetBoostPricingQueryHandler } from '../application/use-cases/boosted-events/get-boost-pricing';
 import { SetupTwilioCommandHandler } from '../application/use-cases/integrations/setup-twilio';
 import { SetupSendgridCommandHandler } from '../application/use-cases/integrations/setup-sendgrid';
 import { SetupMetaWaCommandHandler } from '../application/use-cases/integrations/setup-meta-wa';
@@ -197,6 +202,11 @@ mediator.register('GetUserLikedEventsQuery', new GetUserLikedEventsQueryHandler(
 // 12. Register Boosted Event handlers
 mediator.register('BoostEventCommand', new BoostEventCommandHandler(boostedRepo, eventRepo));
 mediator.register('GetBoostedEventsQuery', new GetBoostedEventsQueryHandler(boostedRepo));
+mediator.register('RequestBoostCommand', new RequestBoostCommandHandler(boostedRepo, commsService, configRepo));
+mediator.register('UpdateBoostStatusCommand', new UpdateBoostStatusCommandHandler(boostedRepo));
+mediator.register('GetBoostRequestsQuery', new GetBoostRequestsQueryHandler(boostedRepo));
+mediator.register('VerifyBoostPaymentCommand', new VerifyBoostPaymentCommandHandler(boostedRepo, configRepo));
+mediator.register('GetBoostPricingQuery', new GetBoostPricingQueryHandler(configRepo));
 
 // Integrations
 mediator.register('SetupTwilioCommand', new SetupTwilioCommandHandler(configRepo, cryptoService, cacheService));

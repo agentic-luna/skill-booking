@@ -30,7 +30,7 @@ export default function AnimatedHeroText() {
           initial={{ opacity: 0, filter: "blur(4px)" }}
           animate={{ opacity: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, filter: "blur(4px)" }}
-          className="inline-flex flex-col text-left"
+          className="inline-flex flex-col text-center"
         >
           <span className="block">{PHRASES[phraseIndex].prefix}</span>
           <span className="block text-[#a0f212]">{PHRASES[phraseIndex].highlight}</span>

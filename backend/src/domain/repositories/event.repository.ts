@@ -38,6 +38,7 @@ export interface IEventRepository {
     durationHours?: number;
     description?: string;
     category?: string;
+    videoUrls?: string[];
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;

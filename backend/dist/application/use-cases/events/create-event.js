@@ -68,7 +68,11 @@ class CreateEventCommandHandler {
             durationHours,
             description: data.description,
             category: data.category,
-            venueDetails: data.venue?.district ? { district: data.venue.district } : undefined,
+            videoUrl: data.videoUrl,
+            venueDetails: {
+                district: data.venue?.district || undefined,
+                endDate: data.venue?.endDate || undefined,
+            },
             commissionType,
             platformValue,
         });

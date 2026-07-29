@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Star, Clock, MapPin, Calendar, Heart, Share2, ShieldCheck, 
-  ChevronLeft, Ticket, Loader2,
+  ChevronLeft, ChevronRight, Ticket, Loader2,
   Instagram, Linkedin, Facebook
 } from "lucide-react";
 
@@ -61,6 +61,7 @@ function mapEventToProgram(event: any): Program {
     facebook,
     companyName,
     category: event.category || "technology",
+    videoUrls: event.videoUrls || [],
     rating: 4.8,
     reviewsCount: event._count?.bookings || 12,
     price: event.price || 0,
@@ -105,6 +106,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const openClientAuthModal = useClientAuthModalStore((s) => s.openModal);
 
   const { 
@@ -308,6 +310,50 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                 className="object-cover w-full h-full animate-in fade-in duration-300"
               />
             </div>
+
+            {program.videoUrls && program.videoUrls.length > 0 && (
+              <div className="space-y-4 mt-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-foreground">Introductory Videos</h2>
+                  {program.videoUrls.length > 1 && (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setActiveVideoIndex((prev) => (prev > 0 ? prev - 1 : program.videoUrls!.length - 1))}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {activeVideoIndex + 1} / {program.videoUrls.length}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setActiveVideoIndex((prev) => (prev < program.videoUrls!.length - 1 ? prev + 1 : 0))}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-muted">
+                  <iframe 
+                    key={program.videoUrls[activeVideoIndex]}
+                    width="100%" 
+                    height="100%" 
+                    src={program.videoUrls[activeVideoIndex].replace("watch?v=", "embed/")} 
+                    title={`YouTube video player ${activeVideoIndex + 1}`}
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </div>
+            )}
 
             {/* Syllabus Description */}
             <div className="space-y-3">

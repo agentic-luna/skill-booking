@@ -25,6 +25,26 @@ class PrismaBoostedEventRepository {
         });
         return item;
     }
+    async update(id, data) {
+        return prisma_1.prisma.boostedEvent.update({
+            where: { id },
+            data
+        });
+    }
+    async findPendingBoostRequests() {
+        return prisma_1.prisma.boostedEvent.findMany({
+            where: { status: 'PENDING' },
+            include: {
+                event: {
+                    include: {
+                        host: {
+                            include: { user: true }
+                        }
+                    }
+                }
+            }
+        });
+    }
     async findActiveBoostedEvents() {
         const now = new Date();
         const items = await prisma_1.prisma.boostedEvent.findMany({

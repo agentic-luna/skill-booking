@@ -2,7 +2,7 @@
 
 import React from "react";
 import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
-import { FileText, Tag, Sparkles } from "lucide-react";
+import { FileText, Tag, Sparkles, Youtube } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -97,6 +97,49 @@ export default function BasicInfoSection({
             {...register("description")}
           />
           {errors.description && <p className="text-[12px] text-red-500 font-semibold">{errors.description.message}</p>}
+        </div>
+
+        {/* Video URL */}
+        <div className="space-y-2.5">
+          <Label htmlFor="videoUrl1" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+            <Youtube size={16} className="text-red-500" />
+            <span>YouTube Video URL 1 (Optional)</span>
+          </Label>
+          <Input
+            id="videoUrl1"
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+            {...register("videoUrl1")}
+          />
+          {errors.videoUrl1 && <p className="text-[12px] text-red-500 font-semibold">{errors.videoUrl1.message}</p>}
+        </div>
+
+        <div className="space-y-2.5">
+          <Label htmlFor="videoUrl2" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+            <Youtube size={16} className="text-red-500" />
+            <span>YouTube Video URL 2 (Optional)</span>
+          </Label>
+          <Input
+            id="videoUrl2"
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+            {...register("videoUrl2")}
+          />
+          {errors.videoUrl2 && <p className="text-[12px] text-red-500 font-semibold">{errors.videoUrl2.message}</p>}
+        </div>
+
+        <div className="space-y-2.5">
+          <Label htmlFor="videoUrl3" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+            <Youtube size={16} className="text-red-500" />
+            <span>YouTube Video URL 3 (Optional)</span>
+          </Label>
+          <Input
+            id="videoUrl3"
+            placeholder="https://www.youtube.com/watch?v=..."
+            className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+            {...register("videoUrl3")}
+          />
+          {errors.videoUrl3 && <p className="text-[12px] text-red-500 font-semibold">{errors.videoUrl3.message}</p>}
         </div>
       </CardContent>
     </Card>

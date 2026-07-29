@@ -8,10 +8,12 @@ const rate_limiter_1 = require("../middleware/rate-limiter");
 const system_permissions_1 = require("../../security/system.permissions");
 const di_container_1 = require("../di-container");
 const router = (0, express_1.Router)();
+router.get('/:bookingId/verify', bookings_controller_1.BookingsController.verifyBooking);
 router.use(auth_1.authenticate);
 router.get('/my-bookings', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_READ_OWN), bookings_controller_1.BookingsController.getMyBookings);
 router.get('/mybookings', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_READ_OWN), bookings_controller_1.BookingsController.getMyBookings);
 router.get('/:bookingId/invoice', bookings_controller_1.BookingsController.downloadInvoice);
+router.get('/:bookingId/ticket', bookings_controller_1.BookingsController.downloadTicket);
 router.post('/checkout', rate_limiter_1.checkoutLimiter, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_CREATE), bookings_controller_1.BookingsController.checkout);
 router.post('/:bookingId/confirm', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_CREATE), (0, authorize_1.requireResourceOwner)(async (req) => {
     const booking = await di_container_1.bookingRepo.findById(req.params.bookingId);

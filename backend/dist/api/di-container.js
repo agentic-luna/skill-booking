@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commsService = exports.whatsappService = exports.smsService = exports.emailService = exports.paymentGatewayProvider = exports.metaWaProvider = exports.twilioProvider = exports.sendGridProvider = exports.cryptoService = exports.queueService = exports.cacheService = exports.eventLikeRepo = exports.wishlistRepo = exports.boostedRepo = exports.reviewRepo = exports.notificationRepo = exports.configRepo = exports.ledgerRepo = exports.bookingRepo = exports.eventRepo = exports.userRepo = exports.logger = exports.mediator = void 0;
+exports.ticketGenService = exports.commsService = exports.whatsappService = exports.smsService = exports.emailService = exports.paymentGatewayProvider = exports.metaWaProvider = exports.twilioProvider = exports.sendGridProvider = exports.cryptoService = exports.queueService = exports.cacheService = exports.eventLikeRepo = exports.wishlistRepo = exports.boostedRepo = exports.reviewRepo = exports.notificationRepo = exports.configRepo = exports.ledgerRepo = exports.bookingRepo = exports.eventRepo = exports.userRepo = exports.logger = exports.mediator = void 0;
 const mediator_1 = require("../application/common/mediator");
 // Repositories
 const user_repository_1 = require("../infrastructure/database/repositories/user.repository");
@@ -26,6 +26,7 @@ const email_communication_1 = require("../infrastructure/services/comms/email.co
 const sms_communication_1 = require("../infrastructure/services/comms/sms.communication");
 const whatsapp_communication_1 = require("../infrastructure/services/comms/whatsapp.communication");
 const comms_gateway_1 = require("../infrastructure/services/comms.gateway");
+const ticket_generation_service_1 = require("../infrastructure/services/ticket-generation.service");
 // Handlers
 const signup_1 = require("../application/use-cases/auth/signup");
 const login_1 = require("../application/use-cases/auth/login");
@@ -71,6 +72,11 @@ const manage_wishlist_1 = require("../application/use-cases/wishlist/manage-wish
 const manage_event_likes_1 = require("../application/use-cases/likes/manage-event-likes");
 const boost_event_1 = require("../application/use-cases/boosted-events/boost-event");
 const get_boosted_events_1 = require("../application/use-cases/boosted-events/get-boosted-events");
+const request_boost_1 = require("../application/use-cases/boosted-events/request-boost");
+const update_boost_status_1 = require("../application/use-cases/boosted-events/update-boost-status");
+const get_boost_requests_1 = require("../application/use-cases/boosted-events/get-boost-requests");
+const verify_boost_payment_1 = require("../application/use-cases/boosted-events/verify-boost-payment");
+const get_boost_pricing_1 = require("../application/use-cases/boosted-events/get-boost-pricing");
 const setup_twilio_1 = require("../application/use-cases/integrations/setup-twilio");
 const setup_sendgrid_1 = require("../application/use-cases/integrations/setup-sendgrid");
 const setup_meta_wa_1 = require("../application/use-cases/integrations/setup-meta-wa");
@@ -121,6 +127,8 @@ const whatsappService = new whatsapp_communication_1.WhatsAppCommunicationServic
 exports.whatsappService = whatsappService;
 const commsService = new comms_gateway_1.CommunicationGateway(emailService, smsService, whatsappService, paymentGatewayProvider);
 exports.commsService = commsService;
+const ticketGenService = new ticket_generation_service_1.TicketGenerationService();
+exports.ticketGenService = ticketGenService;
 // 3. Initialize mediator bus
 const mediator = new mediator_1.Mediator();
 exports.mediator = mediator;
@@ -183,6 +191,11 @@ mediator.register('GetUserLikedEventsQuery', new manage_event_likes_1.GetUserLik
 // 12. Register Boosted Event handlers
 mediator.register('BoostEventCommand', new boost_event_1.BoostEventCommandHandler(boostedRepo, eventRepo));
 mediator.register('GetBoostedEventsQuery', new get_boosted_events_1.GetBoostedEventsQueryHandler(boostedRepo));
+mediator.register('RequestBoostCommand', new request_boost_1.RequestBoostCommandHandler(boostedRepo, commsService, configRepo));
+mediator.register('UpdateBoostStatusCommand', new update_boost_status_1.UpdateBoostStatusCommandHandler(boostedRepo));
+mediator.register('GetBoostRequestsQuery', new get_boost_requests_1.GetBoostRequestsQueryHandler(boostedRepo));
+mediator.register('VerifyBoostPaymentCommand', new verify_boost_payment_1.VerifyBoostPaymentCommandHandler(boostedRepo, configRepo));
+mediator.register('GetBoostPricingQuery', new get_boost_pricing_1.GetBoostPricingQueryHandler(configRepo));
 // Integrations
 mediator.register('SetupTwilioCommand', new setup_twilio_1.SetupTwilioCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupSendgridCommand', new setup_sendgrid_1.SetupSendgridCommandHandler(configRepo, cryptoService, cacheService));

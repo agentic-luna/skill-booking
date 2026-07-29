@@ -28,10 +28,12 @@ class ClientSendOtpCommandHandler {
         }
         const normalizedPhone = phone.trim();
         // Check rate limit: Maximum 3 OTP requests per hour (3600s)
+        // Rate limiting is disabled in development / test environments
         const rateLimitKey = `otp_rate_limit:${normalizedPhone}`;
         const currentCountVal = await this.cacheService.get(rateLimitKey);
         const currentCount = currentCountVal ? Number(currentCountVal) : 0;
-        if (currentCount >= 3) {
+        const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+        if (!isDev && currentCount >= 3) {
             throw new errors_1.TooManyRequestsError('Maximum OTP request limit reached (3 OTPs per hour). Please try again after 1 hour.');
         }
         // Check if phone number is already registered

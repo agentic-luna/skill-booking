@@ -54,7 +54,7 @@ export default function AdminDashboard() {
     if (t.includes("cook") || t.includes("bake") || t.includes("chef") || t.includes("food") || t.includes("culinary")) return "Culinary & Baking";
     if (t.includes("fitness") || t.includes("yoga") || t.includes("workout") || t.includes("gym") || t.includes("wellness")) return "Fitness & Health";
     if (t.includes("photo") || t.includes("camera") || t.includes("video") || t.includes("lens")) return "Photography";
-    return "Other Skills";
+    return "Other Events";
   };
 
   const categoryCounts: Record<string, number> = {};

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Sparkles, LayoutDashboard, UserCheck, CheckSquare, Settings,
-  Menu, LogOut, Bell, Radio, Wallet, Users
+  Menu, LogOut, Bell, Radio, Wallet, Users, AlertTriangle
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -16,7 +16,9 @@ const menuItems = [
   { name: "Hosts Verification", href: "/admin/hosts", icon: UserCheck },
   { name: "Hosts Management", href: "/admin/hosts-management", icon: Users },
   { name: "Approvals", href: "/admin/approvals", icon: CheckSquare },
+  { name: "Boost Requests", href: "/admin/boost-requests", icon: Sparkles },
   { name: "Finance & Payouts", href: "/admin/finance", icon: Wallet },
+  { name: "Complaints", href: "/admin/complaints", icon: AlertTriangle },
   { name: "Broadcast Center", href: "/admin/broadcast", icon: Radio },
   { name: "Platform Settings", href: "/admin/settings", icon: Settings },
 ];
@@ -91,7 +93,7 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
           className="flex items-center gap-3.5 px-4 py-3 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all group font-medium"
         >
           <Sparkles className="h-5 w-5 text-white/60 group-hover:text-white transition-colors" />
-          <span className="text-sm tracking-wide">Explore Skills</span>
+          <span className="text-sm tracking-wide">Explore Events</span>
         </Link>
         <button
           onClick={onLogout}

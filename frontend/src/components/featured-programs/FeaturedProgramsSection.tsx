@@ -43,6 +43,7 @@ function mapEventToProgram(event: any): Program {
     imageUrl: imageUrlStr,
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
+    isBoosted: event.boostedEvent?.status === 'APPROVED' && event.boostedEvent?.isActive,
   };
 }
 
@@ -55,6 +56,13 @@ export default function FeaturedProgramsSection() {
 
   const featuredPrograms = (events || [])
     .filter((p) => p.status === "APPROVED")
+    .sort((a, b) => {
+      const aBoosted = a.boostedEvent?.status === 'APPROVED' && a.boostedEvent?.isActive;
+      const bBoosted = b.boostedEvent?.status === 'APPROVED' && b.boostedEvent?.isActive;
+      if (aBoosted && !bBoosted) return -1;
+      if (!aBoosted && bBoosted) return 1;
+      return 0;
+    })
     .map(mapEventToProgram)
     .slice(0, 4);
 

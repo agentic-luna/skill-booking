@@ -37,7 +37,7 @@ class EventsController {
     }
     static async createEvent(req, res, next) {
         try {
-            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category } = req.body;
+            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrl } = req.body;
             const event = await di_container_1.mediator.send(new create_event_1.CreateEventCommand(req.user.id, {
                 title,
                 posterUrl,
@@ -60,7 +60,7 @@ class EventsController {
     static async updateEvent(req, res, next) {
         try {
             const { id } = req.params;
-            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description } = req.body;
+            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, videoUrl } = req.body;
             // 1. Fetch host profile first to verify ownership
             const hostProfile = await prisma_1.prisma.hostProfile.findUnique({
                 where: { userId: req.user.id },
@@ -159,7 +159,10 @@ class EventsController {
                     description: description !== undefined ? String(description) : event.description,
                     instructorId,
                     venueId,
-                    venueDetails: (venue?.district ? { district: venue.district } : event.venueDetails),
+                    venueDetails: {
+                        district: venue?.district !== undefined ? venue.district : event.venueDetails?.district,
+                        endDate: venue?.endDate !== undefined ? venue.endDate : event.venueDetails?.endDate,
+                    },
                 },
                 include: {
                     instructor: true,
@@ -191,6 +194,7 @@ class EventsController {
                     address: updatedEvent.venue?.address || '',
                     meetingLink: updatedEvent.venue?.meetingLink || '',
                     district: updatedEvent.venueDetails?.district || '',
+                    endDate: updatedEvent.venueDetails?.endDate || '',
                     instructorName: updatedEvent.instructor?.name || '',
                     companyName: updatedEvent.instructor?.companyName || '',
                     instructorBio: updatedEvent.instructor?.bio || '',
