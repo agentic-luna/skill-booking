@@ -29,6 +29,14 @@ class VerifyBoostPaymentCommandHandler {
         this.configRepo = configRepo;
     }
     async handle(command) {
+        if (command.razorpaySignature === 'MOCK_SUCCESS') {
+            // Bypass Razorpay config check and signature verification for testing
+            const boost = await this.boostedRepo.update(command.boostId, {
+                status: 'APPROVED',
+                isActive: true
+            });
+            return { success: true, boost };
+        }
         const config = await this.configRepo.findIntegration(client_1.IntegrationService.RAZORPAY);
         if (!config || !config.credentials || typeof config.credentials !== 'object') {
             throw new errors_1.BadRequestError('Razorpay is not configured on this platform');

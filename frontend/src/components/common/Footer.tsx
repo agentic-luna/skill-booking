@@ -6,10 +6,10 @@ export default function Footer() {
   return (
     <footer className="bg-[#f5f5f5] py-12 text-sm relative z-10 mt-auto border-t border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+
         {/* Top Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          
+
           {/* Column 1: Support */}
           <div className="space-y-4">
             <h4 className="font-bold text-gray-900">Support</h4>
@@ -59,7 +59,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-gray-200">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
             <span className="text-xl font-bold tracking-tight text-gray-900">
-              BookMy<span className="text-gray-500">Skill</span>
+              BookMy<span className="text-gray-500">Training</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">

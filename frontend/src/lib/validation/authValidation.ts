@@ -112,10 +112,24 @@ export function evaluatePasswordStrength(password: string): PasswordStrengthResu
   };
 }
 
+// Email Normalization & Validation utilities
+export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+export function normalizeEmail(email: string | undefined | null): string {
+  if (!email) return "";
+  return email.trim().toLowerCase();
+}
+
+export function isValidEmail(email: string | undefined | null): boolean {
+  if (!email) return false;
+  return EMAIL_REGEX.test(normalizeEmail(email));
+}
+
 // Zod schemas
 export const clientSignupZodSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").regex(/^[A-Za-z\s]+$/, "First name should only contain letters"),
   lastName: z.string().trim().min(1, "Last name is required").regex(/^[A-Za-z\s]+$/, "Last name should only contain letters"),
+  email: z.string().trim().toLowerCase().regex(EMAIL_REGEX, "Please enter a valid email address (e.g. user@example.com)"),
   phone: z.string().refine((val) => isValidE164Phone(val), {
     message: "Please enter a valid WhatsApp mobile number for the selected country (e.g. +91 94882 52540)",
   }),
@@ -125,7 +139,7 @@ export const clientSignupZodSchema = z.object({
 export const hostSignupZodSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().trim().toLowerCase().regex(EMAIL_REGEX, "Please enter a valid email address (e.g. host@example.com)"),
   phone: z.string().refine((val) => isValidE164Phone(val), {
     message: "Please enter a valid phone number with country code",
   }),

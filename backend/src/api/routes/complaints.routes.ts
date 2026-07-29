@@ -1,13 +1,23 @@
 import { Router } from 'express';
-import { createComplaint, getAllComplaints, updateComplaintStatus } from '../controllers/complaints.controller';
+import { createComplaint, getAllComplaints, getComplaintById, updateComplaintStatus } from '../controllers/complaints.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-// Create a new complaint (public or authenticated)
-router.post('/', createComplaint);
+const optionalAuth = (req: any, res: any, next: any) => {
+  if (req.headers.authorization) {
+    return (authenticate as any)(req, res, next);
+  }
+  next();
+};
 
-// Admin routes for managing complaints
-router.get('/admin', getAllComplaints);
-router.patch('/admin/:id/status', updateComplaintStatus);
+// 1. Client Endpoint: Create a new complaint for a booking
+router.post('/', optionalAuth, createComplaint);
+
+// 2. Admin Endpoints: Managing & viewing detailed complaints
+router.get('/admin', optionalAuth, getAllComplaints);
+router.get('/admin/:id', optionalAuth, getComplaintById);
+router.get('/:id', optionalAuth, getComplaintById);
+router.patch('/admin/:id/status', optionalAuth, updateComplaintStatus);
 
 export default router;

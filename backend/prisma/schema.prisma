@@ -347,6 +347,7 @@ model Booking {
   event             Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   transactionLedger TransactionLedger[]
   refundRequest     RefundRequest?
+  complaints        Complaint[]
 
   @@map("bookings")
 }
@@ -478,15 +479,18 @@ model Complaint {
   id          String          @id @default(uuid()) @db.Uuid
   clientId    String?         @db.Uuid
   hostId      String?         @db.Uuid
+  bookingId   String?         @db.Uuid
   hostName    String?
+  category    String?
   subject     String
   description String          @db.Text
   status      ComplaintStatus @default(PENDING)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  client User?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  host   HostProfile? @relation(fields: [hostId], references: [id], onDelete: SetNull)
+  client  User?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  host    HostProfile? @relation(fields: [hostId], references: [id], onDelete: SetNull)
+  booking Booking?     @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 
   @@map("complaints")
 }

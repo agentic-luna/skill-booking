@@ -56,7 +56,8 @@ export default function RegisterPage() {
   // --- HOST HANDLERS ---
   const onHostInfoSubmit = async (data: HostInfoFormValues) => {
     try {
-      await startRegistration({ ...data, role: "host" });
+      const cleanEmail = data.email.trim().toLowerCase();
+      await startRegistration({ ...data, email: cleanEmail, role: "host" });
       setHostStep(1);
     } catch { /* error set in store */ }
   };

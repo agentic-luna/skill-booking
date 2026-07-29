@@ -65,6 +65,7 @@ export interface WishlistItem {
 
 export interface ClientBooking {
   id: string;
+  bookingRef?: string;
   clientUserId?: string;
   clientId: string;
   eventId: string;

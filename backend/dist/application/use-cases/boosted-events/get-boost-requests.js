@@ -11,7 +11,7 @@ class GetBoostRequestsQueryHandler {
         this.boostedRepo = boostedRepo;
     }
     async handle(query) {
-        return this.boostedRepo.findPendingBoostRequests();
+        return this.boostedRepo.findAllBoostRequests();
     }
 }
 exports.GetBoostRequestsQueryHandler = GetBoostRequestsQueryHandler;

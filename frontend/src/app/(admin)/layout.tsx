@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { API_BASE_URL } from "@/lib/config";
 
 // ─── Menu config ──────────────────────────────────────────────────────────────
 const menuItems = [
@@ -32,6 +33,26 @@ interface SidebarProps {
 }
 
 function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarProps) {
+  const [pendingComplaintsCount, setPendingComplaintsCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/complaints/admin`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          const pending = data.data.filter((c: any) => c.status === "PENDING").length;
+          setPendingComplaintsCount(pending);
+        }
+      } catch (err) {
+        console.error("Error fetching pending complaints count", err);
+      }
+    };
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 15000); // refresh every 15s
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex flex-col h-full bg-[#0d1e17] text-white justify-between py-8 px-6 overflow-y-scroll [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#a0f212]/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-[#a0f212]">
       <div className="space-y-8 flex flex-col">
@@ -63,6 +84,7 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
           {menuItems.map((item) => {
             const IconComp = item.icon;
             const isActive = pathname === item.href;
+            const isComplaints = item.href === "/admin/complaints";
             return (
               <Link
                 key={item.href}
@@ -79,7 +101,12 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
                       }`}
                   />
                 </div>
-                <span className="text-sm tracking-wide">{item.name}</span>
+                <span className="text-sm tracking-wide flex-1">{item.name}</span>
+                {isComplaints && pendingComplaintsCount > 0 && (
+                  <span className="bg-[#a0f212] text-[#0b0c01] text-[10px] font-black px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(160,242,18,0.3)] shrink-0 animate-pulse">
+                    {pendingComplaintsCount}
+                  </span>
+                )}
               </Link>
             );
           })}
