@@ -120,3 +120,27 @@ export async function getEventBookings(eventId: string): Promise<any[]> {
   );
   return res.data;
 }
+
+export async function requestBoost(eventId: string, durationDays: number): Promise<any> {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    '/boosted-events/request',
+    { method: "POST", body: JSON.stringify({ eventId, durationDays }) }
+  );
+  return res.data;
+}
+
+export async function verifyBoostPayment(payload: { boostId: string, razorpayPaymentId: string, razorpayOrderId: string, razorpaySignature: string }): Promise<any> {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    '/boosted-events/verify-payment',
+    { method: "POST", body: JSON.stringify(payload) }
+  );
+  return res.data;
+}
+
+export const getBoostPricing = async (): Promise<Record<string, number>> => {
+  const res = await hostRequest<{ success: boolean; data: Record<string, number> }>(
+    '/boosted-events/pricing',
+    { method: "GET" }
+  );
+  return res.data;
+};

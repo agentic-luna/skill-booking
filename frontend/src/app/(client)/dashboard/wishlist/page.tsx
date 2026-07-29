@@ -89,7 +89,7 @@ export default function WishlistPage() {
           <div className="space-y-1">
             <BackButton href="/" label="Back to feed" />
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-              <Heart className="h-6 w-6 text-red-500 fill-red-500" /> My Saved Skills
+              <Heart className="h-6 w-6 text-red-500 fill-red-500" /> My Saved Events
             </h1>
             <p className="text-sm text-muted-foreground">Keep track of the classes you want to attend next.</p>
           </div>

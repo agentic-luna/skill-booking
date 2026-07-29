@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Sparkles } from "lucide-react";
 
@@ -156,12 +156,24 @@ export default function CreateProgramPage() {
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
+        videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter(Boolean),
       });
 
       setSubmitted(true);
       setTimeout(() => router.push("/host/programs"), 2000);
     } catch {
       // error displayed from store
+    }
+  };
+
+  const onError = (errors: FieldErrors<ProgramFormValues>) => {
+    const firstErrorKey = Object.keys(errors)[0];
+    if (firstErrorKey) {
+      const element = document.getElementById(firstErrorKey) || document.getElementsByName(firstErrorKey)[0];
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
     }
   };
 
@@ -208,7 +220,7 @@ export default function CreateProgramPage() {
         </div>
       )}
 
-      <form id="create-program-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form id="create-program-form" onSubmit={handleSubmit(onSubmit, onError)} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           {/* Left: Form Sections */}

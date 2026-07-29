@@ -2,7 +2,8 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { Plus, Loader2, Clock, Users, Calendar, MapPin, Edit2, Trash2 } from "lucide-react";
+import { Plus, Loader2, Clock, Users, Calendar, MapPin, Edit2, Trash2, Rocket } from "lucide-react";
+import { RequestBoostModal } from "./_components/RequestBoostModal";
 import { Button } from "@/components/ui/button";
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
@@ -12,6 +13,7 @@ export default function HostProgramsPage() {
   const { myEvents, fetchMyEvents, deleteEvent, isLoading } = useHostStore();
   const showAlert = useAlertStore(s => s.showAlert);
   const [isRepublishOpen, setIsRepublishOpen] = React.useState(false);
+  const [boostModalState, setBoostModalState] = React.useState({ isOpen: false, eventId: null as string | null, title: "" });
 
   useEffect(() => {
     fetchMyEvents();
@@ -123,6 +125,13 @@ export default function HostProgramsPage() {
                 <Edit2 className="w-4 h-4" />
               </button>
             </Link>
+            <button 
+              onClick={() => setBoostModalState({ isOpen: true, eventId: prog.id, title: prog.title })}
+              className="w-10 h-10 rounded-full bg-blue-50 hover:bg-blue-500 text-blue-600 hover:text-white flex items-center justify-center transition-colors shadow-sm"
+              title="Request Boost"
+            >
+              <Rocket className="w-4 h-4" />
+            </button>
             <button onClick={() => handleDelete(prog.id)} className="w-10 h-10 rounded-full bg-red-50 hover:bg-red-500 text-red-600 hover:text-white flex items-center justify-center transition-colors shadow-sm">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -190,6 +199,13 @@ export default function HostProgramsPage() {
         open={isRepublishOpen} 
         onOpenChange={setIsRepublishOpen} 
         events={myEvents} 
+      />
+
+      <RequestBoostModal 
+        isOpen={boostModalState.isOpen}
+        onClose={() => setBoostModalState({ isOpen: false, eventId: null, title: "" })}
+        eventId={boostModalState.eventId}
+        eventTitle={boostModalState.title}
       />
     </div>
   );

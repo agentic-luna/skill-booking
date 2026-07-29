@@ -9,6 +9,8 @@ export interface IBoostedEventRepository {
   }): Promise<BoostedEvent>;
 
   findActiveBoostedEvents(): Promise<BoostedEvent[]>;
+  update(id: string, data: any): Promise<BoostedEvent>;
+  findAllBoostRequests(): Promise<BoostedEvent[]>;
 
   delete(eventId: string): Promise<boolean>;
 }

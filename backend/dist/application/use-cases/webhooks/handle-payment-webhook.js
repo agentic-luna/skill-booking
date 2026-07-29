@@ -27,8 +27,8 @@ class HandlePaymentWebhookCommandHandler {
     async handle(command) {
         const { payload } = command;
         // Retrieve and verify booking
-        const gatewayTxnId = payload.paymentId || payload.razorpay_payment_id;
-        const bookingRef = payload.bookingRef || payload.razorpay_order_id;
+        const gatewayTxnId = payload.paymentId || payload.razorpay_payment_id || payload.payload?.payment?.entity?.id;
+        const bookingRef = payload.bookingRef || payload.razorpay_order_id || payload.payload?.payment?.entity?.order_id || payload.payload?.payment?.entity?.notes?.bookingRef;
         if (!bookingRef) {
             throw new Error('Booking reference not provided in payload');
         }

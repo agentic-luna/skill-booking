@@ -122,3 +122,9 @@ export const approveRefundRequest = (refundId: string) =>
 
 export const declineRefundRequest = (refundId: string) =>
   request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/decline`, { method: "PUT" }).then(r => r.data);
+
+export const getBoostRequests = () =>
+  request<ApiData<any>>("/boosted-events/requests").then(r => r.data);
+
+export const updateBoostStatus = (id: string, status: 'APPROVED' | 'REJECTED') =>
+  request<ApiData<any>>(`/boosted-events/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }).then(r => r.data);

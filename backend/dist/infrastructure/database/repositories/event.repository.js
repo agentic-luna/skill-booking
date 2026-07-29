@@ -12,6 +12,7 @@ function mapEvent(e) {
         totalSeats: Number(e.totalSeats),
         version: Number(e.version),
         commission: e.commission ? mapCommission(e.commission) : null,
+        boostedEvent: e.boostedEvent || null,
         instructor: e.instructor ? {
             id: e.instructor.id,
             name: e.instructor.name,
@@ -33,6 +34,7 @@ function mapEvent(e) {
             address: e.venue?.address || '',
             meetingLink: e.venue?.meetingLink || '',
             district: e.venueDetails?.district || '',
+            endDate: e.venueDetails?.endDate || '',
             instructorName: e.instructor?.name || '',
             companyName: e.instructor?.companyName || '',
             instructorBio: e.instructor?.bio || '',
@@ -73,6 +75,7 @@ class PrismaEventRepository {
                 commission: true,
                 instructor: true,
                 venue: true,
+                boostedEvent: true,
             },
         });
         return mapEvent(e);
@@ -115,6 +118,7 @@ class PrismaEventRepository {
                 commission: true,
                 instructor: true,
                 venue: true,
+                boostedEvent: true,
             },
             orderBy: {
                 startTime: 'asc',

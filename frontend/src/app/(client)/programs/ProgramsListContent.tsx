@@ -21,9 +21,12 @@ import type { ClientEvent } from "@/features/client/api/types";
 interface FilterSidebarProps {
   category: string;
   setCategory: (v: string) => void;
-  localMaxPrice: number;
-  setLocalMaxPrice: (v: number) => void;
+  minPrice: number;
+  setMinPrice: (v: number) => void;
+  maxPrice: number;
   setMaxPrice: (v: number) => void;
+  trainerName: string;
+  setTrainerName: (v: string) => void;
   minRating: number;
   setMinRating: (v: number) => void;
   hideFull: boolean;
@@ -36,7 +39,7 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = React.memo(function FilterSidebar({
-  category, setCategory, localMaxPrice, setLocalMaxPrice, setMaxPrice,
+  category, setCategory, minPrice, setMinPrice, maxPrice, setMaxPrice, trainerName, setTrainerName,
   minRating, setMinRating, hideFull, setHideFull, handleResetFilters, categoriesList, router,
   isDark = false
 }: FilterSidebarProps) {
@@ -72,30 +75,40 @@ const FilterSidebar = React.memo(function FilterSidebar({
         </div>
       </div>
 
-      {/* Price Slider */}
+      {/* Price Range */}
       <div className="space-y-3 pt-2">
-        <div className="flex justify-between items-end">
-          <label className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? "text-white/50" : "text-muted-foreground/80"}`}>Max Ticket Price</label>
-          <span className={`font-extrabold ${isDark ? "text-white" : "text-[#0b0c01]"}`}>{localMaxPrice === 0 ? "Any Price" : `₹${localMaxPrice}`}</span>
-        </div>
-        <div className="pt-2">
+        <label className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? "text-white/50" : "text-muted-foreground/80"}`}>Price Range (₹)</label>
+        <div className="flex items-center gap-2">
           <input
-            type="range"
+            type="number"
             min={0}
-            max={200}
-            step={1}
-            value={localMaxPrice}
-            onChange={(e) => setLocalMaxPrice(Number(e.target.value))}
-            onMouseUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
-            onTouchEnd={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
-            onKeyUp={(e) => setMaxPrice(Number((e.target as HTMLInputElement).value))}
-            className={`w-full h-1.5 rounded-full appearance-none cursor-pointer focus:outline-none ${isDark ? "accent-[#a0f212] bg-white/10" : "accent-primary bg-muted"}`}
+            value={minPrice || ""}
+            onChange={(e) => setMinPrice(Number(e.target.value))}
+            placeholder="Min"
+            className={`w-full px-3 py-1.5 rounded-lg text-sm border focus:outline-none focus:ring-1 ${isDark ? "bg-white/5 border-white/10 text-white focus:ring-[#a0f212]" : "bg-white border-gray-200 text-gray-900 focus:ring-primary"}`}
           />
-          <div className={`flex justify-between text-[10px] font-semibold mt-2 ${isDark ? "text-white/40" : "text-muted-foreground"}`}>
-            <span>₹0</span>
-            <span>₹200</span>
-          </div>
+          <span className={isDark ? "text-white/50" : "text-gray-400"}>-</span>
+          <input
+            type="number"
+            min={0}
+            value={maxPrice || ""}
+            onChange={(e) => setMaxPrice(Number(e.target.value))}
+            placeholder="Max"
+            className={`w-full px-3 py-1.5 rounded-lg text-sm border focus:outline-none focus:ring-1 ${isDark ? "bg-white/5 border-white/10 text-white focus:ring-[#a0f212]" : "bg-white border-gray-200 text-gray-900 focus:ring-primary"}`}
+          />
         </div>
+      </div>
+
+      {/* Trainer Name Filter */}
+      <div className="space-y-3 pt-2">
+        <label className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? "text-white/50" : "text-muted-foreground/80"}`}>Trainer Name</label>
+        <input
+          type="text"
+          value={trainerName}
+          onChange={(e) => setTrainerName(e.target.value)}
+          placeholder="E.g. John Doe"
+          className={`w-full px-3 py-2 rounded-xl text-sm border focus:outline-none focus:ring-1 ${isDark ? "bg-white/5 border-white/10 text-white focus:ring-[#a0f212]" : "bg-white border-gray-200 text-gray-900 focus:ring-primary"}`}
+        />
       </div>
 
       {/* Minimum Rating */}
@@ -170,8 +183,9 @@ export default function ProgramsListContent() {
   const [category, setCategory] = useState(initialCategory);
   const [location, setLocation] = useState(initialLocation);
   const [dates, setDates] = useState(initialDates);
-  const [maxPrice, setMaxPrice] = useState<number>(0); // 0 means "Any Price"
-  const [localMaxPrice, setLocalMaxPrice] = useState<number>(0);
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [trainerName, setTrainerName] = useState("");
   const [minRating, setMinRating] = useState<number>(0);
   const [hideFull, setHideFull] = useState(false);
   const [sortBy, setSortBy] = useState("popular");
@@ -210,11 +224,7 @@ export default function ProgramsListContent() {
     setDates(initialDates);
   }, [initialDates]);
 
-  // Sync local slider state when filters are reset
-  useEffect(() => {
-    setLocalMaxPrice(maxPrice);
-  }, [maxPrice]);
-
+  
   const categoriesList = [
     { name: "All Categories", value: "all" },
     { name: "Technology", value: "technology" },
@@ -233,11 +243,11 @@ export default function ProgramsListContent() {
     const isFuture = new Date(prog.startTime) >= new Date();
     if (!isFuture) return false;
 
-    const trainerName = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
+    const trainerNameStr = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
     const matchesSearch =
       prog.title.toLowerCase().includes(search.toLowerCase()) ||
       (prog.description || "").toLowerCase().includes(search.toLowerCase()) ||
-      trainerName.toLowerCase().includes(search.toLowerCase());
+      trainerNameStr.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = category === "all" || (prog.category || "").toLowerCase() === category.toLowerCase();
     const eventLocation = prog.mode === "ONLINE" ? "Online" : prog.venueDetails?.city || prog.venueDetails?.address || "In Person";
     let matchesLocation = !location || location === "Anywhere";
@@ -287,7 +297,9 @@ export default function ProgramsListContent() {
     const matchesPrice = maxPrice === 0 || price <= maxPrice;
     const matchesRating = 4.8 >= minRating;
     const matchesAvailability = !hideFull || prog.availableSeats > 0;
-    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability;
+    const matchesTrainerName = !trainerName || trainerNameStr.toLowerCase().includes(trainerName.toLowerCase());
+    
+    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability && matchesTrainerName;
   });
 
   // Sorting calculations
@@ -309,6 +321,7 @@ export default function ProgramsListContent() {
     setDates("");
     setMaxPrice(0);
     setMinRating(0);
+    setTrainerName("");
     setHideFull(false);
     setSortBy("popular");
     router.push("/programs");
@@ -421,9 +434,12 @@ export default function ProgramsListContent() {
               <FilterSidebar
                 category={category}
                 setCategory={setCategory}
-                localMaxPrice={localMaxPrice}
-                setLocalMaxPrice={setLocalMaxPrice}
+                minPrice={minPrice}
+                setMinPrice={setMinPrice}
+                maxPrice={maxPrice}
                 setMaxPrice={setMaxPrice}
+                trainerName={trainerName}
+                setTrainerName={setTrainerName}
                 minRating={minRating}
                 setMinRating={setMinRating}
                 hideFull={hideFull}
@@ -597,9 +613,12 @@ export default function ProgramsListContent() {
               <FilterSidebar
                 category={category}
                 setCategory={setCategory}
-                localMaxPrice={localMaxPrice}
-                setLocalMaxPrice={setLocalMaxPrice}
+                minPrice={minPrice}
+                setMinPrice={setMinPrice}
+                maxPrice={maxPrice}
                 setMaxPrice={setMaxPrice}
+                trainerName={trainerName}
+                setTrainerName={setTrainerName}
                 minRating={minRating}
                 setMinRating={setMinRating}
                 hideFull={hideFull}

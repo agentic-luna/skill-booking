@@ -5,6 +5,7 @@ import FeaturedProgramsSection from "@/components/featured-programs/FeaturedProg
 import CategorySection from "@/components/category-section/CategorySection";
 import TestimonialSection from "@/components/testimonials/TestimonialSection";
 import CtaSection from "@/components/cta-section/CtaSection";
+import ComplaintSection from "@/components/complaints/ComplaintSection";
 
 export default function LandingPage() {
   return (
@@ -14,6 +15,7 @@ export default function LandingPage() {
       <CategorySection />
       <TestimonialSection />
       <CtaSection />
+      <ComplaintSection />
       <Footer />
     </div>
   );

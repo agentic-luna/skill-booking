@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Save, Loader2, Trash2, Lock } from "lucide-react";
 
@@ -89,6 +89,9 @@ export default function EditProgramPage() {
               : details.venueDetails?.address || "",
           district: details.venueDetails?.district || "",
           description: details.description || "",
+          videoUrl1: details.videoUrls && details.videoUrls[0] ? details.videoUrls[0] : "",
+          videoUrl2: details.videoUrls && details.videoUrls[1] ? details.videoUrls[1] : "",
+          videoUrl3: details.videoUrls && details.videoUrls[2] ? details.videoUrls[2] : "",
           imageUrl: details.posterUrl || "",
           additionalImages: details.images && details.images.length > 0 
             ? details.images.map((url: string) => ({ url })) 
@@ -146,6 +149,7 @@ export default function EditProgramPage() {
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
+        videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter(Boolean),
       });
 
       showAlert("Program Updated", "Your changes have been saved successfully.", "success");
@@ -154,6 +158,17 @@ export default function EditProgramPage() {
       showAlert("Error", err.message || "Failed to save changes.", "destructive");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onError = (errors: FieldErrors<ProgramFormValues>) => {
+    const firstErrorKey = Object.keys(errors)[0];
+    if (firstErrorKey) {
+      const element = document.getElementById(firstErrorKey) || document.getElementsByName(firstErrorKey)[0];
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
     }
   };
 
@@ -283,7 +298,7 @@ export default function EditProgramPage() {
         </div>
       </div>
 
-      <form id="edit-program-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form id="edit-program-form" onSubmit={handleSubmit(onSubmit, onError)} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           {/* ── Left Column: Form Sections ─────────────────────────── */}

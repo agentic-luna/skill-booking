@@ -29,6 +29,28 @@ export class PrismaBoostedEventRepository implements IBoostedEventRepository {
     return item as any;
   }
 
+  
+  async update(id: string, data: any): Promise<BoostedEvent> {
+    return prisma.boostedEvent.update({
+      where: { id },
+      data
+    }) as any;
+  }
+  
+  async findAllBoostRequests(): Promise<BoostedEvent[]> {
+    return prisma.boostedEvent.findMany({
+      include: {
+        event: {
+          include: {
+            host: {
+              include: { user: true }
+            }
+          }
+        }
+      }
+    }) as any;
+  }
+  
   async findActiveBoostedEvents(): Promise<BoostedEvent[]> {
     const now = new Date();
     const items = await prisma.boostedEvent.findMany({

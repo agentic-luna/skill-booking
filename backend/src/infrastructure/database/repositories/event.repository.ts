@@ -11,6 +11,7 @@ function mapEvent(e: any): any {
     totalSeats: Number(e.totalSeats),
     version: Number(e.version),
     commission: e.commission ? mapCommission(e.commission) : null,
+    boostedEvent: e.boostedEvent || null,
     instructor: e.instructor ? {
       id: e.instructor.id,
       name: e.instructor.name,
@@ -75,6 +76,7 @@ export class PrismaEventRepository implements IEventRepository {
         commission: true,
         instructor: true,
         venue: true,
+        boostedEvent: true,
       },
     });
     return mapEvent(e);
@@ -130,6 +132,7 @@ export class PrismaEventRepository implements IEventRepository {
         commission: true,
         instructor: true,
         venue: true,
+        boostedEvent: true,
       },
       orderBy: {
         startTime: 'asc',
@@ -167,6 +170,7 @@ export class PrismaEventRepository implements IEventRepository {
     durationHours?: number;
     description?: string;
     category?: string;
+    videoUrls?: string[];
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;

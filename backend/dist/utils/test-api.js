@@ -17,11 +17,17 @@ const PORT = 4001;
 const BASE_URL = `http://localhost:${PORT}/api/v1`;
 const server = http_1.default.createServer(app_1.default);
 let workerInstance = null;
+let originalConfigs = [];
 async function runTests() {
     console.log('\n==================================================');
     console.log('   STARTING INTEGRATION VERIFICATION TEST SUITE   ');
     console.log('==================================================\n');
     try {
+        // Save original integration configurations and deactivate them for testing
+        originalConfigs = await prisma_1.prisma.integrationConfig.findMany();
+        await prisma_1.prisma.integrationConfig.updateMany({
+            data: { isActive: false }
+        });
         // 1. Database & Cache Cleanup
         console.log('[Test] Cleaning test accounts and logs from database & Redis cache...');
         await redis_cache_1.redis.flushall();
@@ -458,6 +464,19 @@ async function runTests() {
         process.exit(1);
     }
     finally {
+        // Restore original integration configs
+        try {
+            for (const config of originalConfigs) {
+                await prisma_1.prisma.integrationConfig.update({
+                    where: { id: config.id },
+                    data: { isActive: config.isActive }
+                });
+            }
+            console.log('[Test] Restored original integration configs.');
+        }
+        catch (e) {
+            console.error('[Test] Failed to restore integration configs:', e);
+        }
         if (workerInstance) {
             console.log('[Test] Stopping BullMQ background worker...');
             await workerInstance.close();

@@ -150,7 +150,7 @@ export default function HostLayout({
             className="flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-medium text-[#8a9b93] hover:bg-white/5 hover:text-white transition-all"
           >
             <Sparkles className="h-5 w-5" />
-            <span>Explore Skills</span>
+            <span>Explore Events</span>
           </Link>
           <button
             onClick={handleLogout}

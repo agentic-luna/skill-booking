@@ -38,7 +38,7 @@ export class EventsController {
 
   static async createEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category } = req.body;
+      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrls } = req.body;
       const event = await mediator.send(new CreateEventCommand(req.user!.id, {
         title,
         posterUrl,
@@ -51,6 +51,7 @@ export class EventsController {
         duration: duration !== undefined ? String(duration) : undefined,
         description: description !== undefined ? String(description) : undefined,
         category: category !== undefined ? String(category) : undefined,
+        videoUrls: Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : []),
       }));
       return ApiResponse.created(res, event);
     } catch (error) {
@@ -61,7 +62,7 @@ export class EventsController {
   static async updateEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description } = req.body;
+      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, videoUrls } = req.body;
 
       // 1. Fetch host profile first to verify ownership
       const hostProfile = await prisma.hostProfile.findUnique({
@@ -164,6 +165,7 @@ export class EventsController {
           price: price !== undefined ? Number(price) : event.price,
           duration: duration !== undefined ? String(duration) : event.duration,
           description: description !== undefined ? String(description) : event.description,
+          videoUrls: videoUrls !== undefined ? (Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : [])) : undefined,
           instructorId,
           venueId,
           venueDetails: {

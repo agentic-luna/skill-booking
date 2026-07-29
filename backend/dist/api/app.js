@@ -119,6 +119,7 @@ const reviews_routes_1 = __importDefault(require("./routes/reviews.routes"));
 const boosted_events_routes_1 = __importDefault(require("./routes/boosted-events.routes"));
 const integrations_routes_1 = __importDefault(require("./routes/integrations.routes"));
 const wishlist_routes_1 = __importDefault(require("./routes/wishlist.routes"));
+const complaints_routes_1 = __importDefault(require("./routes/complaints.routes"));
 app.use('/api/v1/auth', auth_routes_1.default);
 app.use('/api/v1/admin', admin_routes_1.default);
 app.use('/api/v1/notifications', notifications_routes_1.default);
@@ -130,6 +131,7 @@ app.use('/api/v1/reviews', reviews_routes_1.default);
 app.use('/api/v1/boosted-events', boosted_events_routes_1.default);
 app.use('/api/v1/integrations', integrations_routes_1.default);
 app.use('/api/v1/wishlist', wishlist_routes_1.default);
+app.use('/api/v1/complaints', complaints_routes_1.default);
 // Catch-all route for undefined endpoints
 app.use((req, res, next) => {
     res.status(404).json({
