@@ -53,7 +53,7 @@ jobs:
   
             docker login ghcr.io \
               -u ${{ secrets.GHCR_USERNAME }} \
-              -p ${{ secrets.GHCR_PAT }}
+              -p ${{ secrets.YOUR_GITHUB_PAT }}
   
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
