@@ -92,9 +92,12 @@ export default function Navbar() {
           <div className="flex h-16 items-center justify-between gap-4">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
-              <span className={`text-lg font-bold tracking-tight transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink" : "text-white"}`}>
-                BookMy<span className="text-primary/90">Training</span>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity flex-shrink-0">
+              <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
+              </div>
+              <span className={`text-xl font-extrabold tracking-tight transition-colors duration-500 ${isScrolled || !isHome ? "text-graphite-ink" : "text-white"}`}>
+                BookMy<span className="text-[#a0f212]">Skill</span>
               </span>
             </Link>
 

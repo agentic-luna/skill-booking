@@ -25,7 +25,7 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
     if (command.razorpaySignature === 'MOCK_SUCCESS') {
       // Bypass Razorpay config check and signature verification for testing
       const boost = await this.boostedRepo.update(command.boostId, {
-        status: 'APPROVED',
+        status: 'ACTIVE',
         isActive: true
       } as any);
       return { success: true, boost };
@@ -52,7 +52,7 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
 
     // Approve the boost
     const boost = await this.boostedRepo.update(command.boostId, {
-      status: 'APPROVED',
+      status: 'ACTIVE',
       isActive: true
     } as any);
 

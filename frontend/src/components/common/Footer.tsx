@@ -17,6 +17,11 @@ export default function Footer() {
               <li><Link href="/placeholder/manage-bookings" className="hover:text-gray-900 transition-colors">Manage your bookings</Link></li>
               <li><Link href="/placeholder/customer-service" className="hover:text-gray-900 transition-colors">Contact Customer Service</Link></li>
               <li><Link href="/placeholder/safety-resource-centre" className="hover:text-gray-900 transition-colors">Safety resource centre</Link></li>
+              <li className="pt-2">
+                <Link href="/report-issue" className="inline-flex items-center justify-center px-4 py-2 bg-[#a0f212] text-black font-semibold rounded-md hover:bg-[#8ee00d] transition-colors shadow-sm w-full md:w-auto">
+                  Report an Issue
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -63,7 +68,7 @@ export default function Footer() {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-[10px] border border-gray-300">🇮🇳</span>
+            <span>🇮🇳</span>
             <span>INR</span>
           </div>
         </div>

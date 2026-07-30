@@ -3,6 +3,8 @@ import { BoostedEvent } from '../entities/boosted-event.entity';
 export interface IBoostedEventRepository {
   upsert(eventId: string, data: {
     priority: number;
+    tier?: string;
+    price?: number;
     startDate: Date;
     endDate: Date;
     isActive: boolean;

@@ -61,6 +61,7 @@ export default function HostLayout({
     { name: "Programs", href: "/host/programs", icon: Calendar },
     { name: "Participants", href: "/host/participants", icon: Users },
     { name: "Earnings", href: "/host/earnings", icon: IndianRupee },
+    { name: "Boost History", href: "/host/boost-history", icon: Sparkles },
     { name: "KYC Verification", href: "/host/kyc", icon: ShieldCheck },
   ];
 
@@ -74,13 +75,13 @@ export default function HostLayout({
       <div className="space-y-10">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-          <div className="bg-[#a0f212] p-1.5 rounded-lg text-[#0b0c01]">
-            <Sparkles className="h-5 w-5" />
+        <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            BookMy<span className="text-[#a0f212]">Training</span>
-            <span className="text-[#8a9b93] text-xs ml-2 tracking-normal font-medium">Host</span>
+          <span className="text-xl font-extrabold tracking-tight text-white flex items-center">
+            BookMy<span className="text-[#a0f212]">Skill</span>
+            <span className="bg-[#a0f212]/10 text-[#a0f212] text-[10px] ml-2 px-2 py-0.5 rounded-full tracking-wider font-bold uppercase border border-[#a0f212]/20">Host</span>
           </span>
         </Link>
 
@@ -181,13 +182,13 @@ export default function HostLayout({
         {/* Subtle background flair */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#a0f212]/5 rounded-full blur-[100px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
 
-        {/* Top Navbar - Mobile & Small screens */}
+        {/* Mobile top bar - Mobile & Small screens */}
         <header className="lg:hidden flex items-center justify-between h-16 px-6 bg-white border-b border-black/5 sticky top-0 z-40">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="bg-[#a0f212] p-1.5 rounded-lg text-[#0b0c01]">
-              <Sparkles className="h-4.5 w-4.5" />
+          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
             </div>
-            <span className="font-bold text-sm text-[#0b0c01]">Host Center</span>
+            <span className="font-extrabold text-sm text-[#0b0c01]">Host Center</span>
           </Link>
 
           <div className="flex items-center space-x-2">

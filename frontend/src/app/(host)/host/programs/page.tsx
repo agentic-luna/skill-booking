@@ -60,7 +60,7 @@ export default function HostProgramsPage() {
           let badgeColors = "";
 
           if (isPast) {
-            displayStatus = "Past";
+            displayStatus = "Finished";
             badgeColors = "bg-red-500/90 text-white";
           } else if (prog.status === 'approved') {
             displayStatus = "Live";

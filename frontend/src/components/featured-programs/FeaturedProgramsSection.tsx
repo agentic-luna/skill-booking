@@ -43,7 +43,7 @@ function mapEventToProgram(event: any): Program {
     imageUrl: imageUrlStr,
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
-    isBoosted: event.boostedEvent?.status === 'APPROVED' && event.boostedEvent?.isActive,
+    isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'PRO'].includes(event.boostedEvent?.tier),
   };
 }
 
@@ -54,11 +54,16 @@ export default function FeaturedProgramsSection() {
     fetchEvents();
   }, [fetchEvents]);
 
+  const now = new Date();
   const featuredPrograms = (events || [])
     .filter((p) => p.status === "APPROVED")
     .sort((a, b) => {
-      const aBoosted = a.boostedEvent?.status === 'APPROVED' && a.boostedEvent?.isActive;
-      const bBoosted = b.boostedEvent?.status === 'APPROVED' && b.boostedEvent?.isActive;
+      const isBasicOrProBoosted = (e: any) =>
+        e.boostedEvent?.isActive === true &&
+        ['BASIC', 'PRO'].includes(e.boostedEvent?.tier) &&
+        new Date(e.boostedEvent?.endDate) >= now;
+      const aBoosted = isBasicOrProBoosted(a);
+      const bBoosted = isBasicOrProBoosted(b);
       if (aBoosted && !bBoosted) return -1;
       if (!aBoosted && bBoosted) return 1;
       return 0;

@@ -44,9 +44,9 @@ export default function ComplaintSection() {
   };
 
   return (
-    <div className="w-full bg-gray-50 py-16 border-t border-gray-200">
+    <div className="w-full bg-transparent py-16">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-100">
+        <div className="glass-card p-8 md:p-10 rounded-2xl">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600">
               <AlertCircle size={20} />
@@ -79,7 +79,7 @@ export default function ComplaintSection() {
                   value={formData.hostName}
                   onChange={handleChange}
                   placeholder="E.g. John Doe"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#003b95] focus:border-[#003b95] outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#a0f212] focus:border-[#a0f212] outline-none transition-all"
                 />
               </div>
               <div>
@@ -91,7 +91,7 @@ export default function ComplaintSection() {
                   onChange={handleChange}
                   required
                   placeholder="Brief summary of the issue"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#003b95] focus:border-[#003b95] outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#a0f212] focus:border-[#a0f212] outline-none transition-all"
                 />
               </div>
               <div>
@@ -103,7 +103,7 @@ export default function ComplaintSection() {
                   required
                   rows={4}
                   placeholder="Please provide details about your complaint..."
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#003b95] focus:border-[#003b95] outline-none transition-all resize-none"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#a0f212] focus:border-[#a0f212] outline-none transition-all resize-none"
                 />
               </div>
 
@@ -116,7 +116,7 @@ export default function ComplaintSection() {
               <button
                 type="submit"
                 disabled={status === "submitting"}
-                className="w-full bg-[#003b95] hover:bg-[#002a6d] text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#a0f212] hover:bg-[#8ee00d] text-black font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
               >
                 {status === "submitting" ? "Submitting..." : "Submit Complaint"}
               </button>
