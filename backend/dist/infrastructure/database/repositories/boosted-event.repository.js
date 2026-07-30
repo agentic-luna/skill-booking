@@ -31,9 +31,8 @@ class PrismaBoostedEventRepository {
             data
         });
     }
-    async findPendingBoostRequests() {
+    async findAllBoostRequests() {
         return prisma_1.prisma.boostedEvent.findMany({
-            where: { status: 'PENDING' },
             include: {
                 event: {
                     include: {

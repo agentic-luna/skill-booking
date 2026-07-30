@@ -6,10 +6,10 @@ export default function Footer() {
   return (
     <footer className="bg-[#f5f5f5] py-12 text-sm relative z-10 mt-auto border-t border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+
         {/* Top Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          
+
           {/* Column 1: Support */}
           <div className="space-y-4">
             <h4 className="font-bold text-gray-900">Support</h4>
@@ -63,11 +63,8 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-gray-200">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
-            </div>
-            <span className="text-xl font-extrabold tracking-tight text-gray-900">
-              BookMy<span className="text-[#a0f212]">Skill</span>
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              BookMy<span className="text-gray-500">Training</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">

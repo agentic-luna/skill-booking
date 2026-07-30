@@ -36,7 +36,10 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      const user = await login(data.identifier, data.password);
+      const cleanIdentifier = data.identifier.includes("@")
+        ? data.identifier.trim().toLowerCase()
+        : data.identifier.trim();
+      const user = await login(cleanIdentifier, data.password);
       router.push(REDIRECT[user.role] ?? "/");
     } catch { /* error set in store */ }
   };

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const di_container_1 = require("../di-container");
+const email_1 = require("../../utils/email");
 const signup_1 = require("../../application/use-cases/auth/signup");
 const login_1 = require("../../application/use-cases/auth/login");
 const refresh_1 = require("../../application/use-cases/auth/refresh");
@@ -22,7 +23,11 @@ class AuthController {
     static async sendOtp(req, res, next) {
         try {
             const { target, type } = req.body;
-            const result = await di_container_1.mediator.send(new send_otp_1.SendOtpCommand(target, type));
+            const cleanTarget = type === 'EMAIL' ? (0, email_1.normalizeEmail)(target) : target?.trim();
+            if (type === 'EMAIL' && !(0, email_1.isValidEmail)(cleanTarget)) {
+                return res.status(400).json({ success: false, error: 'Invalid email address format' });
+            }
+            const result = await di_container_1.mediator.send(new send_otp_1.SendOtpCommand(cleanTarget, type));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -32,7 +37,8 @@ class AuthController {
     static async verifyOtp(req, res, next) {
         try {
             const { target, type, otp } = req.body;
-            const result = await di_container_1.mediator.send(new verify_otp_1.VerifyOtpCommand(target, type, otp));
+            const cleanTarget = type === 'EMAIL' ? (0, email_1.normalizeEmail)(target) : target?.trim();
+            const result = await di_container_1.mediator.send(new verify_otp_1.VerifyOtpCommand(cleanTarget, type, otp));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -42,10 +48,14 @@ class AuthController {
     static async signup(req, res, next) {
         try {
             const { firstName, lastName, email, phone, password, role, emailOtp, phoneOtp } = req.body;
+            const cleanEmail = (0, email_1.normalizeEmail)(email);
+            if (cleanEmail && !(0, email_1.isValidEmail)(cleanEmail)) {
+                return res.status(400).json({ success: false, error: 'Invalid email address format' });
+            }
             const result = await di_container_1.mediator.send(new signup_1.SignupCommand({
                 firstName,
                 lastName,
-                email,
+                email: cleanEmail,
                 phone,
                 passwordText: password,
                 role,
@@ -101,7 +111,11 @@ class AuthController {
         try {
             const userId = req.user?.id;
             const { email } = req.body;
-            const result = await di_container_1.mediator.send(new send_email_verification_1.ClientSendEmailVerificationCommand(userId, email));
+            const cleanEmail = (0, email_1.normalizeEmail)(email);
+            if (!(0, email_1.isValidEmail)(cleanEmail)) {
+                return res.status(400).json({ success: false, error: 'Invalid email address format' });
+            }
+            const result = await di_container_1.mediator.send(new send_email_verification_1.ClientSendEmailVerificationCommand(userId, cleanEmail));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -121,7 +135,9 @@ class AuthController {
     static async login(req, res, next) {
         try {
             const { identifier, email, phone, password } = req.body;
-            const loginIdentifier = identifier || email || phone;
+            const rawIdentifier = identifier || email || phone || '';
+            // If identifier looks like email, normalize to lowercase
+            const loginIdentifier = rawIdentifier.includes('@') ? (0, email_1.normalizeEmail)(rawIdentifier) : rawIdentifier.trim();
             const result = await di_container_1.mediator.send(new login_1.LoginCommand(loginIdentifier, password));
             return api_response_1.ApiResponse.success(res, result);
         }
@@ -132,7 +148,8 @@ class AuthController {
     static async forgotPasswordSendOtp(req, res, next) {
         try {
             const { identifier, email, phone } = req.body;
-            const targetIdentifier = identifier || email || phone;
+            const rawIdentifier = identifier || email || phone || '';
+            const targetIdentifier = rawIdentifier.includes('@') ? (0, email_1.normalizeEmail)(rawIdentifier) : rawIdentifier.trim();
             const result = await di_container_1.mediator.send(new send_forgot_password_otp_1.SendForgotPasswordOtpCommand(targetIdentifier));
             return api_response_1.ApiResponse.success(res, result);
         }
@@ -143,7 +160,8 @@ class AuthController {
     static async forgotPasswordVerifyOtp(req, res, next) {
         try {
             const { identifier, email, phone, otp } = req.body;
-            const targetIdentifier = identifier || email || phone;
+            const rawIdentifier = identifier || email || phone || '';
+            const targetIdentifier = rawIdentifier.includes('@') ? (0, email_1.normalizeEmail)(rawIdentifier) : rawIdentifier.trim();
             const result = await di_container_1.mediator.send(new verify_forgot_password_otp_1.VerifyForgotPasswordOtpCommand(targetIdentifier, otp));
             return api_response_1.ApiResponse.success(res, result);
         }

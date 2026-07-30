@@ -4,6 +4,7 @@ import React from "react";
 import { Mail, Loader2, ArrowRight, CheckCircle2, Sparkles, AlertCircle, AlertTriangle, Send } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientEmailModalStore } from "@/features/auth/store/clientEmailModalStore";
+import { normalizeEmail, isValidEmail } from "@/lib/validation/authValidation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,13 +28,14 @@ export default function ClientEmailModal() {
     store.setLocalMessage(null);
     clearError();
 
-    if (!store.email || !store.email.includes("@")) {
-      store.setLocalMessage("Please enter a valid email address.");
+    const cleanEmail = normalizeEmail(store.email);
+    if (!cleanEmail || !isValidEmail(cleanEmail)) {
+      store.setLocalMessage("Please enter a valid email address (e.g. name@example.com).");
       return;
     }
 
     try {
-      const res = await sendEmailMagicLink(store.email.trim());
+      const res = await sendEmailMagicLink(cleanEmail);
       store.setIsSent(true);
       store.setMagicLink(res.magicLink || null);
       store.setLocalMessage(res.message || "Magic verification link sent to your inbox!");

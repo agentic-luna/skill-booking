@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { mediator } from '../di-container';
+import { normalizeEmail, isValidEmail } from '../../utils/email';
 import { SignupCommand } from '../../application/use-cases/auth/signup';
 import { LoginCommand } from '../../application/use-cases/auth/login';
 import { RefreshTokenCommand } from '../../application/use-cases/auth/refresh';
@@ -22,7 +23,11 @@ export class AuthController {
   static async sendOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { target, type } = req.body;
-      const result = await mediator.send(new SendOtpCommand(target, type));
+      const cleanTarget = type === 'EMAIL' ? normalizeEmail(target) : target?.trim();
+      if (type === 'EMAIL' && !isValidEmail(cleanTarget)) {
+        return res.status(400).json({ success: false, error: 'Invalid email address format' });
+      }
+      const result = await mediator.send(new SendOtpCommand(cleanTarget, type));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
@@ -32,7 +37,8 @@ export class AuthController {
   static async verifyOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { target, type, otp } = req.body;
-      const result = await mediator.send(new VerifyOtpCommand(target, type, otp));
+      const cleanTarget = type === 'EMAIL' ? normalizeEmail(target) : target?.trim();
+      const result = await mediator.send(new VerifyOtpCommand(cleanTarget, type, otp));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
@@ -42,10 +48,14 @@ export class AuthController {
   static async signup(req: Request, res: Response, next: NextFunction) {
     try {
       const { firstName, lastName, email, phone, password, role, emailOtp, phoneOtp } = req.body;
+      const cleanEmail = normalizeEmail(email);
+      if (cleanEmail && !isValidEmail(cleanEmail)) {
+        return res.status(400).json({ success: false, error: 'Invalid email address format' });
+      }
       const result = await mediator.send(new SignupCommand({
         firstName,
         lastName,
-        email,
+        email: cleanEmail,
         phone,
         passwordText: password,
         role,
@@ -101,7 +111,11 @@ export class AuthController {
     try {
       const userId = (req as any).user?.id;
       const { email } = req.body;
-      const result = await mediator.send(new ClientSendEmailVerificationCommand(userId, email));
+      const cleanEmail = normalizeEmail(email);
+      if (!isValidEmail(cleanEmail)) {
+        return res.status(400).json({ success: false, error: 'Invalid email address format' });
+      }
+      const result = await mediator.send(new ClientSendEmailVerificationCommand(userId, cleanEmail));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
@@ -121,7 +135,9 @@ export class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { identifier, email, phone, password } = req.body;
-      const loginIdentifier = identifier || email || phone;
+      const rawIdentifier = identifier || email || phone || '';
+      // If identifier looks like email, normalize to lowercase
+      const loginIdentifier = rawIdentifier.includes('@') ? normalizeEmail(rawIdentifier) : rawIdentifier.trim();
       const result = await mediator.send(new LoginCommand(loginIdentifier, password));
       return ApiResponse.success(res, result);
     } catch (error) {
@@ -132,7 +148,8 @@ export class AuthController {
   static async forgotPasswordSendOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { identifier, email, phone } = req.body;
-      const targetIdentifier = identifier || email || phone;
+      const rawIdentifier = identifier || email || phone || '';
+      const targetIdentifier = rawIdentifier.includes('@') ? normalizeEmail(rawIdentifier) : rawIdentifier.trim();
       const result = await mediator.send(new SendForgotPasswordOtpCommand(targetIdentifier));
       return ApiResponse.success(res, result);
     } catch (error) {
@@ -143,7 +160,8 @@ export class AuthController {
   static async forgotPasswordVerifyOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const { identifier, email, phone, otp } = req.body;
-      const targetIdentifier = identifier || email || phone;
+      const rawIdentifier = identifier || email || phone || '';
+      const targetIdentifier = rawIdentifier.includes('@') ? normalizeEmail(rawIdentifier) : rawIdentifier.trim();
       const result = await mediator.send(new VerifyForgotPasswordOtpCommand(targetIdentifier, otp));
       return ApiResponse.success(res, result);
     } catch (error) {

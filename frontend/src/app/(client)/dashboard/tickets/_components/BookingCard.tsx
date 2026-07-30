@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Calendar, Clock, MapPin, PlayCircle,
-  FileText, Trash2, MessageSquare, Wifi, Timer, Ticket
+  FileText, Trash2, MessageSquare, Wifi, Timer, Ticket, HelpCircle
 } from "lucide-react";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import type { ClientBooking } from "@/features/client/api/types";
@@ -143,6 +144,17 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
 
             <div className="flex items-center gap-2 flex-wrap">
 
+              {/* Flipkart-inspired Order Details & Help Link */}
+              <Link href={`/dashboard/tickets/${booking.id}`}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-8 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                >
+                  <HelpCircle className="h-3.5 w-3.5 mr-1" /> View Details & Help
+                </Button>
+              </Link>
+
               {/* Invoice */}
               <Button
                 variant="outline"
@@ -207,7 +219,7 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                     }
                   }}
                 >
-                  <Ticket className="h-3.5 w-3.5 mr-1" /> Ticket (PDF)
+                  <FileText className="h-3.5 w-3.5 mr-1" /> Booking Pass (PDF)
                 </Button>
               )}
 
@@ -246,11 +258,11 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                           const a = document.createElement("a");
                           a.style.display = "none";
                           a.href = pngUrl;
-                          a.download = `ticket_${booking.id.slice(0, 8).toUpperCase()}.png`;
+                          a.download = `booking_pass_${booking.id.slice(0, 8).toUpperCase()}.png`;
                           document.body.appendChild(a);
                           a.click();
                           a.remove();
-                          showAlert("PNG Ticket Downloaded", "Your admission ticket PNG has been downloaded.", "success");
+                          showAlert("PNG Booking Pass Downloaded", "Your booking pass PNG has been downloaded.", "success");
                         } else {
                           showAlert("Download Failed", "Could not initialize canvas context.", "destructive");
                         }
@@ -259,16 +271,16 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                       
                       img.onerror = () => {
                         window.URL.revokeObjectURL(url);
-                        showAlert("Download Failed", "Failed to render ticket PNG.", "destructive");
+                        showAlert("Download Failed", "Failed to render booking pass PNG.", "destructive");
                       };
                       
                       img.src = url;
                     } catch (err: any) {
-                      showAlert("Download Failed", err.message || "Failed to download PNG ticket.", "destructive");
+                      showAlert("Download Failed", err.message || "Failed to download PNG booking pass.", "destructive");
                     }
                   }}
                 >
-                  <Ticket className="h-3.5 w-3.5 mr-1" /> Ticket (PNG)
+                  <FileText className="h-3.5 w-3.5 mr-1" /> Booking Pass (PNG)
                 </Button>
               )}
 

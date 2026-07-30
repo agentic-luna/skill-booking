@@ -56,6 +56,8 @@ export default function ClientAuthModal({
       propOnOpenChange(val);
     }
     if (!val) {
+      clearError();
+      store.setLocalMessage(null);
       store.closeModal();
     }
   };
