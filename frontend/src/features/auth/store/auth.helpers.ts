@@ -4,7 +4,7 @@ import type { User } from "./auth.types";
 
 export const TOKEN_KEY   = "bms_access_token";
 export const REFRESH_KEY = "bms_refresh_token";
-export const SESSION_KEY = "bookmyskill_session";
+export const SESSION_KEY = "bookmytraining_session";
 
 /** Cookie max-age: 7 days (matches typical refresh-token lifetime) */
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;

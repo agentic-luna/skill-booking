@@ -381,7 +381,7 @@ export default function ProgramsListContent() {
           <div className="relative group w-full flex-1">
             <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground group-focus-within:text-[#0b0c01] transition-colors" />
             <Input
-              placeholder="Search keywords, instructors, or skills..."
+              placeholder="Search keywords, instructors, or training..."
               className="pl-10 h-11 text-sm bg-white border-border/40 focus:border-[#0b0c01] focus-visible:ring-[#0b0c01] focus-visible:border-[#0b0c01] rounded-xl transition-all shadow-sm w-full"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

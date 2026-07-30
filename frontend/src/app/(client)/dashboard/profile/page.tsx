@@ -352,7 +352,7 @@ export default function ProfilePage() {
                           <CardHeader>
                             <CardTitle>Become a Certified Host</CardTitle>
                             <CardDescription>
-                              Apply to host professional workshops and earn revenue teaching your skill.
+                              Apply to host professional workshops and earn revenue teaching your training.
                             </CardDescription>
                           </CardHeader>
                           <CardContent className="space-y-4">

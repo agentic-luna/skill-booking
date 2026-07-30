@@ -25,7 +25,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Bottom Area (Search Bar + Why BookMySkill) */}
+      {/* Bottom Area (Search Bar + Why BookMyTraining) */}
       <div className="relative w-full bg-white pb-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
           {/* Search Bar */}
@@ -35,7 +35,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Why BookMySkill? Section */}
+          {/* Why BookMyTraining? Section */}
           <div className="mt-16 mb-8">
             <h2 className="text-[24px] md:text-[30px] font-extrabold text-gray-900 mb-8 text-center tracking-tight">
               Why BookMyTraining?

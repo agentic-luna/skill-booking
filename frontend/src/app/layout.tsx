@@ -14,9 +14,9 @@ const hanken = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "BookMyTraining | Skill Training & Event Booking Marketplace",
-  description: "Marketplace for physical and online skill training workshops, book, and host skill-building events and professional training courses.",
-  keywords: ["skills", "events", "courses", "booking", "training", "marketplace"],
+  title: "BookMyTraining | Training & Event Booking Marketplace",
+  description: "Marketplace for physical and online training workshops, book, and host training events and professional training courses.",
+  keywords: ["training", "events", "courses", "booking", "marketplace"],
 };
 
 export default function RootLayout({

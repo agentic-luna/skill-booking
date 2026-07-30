@@ -80,7 +80,7 @@ export default function HostLayout({
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
           </div>
           <span className="text-xl font-extrabold tracking-tight text-white flex items-center">
-            BookMy<span className="text-[#a0f212]">Skill</span>
+            BookMy<span className="text-[#a0f212]">Training</span>
             <span className="bg-[#a0f212]/10 text-[#a0f212] text-[10px] ml-2 px-2 py-0.5 rounded-full tracking-wider font-bold uppercase border border-[#a0f212]/20">Host</span>
           </span>
         </Link>

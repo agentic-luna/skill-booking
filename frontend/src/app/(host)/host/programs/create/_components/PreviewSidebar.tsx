@@ -221,7 +221,7 @@ export default function PreviewSidebar({
                     instagram: values.instagram || "",
                     linkedin: values.linkedin || "",
                     facebook: values.facebook || "",
-                    companyName: values.companyName || "Skill Masterclass Ltd.",
+                    companyName: values.companyName || "Training Masterclass Ltd.",
                     category: (values.category as any) || "technology",
                     rating: 4.8,
                     reviewsCount: 12,

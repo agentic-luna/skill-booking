@@ -198,7 +198,7 @@ export default function CreateProgramPage() {
               Create New Workshop
             </h1>
             <p className="text-sm text-gray-500 font-medium">
-              Publish a premium skill session. Your progress is saved locally.
+              Publish a premium training session. Your progress is saved locally.
             </p>
           </div>
         </div>

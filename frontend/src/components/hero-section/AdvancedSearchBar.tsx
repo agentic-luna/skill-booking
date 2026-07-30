@@ -282,7 +282,7 @@ export default function AdvancedSearchBar() {
                       handleSearch();
                     }
                   }}
-                  placeholder="Search for skills, keywords, or categories..."
+                  placeholder="Search for training, keywords, or categories..."
                   className="bg-transparent border-none outline-none text-[15px] w-full text-gray-800 placeholder:text-gray-400 focus:ring-0"
                   autoFocus
                 />
@@ -302,7 +302,7 @@ export default function AdvancedSearchBar() {
               )}
 
               <div className="text-center text-[11px] font-bold text-gray-400 mb-5 tracking-wider uppercase">
-                {categorySearchQuery.trim() === "" ? "OR BROWSE CATEGORIES" : "MATCHING CATEGORIES & SKILLS"}
+                {categorySearchQuery.trim() === "" ? "OR BROWSE CATEGORIES" : "MATCHING CATEGORIES & TRAINING"}
               </div>
 
               <div className="flex flex-col gap-4">

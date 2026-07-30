@@ -303,7 +303,7 @@ export const initAuth = async () => {
   }
   try {
     // 1. Try to read the user session from localStorage first to avoid API call traffic
-    const sessionStr = localStorage.getItem("bookmyskill_session");
+    const sessionStr = localStorage.getItem("bookmytraining_session");
     let user = null;
     if (sessionStr) {
       user = JSON.parse(sessionStr);

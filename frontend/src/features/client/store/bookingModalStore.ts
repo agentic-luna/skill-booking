@@ -222,7 +222,7 @@ export const useBookingModalStore = create<BookingModalState>()(
       },
     }),
     {
-      name: "bookmyskill_booking_modal_v1",
+      name: "bookmytraining_booking_modal_v1",
       storage: createJSONStorage(() => sessionStorage), // Use sessionStorage so it survives app switches/reloads during payments
       partialize: (state) => ({
         isOpen: state.isOpen,

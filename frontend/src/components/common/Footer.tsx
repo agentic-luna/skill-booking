@@ -29,7 +29,7 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="font-bold text-gray-900">Discover</h4>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/programs" className="hover:text-gray-900 transition-colors">Explore Skills</Link></li>
+              <li><Link href="/programs" className="hover:text-gray-900 transition-colors">Explore Trainings</Link></li>
               <li><Link href="/programs?category=technology" className="hover:text-gray-900 transition-colors">Technology Events</Link></li>
               <li><Link href="/programs?category=culinary" className="hover:text-gray-900 transition-colors">Culinary Arts</Link></li>
               <li><Link href="/programs?category=business" className="hover:text-gray-900 transition-colors">Business Workshops</Link></li>
@@ -51,7 +51,7 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="font-bold text-gray-900">About</h4>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/placeholder/about-book-my-skill" className="hover:text-gray-900 transition-colors">About BookMySkill</Link></li>
+              <li><Link href="/placeholder/about-book-my-skill" className="hover:text-gray-900 transition-colors">About BookMyTraining</Link></li>
               <li><Link href="/placeholder/how-we-work" className="hover:text-gray-900 transition-colors">How we work</Link></li>
               <li><Link href="/placeholder/careers" className="hover:text-gray-900 transition-colors">Careers</Link></li>
               <li><Link href="/placeholder/corporate-contact" className="hover:text-gray-900 transition-colors">Corporate contact</Link></li>

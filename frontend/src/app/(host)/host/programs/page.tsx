@@ -151,7 +151,7 @@ export default function HostProgramsPage() {
             Program Management
             {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground ml-2" />}
           </h1>
-          <p className="text-muted-foreground font-medium text-sm">Create, edit, and manage all your upcoming skills workshops.</p>
+          <p className="text-muted-foreground font-medium text-sm">Create, edit, and manage all your upcoming training workshops.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
           <Button 

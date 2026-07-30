@@ -15,7 +15,7 @@ export default function TestimonialSection() {
             Loved by Thousands of Learners
           </h2>
           <p className="text-muted-foreground text-sm">
-            See how BookMySkill is helping individuals master practical skills under live guidance.
+            See how BookMyTraining is helping individuals master practical training under live guidance.
           </p>
         </div>
 

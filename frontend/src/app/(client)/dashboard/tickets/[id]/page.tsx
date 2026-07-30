@@ -263,7 +263,7 @@ export default function SingleBookingDetailPage() {
                     </span>
 
                     <h2 className="text-xl font-bold text-foreground leading-tight">
-                      {event?.title || "Skill Workshop"}
+                      {event?.title || "Training Workshop"}
                     </h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">

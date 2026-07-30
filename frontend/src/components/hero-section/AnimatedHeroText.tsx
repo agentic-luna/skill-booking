@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PHRASES = [
-  { prefix: "Build Skills That ", highlight: "Matter." },
+  { prefix: "Build Trainings That ", highlight: "Matter." },
   { prefix: "Learn from ", highlight: "Industry Experts." },
-  { prefix: "Upgrade Your ", highlight: "Skill Set." },
+  { prefix: "Upgrade Your ", highlight: "Training." },
 ];
 
 const DISPLAY_DURATION = 3500;

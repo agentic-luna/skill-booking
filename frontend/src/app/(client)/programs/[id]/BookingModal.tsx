@@ -545,7 +545,7 @@ export default function BookingModal(props: BookingModalProps) {
             </div>
 
             <div className="p-3 bg-muted/40 rounded-xl border text-xs text-left space-y-1.5">
-              <div className="flex justify-between"><span className="text-muted-foreground">Merchant</span><span className="font-bold text-foreground">BookMySkill Pvt Ltd</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Merchant</span><span className="font-bold text-foreground">BookMyTraining Pvt Ltd</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-extrabold text-emerald-600">₹{summary.total.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">UPI Methods</span><span className="font-semibold text-foreground">GPay / PhonePe / Paytm</span></div>
             </div>

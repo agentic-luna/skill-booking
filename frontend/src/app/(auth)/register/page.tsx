@@ -121,7 +121,7 @@ export default function RegisterPage() {
             <div className="space-y-5">
               <div className="space-y-1">
                 <h2 className="text-2xl font-bold tracking-tight text-foreground">Create a Learner Account</h2>
-                <p className="text-sm text-muted-foreground">Sign up with your WhatsApp number to start booking live skill training.</p>
+                <p className="text-sm text-muted-foreground">Sign up with your WhatsApp number to start booking live training.</p>
               </div>
 
               <form onSubmit={handleSubmitClient(onClientInfoSubmit)} className="space-y-4">

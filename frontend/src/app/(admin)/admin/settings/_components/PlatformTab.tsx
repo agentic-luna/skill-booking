@@ -15,7 +15,7 @@ export default function PlatformTab() {
   const [commissionRate, setCommissionRate] = useState(15);
   const [refundWindow, setRefundWindow] = useState(48);
   const [minPayout, setMinPayout] = useState(50);
-  const [platformName, setPlatformName] = useState("BookMySkill");
+  const [platformName, setPlatformName] = useState("BookMyTraining");
   const [slogan, setSlogan] = useState("Empowering experts, expanding learners.");
   const [boostPricing, setBoostPricing] = useState<Record<string, number | string>>({ "7": 500, "15": 900, "30": 1500 });
 
@@ -24,7 +24,7 @@ export default function PlatformTab() {
     setCommissionRate(Number(findVal("commissionRate", "15")));
     setRefundWindow(Number(findVal("refundWindow", "48")));
     setMinPayout(Number(findVal("minPayout", "50")));
-    setPlatformName(findVal("platformName", "BookMySkill"));
+    setPlatformName(findVal("platformName", "BookMyTraining"));
     setSlogan(findVal("slogan", "Empowering experts, expanding learners."));
     const pricingVal = findVal("BOOST_PRICING", "");
     if (pricingVal) {

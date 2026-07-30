@@ -22,7 +22,7 @@ export default function CtaSection() {
           </Link>
           <Link href="/register?role=host">
             <Button variant="outline" size="lg" className="border-clay-shadow text-graphite-ink bg-bone-white hover:bg-haze rounded-xl">
-              Teach on BookMySkill
+              Teach on BookMyTraining
             </Button>
           </Link>
         </div>

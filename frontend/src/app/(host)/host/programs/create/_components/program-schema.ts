@@ -42,7 +42,7 @@ export const CATEGORIES = [
   { value: "design", label: "UI/UX & Design", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20" },
   { value: "fitness", label: "Fitness & Health", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
   { value: "culinary", label: "Culinary Arts", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
-  { value: "business", label: "Business Skills", color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" },
+  { value: "business", label: "Business Training", color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" },
   { value: "photography", label: "Photography", color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20" },
 ] as const;
 

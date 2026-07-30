@@ -55,7 +55,7 @@ export async function updateBankDetails(
 
 // ── Events ────────────────────────────────────────────────────────────────
 
-/** POST /hosts/events — Create a new skill booking event (enters PENDING status) */
+/** POST /hosts/events — Create a new training event (enters PENDING status) */
 export async function createEvent(payload: CreateEventPayload): Promise<CreatedEvent> {
   const res = await hostRequest<{ success: boolean; data: CreatedEvent }>(
     "/hosts/events",

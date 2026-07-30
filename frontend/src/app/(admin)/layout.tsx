@@ -62,7 +62,7 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-6 w-6 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
           </div>
           <div className="flex flex-col">
-            <h2 className="text-2xl font-black tracking-tight text-white leading-none">BookMy<span className="text-[#a0f212]">Skill</span></h2>
+            <h2 className="text-2xl font-black tracking-tight text-white leading-none">BookMy<span className="text-[#a0f212]">Training</span></h2>
             <span className="text-[10px] font-bold text-primary tracking-widest uppercase mt-0.5">Admin Portal</span>
           </div>
         </div>

@@ -23,7 +23,7 @@ export default function CategorySection() {
               <span className="font-sans not-italic font-bold tracking-tighter">Top Categories</span>
             </h2>
             <p className="text-stone-grey text-lg max-w-lg leading-relaxed">
-              Discover verified instructors teaching highly demanded technical and life skills across the globe.
+              Discover verified instructors teaching highly demanded technical and life training across the globe.
             </p>
           </div>
           <Link href="/programs" className="group shrink-0">

@@ -78,7 +78,7 @@ export function RequestBoostModal({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_mock",
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
-        name: "BookMySkill",
+        name: "BookMyTraining",
         description: `Boost Event: ${eventTitle} (${selectedPlan.tier})`,
         order_id: razorpayOrder.id,
         handler: async function (response: any) {

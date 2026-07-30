@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
           <Label htmlFor="identifier">Email or Username</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input id="identifier" placeholder="admin@bookmyskill.com" type="text" className="pl-10" {...register("identifier")} disabled={isLoading} />
+            <Input id="identifier" placeholder="admin@bookmytraining.com" type="text" className="pl-10" {...register("identifier")} disabled={isLoading} />
           </div>
           {errors.identifier && <p className="text-xs text-destructive">{errors.identifier.message}</p>}
         </div>

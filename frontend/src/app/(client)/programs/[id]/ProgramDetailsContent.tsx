@@ -40,7 +40,7 @@ function mapEventToProgram(event: any): Program {
   const instagram = (isObj && event.venueDetails.instagram) ? event.venueDetails.instagram : "";
   const linkedin = (isObj && event.venueDetails.linkedin) ? event.venueDetails.linkedin : "";
   const facebook = (isObj && event.venueDetails.facebook) ? event.venueDetails.facebook : "";
-  const companyName = (isObj && event.venueDetails.companyName) ? event.venueDetails.companyName : "Skill Masterclass Ltd.";
+  const companyName = (isObj && event.venueDetails.companyName) ? event.venueDetails.companyName : "Training Masterclass Ltd.";
 
   const locationStr = event.mode === "ONLINE"
     ? "Online"
@@ -198,7 +198,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
         <h3 className="text-xl font-bold text-foreground">Program Not Found</h3>
         <p className="text-muted-foreground text-sm max-w-sm">
-          We couldn&apos;t load the skill training details. It may have been removed or rejected.
+          We couldn&apos;t load the training details. It may have been removed or rejected.
         </p>
         <Link href="/programs">
           <Button>Back to Marketplace</Button>

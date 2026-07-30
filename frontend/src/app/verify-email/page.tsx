@@ -43,7 +43,7 @@ function VerifyEmailContent() {
         {/* Brand Header */}
         <div className="flex items-center justify-center space-x-2 text-[#a0f212]">
           <Sparkles className="h-5 w-5" />
-          <span className="font-extrabold text-sm tracking-wider uppercase">BookMySkill Security</span>
+          <span className="font-extrabold text-sm tracking-wider uppercase">BookMyTraining Security</span>
         </div>
 
         {status === "loading" && (

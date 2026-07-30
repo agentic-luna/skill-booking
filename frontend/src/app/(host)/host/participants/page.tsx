@@ -52,7 +52,7 @@ export default function HostParticipantsPage() {
             {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground ml-2" />}
           </h1>
           <p className="text-muted-foreground font-medium text-sm">
-            Select an active skill workshop to review confirmed learners and ticket payments.
+            Select an active training workshop to review confirmed learners and ticket payments.
           </p>
         </div>
 

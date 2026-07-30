@@ -77,7 +77,7 @@ export default function FeaturedProgramsSection() {
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div className="space-y-2">
             <h2 className="text-3xl font-bold tracking-tight text-graphite-ink">
-              Featured Skill Masterclasses
+              Featured Training Masterclasses
             </h2>
             <p className="text-stone-grey text-sm">
               Reserve your spot in high-demand workshops starting this week.
