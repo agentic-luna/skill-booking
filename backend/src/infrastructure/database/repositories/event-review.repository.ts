@@ -36,6 +36,33 @@ export class PrismaEventReviewRepository implements IEventReviewRepository {
     return reviews as any[];
   }
 
+  async findByHostId(hostId: string, page = 1, limit = 5): Promise<{ reviews: EventReview[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const [reviews, total] = await prisma.$transaction([
+      prisma.review.findMany({
+        where: {
+          event: {
+            hostId,
+          },
+        },
+        include: {
+          client: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.review.count({
+        where: {
+          event: {
+            hostId,
+          },
+        },
+      }),
+    ]);
+    return { reviews: reviews as any[], total };
+  }
+
   async findAverageRatingForEvent(eventId: string): Promise<{ averageRating: number; totalReviews: number }> {
     const aggregate = await prisma.review.aggregate({
       where: { eventId },

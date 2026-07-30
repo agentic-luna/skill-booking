@@ -20,6 +20,7 @@ export interface Program {
   isBoosted?: boolean;
   videoUrls?: string[];
   mode?: "ONLINE" | "OFFLINE";
+  hostId?: string;
   companyName?: string;
   instructorBio?: string;
   instagram?: string;

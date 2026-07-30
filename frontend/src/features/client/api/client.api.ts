@@ -78,6 +78,9 @@ export const submitReview = (payload: SubmitReviewPayload) =>
 export const getEventReviews = (eventId: string) =>
   request<ApiData<{ reviews: EventReview[]; stats: any }>>(`/reviews/event/${eventId}`).then(r => r.data);
 
+export const getHostReviews = (hostId: string, page = 1, limit = 5) =>
+  request<ApiData<{ reviews: EventReview[]; total: number; stats: any }>>(`/reviews/host/${hostId}?page=${page}&limit=${limit}`).then(r => r.data);
+
 // ── Notifications ─────────────────────────────────────────────────────────
 
 export const getMyNotifications = () =>

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { mediator } from '../di-container';
 import { CreateEventReviewCommand } from '../../application/use-cases/reviews/create-review';
 import { GetEventReviewsQuery } from '../../application/use-cases/reviews/get-reviews';
+import { GetHostReviewsQuery } from '../../application/use-cases/reviews/get-host-reviews';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { ApiResponse } from '../common/api-response';
 
@@ -25,6 +26,18 @@ export class ReviewsController {
     try {
       const { eventId } = req.params;
       const result = await mediator.send(new GetEventReviewsQuery(eventId));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getHostReviews(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { hostId } = req.params;
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 5;
+      const result = await mediator.send(new GetHostReviewsQuery(hostId, page, limit));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);

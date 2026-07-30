@@ -52,6 +52,7 @@ function mapEventToProgram(event: any): Program {
 
   return {
     id: event.id,
+    hostId: event.hostId,
     title: event.title,
     description: event.description || "",
     instructorName,
@@ -119,9 +120,11 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     addToWishlist, 
     removeFromWishlist,
     reviews,
-    fetchReviews
+    reviewsTotalCount,
+    fetchHostReviews
   } = useClientStore();
 
+  const [reviewsPage, setReviewsPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,10 +135,10 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   }, [initialProgram]);
   
   useEffect(() => {
-    if (program?.id && program.id !== "preview") {
-      fetchReviews(program.id);
+    if (program?.hostId && program.hostId !== "preview") {
+      fetchHostReviews(program.hostId, reviewsPage, 5);
     }
-  }, [program?.id, fetchReviews]);
+  }, [program?.hostId, reviewsPage, fetchHostReviews]);
 
   useEffect(() => {
     if (programId === "preview") {
@@ -420,7 +423,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                       <span className="text-[10px] font-bold text-muted-foreground">/ 5.0</span>
                     </div>
                     <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wide">
-                      {program.reviewsCount} Verified Learner Reviews
+                      {program.reviewsCount} Host Reviews
                     </div>
                   </div>
                 </CardContent>
@@ -544,7 +547,10 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
             {/* Verified Student Reviews List */}
             <div className="space-y-4 pt-2">
-              <h2 className="text-lg font-bold text-foreground">Verified Student Reviews</h2>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Host Reviews & Feedback</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Reviews and feedback from students who attended workshops hosted by this trainer.</p>
+              </div>
               {reviews && reviews.length > 0 ? (
                 <div className="space-y-4">
                   {reviews.map((rev) => (
@@ -577,6 +583,37 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                       </CardContent>
                     </Card>
                   ))}
+
+                  {/* Pagination Controls */}
+                  {(() => {
+                    const totalPages = Math.max(1, Math.ceil(reviewsTotalCount / 5));
+                    if (totalPages <= 1) return null;
+                    return (
+                      <div className="flex items-center justify-between pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={reviewsPage === 1}
+                          onClick={() => setReviewsPage((p) => Math.max(1, p - 1))}
+                          className="text-xs h-8 px-3 rounded-lg border-border"
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-xs text-muted-foreground font-semibold">
+                          Page {reviewsPage} of {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={reviewsPage === totalPages}
+                          onClick={() => setReviewsPage((p) => Math.min(totalPages, p + 1))}
+                          className="text-xs h-8 px-3 rounded-lg border-border"
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground italic bg-muted/20 border rounded-xl p-4 text-center">

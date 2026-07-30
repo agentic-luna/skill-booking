@@ -16,6 +16,7 @@ interface ClientState {
   bookings: ClientBooking[];
   notifications: InAppNotification[];
   reviews: EventReview[];
+  reviewsTotalCount: number;
 
   fetchEvents: (filters?: SearchEventsFilter) => Promise<void>;
   fetchEventDetails: (id: string) => Promise<ClientEvent>;
@@ -29,6 +30,7 @@ interface ClientState {
   confirmPayment: (bookingId: string, payload: ConfirmPaymentPayload) => Promise<ConfirmPaymentResult>;
   cancelBooking: (bookingId: string) => Promise<CancelBookingResult>;
   fetchReviews: (eventId: string) => Promise<void>;
+  fetchHostReviews: (hostId: string, page?: number, limit?: number) => Promise<void>;
   submitReview: (payload: SubmitReviewPayload) => Promise<EventReview>;
   fetchNotifications: () => Promise<void>;
   readNotification: (id: string) => Promise<void>;
@@ -60,6 +62,7 @@ export const useClientStore = create<ClientState>((set, get) => ({
   bookings: [],
   notifications: [],
   reviews: [],
+  reviewsTotalCount: 0,
 
   fetchEvents: (filters) => withLoading(set, async () => {
     const events = await api.getEvents(filters);
@@ -119,9 +122,16 @@ export const useClientStore = create<ClientState>((set, get) => ({
     set({ reviews: result.reviews || [] });
   }),
 
+  fetchHostReviews: (hostId, page = 1, limit = 5) => withLoading(set, async () => {
+    const result = await api.getHostReviews(hostId, page, limit);
+    set({ 
+      reviews: result.reviews || [],
+      reviewsTotalCount: result.total || 0
+    });
+  }),
+
   submitReview: (payload) => withLoading(set, async () => {
     const review = await api.submitReview(payload);
-    await get().fetchReviews(payload.eventId);
     return review;
   }),
 

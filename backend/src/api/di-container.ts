@@ -78,6 +78,7 @@ import { MarkNotificationReadCommandHandler } from '../application/use-cases/not
 
 import { CreateEventReviewCommandHandler } from '../application/use-cases/reviews/create-review';
 import { GetEventReviewsQueryHandler } from '../application/use-cases/reviews/get-reviews';
+import { GetHostReviewsQueryHandler } from '../application/use-cases/reviews/get-host-reviews';
 
 import { AddToWishlistCommandHandler, RemoveFromWishlistCommandHandler, GetUserWishlistQueryHandler } from '../application/use-cases/wishlist/manage-wishlist';
 import { ToggleEventLikeCommandHandler, GetUserLikedEventsQueryHandler } from '../application/use-cases/likes/manage-event-likes';
@@ -190,7 +191,8 @@ mediator.register('MarkNotificationReadCommand', new MarkNotificationReadCommand
 
 // 11. Register Review handlers
 mediator.register('CreateEventReviewCommand', new CreateEventReviewCommandHandler(reviewRepo, bookingRepo, eventRepo, userRepo));
-mediator.register('GetEventReviewsQuery', new GetEventReviewsQueryHandler(reviewRepo));
+mediator.register('GetEventReviewsQuery', new GetEventReviewsQueryHandler(reviewRepo, eventRepo));
+mediator.register('GetHostReviewsQuery', new GetHostReviewsQueryHandler(reviewRepo));
 
 // 12. Register Wishlist & Likes handlers
 mediator.register('AddToWishlistCommand', new AddToWishlistCommandHandler(wishlistRepo, eventRepo));
