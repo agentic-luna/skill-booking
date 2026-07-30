@@ -38,6 +38,7 @@ export default function ClientAuthModal({
 
   const [devOtp, setDevOtp] = useState<string | undefined>(undefined);
   const [copied, setCopied] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleCopy = () => {
     if (!devOtp) return;
@@ -94,6 +95,11 @@ export default function ClientAuthModal({
       phone: store.phone,
       password: store.signupPassword,
     });
+
+    if (store.signupPassword !== confirmPassword) {
+      store.setLocalMessage("Passwords do not match");
+      return;
+    }
 
     if (!valResult.success) {
       const errMsg = valResult.error.errors[0]?.message || "Invalid input details.";
@@ -322,6 +328,23 @@ export default function ClientAuthModal({
                     <PasswordStrengthMeter password={store.signupPassword} />
                   </div>
 
+                  <div className="space-y-1">
+                    <Label htmlFor="modal-signup-confirm-password" className="text-xs font-bold">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="modal-signup-confirm-password"
+                        placeholder="••••••••"
+                        type="password"
+                        className="pl-10 h-10 text-xs rounded-xl"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={isLoading}
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <Button
                     type="submit"
                     className="w-full h-11 text-sm font-semibold rounded-xl shadow-sm mt-3"
@@ -347,7 +370,7 @@ export default function ClientAuthModal({
 
                   <div className="p-3 bg-muted/40 rounded-xl border border-border/40 space-y-1 text-xs">
                     <span className="font-extrabold text-foreground flex items-center">
-                      <ShieldCheck className="h-4 w-4 text-[#a0f212] mr-1.5" /> Verify WhatsApp Number
+                      <ShieldCheck className="h-4 w-4 text-emerald-600 mr-1.5" /> Verify WhatsApp Number
                     </span>
                     <p className="text-muted-foreground text-[11px]">
                       Enter the 6-digit verification code sent to <strong className="text-foreground">{store.phone}</strong>.
@@ -410,7 +433,7 @@ export default function ClientAuthModal({
                     <button
                       type="button"
                       onClick={handleResendOtp}
-                      className="font-bold text-[#a0f212] hover:underline"
+                      className="font-bold text-primary hover:underline"
                       disabled={isLoading}
                     >
                       Resend OTP

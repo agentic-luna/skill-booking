@@ -18,9 +18,12 @@ export default function HeroSection() {
             transition={{ duration: 0.8 }}
             className="w-full max-w-3xl flex flex-col items-center"
           >
-            <h1 className="text-[36px] md:text-[48px] lg:text-[60px] font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-8">
+            <h1 className="text-[36px] md:text-[48px] lg:text-[60px] font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-4">
               <AnimatedHeroText />
             </h1>
+            <p className="text-gray-600 text-lg md:text-xl font-medium max-w-xl mb-8">
+              Search lowest prices on training event tickets.
+            </p>
           </motion.div>
         </div>
       </div>

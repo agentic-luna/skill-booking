@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. Client/Host login or registration page protection
-  if (pathname === "/login" || pathname === "/register") {
+  if (pathname === "/login" || pathname === "/register" || pathname === "/host/login" || pathname === "/host/register") {
     if (isAuthenticated) {
       if (role === "admin") {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
@@ -52,8 +52,11 @@ export function middleware(request: NextRequest) {
 
   // 4. Host dashboard and tools
   if (pathname.startsWith("/host")) {
-    if (!isAuthenticated || role !== "host") {
-      return NextResponse.redirect(new URL("/login", request.url));
+    const isPublicHostPath = pathname === "/host/login" || pathname === "/host/register" || pathname === "/host/list-your-event";
+    if (!isPublicHostPath) {
+      if (!isAuthenticated || role !== "host") {
+        return NextResponse.redirect(new URL("/host/login", request.url));
+      }
     }
   }
 

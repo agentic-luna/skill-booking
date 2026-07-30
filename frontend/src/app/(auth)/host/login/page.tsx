@@ -24,7 +24,7 @@ const REDIRECT: Record<UserRole, string> = {
   admin: "/admin/dashboard",
 };
 
-export default function LoginPage() {
+export default function HostLoginPage() {
   const router = useRouter();
   const { login, isLoading, error } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
@@ -40,15 +40,15 @@ export default function LoginPage() {
         ? data.identifier.trim().toLowerCase()
         : data.identifier.trim();
       const user = await login(cleanIdentifier, data.password);
-      router.push(REDIRECT[user.role] ?? "/");
+      router.push(REDIRECT[user.role] ?? "/host/dashboard");
     } catch { /* error set in store */ }
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome back</h2>
-        <p className="text-sm text-muted-foreground">Enter your details to sign in</p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Trainer Portal Sign In</h2>
+        <p className="text-sm text-muted-foreground font-medium">Access your instructor dashboard to manage active workshops, review payouts, and monitor training rosters.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -58,7 +58,7 @@ export default function LoginPage() {
           <Label htmlFor="identifier">Email or Phone Number</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input id="identifier" placeholder="name@example.com or +1 555 0201" type="text" className="pl-10" {...register("identifier")} disabled={isLoading} />
+            <Input id="identifier" placeholder="host@example.com" type="text" className="pl-10" {...register("identifier")} disabled={isLoading} />
           </div>
           {errors.identifier && <p className="text-xs text-destructive">{errors.identifier.message}</p>}
         </div>
@@ -78,7 +78,7 @@ export default function LoginPage() {
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full font-bold h-11 rounded-xl" disabled={isLoading}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           {isLoading ? "Signing in..." : "Sign In"}
         </Button>
@@ -86,14 +86,13 @@ export default function LoginPage() {
 
       <div className="space-y-3 pt-2 border-t border-border/40">
         <div className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-semibold text-primary hover:underline">Register here</Link>
+          Don&apos;t have a host account?{" "}
+          <Link href="/host/register" className="font-semibold text-primary hover:underline">Register here</Link>
         </div>
         <div className="text-center text-xs text-muted-foreground">
-          Are you a trainer?{" "}
-          <Link href="/host/list-your-event" className="font-semibold text-primary hover:underline">Host Portal / Sign in</Link>
+          Looking to learn instead?{" "}
+          <Link href="/login" className="font-semibold text-primary hover:underline">Learner Portal</Link>
         </div>
-     
       </div>
     </div>
   );

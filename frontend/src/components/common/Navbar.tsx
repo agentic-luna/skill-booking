@@ -239,6 +239,13 @@ export default function Navbar() {
                 <div className="flex items-center space-x-3">
                   <Button
                     variant="ghost"
+                    onClick={() => router.push("/host/list-your-event")}
+                    className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-black/5 border-black/10 text-graphite-ink hover:bg-black/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}
+                  >
+                    List your trainings
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => router.push("/login")}
                     className={`rounded-full px-5 transition-all duration-300 backdrop-blur-sm border ${isScrolled || !isHome ? "bg-black/5 border-black/10 text-graphite-ink hover:bg-black/10 hover:shadow-sm" : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"}`}
                   >
@@ -363,6 +370,13 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  className="w-full text-foreground hover:bg-black/5"
+                  onClick={() => { setMobileMenuOpen(false); router.push("/host/list-your-event"); }}
+                >
+                  List your trainings
+                </Button>
                 <Button
                   variant="outline"
                   className="w-full"

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PHRASES = [
-  { prefix: "Build Trainings That ", highlight: "Matter." },
+  { prefix: "Find The Best ", highlight: "Training Events in India." },
   { prefix: "Learn from ", highlight: "Industry Experts." },
   { prefix: "Upgrade Your ", highlight: "Training." },
 ];
