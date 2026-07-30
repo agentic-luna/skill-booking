@@ -51,10 +51,10 @@ export default function BoostSettingsTab() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await upsertPlatformSetting({ key: "BOOST_PRICING", value: boostPricing });
+      await upsertPlatformSetting({ key: "BOOST_PRICING", value: JSON.stringify(boostPricing) });
       showAlert("Boost Pricing Updated", "Event boost pricing updated successfully.", "success");
     } catch {
-      showAlert("Error", "Failed to update boost pricing.", "error");
+      showAlert("Error", "Failed to update boost pricing.", "destructive");
     }
   };
 
