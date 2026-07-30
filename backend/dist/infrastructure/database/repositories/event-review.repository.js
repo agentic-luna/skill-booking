@@ -4,8 +4,19 @@ exports.PrismaEventReviewRepository = void 0;
 const prisma_1 = require("../../../config/prisma");
 class PrismaEventReviewRepository {
     async create(data) {
-        const review = await prisma_1.prisma.review.create({
-            data: {
+        const review = await prisma_1.prisma.review.upsert({
+            where: {
+                clientId_eventId: {
+                    clientId: data.clientId,
+                    eventId: data.eventId,
+                },
+            },
+            update: {
+                rating: data.rating,
+                comment: data.comment || null,
+                bookingId: data.bookingId || null,
+            },
+            create: {
                 eventId: data.eventId,
                 bookingId: data.bookingId || null,
                 clientId: data.clientId,

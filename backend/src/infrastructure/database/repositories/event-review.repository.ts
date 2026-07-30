@@ -10,8 +10,19 @@ export class PrismaEventReviewRepository implements IEventReviewRepository {
     rating: number;
     comment?: string | null;
   }): Promise<EventReview> {
-    const review = await prisma.review.create({
-      data: {
+    const review = await prisma.review.upsert({
+      where: {
+        clientId_eventId: {
+          clientId: data.clientId,
+          eventId: data.eventId,
+        },
+      },
+      update: {
+        rating: data.rating,
+        comment: data.comment || null,
+        bookingId: data.bookingId || null,
+      },
+      create: {
         eventId: data.eventId,
         bookingId: data.bookingId || null,
         clientId: data.clientId,
