@@ -55,6 +55,26 @@ function mapCommission(c: any): EventCommission {
   };
 }
 
+async function getHostRatingAndReviewsCount(hostId: string): Promise<{ rating: number; reviewsCount: number }> {
+  const aggregate = await prisma.review.aggregate({
+    _avg: {
+      rating: true,
+    },
+    _count: {
+      rating: true,
+    },
+    where: {
+      event: {
+        hostId: hostId,
+      },
+    },
+  });
+  return {
+    rating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : 4.8,
+    reviewsCount: aggregate._count.rating || 0,
+  };
+}
+
 export class PrismaEventRepository implements IEventRepository {
   async findById(id: string): Promise<any> {
     const e = await prisma.event.findUnique({
@@ -79,7 +99,12 @@ export class PrismaEventRepository implements IEventRepository {
         boostedEvent: true,
       },
     });
-    return mapEvent(e);
+    if (!e) return null;
+    const mapped = mapEvent(e);
+    const stats = await getHostRatingAndReviewsCount(e.hostId);
+    mapped.rating = stats.rating;
+    mapped.reviewsCount = stats.reviewsCount;
+    return mapped;
   }
 
   async findMany(filters: {
@@ -139,7 +164,13 @@ export class PrismaEventRepository implements IEventRepository {
       },
     });
 
-    return events.map(mapEvent);
+    const mappedEvents = events.map(mapEvent);
+    for (const me of mappedEvents) {
+      const stats = await getHostRatingAndReviewsCount(me.hostId);
+      me.rating = stats.rating;
+      me.reviewsCount = stats.reviewsCount;
+    }
+    return mappedEvents;
   }
 
   async create(data: {

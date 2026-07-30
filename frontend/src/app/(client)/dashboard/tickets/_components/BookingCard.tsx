@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Calendar, Clock, MapPin, PlayCircle,
-  FileText, Trash2, MessageSquare, Wifi, Timer, Ticket, HelpCircle
+  FileText, Trash2, MessageSquare, Wifi, Timer, Ticket, HelpCircle, Star
 } from "lucide-react";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import type { ClientBooking } from "@/features/client/api/types";
@@ -284,15 +284,15 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                 </Button>
               )}
 
-              {/* Leave Review – completed only */}
-              {booking.status === "COMPLETED" && (
+              {/* Leave Review – completed or confirmed past events */}
+              {(booking.status === "COMPLETED" || (booking.status === "CONFIRMED" && new Date(event.startTime).getTime() + (event.durationHours || 2) * 60 * 60 * 1000 < Date.now())) && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs rounded-lg border-primary/20 text-primary hover:bg-primary/5"
+                  className="h-8 text-xs rounded-lg border-border bg-card hover:bg-accent text-foreground shadow-xs"
                   onClick={() => onWriteReview(booking)}
                 >
-                  <MessageSquare className="h-3.5 w-3.5 mr-1" /> Leave Review
+                  <Star className="h-3.5 w-3.5 mr-1 text-amber-500 fill-amber-500" /> Rate & Review
                 </Button>
               )}
 

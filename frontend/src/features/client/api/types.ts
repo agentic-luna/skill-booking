@@ -39,6 +39,8 @@ export interface ClientEvent {
   duration?: string;
   durationHours?: number;
   category?: string;
+  rating?: number;
+  reviewsCount?: number;
   createdAt: string;
   updatedAt: string;
   host?: ClientHostProfile;
@@ -126,6 +128,10 @@ export interface EventReview {
     firstName: string;
     lastName: string;
     avatarUrl?: string;
+  };
+  client?: {
+    firstName: string;
+    lastName: string;
   };
 }
 

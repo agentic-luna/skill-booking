@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Clock, MapPin, Star, Flame, Zap } from "lucide-react";
+import { Clock, MapPin, Star, Flame, Zap, Calendar } from "lucide-react";
 import { Program } from "@/constants/mockData";
 import { calculateBookedSeats } from "@/lib/utils";
 
@@ -69,9 +69,14 @@ export default function ProgramCard({ program }: ProgramCardProps) {
           {program.title}
         </h3>
 
-        <div className="flex flex-wrap gap-y-2 text-xs text-muted-foreground font-medium border-b border-border/30 pb-2">
-          <span className="flex items-center w-1/2"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.duration || "2 hrs"}</span>
-          <span className="flex items-center w-1/2"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.location.split(",")[0]}</span>
+        <div className="flex flex-col gap-2 text-xs text-muted-foreground font-medium border-b border-border/30 pb-2">
+          {program.date && program.time && (
+            <span className="flex items-center w-full"><Calendar className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.date} • {program.time}</span>
+          )}
+          <div className="flex items-center gap-4">
+            <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.duration || "2 hrs"}</span>
+            <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.location.split(",")[0]}</span>
+          </div>
         </div>
 
         {/* Live Enrollment Tension Counter */}

@@ -527,7 +527,7 @@ export default function ProgramsListContent() {
                             </div>
                             <div className="flex items-center bg-amber-500/10 px-2 py-0.5 rounded-full">
                               <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
-                              <span className="text-xs font-bold text-amber-700 dark:text-amber-500">4.8</span>
+                              <span className="text-xs font-bold text-amber-700 dark:text-amber-500">{prog.rating || 4.8}</span>
                             </div>
                           </div>
 
@@ -535,9 +535,12 @@ export default function ProgramsListContent() {
                             {prog.title}
                           </h3>
 
-                          <div className="flex flex-wrap gap-y-2 text-xs text-muted-foreground font-medium">
-                            <span className="flex items-center w-1/2"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.duration || "2 hrs"}</span>
-                            <span className="flex items-center w-1/2"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.mode}</span>
+                          <div className="flex flex-col gap-2 text-xs text-muted-foreground font-medium">
+                            <span className="flex items-center w-full"><Calendar className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {new Date(prog.startTime).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} • {new Date(prog.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.duration || "2 hrs"}</span>
+                              <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {prog.mode}</span>
+                            </div>
                           </div>
 
                           <div className="flex items-center justify-between pt-4 mt-auto">
@@ -611,10 +614,11 @@ export default function ProgramsListContent() {
                                   </div>
                                   <span className="text-foreground">{instructorName}</span>
                                 </div>
+                                <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 opacity-60" /> {new Date(prog.startTime).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} • {new Date(prog.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                                 <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 opacity-60" /> {prog.duration || "2 hrs"}</span>
                                 <span className="flex items-center"><MapPin className="h-4 w-4 mr-1.5 opacity-60" /> {prog.mode}</span>
                                 <div className="flex items-center bg-amber-500/10 px-2 py-1 rounded-md text-amber-700 dark:text-amber-500">
-                                  <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> 4.8 ({prog._count?.likes || 0})
+                                  <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> {prog.rating || 4.8} ({prog.reviewsCount || 0})
                                 </div>
                               </div>
                               <div className="flex items-center justify-center rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] group-hover:from-[#a0f212] group-hover:to-[#8ce20b] group-hover:text-[#0b0c01] group-hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">

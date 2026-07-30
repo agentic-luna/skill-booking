@@ -117,7 +117,9 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     wishlist, 
     fetchWishlist, 
     addToWishlist, 
-    removeFromWishlist 
+    removeFromWishlist,
+    reviews,
+    fetchReviews
   } = useClientStore();
 
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,12 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       setProgram(initialProgram);
     }
   }, [initialProgram]);
+  
+  useEffect(() => {
+    if (program?.id && program.id !== "preview") {
+      fetchReviews(program.id);
+    }
+  }, [program?.id, fetchReviews]);
 
   useEffect(() => {
     if (programId === "preview") {
@@ -530,6 +538,51 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            <Separator />
+
+            {/* Verified Student Reviews List */}
+            <div className="space-y-4 pt-2">
+              <h2 className="text-lg font-bold text-foreground">Verified Student Reviews</h2>
+              {reviews && reviews.length > 0 ? (
+                <div className="space-y-4">
+                  {reviews.map((rev) => (
+                    <Card key={rev.id} className="rounded-xl border-border/30 bg-card overflow-hidden">
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
+                              {rev.client?.firstName?.charAt(0).toUpperCase() || "S"}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-foreground">
+                                {rev.client?.firstName} {rev.client?.lastName}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground">
+                                {new Date(rev.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center bg-amber-500/10 px-2 py-0.5 rounded-full">
+                            <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
+                            <span className="text-[10px] font-black text-amber-700">{rev.rating}</span>
+                          </div>
+                        </div>
+                        {rev.comment && (
+                          <p className="text-xs text-muted-foreground leading-relaxed italic pl-1 border-l-2 border-border/50">
+                            "{rev.comment}"
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic bg-muted/20 border rounded-xl p-4 text-center">
+                  No student reviews submitted for this workshop yet.
+                </p>
+              )}
             </div>
 
           </div>
