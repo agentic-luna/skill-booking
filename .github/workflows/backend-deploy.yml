@@ -37,11 +37,10 @@ jobs:
       - name: Push Docker Image
         run: |
           docker push $IMAGE_NAME:latest
-
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-
+  
     steps:
       - name: Deploy to Oracle VPS
         uses: appleboy/ssh-action@v1.2.2
@@ -51,10 +50,10 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd ${{ secrets.PROJECT_PATH }}
-
+  
             docker login ghcr.io \
-              -u YOUR_GITHUB_USERNAME \
-              -p YOUR_GITHUB_PAT
-
+              -u ${{ secrets.GHCR_USERNAME }} \
+              -p ${{ secrets.GHCR_PAT }}
+  
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
