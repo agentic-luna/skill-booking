@@ -41,10 +41,10 @@ export function mapEventToProgram(event: any): Program {
     linkedin,
     facebook,
     companyName,
-    category: event.category || "technology",
+    category: event.category || "life-coaching",
     videoUrls: event.videoUrls || [],
-    rating: 4.8,
-    reviewsCount: event._count?.bookings || 12,
+    rating: typeof event.rating === "number" ? event.rating : 0,
+    reviewsCount: typeof event.reviewsCount === "number" ? event.reviewsCount : 0,
     price: event.price || 0,
     duration: event.duration || "2 hours",
     date: (() => {

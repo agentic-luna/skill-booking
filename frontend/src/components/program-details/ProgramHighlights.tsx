@@ -21,22 +21,24 @@ export default function ProgramHighlights({
       {/* Large Highlighted Key Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
         {/* Rating Spec */}
-        <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">
-          <CardContent className="p-5 flex items-center space-x-4">
-            <div className="bg-amber-500/10 text-amber-500 p-3.5 rounded-xl shrink-0">
-              <Star className="h-6 w-6 fill-amber-500 text-amber-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-black text-foreground leading-none flex items-baseline space-x-1">
-                <span>{rating}</span>
-                <span className="text-[10px] font-bold text-muted-foreground">/ 5.0</span>
+        {rating && rating >= 2 ? (
+          <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">
+            <CardContent className="p-5 flex items-center space-x-4">
+              <div className="bg-amber-500/10 text-amber-500 p-3.5 rounded-xl shrink-0">
+                <Star className="h-6 w-6 fill-amber-500 text-amber-500" />
               </div>
-              <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wide">
-                {reviewsCount} Host Reviews
+              <div>
+                <div className="text-2xl font-black text-foreground leading-none flex items-baseline space-x-1">
+                  <span>{rating.toFixed(1)}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">/ 5.0</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wide">
+                  {reviewsCount} Host Reviews
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Location Spec */}
         <Card className="rounded-2xl border-border/40 bg-card overflow-hidden shadow-2xs">

@@ -20,9 +20,9 @@ function mapEventToProgram(event: any): Program {
     description: event.description || "",
     instructorName,
     instructorAvatar,
-    category: event.category || "technology",
-    rating: 4.8,
-    reviewsCount: event._count?.bookings || 12,
+    category: event.category || "life-coaching",
+    rating: typeof event.rating === 'number' ? event.rating : 0,
+    reviewsCount: typeof event.reviewsCount === 'number' ? event.reviewsCount : 0,
     price: event.price || 0,
     duration: event.duration || "2 hours",
     date: (() => {

@@ -59,7 +59,7 @@ export default function EditProgramPage() {
           return;
         }
         setProgram(details);
-        setSelectedCategory(details.category || "technology");
+        setSelectedCategory(details.category || "life-coaching");
 
         const start = details.startTime ? new Date(details.startTime) : new Date();
         const dateStr = start.toISOString().split("T")[0];
@@ -75,7 +75,8 @@ export default function EditProgramPage() {
 
         reset({
           title: details.title || "",
-          category: (details.category as any) || "technology",
+          category: (details.category as any) || "life-coaching",
+          keywords: details.keywords || [],
           mode: safeMode,
           price: details.price ?? 0,
           duration: details.duration || "2 hours",
@@ -149,6 +150,7 @@ export default function EditProgramPage() {
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
+        keywords: data.keywords || [],
         videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter((url): url is string => Boolean(url)),
       });
 
@@ -307,6 +309,7 @@ export default function EditProgramPage() {
               register={register}
               errors={errors}
               setValue={setValue}
+              watch={watch}
               selectedCategory={selectedCategory}
               onCategoryChange={setSelectedCategory}
               categoryMeta={categoryMeta}

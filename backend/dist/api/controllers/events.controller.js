@@ -43,7 +43,7 @@ class EventsController {
     }
     static async createEvent(req, res, next) {
         try {
-            const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrls } = req.body;
+            const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls } = req.body;
             const event = await di_container_1.mediator.send(new create_event_1.CreateEventCommand(req.user.id, {
                 title,
                 posterUrl,
@@ -57,6 +57,7 @@ class EventsController {
                 duration: duration !== undefined ? String(duration) : undefined,
                 description: description !== undefined ? String(description) : undefined,
                 category: category !== undefined ? String(category) : undefined,
+                keywords: Array.isArray(keywords) ? keywords : [],
                 videoUrls: Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : []),
             }));
             return api_response_1.ApiResponse.created(res, event);
@@ -68,7 +69,7 @@ class EventsController {
     static async updateEvent(req, res, next) {
         try {
             const { id } = req.params;
-            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, videoUrls } = req.body;
+            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls } = req.body;
             // 1. Fetch host profile first to verify ownership
             const hostProfile = await prisma_1.prisma.hostProfile.findUnique({
                 where: { userId: req.user.id },
@@ -165,6 +166,8 @@ class EventsController {
                     price: price !== undefined ? Number(price) : event.price,
                     duration: duration !== undefined ? String(duration) : event.duration,
                     description: description !== undefined ? String(description) : event.description,
+                    category: category !== undefined ? String(category) : event.category,
+                    keywords: keywords !== undefined ? (Array.isArray(keywords) ? keywords : []) : undefined,
                     videoUrls: videoUrls !== undefined ? (Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : [])) : undefined,
                     instructorId,
                     venueId,

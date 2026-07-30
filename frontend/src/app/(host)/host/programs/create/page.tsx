@@ -47,7 +47,7 @@ export default function CreateProgramPage() {
     resolver: zodResolver(programSchema),
     defaultValues: {
       title: "",
-      category: "technology",
+      category: "life-coaching",
       mode: "OFFLINE",
       price: 49,
       duration: "3 hours",
@@ -156,6 +156,7 @@ export default function CreateProgramPage() {
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
+        keywords: data.keywords || [],
         videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter((url): url is string => Boolean(url)),
       });
 
@@ -229,6 +230,7 @@ export default function CreateProgramPage() {
               register={register}
               errors={errors}
               setValue={setValue}
+              watch={watch}
               selectedCategory={selectedCategory}
               onCategoryChange={setSelectedCategory}
               categoryMeta={categoryMeta}

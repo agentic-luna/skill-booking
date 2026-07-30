@@ -29,10 +29,11 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="font-bold text-gray-900">Discover</h4>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link href="/programs" className="hover:text-gray-900 transition-colors">Explore Trainings</Link></li>
-              <li><Link href="/programs?category=technology" className="hover:text-gray-900 transition-colors">Technology Events</Link></li>
-              <li><Link href="/programs?category=culinary" className="hover:text-gray-900 transition-colors">Culinary Arts</Link></li>
+              <li><Link href="/programs" className="hover:text-gray-900 transition-colors">Explore All Trainings</Link></li>
+              <li><Link href="/programs?category=life-coaching" className="hover:text-gray-900 transition-colors">Life Coaching</Link></li>
+              <li><Link href="/programs?category=trauma-healing" className="hover:text-gray-900 transition-colors">Trauma Healing</Link></li>
               <li><Link href="/programs?category=business" className="hover:text-gray-900 transition-colors">Business Workshops</Link></li>
+              <li><Link href="/programs?category=relationship" className="hover:text-gray-900 transition-colors">Relationship & Bond</Link></li>
             </ul>
           </div>
 

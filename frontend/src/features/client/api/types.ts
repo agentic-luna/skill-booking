@@ -39,6 +39,7 @@ export interface ClientEvent {
   duration?: string;
   durationHours?: number;
   category?: string;
+  keywords?: string[];
   rating?: number;
   reviewsCount?: number;
   createdAt: string;
@@ -57,6 +58,7 @@ export interface SearchEventsFilter {
   startTimeFrom?: string;
   category?: string;
   district?: string;
+  keywords?: string[];
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;

@@ -51,31 +51,39 @@ export default function ProgramCard({ program }: ProgramCardProps) {
         </div>
       </div>
 
-      <div className="flex flex-col flex-1 p-6 gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="h-6 w-6 rounded-full bg-muted text-foreground border border-border/50 flex items-center justify-center text-[8px] font-extrabold shadow-sm">
-              {program.instructorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+      <div className="flex flex-col flex-1 p-6 gap-4 min-w-0">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center space-x-2 mr-auto min-w-0">
+            <div className="h-6 w-6 rounded-full bg-muted text-foreground border border-border/50 flex items-center justify-center text-[8px] font-extrabold shadow-sm shrink-0">
+              {program.instructorName ? program.instructorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "IN"}
             </div>
-            <span className="text-xs font-semibold text-muted-foreground">{program.instructorName}</span>
+            <span className="text-xs font-semibold text-muted-foreground truncate">{program.instructorName}</span>
           </div>
-          <div className="flex items-center bg-amber-500/10 px-2 py-0.5 rounded-full">
-            <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-500">{program.rating || 4.8}</span>
-          </div>
+          {program.rating && program.rating >= 2 ? (
+            <div className="flex items-center bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full shrink-0">
+              <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-500">
+                {program.rating.toFixed(1)}
+                {program.reviewsCount ? ` (${program.reviewsCount})` : ""}
+              </span>
+            </div>
+          ) : null}
         </div>
 
-        <h3 className="font-extrabold text-[15px] text-foreground line-clamp-2 leading-snug transition-colors duration-300">
+        <h3 className="font-extrabold text-[15px] text-foreground line-clamp-2 leading-snug transition-colors duration-300 min-h-[40px]">
           {program.title}
         </h3>
 
-        <div className="flex flex-col gap-2 text-xs text-muted-foreground font-medium border-b border-border/30 pb-2">
-          {program.date && program.time && (
-            <span className="flex items-center w-full"><Calendar className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.date} • {program.time}</span>
+        <div className="flex flex-col gap-2 text-xs text-muted-foreground font-medium border-b border-border/30 pb-2 min-w-0">
+          {program.date && (
+            <span className="flex items-center w-full truncate">
+              <Calendar className="h-3.5 w-3.5 mr-1.5 opacity-70 shrink-0" />
+              <span className="truncate">{program.date} {program.time ? `• ${program.time}` : ""}</span>
+            </span>
           )}
-          <div className="flex items-center gap-4">
-            <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.duration || "2 hrs"}</span>
-            <span className="flex items-center"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" /> {program.location.split(",")[0]}</span>
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="flex items-center shrink-0"><Clock className="h-3.5 w-3.5 mr-1.5 opacity-70 shrink-0" /> {program.duration || "2 hrs"}</span>
+            <span className="flex items-center min-w-0 truncate"><MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70 shrink-0" /> <span className="truncate">{program.location.split(",")[0]}</span></span>
           </div>
         </div>
 

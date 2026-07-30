@@ -1,16 +1,16 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Code, Dumbbell, Camera, UtensilsCrossed, Briefcase, Palette } from "lucide-react";
+import { ArrowRight, Compass, Heart, Briefcase, Flower2 } from "lucide-react";
 import { CategoryCard, CategoryItem } from "./CategoryCard";
+import { CATEGORIES } from "@/constants/categories";
 
-const categories: CategoryItem[] = [
-  { name: "Technology", slug: "technology", icon: Code, count: 18, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
-  { name: "Culinary Arts", slug: "culinary", icon: UtensilsCrossed, count: 12, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
-  { name: "Photography", slug: "photography", icon: Camera, count: 8, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
-  { name: "Fitness & Wellness", slug: "fitness", icon: Dumbbell, count: 14, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
-  { name: "Business", slug: "business", icon: Briefcase, count: 9, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
-  { name: "Design & Arts", slug: "design", icon: Palette, count: 15, color: "text-graphite-ink bg-linen-canvas border border-clay-shadow" },
-];
+const categories: CategoryItem[] = CATEGORIES.map((cat) => ({
+  name: cat.label,
+  slug: cat.value,
+  icon: cat.icon,
+  count: 12,
+  color: "text-graphite-ink bg-linen-canvas border border-clay-shadow",
+}));
 
 export default function CategorySection() {
   return (
@@ -23,7 +23,7 @@ export default function CategorySection() {
               <span className="font-sans not-italic font-bold tracking-tighter">Top Categories</span>
             </h2>
             <p className="text-stone-grey text-lg max-w-lg leading-relaxed">
-              Discover verified instructors teaching highly demanded technical and life training across the globe.
+              Discover verified instructors teaching highly demanded life coaching, relationship, business, and trauma healing workshops.
             </p>
           </div>
           <Link href="/programs" className="group shrink-0">
@@ -38,7 +38,7 @@ export default function CategorySection() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((cat) => (
             <CategoryCard key={cat.name} cat={cat} />
           ))}

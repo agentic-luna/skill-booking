@@ -11,6 +11,7 @@ export interface IEventRepository {
     status?: EventStatus;
     category?: string;
     district?: string;
+    keywords?: string[];
     minPrice?: number;
     maxPrice?: number;
     sortBy?: string;
@@ -44,6 +45,7 @@ export interface IEventRepository {
     durationHours?: number;
     description?: string;
     category?: string;
+    keywords?: string[];
     videoUrls?: string[];
     images?: string[];
     venueDetails?: any;

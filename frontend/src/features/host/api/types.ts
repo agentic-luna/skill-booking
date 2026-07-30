@@ -69,6 +69,7 @@ export interface CreateEventPayload {
   duration?: string;
   description?: string;
   category?: string;
+  keywords?: string[];
 }
 
 export interface CreatedEvent {

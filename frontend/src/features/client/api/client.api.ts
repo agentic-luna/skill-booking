@@ -18,6 +18,9 @@ export const getEvents = (filters?: SearchEventsFilter) => {
   if (filters?.startTimeFrom) params.set("startTimeFrom", filters.startTimeFrom);
   if (filters?.category) params.set("category", filters.category);
   if (filters?.district) params.set("district", filters.district);
+  if (filters?.keywords && filters.keywords.length > 0) {
+    filters.keywords.forEach(k => params.append("keywords", k));
+  }
   if (filters?.minPrice !== undefined) params.set("minPrice", String(filters.minPrice));
   if (filters?.maxPrice !== undefined) params.set("maxPrice", String(filters.maxPrice));
   if (filters?.sortBy) params.set("sortBy", filters.sortBy);

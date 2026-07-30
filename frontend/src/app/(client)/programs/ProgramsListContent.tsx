@@ -19,6 +19,7 @@ import { useClientStore } from "@/features/client/store/clientStore";
 import type { ClientEvent } from "@/features/client/api/types";
 import AdvancedSearchBar from "@/components/hero-section/AdvancedSearchBar";
 import { getDistrictDbValue } from "@/constants/locations";
+import { CATEGORIES } from "@/constants/categories";
 
 interface FilterSidebarProps {
   category: string;
@@ -279,12 +280,7 @@ export default function ProgramsListContent() {
   
   const categoriesList = [
     { name: "All Categories", value: "all" },
-    { name: "Technology", value: "technology" },
-    { name: "Culinary Arts", value: "culinary" },
-    { name: "Fitness & Wellness", value: "fitness" },
-    { name: "Design & Arts", value: "design" },
-    { name: "Photography", value: "photography" },
-    { name: "Business", value: "business" },
+    ...CATEGORIES.map(c => ({ name: c.label, value: c.value }))
   ];
 
   // Filtering calculations
@@ -570,16 +566,20 @@ export default function ProgramsListContent() {
 
                         <div className="flex flex-col flex-1 p-6 gap-4">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2.5">
-                              <div className="h-6 w-6 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-[8px] font-extrabold ring-2 ring-background shadow-sm">
+                            <div className="flex items-center space-x-2 mr-auto min-w-0">
+                              <div className="h-6 w-6 rounded-full bg-[#0b0c01] text-[#a0f212] flex items-center justify-center text-[8px] font-extrabold ring-2 ring-background shadow-sm shrink-0">
                                 {instructorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
                               </div>
-                              <span className="text-xs font-semibold text-muted-foreground">{instructorName}</span>
+                              <span className="text-xs font-semibold text-muted-foreground truncate">{instructorName}</span>
                             </div>
-                            <div className="flex items-center bg-amber-500/10 px-2 py-0.5 rounded-full">
-                              <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
-                              <span className="text-xs font-bold text-amber-700 dark:text-amber-500">{prog.rating || 4.8}</span>
-                            </div>
+                            {prog.rating && prog.rating >= 2 ? (
+                              <div className="flex items-center bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                                <Star className="h-3 w-3 fill-amber-500 text-amber-500 mr-1" />
+                                <span className="text-xs font-bold text-amber-700 dark:text-amber-500">
+                                  {prog.rating.toFixed(1)}
+                                </span>
+                              </div>
+                            ) : null}
                           </div>
 
                           <h3 className="font-extrabold text-[15px] text-foreground line-clamp-2 leading-snug transition-colors duration-300">
@@ -597,7 +597,7 @@ export default function ProgramsListContent() {
                           <div className="flex items-center justify-between pt-4 mt-auto">
                             <div className="flex flex-col">
                               <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">Price</span>
-                              <div className="text-xl font-black text-foreground">${price}</div>
+                              <div className="text-xl font-black text-foreground">₹{price}</div>
                             </div>
                             <div className="flex items-center justify-center rounded-xl h-10 px-5 text-xs font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] group-hover:from-[#a0f212] group-hover:to-[#8ce20b] group-hover:text-[#0b0c01] group-hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
                               View Details
@@ -649,10 +649,10 @@ export default function ProgramsListContent() {
                           <div className="flex-1 p-6 flex flex-col justify-between">
                             <div className="space-y-3">
                               <div className="flex items-start justify-between gap-4">
-                                <h3 className="font-extrabold text-lg text-foreground leading-tight transition-colors duration-300 max-w-lg">
+                                <h3 className="font-extrabold text-lg text-foreground leading-tight transition-colors duration-300 max-w-lg min-w-0 truncate">
                                   {prog.title}
                                 </h3>
-                                <div className="text-2xl font-black text-foreground shrink-0">${price}</div>
+                                <div className="text-2xl font-black text-foreground shrink-0">₹{price}</div>
                               </div>
                               <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed max-w-2xl font-medium">{prog.description}</p>
                             </div>
@@ -668,9 +668,11 @@ export default function ProgramsListContent() {
                                 <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 opacity-60" /> {new Date(prog.startTime).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} • {new Date(prog.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                                 <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 opacity-60" /> {prog.duration || "2 hrs"}</span>
                                 <span className="flex items-center"><MapPin className="h-4 w-4 mr-1.5 opacity-60" /> {prog.mode}</span>
-                                <div className="flex items-center bg-amber-500/10 px-2 py-1 rounded-md text-amber-700 dark:text-amber-500">
-                                  <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> {prog.rating || 4.8} ({prog.reviewsCount || 0})
-                                </div>
+                                {prog.rating && prog.rating >= 2 ? (
+                                  <div className="flex items-center bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-md text-amber-700 dark:text-amber-500">
+                                    <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" /> {prog.rating.toFixed(1)} ({prog.reviewsCount || 0})
+                                  </div>
+                                ) : null}
                               </div>
                               <div className="flex items-center justify-center rounded-xl h-10 px-6 text-sm font-bold bg-gradient-to-r from-[#1b2b0a] to-[#2a420f] border border-[#a0f212]/30 text-[#a0f212] shadow-[0_0_15px_rgba(160,242,18,0.15)] group-hover:from-[#a0f212] group-hover:to-[#8ce20b] group-hover:text-[#0b0c01] group-hover:shadow-[0_0_25px_rgba(160,242,18,0.4)] transition-all duration-300">
                                 View Details

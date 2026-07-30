@@ -69,7 +69,7 @@ async function getHostRatingAndReviewsCount(hostId) {
         },
     });
     return {
-        rating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : 4.8,
+        rating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : 0,
         reviewsCount: aggregate._count.rating || 0,
     };
 }
@@ -111,9 +111,36 @@ class PrismaEventRepository {
             where.status = filters.status;
         }
         if (filters.title) {
-            where.title = {
-                contains: filters.title,
-                mode: 'insensitive',
+            const searchTerm = filters.title.trim();
+            where.OR = [
+                {
+                    title: {
+                        contains: searchTerm,
+                        mode: 'insensitive',
+                    },
+                },
+                {
+                    description: {
+                        contains: searchTerm,
+                        mode: 'insensitive',
+                    },
+                },
+                {
+                    category: {
+                        contains: searchTerm,
+                        mode: 'insensitive',
+                    },
+                },
+                {
+                    keywords: {
+                        hasSome: [searchTerm],
+                    },
+                },
+            ];
+        }
+        if (filters.keywords && filters.keywords.length > 0) {
+            where.keywords = {
+                hasSome: filters.keywords,
             };
         }
         if (filters.mode) {

@@ -38,6 +38,7 @@ export class CreateEventCommand implements IRequest<any> {
       duration?: string;
       description?: string;
       category?: string;
+      keywords?: string[];
       videoUrls?: string[];
     }
   ) { }
@@ -99,6 +100,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       durationHours,
       description: data.description,
       category: data.category,
+      keywords: data.keywords || [],
       videoUrls: data.videoUrls || [],
       venueDetails: {
         district: data.venue?.district || undefined,

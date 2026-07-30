@@ -70,7 +70,7 @@ async function getHostRatingAndReviewsCount(hostId: string): Promise<{ rating: n
     },
   });
   return {
-    rating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : 4.8,
+    rating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : 0,
     reviewsCount: aggregate._count.rating || 0,
   };
 }
@@ -115,6 +115,7 @@ export class PrismaEventRepository implements IEventRepository {
     status?: EventStatus;
     category?: string;
     district?: string;
+    keywords?: string[];
     minPrice?: number;
     maxPrice?: number;
     sortBy?: string;
@@ -127,9 +128,37 @@ export class PrismaEventRepository implements IEventRepository {
     }
 
     if (filters.title) {
-      where.title = {
-        contains: filters.title,
-        mode: 'insensitive',
+      const searchTerm = filters.title.trim();
+      where.OR = [
+        {
+          title: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        {
+          description: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        {
+          category: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        {
+          keywords: {
+            hasSome: [searchTerm],
+          },
+        },
+      ];
+    }
+
+    if (filters.keywords && filters.keywords.length > 0) {
+      where.keywords = {
+        hasSome: filters.keywords,
       };
     }
 
@@ -244,6 +273,7 @@ export class PrismaEventRepository implements IEventRepository {
     durationHours?: number;
     description?: string;
     category?: string;
+    keywords?: string[];
     videoUrls?: string[];
     images?: string[];
     venueDetails?: any;

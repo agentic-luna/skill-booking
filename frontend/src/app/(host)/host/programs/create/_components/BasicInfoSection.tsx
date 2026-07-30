@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
+import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { FileText, Tag, Sparkles, Youtube } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +13,7 @@ interface BasicInfoSectionProps {
   register: UseFormRegister<ProgramFormValues>;
   errors: FieldErrors<ProgramFormValues>;
   setValue: UseFormSetValue<ProgramFormValues>;
+  watch?: UseFormWatch<ProgramFormValues>;
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
   categoryMeta: CategoryMeta | undefined;
@@ -23,10 +23,24 @@ export default function BasicInfoSection({
   register,
   errors,
   setValue,
+  watch,
   selectedCategory,
   onCategoryChange,
   categoryMeta,
 }: BasicInfoSectionProps) {
+  const selectedKeywords: string[] = watch ? (watch("keywords") || []) : [];
+
+  const toggleKeyword = (kw: string) => {
+    if (!setValue) return;
+    const current = [...selectedKeywords];
+    const index = current.indexOf(kw);
+    if (index > -1) {
+      current.splice(index, 1);
+    } else {
+      current.push(kw);
+    }
+    setValue("keywords", current, { shouldValidate: true });
+  };
   return (
     <Card className="rounded-[24px] border-none shadow-sm hover:shadow-md transition-all duration-300 bg-white overflow-hidden">
       <CardHeader className="bg-transparent border-b border-gray-100/50 pb-5 pt-6">
@@ -82,6 +96,36 @@ export default function BasicInfoSection({
           )}
           {errors.category && <p className="text-[12px] text-red-500 font-semibold">{errors.category.message}</p>}
         </div>
+
+        {/* Search Keywords & Sub-Types */}
+        {categoryMeta && categoryMeta.keywords && categoryMeta.keywords.length > 0 && (
+          <div className="space-y-3 bg-gray-50/60 p-4 rounded-2xl border border-gray-100">
+            <Label className="text-[12px] font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5 text-gray-400" />
+              <span>Target Topics / Keywords ({categoryMeta.label})</span>
+            </Label>
+            <p className="text-[11px] text-gray-500 font-medium">Select relevant tags to help learners discover your workshop in searches:</p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {categoryMeta.keywords.map((kw) => {
+                const isSelected = selectedKeywords.includes(kw);
+                return (
+                  <button
+                    key={kw}
+                    type="button"
+                    onClick={() => toggleKeyword(kw)}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all duration-200 shadow-2xs ${
+                      isSelected
+                        ? "bg-[#0b0c01] text-[#a0f212] border-[#0b0c01] shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    {isSelected ? "✓ " : "+ "}{kw}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Description */}
         <div className="space-y-2.5">
