@@ -239,10 +239,6 @@ export default function ProgramsListContent() {
   const filteredPrograms = events.filter((prog) => {
     if (prog.status !== "APPROVED") return false;
 
-    // Filter out past events
-    const isFuture = new Date(prog.startTime) >= new Date();
-    if (!isFuture) return false;
-
     const trainerNameStr = prog.trainerName || (prog.host?.user ? `${prog.host.user.firstName} ${prog.host.user.lastName}` : "Platform Host");
     const matchesSearch =
       prog.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -304,6 +300,18 @@ export default function ProgramsListContent() {
 
   // Sorting calculations
   const sortedPrograms = [...filteredPrograms].sort((a, b) => {
+    // Boost sorting priority: STANDARD and PRO boosted events go to the top
+    const now = new Date();
+    const isStandardOrProBoosted = (e: any) =>
+      e.boostedEvent?.isActive === true &&
+      ['STANDARD', 'PRO'].includes(e.boostedEvent?.tier) &&
+      new Date(e.boostedEvent?.endDate) >= now;
+    const aBoosted = isStandardOrProBoosted(a);
+    const bBoosted = isStandardOrProBoosted(b);
+    
+    if (aBoosted && !bBoosted) return -1;
+    if (!aBoosted && bBoosted) return 1;
+
     const priceA = a.price || a.venueDetails?.price || 0;
     const priceB = b.price || b.venueDetails?.price || 0;
     const likesA = a._count?.likes || 0;

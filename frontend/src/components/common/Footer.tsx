@@ -17,6 +17,11 @@ export default function Footer() {
               <li><Link href="/placeholder/manage-bookings" className="hover:text-gray-900 transition-colors">Manage your bookings</Link></li>
               <li><Link href="/placeholder/customer-service" className="hover:text-gray-900 transition-colors">Contact Customer Service</Link></li>
               <li><Link href="/placeholder/safety-resource-centre" className="hover:text-gray-900 transition-colors">Safety resource centre</Link></li>
+              <li className="pt-2">
+                <Link href="/report-issue" className="inline-flex items-center justify-center px-4 py-2 bg-[#a0f212] text-black font-semibold rounded-md hover:bg-[#8ee00d] transition-colors shadow-sm w-full md:w-auto">
+                  Report an Issue
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -58,12 +63,15 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-gray-200">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <span className="text-xl font-bold tracking-tight text-gray-900">
-              BookMy<span className="text-gray-500">Skill</span>
+            <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
+            </div>
+            <span className="text-xl font-extrabold tracking-tight text-gray-900">
+              BookMy<span className="text-[#a0f212]">Skill</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-900 font-medium">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-[10px] border border-gray-300">🇮🇳</span>
+            <span>🇮🇳</span>
             <span>INR</span>
           </div>
         </div>

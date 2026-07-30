@@ -32,7 +32,7 @@ interface HostState {
   // Events
   latestCreatedEvent: CreatedEvent | null;
   createEvent: (payload: CreateEventPayload) => Promise<CreatedEvent>;
-  requestBoost: (eventId: string, durationDays: number) => Promise<any>;
+  requestBoost: (eventId: string, durationDays: number, tier: string) => Promise<any>;
   verifyBoostPayment: (payload: { boostId: string, razorpayPaymentId: string, razorpayOrderId: string, razorpaySignature: string }) => Promise<any>;
   updateEvent: (id: string, payload: any) => Promise<any>;
   deleteEvent: (id: string) => Promise<any>;
@@ -40,7 +40,7 @@ interface HostState {
   myEvents: any[];
   fetchMyEvents: () => Promise<void>;
   
-  boostPricing: Record<string, number> | null;
+  boostPricing: any[] | null;
   fetchBoostPricing: () => Promise<void>;
 
   // Roster Board
@@ -182,10 +182,10 @@ export const useHostStore = create<HostState>((set) => ({
       throw new Error(message);
     }
   },
-  requestBoost: async (eventId, durationDays) => {
+  requestBoost: async (eventId, durationDays, tier) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await hostApi.requestBoost(eventId, durationDays);
+      const response = await hostApi.requestBoost(eventId, durationDays, tier);
       set({ isLoading: false });
       return response;
     } catch (error: any) {

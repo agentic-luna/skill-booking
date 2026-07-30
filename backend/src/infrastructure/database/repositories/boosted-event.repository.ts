@@ -5,19 +5,23 @@ import { prisma } from '../../../config/prisma';
 export class PrismaBoostedEventRepository implements IBoostedEventRepository {
   async upsert(
     eventId: string,
-    data: { priority: number; startDate: Date; endDate: Date; isActive: boolean }
+    data: { priority: number; tier?: string; price?: number; startDate: Date; endDate: Date; isActive: boolean }
   ): Promise<BoostedEvent> {
     const item = await prisma.boostedEvent.upsert({
       where: { eventId },
       create: {
         eventId,
         priority: data.priority,
+        tier: data.tier as any,
+        price: data.price,
         startDate: data.startDate,
         endDate: data.endDate,
         isActive: data.isActive,
       },
       update: {
         priority: data.priority,
+        tier: data.tier as any,
+        price: data.price,
         startDate: data.startDate,
         endDate: data.endDate,
         isActive: data.isActive,

@@ -21,9 +21,6 @@ export default function HeroSection() {
             <h1 className="text-[36px] md:text-[48px] lg:text-[60px] font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-8">
               <AnimatedHeroText />
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl leading-relaxed mb-10">
-              Discover the best handpicked trainings and programs to upgrade your skillset today. Find top-rated industry experts and book your next learning journey.
-            </p>
           </motion.div>
         </div>
       </div>
@@ -64,9 +61,9 @@ export default function HeroSection() {
                   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
                 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center justify-center p-5 bg-[#faf7ff] rounded-[20px] text-center border border-purple-50 shadow-sm hover:shadow-xl hover:shadow-purple-900/5 transition-all cursor-default group"
+                className="flex flex-col items-center justify-center p-5 bg-[#fafff0] rounded-[20px] text-center border border-[#a0f212]/20 shadow-sm hover:shadow-xl hover:shadow-[#a0f212]/10 transition-all cursor-default group"
               >
-                <div className="h-12 w-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 bg-[#a0f212]/20 text-[#6a9e08] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <CreditCard className="h-6 w-6" />
                 </div>
                 <h3 className="text-[15px] font-extrabold text-gray-900 mb-2 leading-tight">
@@ -84,9 +81,9 @@ export default function HeroSection() {
                   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
                 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center justify-center p-5 bg-[#fdfcf5] rounded-[20px] text-center border border-yellow-50 shadow-sm hover:shadow-xl hover:shadow-yellow-900/5 transition-all cursor-default group"
+                className="flex flex-col items-center justify-center p-5 bg-[#fafff0] rounded-[20px] text-center border border-[#a0f212]/20 shadow-sm hover:shadow-xl hover:shadow-[#a0f212]/10 transition-all cursor-default group"
               >
-                <div className="h-12 w-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 bg-[#a0f212]/20 text-[#6a9e08] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <ThumbsUp className="h-6 w-6" />
                 </div>
                 <h3 className="text-[15px] font-extrabold text-gray-900 mb-2 leading-tight">
@@ -104,9 +101,9 @@ export default function HeroSection() {
                   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
                 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center justify-center p-5 bg-[#f0f9ff] rounded-[20px] text-center border border-blue-50 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all cursor-default group"
+                className="flex flex-col items-center justify-center p-5 bg-[#fafff0] rounded-[20px] text-center border border-[#a0f212]/20 shadow-sm hover:shadow-xl hover:shadow-[#a0f212]/10 transition-all cursor-default group"
               >
-                <div className="h-12 w-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 bg-[#a0f212]/20 text-[#6a9e08] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <CheckCircle className="h-6 w-6" />
                 </div>
                 <h3 className="text-[15px] font-extrabold text-gray-900 mb-2 leading-tight">
@@ -124,9 +121,9 @@ export default function HeroSection() {
                   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
                 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center justify-center p-5 bg-[#f0fdf4] rounded-[20px] text-center border border-green-50 shadow-sm hover:shadow-xl hover:shadow-green-900/5 transition-all cursor-default group"
+                className="flex flex-col items-center justify-center p-5 bg-[#fafff0] rounded-[20px] text-center border border-[#a0f212]/20 shadow-sm hover:shadow-xl hover:shadow-[#a0f212]/10 transition-all cursor-default group"
               >
-                <div className="h-12 w-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 bg-[#a0f212]/20 text-[#6a9e08] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Headset className="h-6 w-6" />
                 </div>
                 <h3 className="text-[15px] font-extrabold text-gray-900 mb-2 leading-tight">

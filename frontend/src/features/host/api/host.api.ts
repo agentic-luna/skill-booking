@@ -121,10 +121,10 @@ export async function getEventBookings(eventId: string): Promise<any[]> {
   return res.data;
 }
 
-export async function requestBoost(eventId: string, durationDays: number): Promise<any> {
+export async function requestBoost(eventId: string, durationDays: number, tier: string): Promise<any> {
   const res = await hostRequest<{ success: boolean; data: any }>(
     '/boosted-events/request',
-    { method: "POST", body: JSON.stringify({ eventId, durationDays }) }
+    { method: "POST", body: JSON.stringify({ eventId, durationDays, tier }) }
   );
   return res.data;
 }
@@ -137,8 +137,8 @@ export async function verifyBoostPayment(payload: { boostId: string, razorpayPay
   return res.data;
 }
 
-export const getBoostPricing = async (): Promise<Record<string, number>> => {
-  const res = await hostRequest<{ success: boolean; data: Record<string, number> }>(
+export const getBoostPricing = async (): Promise<any[]> => {
+  const res = await hostRequest<{ success: boolean; data: any[] }>(
     '/boosted-events/pricing',
     { method: "GET" }
   );

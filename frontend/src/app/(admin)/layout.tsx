@@ -16,7 +16,6 @@ const menuItems = [
   { name: "Hosts Verification", href: "/admin/hosts", icon: UserCheck },
   { name: "Hosts Management", href: "/admin/hosts-management", icon: Users },
   { name: "Approvals", href: "/admin/approvals", icon: CheckSquare },
-  { name: "Boost Requests", href: "/admin/boost-requests", icon: Sparkles },
   { name: "Finance & Payouts", href: "/admin/finance", icon: Wallet },
   { name: "Complaints", href: "/admin/complaints", icon: AlertTriangle },
   { name: "Broadcast Center", href: "/admin/broadcast", icon: Radio },
@@ -38,11 +37,11 @@ function SidebarContent({ pathname, userName, onNavigate, onLogout }: SidebarPro
 
         {/* Brand / Logo */}
         <div className="flex items-center gap-3 px-2">
-          <div className="bg-[#a0f212] p-2.5 rounded-2xl text-[#0b0c01] shadow-[0_0_20px_rgba(160,242,18,0.4)]">
-            <Sparkles className="h-6 w-6 animate-pulse" />
+          <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-6 w-6 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
           </div>
           <div className="flex flex-col">
-            <h2 className="text-2xl font-black tracking-tight text-white leading-none">BookMyTraining</h2>
+            <h2 className="text-2xl font-black tracking-tight text-white leading-none">BookMy<span className="text-[#a0f212]">Skill</span></h2>
             <span className="text-[10px] font-bold text-primary tracking-widest uppercase mt-0.5">Admin Portal</span>
           </div>
         </div>
@@ -172,9 +171,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Mobile top bar */}
         <header className="lg:hidden flex items-center justify-between h-16 px-6 bg-background border-b border-border/40 sticky top-0 z-40">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="bg-[#0b0c01] p-1.5 rounded-xl text-[#a0f212]">
-              <Sparkles className="h-4 w-4" />
+          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4 text-[#0b0c01]"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
             </div>
             <span className="font-extrabold text-sm tracking-tight text-foreground">Admin Control</span>
           </Link>

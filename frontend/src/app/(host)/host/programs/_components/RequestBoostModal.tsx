@@ -7,6 +7,12 @@ import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useAuthStore } from "@/features/auth/store/authStore";
 
+const DEFAULT_PRICING = [
+  { id: "def-basic-7", tier: "BASIC", days: 7, price: 400 },
+  { id: "def-standard-7", tier: "STANDARD", days: 7, price: 600 },
+  { id: "def-pro-7", tier: "PRO", days: 7, price: 1000 },
+];
+
 export function RequestBoostModal({
   isOpen,
   onClose,
@@ -18,7 +24,7 @@ export function RequestBoostModal({
   eventId: string | null;
   eventTitle: string;
 }) {
-  const [duration, setDuration] = useState("7");
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { requestBoost, verifyBoostPayment, boostPricing, fetchBoostPricing } = useHostStore();
   const { user } = useAuthStore();
@@ -36,17 +42,32 @@ export function RequestBoostModal({
     }
   }, [isOpen]);
 
-  const pricing = boostPricing || { "7": 500, "15": 900, "30": 1500 };
-  useEffect(() => {
-    fetchBoostPricing();
-  }, [fetchBoostPricing]);
+  const plans = boostPricing && Array.isArray(boostPricing) && boostPricing.length > 0
+    ? boostPricing
+    : DEFAULT_PRICING;
 
+  // Fetch fresh pricing every time modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchBoostPricing();
+      setSelectedPlanId(null); // Reset selection so it re-selects after new data arrives
+    }
+  }, [isOpen]);
+
+  // Once plans are loaded, auto-select first plan
+  useEffect(() => {
+    if (plans.length > 0) {
+      setSelectedPlanId(plans[0].id);
+    }
+  }, [boostPricing]); // Re-run whenever the store updates with real data
+
+  const selectedPlan = plans.find(p => p.id === selectedPlanId) || plans[0];
 
   const handleSubmit = async () => {
-    if (!eventId) return;
+    if (!eventId || !selectedPlan) return;
     setIsSubmitting(true);
     try {
-      const response = await requestBoost(eventId, Number(duration));
+      const response = await requestBoost(eventId, selectedPlan.days, selectedPlan.tier);
       const { boostRequest, razorpayOrder } = response;
 
       if (!razorpayOrder) {
@@ -58,7 +79,7 @@ export function RequestBoostModal({
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: "BookMySkill",
-        description: `Boost Event: ${eventTitle}`,
+        description: `Boost Event: ${eventTitle} (${selectedPlan.tier})`,
         order_id: razorpayOrder.id,
         handler: async function (response: any) {
           try {
@@ -117,7 +138,7 @@ export function RequestBoostModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="sm:max-w-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-bold">
             <Rocket className="h-5 w-5 text-[#a0f212]" /> Request Event Boost
@@ -129,24 +150,27 @@ export function RequestBoostModal({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Boost Duration</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {[7, 15, 30].map((days) => (
+            <Label className="text-sm font-semibold">Select Boost Plan</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {plans.map((plan: any) => (
                 <div
-                  key={days}
-                  onClick={() => setDuration(days.toString())}
+                  key={plan.id}
+                  onClick={() => setSelectedPlanId(plan.id)}
                   className={`border rounded-xl p-4 text-center cursor-pointer transition-all ${
-                    duration === days.toString()
+                    selectedPlanId === plan.id
                       ? "border-[#a0f212] bg-[#a0f212]/10 text-black shadow-sm ring-2 ring-[#a0f212]/30"
                       : "border-gray-200 text-gray-500 hover:border-gray-300"
                   }`}
                 >
-                  <div className="text-lg font-black">{days} Days</div>
-                  <div className="text-[10px] uppercase tracking-wider mt-1 opacity-70">
-                    {days === 30 ? "1 Month" : "Duration"}
+                  <div className="text-lg font-black text-foreground">{plan.tier}</div>
+                  <div className="text-sm font-semibold mt-1">
+                    {plan.days} Days
                   </div>
-                  <div className="text-sm font-bold text-green-600 mt-2">
-                    ₹{pricing[days.toString()]}
+                  <div className="text-[10px] uppercase tracking-wider mt-1 opacity-70">
+                    Duration
+                  </div>
+                  <div className="text-lg font-bold text-green-600 mt-2">
+                    ₹{plan.price}
                   </div>
                 </div>
               ))}
@@ -160,11 +184,11 @@ export function RequestBoostModal({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !selectedPlan}
             className="rounded-xl bg-[#0b0c01] text-white hover:bg-black/80"
           >
             {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Rocket className="h-4 w-4 mr-2" />}
-            Pay ₹{pricing[duration]} to Boost
+            Pay ₹{selectedPlan?.price} to Boost
           </Button>
         </div>
       </DialogContent>

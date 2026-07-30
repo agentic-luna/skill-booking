@@ -7,7 +7,8 @@ export class RequestBoostCommand implements IRequest<any> {
   readonly __tag = 'RequestBoostCommand';
   constructor(
     public readonly eventId: string,
-    public readonly durationDays: number
+    public readonly durationDays: number,
+    public readonly tier: 'BASIC' | 'STANDARD' | 'PRO' = 'BASIC'
   ) {}
 }
 
@@ -23,26 +24,25 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + command.durationDays);
 
+    // Fetch dynamic pricing
+    const pricingConfig = await this.configRepo.findPlatformSetting('BOOST_PRICING');
+    let amount = 500;
+    
+    if (pricingConfig && pricingConfig.value && Array.isArray(pricingConfig.value)) {
+      const plan = pricingConfig.value.find((p: any) => p.tier === command.tier && p.days === command.durationDays);
+      if (plan && plan.price) {
+        amount = plan.price;
+      }
+    }
+
     const boostRequest = await this.boostedRepo.upsert(command.eventId, {
-      priority: 1,
+      priority: command.tier === 'PRO' ? 3 : command.tier === 'STANDARD' ? 2 : 1,
+      tier: command.tier,
+      price: amount,
       startDate,
       endDate,
       isActive: false, // Wait for payment verification
     } as any);
-    
-    // Fetch dynamic pricing
-    let pricing: Record<string, number> = {
-      "7": 500,
-      "15": 900,
-      "30": 1500
-    };
-    
-    const pricingConfig = await this.configRepo.findPlatformSetting('BOOST_PRICING');
-    if (pricingConfig && pricingConfig.value) {
-      pricing = pricingConfig.value as Record<string, number>;
-    }
-    
-    const amount = pricing[command.durationDays.toString()] || 500;
     
     // Create Razorpay Order
     const razorpayOrder = await this.commsService.createRazorpayOrder(amount, 'INR', boostRequest.id);

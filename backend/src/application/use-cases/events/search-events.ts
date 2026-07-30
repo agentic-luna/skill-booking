@@ -24,9 +24,7 @@ export class SearchEventsQueryHandler implements IRequestHandler<SearchEventsQue
 
   async handle(query: SearchEventsQuery): Promise<any[]> {
     const { filters } = query;
-    const nowStr = new Date().toISOString();
-    const startTimeFrom = filters.startTimeFrom || nowStr;
-    const cacheKey = `events:search:title:${filters.title || ''}:mode:${filters.mode || ''}:host:${filters.hostId || ''}:from:${startTimeFrom}`;
+    const cacheKey = `events:search:title:${filters.title || ''}:mode:${filters.mode || ''}:host:${filters.hostId || ''}:from:${filters.startTimeFrom || 'all'}`;
 
     const cached = await this.cacheService.get<any[]>(cacheKey);
     if (cached) {
@@ -37,7 +35,6 @@ export class SearchEventsQueryHandler implements IRequestHandler<SearchEventsQue
     logger.info(`[EventsQuery] Search Cache MISS for key: ${cacheKey}`);
     const events = await this.eventRepo.findMany({
       ...filters,
-      startTimeFrom,
       status: EventStatus.APPROVED,
     });
 

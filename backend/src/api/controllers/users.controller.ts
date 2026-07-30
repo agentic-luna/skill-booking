@@ -187,6 +187,7 @@ export class UsersController {
           category: true,
           createdAt: true,
           updatedAt: true,
+          boostedEvent: true,
         },
         orderBy: { startTime: 'desc' },
       });
