@@ -80,11 +80,10 @@ export default function Navbar() {
   }
 
   return (
-    <div className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] transition-all duration-500 ease-out ${showSearchAndShrink ? "max-w-[816px]" : "max-w-[1250px]"} ${
-      isSearchActive 
-        ? "z-30 opacity-20 pointer-events-none blur-[2px] scale-[0.98]" 
-        : "z-[100] opacity-100"
-    }`}>
+    <div className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] transition-all duration-500 ease-out ${showSearchAndShrink ? "max-w-[816px]" : "max-w-[1250px]"} ${isSearchActive
+      ? "z-30 opacity-20 pointer-events-none blur-[2px] scale-[0.98]"
+      : "z-[100] opacity-100"
+      }`}>
       <nav className={`w-full rounded-full transition-all duration-500 ease-out overflow-hidden ${showSearchAndShrink
         ? "bg-white/90 backdrop-blur-xl border border-black/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
         : "bg-transparent border-transparent"
@@ -107,7 +106,7 @@ export default function Navbar() {
                 href="/programs"
                 className="text-sm font-medium hover:opacity-80 transition-all duration-500 ease-in-out whitespace-nowrap"
               >
-                Explore Skills
+                Explore Trainings
               </Link>
               {isAuthenticated && user ? (
                 <>
@@ -119,8 +118,8 @@ export default function Navbar() {
                           variant="ghost"
                           size="icon"
                           className={`rounded-full relative transition-all duration-300 ${isScrolled || !isHome
-                              ? "text-graphite-ink hover:bg-black/5 hover:drop-shadow-sm"
-                              : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                            ? "text-graphite-ink hover:bg-black/5 hover:drop-shadow-sm"
+                            : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
                             }`}
                         >
                           <Bell className="h-5 w-5" />
@@ -277,7 +276,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="text-sm font-medium text-foreground hover:text-black py-1.5"
             >
-              Explore Skills
+              Explore Trainings
             </Link>
 
             {isAuthenticated && user ? (
