@@ -11,16 +11,31 @@ class GetEventReviewsQuery {
 exports.GetEventReviewsQuery = GetEventReviewsQuery;
 class GetEventReviewsQueryHandler {
     reviewRepo;
-    constructor(reviewRepo) {
+    eventRepo;
+    constructor(reviewRepo, eventRepo) {
         this.reviewRepo = reviewRepo;
+        this.eventRepo = eventRepo;
     }
     async handle(query) {
         const { eventId } = query;
-        const reviews = await this.reviewRepo.findByEventId(eventId);
-        const stats = await this.reviewRepo.findAverageRatingForEvent(eventId);
+        const event = await this.eventRepo.findById(eventId);
+        let reviews = [];
+        let stats = { averageRating: 4.8, totalReviews: 0 };
+        if (event) {
+            const res = await this.reviewRepo.findByHostId(event.hostId, 1, 100);
+            reviews = res.reviews;
+            stats = await this.reviewRepo.findAverageRatingForHost(event.hostId);
+        }
+        else {
+            reviews = await this.reviewRepo.findByEventId(eventId);
+            stats = await this.reviewRepo.findAverageRatingForEvent(eventId);
+        }
         return {
             reviews,
-            stats,
+            stats: {
+                averageRating: stats.averageRating,
+                totalReviews: stats.totalReviews,
+            },
         };
     }
 }

@@ -9,6 +9,7 @@ import { commsService, logger } from './api/di-container';
 // Clean Architecture Worker bootstrapping dependencies
 import { startNotificationWorker } from './infrastructure/queue/bull.queue';
 import { PrismaNotificationRepository } from './infrastructure/database/repositories/notification.repository';
+import { EventJobs } from './infrastructure/jobs/event-status.job';
 
 const server = http.createServer(app);
 
@@ -34,6 +35,10 @@ const startServer = async () => {
 
     server.listen(env.PORT, () => {
       logger.info(`[Server] Application running on port ${env.PORT} in ${env.NODE_ENV} mode.`);
+
+      EventJobs.startStatusUpdater();
+
+      logger.info("[EventJobs] Starting event status updater...");
     });
   } catch (error) {
     logger.error('[Server] Initialization failed:', error);

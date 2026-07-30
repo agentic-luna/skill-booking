@@ -18,6 +18,7 @@ import { CanvasText } from "@/components/ui/canvas-text";
 import { useClientStore } from "@/features/client/store/clientStore";
 import type { ClientEvent } from "@/features/client/api/types";
 import AdvancedSearchBar from "@/components/hero-section/AdvancedSearchBar";
+import { getDistrictDbValue } from "@/constants/locations";
 
 interface FilterSidebarProps {
   category: string;
@@ -197,8 +198,58 @@ export default function ProgramsListContent() {
   const { events, fetchEvents, loading } = useClientStore();
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    // Translate sorting
+    let mappedSortBy = "startTime";
+    let mappedSortOrder: "asc" | "desc" = "asc";
+    if (sortBy === "price-asc") {
+      mappedSortBy = "price";
+      mappedSortOrder = "asc";
+    } else if (sortBy === "price-desc") {
+      mappedSortBy = "price";
+      mappedSortOrder = "desc";
+    } else if (sortBy === "rating") {
+      mappedSortBy = "rating";
+      mappedSortOrder = "desc";
+    } else if (sortBy === "popular") {
+      mappedSortBy = "popular";
+      mappedSortOrder = "desc";
+    }
+
+    // Translate dates
+    let startTimeFrom: string | undefined = undefined;
+    if (dates) {
+      if (dates.startsWith("range:")) {
+        const [startStr] = dates.replace("range:", "").split("_");
+        if (startStr) {
+          startTimeFrom = new Date(startStr).toISOString();
+        }
+      }
+    }
+
+    // Clean up location query and map to mode
+    let modeParam: "ONLINE" | "OFFLINE" | undefined = undefined;
+    let districtParam = "";
+    if (location) {
+      if (location === "Online") {
+        modeParam = "ONLINE";
+      } else if (location !== "Anywhere") {
+        modeParam = "OFFLINE";
+        districtParam = getDistrictDbValue(location);
+      }
+    }
+
+    fetchEvents({
+      title: search || undefined,
+      category: category !== "all" ? category : undefined,
+      mode: modeParam,
+      district: districtParam || undefined,
+      minPrice: minPrice > 0 ? minPrice : undefined,
+      maxPrice: maxPrice > 0 ? maxPrice : undefined,
+      sortBy: mappedSortBy,
+      sortOrder: mappedSortOrder,
+      startTimeFrom,
+    });
+  }, [fetchEvents, search, category, location, dates, minPrice, maxPrice, sortBy]);
 
   useEffect(() => {
     const handleScroll = () => {

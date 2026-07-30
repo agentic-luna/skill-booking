@@ -28,6 +28,32 @@ class PrismaEventReviewRepository {
         });
         return reviews;
     }
+    async findByHostId(hostId, page = 1, limit = 5) {
+        const skip = (page - 1) * limit;
+        const [reviews, total] = await prisma_1.prisma.$transaction([
+            prisma_1.prisma.review.findMany({
+                where: {
+                    event: {
+                        hostId,
+                    },
+                },
+                include: {
+                    client: true,
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            prisma_1.prisma.review.count({
+                where: {
+                    event: {
+                        hostId,
+                    },
+                },
+            }),
+        ]);
+        return { reviews: reviews, total };
+    }
     async findAverageRatingForEvent(eventId) {
         const aggregate = await prisma_1.prisma.review.aggregate({
             where: { eventId },

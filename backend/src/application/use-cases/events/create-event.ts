@@ -15,6 +15,7 @@ export class CreateEventCommand implements IRequest<any> {
     public readonly data: {
       title: string;
       posterUrl?: string;  // optional — defaults to empty string if not provided
+      images?: string[];
       mode: EventMode;
       venue?: {
         address: string;
@@ -84,6 +85,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       hostId: hostProfile.id,
       title: data.title,
       posterUrl: data.posterUrl || '',  // default to empty string if not provided
+      images: data.images || [],
       mode: data.mode,
       venue: data.venue,
       instructor: data.instructor,

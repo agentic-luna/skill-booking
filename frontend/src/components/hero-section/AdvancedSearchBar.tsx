@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Search, MapPin, Grid2X2, CalendarDays } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useClientStore } from "@/features/client/store/clientStore";
+import { LOCATION_PRESETS } from "@/constants/locations";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -66,11 +67,7 @@ export default function AdvancedSearchBar() {
       }
     });
 
-    const presets = [
-      "Alappuzha", "Ernakulam (Kochi)", "Idukki", "Kannur", "Kasaragod",
-      "Kollam", "Kottayam", "Kozhikode (Calicut)", "Malappuram", "Palakkad",
-      "Pathanamthitta", "Thiruvananthapuram (Trivandrum)", "Thrissur", "Wayanad", "Online"
-    ];
+    const presets = LOCATION_PRESETS;
     presets.forEach(p => {
       if (!Array.from(locs).some(c => c.toLowerCase() === p.toLowerCase())) {
         locs.add(p);

@@ -8,4 +8,5 @@ const system_permissions_1 = require("../../security/system.permissions");
 const router = (0, express_1.Router)();
 router.post('/', auth_1.authenticate, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_REVIEWS_CREATE), reviews_controller_1.ReviewsController.createReview);
 router.get('/event/:eventId', reviews_controller_1.ReviewsController.getEventReviews);
+router.get('/host/:hostId', reviews_controller_1.ReviewsController.getHostReviews);
 exports.default = router;

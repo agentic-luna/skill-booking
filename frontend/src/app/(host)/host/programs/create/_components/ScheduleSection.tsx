@@ -17,11 +17,7 @@ interface ScheduleSectionProps {
   watch: UseFormWatch<ProgramFormValues>;
 }
 
-const KERALA_DISTRICTS = [
-  "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", 
-  "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", 
-  "Thiruvananthapuram", "Thrissur", "Wayanad"
-];
+import { KERALA_DISTRICTS } from "@/constants/locations";
 
 export default function ScheduleSection({ register, errors, setValue, watch }: ScheduleSectionProps) {
   const selectedMode = watch("mode");
@@ -73,11 +69,12 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
 
         // Scan for matching district in Kerala
         const matched = KERALA_DISTRICTS.find(d => 
-          fullAddress.toLowerCase().includes(d.toLowerCase())
+          fullAddress.toLowerCase().includes(d.name.toLowerCase()) ||
+          fullAddress.toLowerCase().includes(d.label.toLowerCase())
         );
         
         if (matched) {
-          setSelectedDistrict(matched);
+          setSelectedDistrict(matched.name);
         } else {
           // If no direct district found, check popular city aliases
           const lowerAddr = fullAddress.toLowerCase();
@@ -375,7 +372,7 @@ export default function ScheduleSection({ register, errors, setValue, watch }: S
                 >
                   <option value="" disabled className="text-gray-400 font-medium">Select a District</option>
                   {KERALA_DISTRICTS.map(d => (
-                    <option key={d} value={d} className="text-gray-800 font-semibold">{d}</option>
+                    <option key={d.name} value={d.name} className="text-gray-800 font-semibold">{d.label}</option>
                   ))}
                 </select>
               </div>

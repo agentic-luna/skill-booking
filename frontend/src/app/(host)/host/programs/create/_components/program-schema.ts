@@ -32,6 +32,25 @@ export const programSchema = z.object({
   acknowledgedPolicy: z.boolean().refine(val => val === true, {
     message: "You must acknowledge the admin review policy"
   }),
+}).superRefine((data, ctx) => {
+  // Validate that the event start date/time is in the future
+  const now = new Date();
+  const eventDateTime = new Date(`${data.date}T${data.time}:00`);
+  if (isNaN(eventDateTime.getTime()) || eventDateTime < now) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Event date and time must be in the future",
+      path: ["date"],
+    });
+  }
+
+  if (data.mode === "OFFLINE" && (!data.district || !data.district.trim())) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Please select a Kerala district for offline events",
+      path: ["district"],
+    });
+  }
 });
 
 export type ProgramFormValues = z.infer<typeof programSchema>;

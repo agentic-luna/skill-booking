@@ -12,12 +12,18 @@ const api_response_1 = require("../common/api-response");
 class EventsController {
     static async getEvents(req, res, next) {
         try {
-            const { title, mode, hostId, startTimeFrom } = req.query;
+            const { title, mode, hostId, startTimeFrom, category, district, minPrice, maxPrice, sortBy, sortOrder } = req.query;
             const events = await di_container_1.mediator.send(new search_events_1.SearchEventsQuery({
                 title: title,
                 mode: mode,
                 hostId: hostId,
                 startTimeFrom: startTimeFrom,
+                category: category,
+                district: district,
+                minPrice: minPrice ? Number(minPrice) : undefined,
+                maxPrice: maxPrice ? Number(maxPrice) : undefined,
+                sortBy: sortBy,
+                sortOrder: sortOrder,
             }));
             return api_response_1.ApiResponse.success(res, events);
         }
@@ -37,10 +43,11 @@ class EventsController {
     }
     static async createEvent(req, res, next) {
         try {
-            const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrls } = req.body;
+            const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrls } = req.body;
             const event = await di_container_1.mediator.send(new create_event_1.CreateEventCommand(req.user.id, {
                 title,
                 posterUrl,
+                images: Array.isArray(images) ? images : [],
                 mode: mode,
                 venue,
                 instructor,

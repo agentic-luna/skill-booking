@@ -16,6 +16,12 @@ export const getEvents = (filters?: SearchEventsFilter) => {
   if (filters?.mode) params.set("mode", filters.mode);
   if (filters?.hostId) params.set("hostId", filters.hostId);
   if (filters?.startTimeFrom) params.set("startTimeFrom", filters.startTimeFrom);
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.district) params.set("district", filters.district);
+  if (filters?.minPrice !== undefined) params.set("minPrice", String(filters.minPrice));
+  if (filters?.maxPrice !== undefined) params.set("maxPrice", String(filters.maxPrice));
+  if (filters?.sortBy) params.set("sortBy", filters.sortBy);
+  if (filters?.sortOrder) params.set("sortOrder", filters.sortOrder);
   const query = params.toString() ? `?${params.toString()}` : "";
   return request<ApiData<ClientEvent[]>>(`/events${query}`).then(r => r.data);
 };

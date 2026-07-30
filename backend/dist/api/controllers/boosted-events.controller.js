@@ -41,8 +41,8 @@ class BoostedEventsController {
     }
     static async requestBoost(req, res, next) {
         try {
-            const { eventId, durationDays } = req.body;
-            const result = await di_container_1.mediator.send(new request_boost_1.RequestBoostCommand(eventId, Number(durationDays)));
+            const { eventId, durationDays, tier } = req.body;
+            const result = await di_container_1.mediator.send(new request_boost_1.RequestBoostCommand(eventId, Number(durationDays), tier));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

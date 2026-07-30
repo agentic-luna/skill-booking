@@ -9,12 +9,16 @@ class PrismaBoostedEventRepository {
             create: {
                 eventId,
                 priority: data.priority,
+                tier: data.tier,
+                price: data.price,
                 startDate: data.startDate,
                 endDate: data.endDate,
                 isActive: data.isActive,
             },
             update: {
                 priority: data.priority,
+                tier: data.tier,
+                price: data.price,
                 startDate: data.startDate,
                 endDate: data.endDate,
                 isActive: data.isActive,

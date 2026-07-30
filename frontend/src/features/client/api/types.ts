@@ -55,6 +55,12 @@ export interface SearchEventsFilter {
   mode?: EventMode;
   hostId?: string;
   startTimeFrom?: string;
+  category?: string;
+  district?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface WishlistItem {

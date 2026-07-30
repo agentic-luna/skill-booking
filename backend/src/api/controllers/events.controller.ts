@@ -13,13 +13,32 @@ import { ApiResponse } from '../common/api-response';
 export class EventsController {
   static async getEvents(req: Request, res: Response, next: NextFunction) {
     try {
-      const { title, mode, hostId, startTimeFrom } = req.query;
+      const {
+        title,
+        mode,
+        hostId,
+        startTimeFrom,
+        category,
+        district,
+        minPrice,
+        maxPrice,
+        sortBy,
+        sortOrder
+      } = req.query;
+
       const events = await mediator.send(new SearchEventsQuery({
         title: title as string,
         mode: mode as EventMode,
         hostId: hostId as string,
         startTimeFrom: startTimeFrom as string,
+        category: category as string,
+        district: district as string,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        sortBy: sortBy as string,
+        sortOrder: sortOrder as 'asc' | 'desc',
       }));
+
       return ApiResponse.success(res, events);
     } catch (error) {
       next(error);
@@ -38,10 +57,11 @@ export class EventsController {
 
   static async createEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrls } = req.body;
+      const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, videoUrls } = req.body;
       const event = await mediator.send(new CreateEventCommand(req.user!.id, {
         title,
         posterUrl,
+        images: Array.isArray(images) ? images : [],
         mode: mode as EventMode,
         venue,
         instructor,

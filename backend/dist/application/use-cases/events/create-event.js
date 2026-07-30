@@ -55,6 +55,7 @@ class CreateEventCommandHandler {
             hostId: hostProfile.id,
             title: data.title,
             posterUrl: data.posterUrl || '', // default to empty string if not provided
+            images: data.images || [],
             mode: data.mode,
             venue: data.venue,
             instructor: data.instructor,

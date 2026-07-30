@@ -68,6 +68,7 @@ const get_user_notifications_1 = require("../application/use-cases/notifications
 const mark_notification_read_1 = require("../application/use-cases/notifications/mark-notification-read");
 const create_review_1 = require("../application/use-cases/reviews/create-review");
 const get_reviews_1 = require("../application/use-cases/reviews/get-reviews");
+const get_host_reviews_1 = require("../application/use-cases/reviews/get-host-reviews");
 const manage_wishlist_1 = require("../application/use-cases/wishlist/manage-wishlist");
 const manage_event_likes_1 = require("../application/use-cases/likes/manage-event-likes");
 const boost_event_1 = require("../application/use-cases/boosted-events/boost-event");
@@ -181,7 +182,8 @@ mediator.register('GetUserNotificationsQuery', new get_user_notifications_1.GetU
 mediator.register('MarkNotificationReadCommand', new mark_notification_read_1.MarkNotificationReadCommandHandler(notificationRepo));
 // 11. Register Review handlers
 mediator.register('CreateEventReviewCommand', new create_review_1.CreateEventReviewCommandHandler(reviewRepo, bookingRepo, eventRepo, userRepo));
-mediator.register('GetEventReviewsQuery', new get_reviews_1.GetEventReviewsQueryHandler(reviewRepo));
+mediator.register('GetEventReviewsQuery', new get_reviews_1.GetEventReviewsQueryHandler(reviewRepo, eventRepo));
+mediator.register('GetHostReviewsQuery', new get_host_reviews_1.GetHostReviewsQueryHandler(reviewRepo));
 // 12. Register Wishlist & Likes handlers
 mediator.register('AddToWishlistCommand', new manage_wishlist_1.AddToWishlistCommandHandler(wishlistRepo, eventRepo));
 mediator.register('RemoveFromWishlistCommand', new manage_wishlist_1.RemoveFromWishlistCommandHandler(wishlistRepo));

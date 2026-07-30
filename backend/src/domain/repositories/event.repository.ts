@@ -9,6 +9,12 @@ export interface IEventRepository {
     hostId?: string;
     startTimeFrom?: string;
     status?: EventStatus;
+    category?: string;
+    district?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<any[]>;
   create(data: {
     hostId: string;
@@ -39,6 +45,7 @@ export interface IEventRepository {
     description?: string;
     category?: string;
     videoUrls?: string[];
+    images?: string[];
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;

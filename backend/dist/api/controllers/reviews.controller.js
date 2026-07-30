@@ -4,6 +4,7 @@ exports.ReviewsController = void 0;
 const di_container_1 = require("../di-container");
 const create_review_1 = require("../../application/use-cases/reviews/create-review");
 const get_reviews_1 = require("../../application/use-cases/reviews/get-reviews");
+const get_host_reviews_1 = require("../../application/use-cases/reviews/get-host-reviews");
 const api_response_1 = require("../common/api-response");
 class ReviewsController {
     static async createReview(req, res, next) {
@@ -25,6 +26,18 @@ class ReviewsController {
         try {
             const { eventId } = req.params;
             const result = await di_container_1.mediator.send(new get_reviews_1.GetEventReviewsQuery(eventId));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getHostReviews(req, res, next) {
+        try {
+            const { hostId } = req.params;
+            const page = Number(req.query.page) || 1;
+            const limit = Number(req.query.limit) || 5;
+            const result = await di_container_1.mediator.send(new get_host_reviews_1.GetHostReviewsQuery(hostId, page, limit));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

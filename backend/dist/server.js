@@ -13,6 +13,7 @@ const di_container_1 = require("./api/di-container");
 // Clean Architecture Worker bootstrapping dependencies
 const bull_queue_1 = require("./infrastructure/queue/bull.queue");
 const notification_repository_1 = require("./infrastructure/database/repositories/notification.repository");
+const event_status_job_1 = require("./infrastructure/jobs/event-status.job");
 const server = http_1.default.createServer(app_1.default);
 // Initialize Socket.io WebSockets
 (0, socket_1.initSocket)(server);
@@ -31,6 +32,8 @@ const startServer = async () => {
         di_container_1.logger.info('[BullMQ] Notification worker active.');
         server.listen(environment_1.env.PORT, () => {
             di_container_1.logger.info(`[Server] Application running on port ${environment_1.env.PORT} in ${environment_1.env.NODE_ENV} mode.`);
+            event_status_job_1.EventJobs.startStatusUpdater();
+            di_container_1.logger.info("[EventJobs] Starting event status updater...");
         });
     }
     catch (error) {

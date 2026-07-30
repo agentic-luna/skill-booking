@@ -54,6 +54,25 @@ function mapCommission(c) {
         platformValue: Number(c.platformValue),
     };
 }
+async function getHostRatingAndReviewsCount(hostId) {
+    const aggregate = await prisma_1.prisma.review.aggregate({
+        _avg: {
+            rating: true,
+        },
+        _count: {
+            rating: true,
+        },
+        where: {
+            event: {
+                hostId: hostId,
+            },
+        },
+    });
+    return {
+        rating: aggregate._avg.rating ? parseFloat(aggregate._avg.rating.toFixed(1)) : 4.8,
+        reviewsCount: aggregate._count.rating || 0,
+    };
+}
 class PrismaEventRepository {
     async findById(id) {
         const e = await prisma_1.prisma.event.findUnique({
@@ -78,7 +97,13 @@ class PrismaEventRepository {
                 boostedEvent: true,
             },
         });
-        return mapEvent(e);
+        if (!e)
+            return null;
+        const mapped = mapEvent(e);
+        const stats = await getHostRatingAndReviewsCount(e.hostId);
+        mapped.rating = stats.rating;
+        mapped.reviewsCount = stats.reviewsCount;
+        return mapped;
     }
     async findMany(filters) {
         const where = {};
@@ -97,10 +122,49 @@ class PrismaEventRepository {
         if (filters.hostId) {
             where.hostId = filters.hostId;
         }
-        if (filters.startTimeFrom) {
-            where.startTime = {
-                gte: new Date(filters.startTimeFrom),
+        // STRICT DATE ENFORCEMENT: Date must be greater than current date
+        const now = new Date();
+        const fromDate = filters.startTimeFrom ? new Date(filters.startTimeFrom) : now;
+        where.startTime = {
+            // If provided date is in the past, default to now. 
+            // 'gt' ensures we strictly only get future events.
+            gt: fromDate > now ? fromDate : now,
+        };
+        if (filters.category) {
+            where.category = filters.category;
+        }
+        // Map price ranges
+        if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+            where.price = {};
+            if (filters.minPrice !== undefined)
+                where.price.gte = filters.minPrice;
+            if (filters.maxPrice !== undefined)
+                where.price.lte = filters.maxPrice;
+        }
+        // Map district (assuming it's stored inside the JSON venueDetails)
+        if (filters.district) {
+            where.venueDetails = {
+                path: ['district'],
+                equals: filters.district,
             };
+        }
+        // Determine sorting
+        let orderBy = { startTime: 'asc' };
+        if (filters.sortBy === 'price') {
+            orderBy = { price: filters.sortOrder || 'asc' };
+        }
+        else if (filters.sortBy === 'rating' || filters.sortBy === 'popular') {
+            orderBy = {
+                likes: {
+                    _count: 'desc',
+                },
+            };
+        }
+        else if (filters.sortBy === 'createdAt') {
+            orderBy = { createdAt: filters.sortOrder || 'desc' };
+        }
+        else if (filters.sortBy === 'startTime') {
+            orderBy = { startTime: filters.sortOrder || 'asc' };
         }
         const events = await prisma_1.prisma.event.findMany({
             where,
@@ -120,11 +184,15 @@ class PrismaEventRepository {
                 venue: true,
                 boostedEvent: true,
             },
-            orderBy: {
-                startTime: 'asc',
-            },
+            orderBy,
         });
-        return events.map(mapEvent);
+        const mappedEvents = events.map(mapEvent);
+        for (const me of mappedEvents) {
+            const stats = await getHostRatingAndReviewsCount(me.hostId);
+            me.rating = stats.rating;
+            me.reviewsCount = stats.reviewsCount;
+        }
+        return mappedEvents;
     }
     async create(data) {
         let instructorId = null;

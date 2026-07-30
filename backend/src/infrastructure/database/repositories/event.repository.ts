@@ -113,6 +113,12 @@ export class PrismaEventRepository implements IEventRepository {
     hostId?: string;
     startTimeFrom?: string;
     status?: EventStatus;
+    category?: string;
+    district?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }): Promise<any[]> {
     const where: any = {};
 
@@ -135,10 +141,49 @@ export class PrismaEventRepository implements IEventRepository {
       where.hostId = filters.hostId;
     }
 
-    if (filters.startTimeFrom) {
-      where.startTime = {
-        gte: new Date(filters.startTimeFrom),
+    // STRICT DATE ENFORCEMENT: Date must be greater than current date
+    const now = new Date();
+    const fromDate = filters.startTimeFrom ? new Date(filters.startTimeFrom) : now;
+
+    where.startTime = { 
+      // If provided date is in the past, default to now. 
+      // 'gt' ensures we strictly only get future events.
+      gt: fromDate > now ? fromDate : now,
+    };
+
+    if (filters.category) {
+      where.category = filters.category;
+    }
+
+    // Map price ranges
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      where.price = {};
+      if (filters.minPrice !== undefined) where.price.gte = filters.minPrice;
+      if (filters.maxPrice !== undefined) where.price.lte = filters.maxPrice;
+    }
+
+    // Map district (assuming it's stored inside the JSON venueDetails)
+    if (filters.district) {
+      where.venueDetails = {
+        path: ['district'],
+        equals: filters.district,
       };
+    }
+
+    // Determine sorting
+    let orderBy: any = { startTime: 'asc' };
+    if (filters.sortBy === 'price') {
+      orderBy = { price: filters.sortOrder || 'asc' };
+    } else if (filters.sortBy === 'rating' || filters.sortBy === 'popular') {
+      orderBy = {
+        likes: {
+          _count: 'desc',
+        },
+      };
+    } else if (filters.sortBy === 'createdAt') {
+      orderBy = { createdAt: filters.sortOrder || 'desc' };
+    } else if (filters.sortBy === 'startTime') {
+      orderBy = { startTime: filters.sortOrder || 'asc' };
     }
 
     const events = await prisma.event.findMany({
@@ -159,9 +204,7 @@ export class PrismaEventRepository implements IEventRepository {
         venue: true,
         boostedEvent: true,
       },
-      orderBy: {
-        startTime: 'asc',
-      },
+      orderBy,
     });
 
     const mappedEvents = events.map(mapEvent);
@@ -202,6 +245,7 @@ export class PrismaEventRepository implements IEventRepository {
     description?: string;
     category?: string;
     videoUrls?: string[];
+    images?: string[];
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;
