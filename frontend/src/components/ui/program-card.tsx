@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Program } from "@/constants/mockData";
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
+import { calculateBookedSeats } from "@/lib/utils";
 
 const STATUS_STYLES: Record<string, string> = {
   approved: "bg-emerald-500/80",
@@ -84,7 +85,7 @@ export default function ProgramCard({ program }: ProgramCardProps) {
               <Clock className="h-3 w-3 mr-1" /> {program.duration}
             </span>
             <span className="flex items-center">
-              <Ticket className="h-3 w-3 mr-1" /> {program.spotsLeft}/{program.maxSpots} spots
+              <Ticket className="h-3 w-3 mr-1" /> {calculateBookedSeats(program.maxSpots, program.spotsLeft)}/{program.maxSpots} booked
             </span>
             <span className="flex items-center col-span-2">
               <MapPin className="h-3 w-3 mr-1 truncate" /> {program.location.split(",")[0]}

@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CanvasText } from "@/components/ui/canvas-text";
 import { useClientStore } from "@/features/client/store/clientStore";
 import type { ClientEvent } from "@/features/client/api/types";
+import AdvancedSearchBar from "@/components/hero-section/AdvancedSearchBar";
 
 interface FilterSidebarProps {
   category: string;
@@ -371,21 +372,29 @@ export default function ProgramsListContent() {
         </div>
       </div>
 
+      {/* Booking.com Style Overlapping Advanced Search Bar */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full relative z-30 -mt-12 flex justify-center">
+        <div className="w-full max-w-4xl shadow-xl shadow-gray-200/50 rounded-[32px] bg-white">
+          <AdvancedSearchBar />
+        </div>
+      </div>
+
       {/* Main Content Area */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-12 relative z-20">
 
         {/* Action Bar (Sorting & Layout) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white/80 backdrop-blur-xl border border-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-4">
 
-          {/* Search Input in Action Bar */}
-          <div className="relative group w-full flex-1">
-            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground group-focus-within:text-[#0b0c01] transition-colors" />
-            <Input
-              placeholder="Search keywords, instructors, or training..."
-              className="pl-10 h-11 text-sm bg-white border-border/40 focus:border-[#0b0c01] focus-visible:ring-[#0b0c01] focus-visible:border-[#0b0c01] rounded-xl transition-all shadow-sm w-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          {/* List Results Count Summary */}
+          <div className="flex-1">
+            <h2 className="text-sm font-extrabold text-foreground">
+              {sortedPrograms.length} training program{sortedPrograms.length === 1 ? "" : "s"} found
+            </h2>
+            {location && (
+              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">
+                Available in {location}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center space-x-3 shrink-0">
@@ -489,6 +498,23 @@ export default function ProgramsListContent() {
                           <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
                             {prog.category || "General"}
                           </div>
+
+                          {/* Scarcity Tension Badge */}
+                          <div className="absolute top-4 right-4 z-10">
+                            {prog.availableSeats <= 0 ? (
+                              <span className="bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                Sold Out
+                              </span>
+                            ) : prog.availableSeats <= 5 ? (
+                              <span className="bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse">
+                                🔥 Only {prog.availableSeats} left!
+                              </span>
+                            ) : (
+                              <span className="bg-[#0d1e17] border border-[#a0f212]/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                ⚡ {prog.availableSeats} slots left
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex flex-col flex-1 p-6 gap-4">
@@ -547,6 +573,23 @@ export default function ProgramsListContent() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
                               {prog.category || "General"}
+                            </div>
+
+                            {/* Scarcity Tension Badge */}
+                            <div className="absolute top-4 right-4 z-10">
+                              {prog.availableSeats <= 0 ? (
+                                <span className="bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                  Sold Out
+                                </span>
+                              ) : prog.availableSeats <= 5 ? (
+                                <span className="bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse">
+                                  🔥 Only {prog.availableSeats} left!
+                                </span>
+                              ) : (
+                                <span className="bg-[#0d1e17] border border-[#a0f212]/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                  ⚡ {prog.availableSeats} slots left
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="flex-1 p-6 flex flex-col justify-between">
