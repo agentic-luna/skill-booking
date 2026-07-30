@@ -21,12 +21,14 @@ class CancelBookingCommandHandler {
     configRepo;
     ledgerRepo;
     paymentGateway;
-    constructor(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGateway) {
+    cacheService;
+    constructor(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGateway, cacheService) {
         this.bookingRepo = bookingRepo;
         this.eventRepo = eventRepo;
         this.configRepo = configRepo;
         this.ledgerRepo = ledgerRepo;
         this.paymentGateway = paymentGateway;
+        this.cacheService = cacheService;
     }
     async handle(command) {
         const { bookingId, userId, role } = command;
@@ -93,6 +95,8 @@ class CancelBookingCommandHandler {
                 status: client_1.LedgerStatus.REFUNDED_TO_CLIENT,
             });
         }
+        // Clear search cache when seats count or booking status changes
+        await this.cacheService.delPattern('events:search:*');
         return {
             booking: updatedBooking,
             refundAmount,

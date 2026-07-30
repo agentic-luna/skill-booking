@@ -22,12 +22,14 @@ class ConfirmBookingPaymentCommandHandler {
     configRepo;
     notificationRepo;
     queueService;
-    constructor(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService) {
+    cacheService;
+    constructor(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService) {
         this.bookingRepo = bookingRepo;
         this.ledgerRepo = ledgerRepo;
         this.configRepo = configRepo;
         this.notificationRepo = notificationRepo;
         this.queueService = queueService;
+        this.cacheService = cacheService;
     }
     async handle(command) {
         const { bookingId, clientId, paymentMethod } = command;
@@ -135,6 +137,8 @@ class ConfirmBookingPaymentCommandHandler {
         catch {
             // Notification enqueue logging failure silently avoided
         }
+        // Clear the search cache when a booking changes seats or status
+        await this.cacheService.delPattern('events:search:*');
         return {
             success: true,
             message: 'Booking payment confirmed directly',

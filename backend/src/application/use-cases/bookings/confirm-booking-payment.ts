@@ -7,6 +7,7 @@ import { IQueueService } from '../../services/queue.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { NotFoundError, BadRequestError } from '../../common/errors';
 import { parseCommissionRate } from '../../../utils/commission-parser';
+import { ICacheService } from '../../services/cache.service';
 
 export class ConfirmBookingPaymentCommand implements IRequest<any> {
   readonly __tag = 'ConfirmBookingPaymentCommand';
@@ -23,7 +24,8 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
     private ledgerRepo: ILedgerRepository,
     private configRepo: IConfigRepository,
     private notificationRepo: INotificationRepository,
-    private queueService: IQueueService
+    private queueService: IQueueService,
+    private cacheService: ICacheService
   ) { }
 
   async handle(command: ConfirmBookingPaymentCommand): Promise<any> {
@@ -145,6 +147,9 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
     } catch {
       // Notification enqueue logging failure silently avoided
     }
+
+    // Clear the search cache when a booking changes seats or status
+    await this.cacheService.delPattern('events:search:*');
 
     return {
       success: true,

@@ -96,7 +96,7 @@ export default function HeroSection() {
                       {cat.keywords.map((kw) => (
                         <button
                           key={kw}
-                          onClick={() => router.push(`/programs?category=${cat.value}&search=${encodeURIComponent(kw)}`)}
+                          onClick={() => router.push(`/programs?category=${cat.value}&keywords=${encodeURIComponent(kw)}`)}
                           className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-gray-50 text-gray-600 border border-gray-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all duration-150"
                         >
                           {kw}

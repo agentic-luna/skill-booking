@@ -6,6 +6,7 @@ import { ILedgerRepository } from '../../../domain/repositories/ledger.repositor
 import { IPaymentGatewayProvider } from '../../../infrastructure/services/providers/payment-gateway.provider';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../common/errors';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { ICacheService } from '../../services/cache.service';
 
 export class CancelBookingCommand implements IRequest<any> {
   readonly __tag = 'CancelBookingCommand';
@@ -22,7 +23,8 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
     private eventRepo: IEventRepository,
     private configRepo: IConfigRepository,
     private ledgerRepo: ILedgerRepository,
-    private paymentGateway: IPaymentGatewayProvider
+    private paymentGateway: IPaymentGatewayProvider,
+    private cacheService: ICacheService
   ) {}
 
   async handle(command: CancelBookingCommand): Promise<any> {
@@ -111,6 +113,9 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
         status: LedgerStatus.REFUNDED_TO_CLIENT,
       });
     }
+
+    // Clear search cache when seats count or booking status changes
+    await this.cacheService.delPattern('events:search:*');
 
     return {
       booking: updatedBooking,

@@ -160,11 +160,11 @@ mediator.register('CreateEventCommand', new create_event_1.CreateEventCommandHan
 mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommandHandler(eventRepo, cacheService, configRepo));
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new checkout_1.CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
-mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider));
+mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
 mediator.register('GetMyBookingsQuery', new get_my_bookings_1.GetMyBookingsQueryHandler(bookingRepo));
-mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
+mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
 // 8. Register Webhook handlers
-mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
+mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new admin_login_1.AdminLoginCommandHandler(userRepo, cacheService));
 mediator.register('GetPendingKycHostsQuery', new review_kyc_1.GetPendingKycHostsQueryHandler(userRepo, cryptoService));

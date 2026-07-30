@@ -12,7 +12,16 @@ const api_response_1 = require("../common/api-response");
 class EventsController {
     static async getEvents(req, res, next) {
         try {
-            const { title, mode, hostId, startTimeFrom, category, district, minPrice, maxPrice, sortBy, sortOrder } = req.query;
+            const { title, mode, hostId, startTimeFrom, category, district, keywords, minPrice, maxPrice, sortBy, sortOrder } = req.query;
+            let keywordsArr = undefined;
+            if (keywords) {
+                if (Array.isArray(keywords)) {
+                    keywordsArr = keywords.map(String);
+                }
+                else {
+                    keywordsArr = [String(keywords)];
+                }
+            }
             const events = await di_container_1.mediator.send(new search_events_1.SearchEventsQuery({
                 title: title,
                 mode: mode,
@@ -20,6 +29,7 @@ class EventsController {
                 startTimeFrom: startTimeFrom,
                 category: category,
                 district: district,
+                keywords: keywordsArr,
                 minPrice: minPrice ? Number(minPrice) : undefined,
                 maxPrice: maxPrice ? Number(maxPrice) : undefined,
                 sortBy: sortBy,
@@ -216,6 +226,7 @@ class EventsController {
                     facebook: updatedEvent.instructor?.facebook || '',
                 };
             }
+            await di_container_1.cacheService.delPattern('events:search:*');
             return api_response_1.ApiResponse.success(res, mappedEvent);
         }
         catch (error) {
@@ -257,6 +268,7 @@ class EventsController {
             await prisma_1.prisma.event.delete({
                 where: { id },
             });
+            await di_container_1.cacheService.delPattern('events:search:*');
             return api_response_1.ApiResponse.success(res, { message: 'Event deleted successfully.' });
         }
         catch (error) {

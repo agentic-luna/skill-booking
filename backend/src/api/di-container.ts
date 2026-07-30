@@ -165,12 +165,12 @@ mediator.register('ApproveEventCommand', new ApproveEventCommandHandler(eventRep
 
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
-mediator.register('CancelBookingCommand', new CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider));
+mediator.register('CancelBookingCommand', new CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
 mediator.register('GetMyBookingsQuery', new GetMyBookingsQueryHandler(bookingRepo));
-mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
+mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
 
 // 8. Register Webhook handlers
-mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService));
+mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
 
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new AdminLoginCommandHandler(userRepo, cacheService));

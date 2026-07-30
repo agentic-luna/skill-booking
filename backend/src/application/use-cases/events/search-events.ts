@@ -14,6 +14,7 @@ export class SearchEventsQuery implements IRequest<any[]> {
       startTimeFrom?: string;
       category?: string;
       district?: string;
+      keywords?: string[];
       minPrice?: number;
       maxPrice?: number;
       sortBy?: string;

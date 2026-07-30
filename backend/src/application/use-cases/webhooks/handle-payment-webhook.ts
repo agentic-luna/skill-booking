@@ -6,6 +6,7 @@ import { INotificationRepository } from '../../../domain/repositories/notificati
 import { IQueueService } from '../../services/queue.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { parseCommissionRate } from '../../../utils/commission-parser';
+import { ICacheService } from '../../services/cache.service';
 
 export class HandlePaymentWebhookCommand implements IRequest<any> {
   readonly __tag = 'HandlePaymentWebhookCommand';
@@ -18,7 +19,8 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
     private ledgerRepo: ILedgerRepository,
     private configRepo: IConfigRepository,
     private notificationRepo: INotificationRepository,
-    private queueService: IQueueService
+    private queueService: IQueueService,
+    private cacheService: ICacheService
   ) {}
 
   async handle(command: HandlePaymentWebhookCommand): Promise<any> {
@@ -130,6 +132,9 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
         await this.queueService.addNotificationJob(log.id);
       }
     }
+
+    // Clear search cache when seats count or booking status changes
+    await this.cacheService.delPattern('events:search:*');
 
     return {
       status: 'processed',

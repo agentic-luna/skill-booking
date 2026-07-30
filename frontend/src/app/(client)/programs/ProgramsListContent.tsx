@@ -180,10 +180,12 @@ export default function ProgramsListContent() {
   const initialSearch = searchParams.get("search") || "";
   const initialLocation = searchParams.get("location") || "";
   const initialDates = searchParams.get("dates") || "";
+  const initialKeywords = searchParams.get("keywords") || "";
 
   // Filters State
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
+  const [selectedKeyword, setSelectedKeyword] = useState(initialKeywords);
   const [location, setLocation] = useState(initialLocation);
   const [dates, setDates] = useState(initialDates);
   const [minPrice, setMinPrice] = useState<number>(0);
@@ -244,13 +246,14 @@ export default function ProgramsListContent() {
       category: category !== "all" ? category : undefined,
       mode: modeParam,
       district: districtParam || undefined,
+      keywords: selectedKeyword ? [selectedKeyword] : undefined,
       minPrice: minPrice > 0 ? minPrice : undefined,
       maxPrice: maxPrice > 0 ? maxPrice : undefined,
       sortBy: mappedSortBy,
       sortOrder: mappedSortOrder,
       startTimeFrom,
     });
-  }, [fetchEvents, search, category, location, dates, minPrice, maxPrice, sortBy]);
+  }, [fetchEvents, search, category, selectedKeyword, location, dates, minPrice, maxPrice, sortBy]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -276,6 +279,10 @@ export default function ProgramsListContent() {
   useEffect(() => {
     setDates(initialDates);
   }, [initialDates]);
+
+  useEffect(() => {
+    setSelectedKeyword(initialKeywords);
+  }, [initialKeywords]);
 
   
   const categoriesList = [

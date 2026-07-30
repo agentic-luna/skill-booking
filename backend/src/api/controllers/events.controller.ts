@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { EventMode } from '@prisma/client';
-import { mediator } from '../di-container';
+import { mediator, cacheService } from '../di-container';
 import { prisma } from '../../config/prisma';
 import { BadRequestError } from '../common/errors';
 import { SearchEventsQuery } from '../../application/use-cases/events/search-events';
@@ -20,11 +20,21 @@ export class EventsController {
         startTimeFrom,
         category,
         district,
+        keywords,
         minPrice,
         maxPrice,
         sortBy,
         sortOrder
       } = req.query;
+
+      let keywordsArr: string[] | undefined = undefined;
+      if (keywords) {
+        if (Array.isArray(keywords)) {
+          keywordsArr = keywords.map(String);
+        } else {
+          keywordsArr = [String(keywords)];
+        }
+      }
 
       const events = await mediator.send(new SearchEventsQuery({
         title: title as string,
@@ -33,6 +43,7 @@ export class EventsController {
         startTimeFrom: startTimeFrom as string,
         category: category as string,
         district: district as string,
+        keywords: keywordsArr,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
         sortBy: sortBy as string,
@@ -239,6 +250,8 @@ export class EventsController {
         };
       }
 
+      await cacheService.delPattern('events:search:*');
+
       return ApiResponse.success(res, mappedEvent);
     } catch (error) {
       next(error);
@@ -285,6 +298,8 @@ export class EventsController {
       await prisma.event.delete({
         where: { id },
       });
+
+      await cacheService.delPattern('events:search:*');
 
       return ApiResponse.success(res, { message: 'Event deleted successfully.' });
     } catch (error) {

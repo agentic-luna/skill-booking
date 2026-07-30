@@ -17,12 +17,14 @@ class HandlePaymentWebhookCommandHandler {
     configRepo;
     notificationRepo;
     queueService;
-    constructor(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService) {
+    cacheService;
+    constructor(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService) {
         this.bookingRepo = bookingRepo;
         this.ledgerRepo = ledgerRepo;
         this.configRepo = configRepo;
         this.notificationRepo = notificationRepo;
         this.queueService = queueService;
+        this.cacheService = cacheService;
     }
     async handle(command) {
         const { payload } = command;
@@ -119,6 +121,8 @@ class HandlePaymentWebhookCommandHandler {
                 await this.queueService.addNotificationJob(log.id);
             }
         }
+        // Clear search cache when seats count or booking status changes
+        await this.cacheService.delPattern('events:search:*');
         return {
             status: 'processed',
             bookingId: booking.id,
