@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 export default function AuthBrandPanel() {
   const pathname = usePathname() || "";
   const isAdmin = pathname.includes("/admin");
+  const isHost = pathname.includes("/host");
   const isRegister = pathname.includes("/register");
 
   const getContent = () => {
@@ -19,6 +20,30 @@ export default function AuthBrandPanel() {
           { value: "1.2M+", label: "Total Value" },
           { value: "2.5k+", label: "Active Programs" },
           { value: "100%", label: "Platform Uptime" },
+        ]
+      };
+    }
+    if (isHost) {
+      if (isRegister) {
+        return {
+          slogan: "Scale Your Audience",
+          title: "Teach Live Workshops Worldwide",
+          description: "Onboard as a certified instructor today. Reach thousands of eager learners, automate session logistics, and secure bank payouts easily.",
+          stats: [
+            { value: "₹0", label: "Setup Cost" },
+            { value: "15%", label: "Platform Fee" },
+            { value: "10k+", label: "Eager Students" },
+          ]
+        };
+      }
+      return {
+        slogan: "Welcome Back, Instructor",
+        title: "Publish and Scale Your Workshops",
+        description: "Sign in to access your instructor dashboard, analyze enrollment reports, and dispatch notifications to your students.",
+        stats: [
+          { value: "12k+", label: "Trainers" },
+          { value: "100%", label: "Direct Payouts" },
+          { value: "24/7", label: "Host Support" },
         ]
       };
     }

@@ -47,8 +47,8 @@ export default function HostLoginPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Trainer Portal Sign In</h2>
-        <p className="text-sm text-muted-foreground font-medium">Access your instructor dashboard to manage active workshops, review payouts, and monitor training rosters.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome Back, Instructor!</h2>
+        <p className="text-sm text-muted-foreground font-medium">Ready to scale your training events globally? Sign in to manage your workshop schedules, track student rosters, and view payouts.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -215,8 +215,8 @@ export default function HostRegisterPage() {
             className="space-y-5"
           >
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Tell us about yourself</h2>
-              <p className="text-sm text-muted-foreground">Welcome! Enter your full name to start listing your training courses.</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Share your expertise globally</h2>
+              <p className="text-sm text-muted-foreground font-medium">Create your instructor profile to publish premium workshops and reach students worldwide.</p>
             </div>
 
             {error && <div className="p-3 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 rounded-xl border border-red-500/30 animate-pulse">{error}</div>}
@@ -275,8 +275,8 @@ export default function HostRegisterPage() {
             </button>
 
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">How can we reach you?</h2>
-              <p className="text-sm text-muted-foreground">E-mail and phone numbers are verified securely prior to onboarding.</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Set up your global reach</h2>
+              <p className="text-sm text-muted-foreground font-medium">Verify your email and WhatsApp contact details to receive direct notifications and student booking alerts.</p>
             </div>
 
             <div className="space-y-1.5">
@@ -331,8 +331,8 @@ export default function HostRegisterPage() {
             </button>
 
             <div className="space-y-1">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Secure your account</h2>
-              <p className="text-sm text-muted-foreground">Select a password to protect your payouts, stats, and course details.</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Protect your trainings & payouts</h2>
+              <p className="text-sm text-muted-foreground font-medium">Select a secure password to protect your dashboard stats, workshop ledgers, and direct bank payouts.</p>
             </div>
 
             {error && <div className="p-3 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-500/10 rounded-xl border border-red-500/30 animate-pulse">{error}</div>}
@@ -411,8 +411,8 @@ export default function HostRegisterPage() {
 
             <OtpStep
               idPrefix="reg-email-otp"
-              title="Verify trainer email"
-              description={`To finalize listing rights, verify the email OTP sent to ${email}`}
+              title="Verify trainer workspace"
+              description={`Verify the email confirmation OTP sent to ${email} to unlock global publishing rights`}
               isLoading={isLoading}
               error={error}
               devOtp={pendingRegistration?.devEmailOtp}
@@ -465,8 +465,8 @@ export default function HostRegisterPage() {
 
             <OtpStep
               idPrefix="reg-phone-otp"
-              title="Verify trainer WhatsApp"
-              description={`Verify the 6-digit confirmation code delivered to ${phone}`}
+              title="Activate instructor dashboard"
+              description={`Verify the 6-digit verification code delivered to ${phone} to activate your global trainer dashboard`}
               isLoading={isLoading}
               error={error}
               devOtp={pendingRegistration?.devPhoneOtp}
