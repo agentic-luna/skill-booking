@@ -170,7 +170,7 @@ mediator.register('ApproveEventCommand', new ApproveEventCommandHandler(eventRep
 mediator.register('CheckoutCommand', new CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
 mediator.register('CancelBookingCommand', new CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
 mediator.register('GetMyBookingsQuery', new GetMyBookingsQueryHandler(bookingRepo));
-mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
+mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, cryptoService, notificationRepo, queueService, cacheService));
 mediator.register('GetCancellationQuoteQuery', new GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 
 // 8. Register Webhook handlers

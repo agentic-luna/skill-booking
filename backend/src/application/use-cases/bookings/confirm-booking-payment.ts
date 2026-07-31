@@ -9,6 +9,7 @@ import { IRequest, IRequestHandler } from '../../common/mediator';
 import { NotFoundError, BadRequestError } from '../../common/errors';
 import { parseCommissionRate } from '../../../utils/commission-parser';
 import { ICacheService } from '../../services/cache.service';
+import { ICryptoService } from '../../services/crypto.service';
 import crypto from 'crypto';
 
 export class ConfirmBookingPaymentCommand implements IRequest<any> {
@@ -28,6 +29,7 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
     private bookingRepo: IBookingRepository,
     private ledgerRepo: ILedgerRepository,
     private configRepo: IConfigRepository,
+    private cryptoService: ICryptoService,
     private notificationRepo: INotificationRepository,
     private queueService: IQueueService,
     private cacheService: ICacheService
@@ -62,7 +64,8 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
           throw new BadRequestError('Razorpay is not configured on this platform');
         }
 
-        const keySecret = (config.credentials as any).keySecret;
+        const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+        const keySecret = decrypted?.keySecret;
         if (!keySecret) {
           throw new BadRequestError('Razorpay keySecret is missing');
         }
