@@ -7,6 +7,7 @@ import {
   CheckCircle2, Loader2, Plus, Minus, ChevronRight, ChevronLeft,
   Users, ShieldCheck, Ticket, AlertCircle, Receipt, X, BadgeCheck, Timer, Clock
 } from "lucide-react";
+import { useRazorpayCheckout } from "@/features/payment/hooks/useRazorpayCheckout";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,10 +84,21 @@ export default function BookingModal(props: BookingModalProps) {
   const { user } = useAuthStore();
   const store = useBookingModalStore();
 
+  const { startCheckout, isLoading: rzpLoading, isSuccess: rzpSuccess } = useRazorpayCheckout({
+    onSuccess: (result) => {
+      store.setPaymentLoading(false);
+      store.setPaymentSuccess(true, result.booking.bookingRef);
+      if (store.onSuccessCallback) store.onSuccessCallback();
+    },
+    onError: (msg) => {
+      store.setPaymentLoading(false);
+    },
+  });
+
   // Resolve values from Store or Props for backward compatibility
   const isOpen = props.open !== undefined ? props.open : store.isOpen;
   const activeProgram = props.program || store.program;
-  const isPaymentLoading = props.paymentLoading !== undefined ? props.paymentLoading : store.paymentLoading;
+  const isPaymentLoading = props.paymentLoading !== undefined ? props.paymentLoading : (store.paymentLoading || rzpLoading);
   const isPaymentSuccess = props.paymentSuccess !== undefined ? props.paymentSuccess : store.paymentSuccess;
 
   // Auto pre-fill user placeholders when modal is open and user is logged in
@@ -134,24 +146,28 @@ export default function BookingModal(props: BookingModalProps) {
   const handleRazorpayClick = async () => {
     if (props.onConfirmBooking) {
       await props.onConfirmBooking(store.qty);
-    } else {
-      store.setRazorpayAlert(true);
+      return;
+    }
+    if (!activeProgram) return;
+    store.setPaymentLoading(true);
+    try {
+      await startCheckout(
+        { eventId: activeProgram.id, seatCount: store.qty },
+        {
+          name: store.primary.fullName || user?.firstName || "Guest",
+          email: store.primary.email || user?.email || "",
+          phone: store.primary.mobile || user?.phone || "",
+        }
+      );
+    } catch {
+      // errors handled by hook's onError callback
     }
   };
 
+  // For the mock dialog: same flow, hook auto-detects no keyId and uses MOCK_SUCCESS
   const handleFakePaymentApprove = async () => {
     store.setRazorpayAlert(false);
-    if (props.onConfirmBooking) {
-      await props.onConfirmBooking(store.qty);
-    } else {
-      store.setPaymentLoading(true);
-      setTimeout(() => {
-        const ref = `BK-${Date.now().toString(36).toUpperCase()}`;
-        store.setPaymentLoading(false);
-        store.setPaymentSuccess(true, ref);
-        if (store.onSuccessCallback) store.onSuccessCallback();
-      }, 1200);
-    }
+    await handleRazorpayClick();
   };
 
   const handleClose = () => {

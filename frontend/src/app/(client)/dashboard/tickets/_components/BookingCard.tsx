@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import type { ClientBooking } from "@/features/client/api/types";
+import RefundStatusBadge from "@/features/payment/components/RefundStatusBadge";
 
 interface BookingCardProps {
   booking: ClientBooking;
@@ -113,23 +114,8 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase ${statusColor}`}>
                   {booking.status}
                 </span>
-                {booking.refundRequest && (
-                  (() => {
-                    let badgeStyle = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
-                    let label = "Refund in Processing";
-                    if (booking.refundRequest.status === "APPROVED") {
-                      badgeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-                      label = `Refunded`;
-                    } else if (booking.refundRequest.status === "DECLINED") {
-                      badgeStyle = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
-                      label = "Refund Declined";
-                    }
-                    return (
-                      <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border tracking-wide ${badgeStyle}`} title={`Reason: ${booking.refundRequest.reason || 'None'}`}>
-                        {label}
-                      </span>
-                    );
-                  })()
+                {(booking.status === "CANCELED" || booking.status === "CANCELLED" || booking.status === "REFUNDED") && (
+                  <RefundStatusBadge bookingId={booking.id} variant="badge" />
                 )}
               </div>
             </div>
