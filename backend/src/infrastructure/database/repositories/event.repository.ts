@@ -150,15 +150,28 @@ export class PrismaEventRepository implements IEventRepository {
         },
         {
           keywords: {
-            hasSome: [searchTerm],
+            hasSome: [
+              searchTerm,
+              searchTerm.toLowerCase(),
+              searchTerm.toUpperCase(),
+              searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase(),
+            ],
           },
         },
       ];
     }
 
     if (filters.keywords && filters.keywords.length > 0) {
+      const searchKeywords = filters.keywords.reduce((acc: string[], kw: string) => {
+        acc.push(kw);
+        acc.push(kw.toLowerCase());
+        acc.push(kw.toUpperCase());
+        const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
+        if (!acc.includes(capitalized)) acc.push(capitalized);
+        return acc;
+      }, []);
       where.keywords = {
-        hasSome: filters.keywords,
+        hasSome: searchKeywords,
       };
     }
 

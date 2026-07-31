@@ -24,6 +24,8 @@ import { CATEGORIES } from "@/constants/categories";
 interface FilterSidebarProps {
   category: string;
   setCategory: (v: string) => void;
+  selectedKeyword: string;
+  setSelectedKeyword: (v: string) => void;
   minPrice: number;
   setMinPrice: (v: number) => void;
   maxPrice: number;
@@ -42,7 +44,7 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = React.memo(function FilterSidebar({
-  category, setCategory, minPrice, setMinPrice, maxPrice, setMaxPrice, trainerName, setTrainerName,
+  category, setCategory, selectedKeyword, setSelectedKeyword, minPrice, setMinPrice, maxPrice, setMaxPrice, trainerName, setTrainerName,
   minRating, setMinRating, hideFull, setHideFull, handleResetFilters, categoriesList, router,
   isDark = false
 }: FilterSidebarProps) {
@@ -54,25 +56,56 @@ const FilterSidebar = React.memo(function FilterSidebar({
         <div className="space-y-1.5 pt-1">
           {categoriesList.map((cat) => {
             const isActive = category === cat.value;
+            const catMeta = CATEGORIES.find((c) => c.value === cat.value);
             return (
-              <button
-                key={cat.value}
-                onClick={() => {
-                  setCategory(cat.value);
-                  router.push(`/programs?category=${cat.value}`);
-                }}
-                className={`group flex items-center w-full justify-between text-left text-sm py-2 px-3 rounded-xl transition-colors duration-200 ${isActive
-                  ? isDark
-                    ? "bg-[#a0f212]/10 text-[#a0f212] font-bold shadow-[inset_3px_0_0_0_#a0f212]"
-                    : "bg-[#a0f212]/20 text-foreground font-bold shadow-[inset_3px_0_0_0_#a0f212]"
-                  : isDark
-                    ? "text-white/70 hover:bg-white/5 hover:text-white"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                  }`}
-              >
-                <span className="truncate">{cat.name}</span>
-                <ChevronRight className={`h-3.5 w-3.5 transition-transform duration-300 ${isActive ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 group-hover:opacity-40 group-hover:translate-x-0"}`} />
-              </button>
+              <div key={cat.value} className="space-y-1">
+                <button
+                  onClick={() => {
+                    setCategory(cat.value);
+                    setSelectedKeyword("");
+                    router.push(`/programs?category=${cat.value}`);
+                  }}
+                  className={`group flex items-center w-full justify-between text-left text-sm py-2 px-3 rounded-xl transition-colors duration-200 ${isActive
+                    ? isDark
+                      ? "bg-[#a0f212]/10 text-[#a0f212] font-bold shadow-[inset_3px_0_0_0_#a0f212]"
+                      : "bg-[#a0f212]/20 text-foreground font-bold shadow-[inset_3px_0_0_0_#a0f212]"
+                    : isDark
+                      ? "text-white/70 hover:bg-white/5 hover:text-white"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    }`}
+                >
+                  <span className="truncate">{cat.name}</span>
+                  <ChevronRight className={`h-3.5 w-3.5 transition-all duration-300 ${isActive ? "rotate-90 text-foreground opacity-100" : "opacity-0 -translate-x-2 group-hover:opacity-40 group-hover:translate-x-0"}`} />
+                </button>
+                {isActive && catMeta && catMeta.keywords.length > 0 && (
+                  <div className="pl-4 pr-2 py-1.5 space-y-2 mt-1 border-l border-[#a0f212]/40 ml-3">
+                    {catMeta.keywords.map((kw) => {
+                      const isKwActive = selectedKeyword === kw;
+                      return (
+                        <label key={kw} className="flex items-center space-x-2 text-xs cursor-pointer group/kw select-none">
+                          <input
+                            type="checkbox"
+                            checked={isKwActive}
+                            onChange={() => {
+                              if (isKwActive) {
+                                setSelectedKeyword("");
+                                router.push(`/programs?category=${cat.value}`);
+                              } else {
+                                setSelectedKeyword(kw);
+                                router.push(`/programs?category=${cat.value}&keywords=${kw}`);
+                              }
+                            }}
+                            className="rounded border-gray-300 text-[#a0f212] focus:ring-[#a0f212] h-3.5 w-3.5"
+                          />
+                          <span className={`transition-colors duration-150 ${isKwActive ? "font-bold text-[#a0f212]" : isDark ? "text-white/60 group-hover/kw:text-white" : "text-muted-foreground group-hover/kw:text-foreground"}`}>
+                            {kw}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -349,8 +382,11 @@ export default function ProgramsListContent() {
     const matchesRating = 4.8 >= minRating;
     const matchesAvailability = !hideFull || prog.availableSeats > 0;
     const matchesTrainerName = !trainerName || trainerNameStr.toLowerCase().includes(trainerName.toLowerCase());
+    const matchesKeyword = !selectedKeyword || (prog.keywords || []).some(
+      (k: string) => k.toLowerCase() === selectedKeyword.toLowerCase()
+    );
     
-    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability && matchesTrainerName;
+    return matchesSearch && matchesCategory && matchesLocation && matchesDates && matchesPrice && matchesRating && matchesAvailability && matchesTrainerName && matchesKeyword;
   });
 
   // Sorting calculations
@@ -505,6 +541,8 @@ export default function ProgramsListContent() {
               <FilterSidebar
                 category={category}
                 setCategory={setCategory}
+                selectedKeyword={selectedKeyword}
+                setSelectedKeyword={setSelectedKeyword}
                 minPrice={minPrice}
                 setMinPrice={setMinPrice}
                 maxPrice={maxPrice}
@@ -728,6 +766,8 @@ export default function ProgramsListContent() {
               <FilterSidebar
                 category={category}
                 setCategory={setCategory}
+                selectedKeyword={selectedKeyword}
+                setSelectedKeyword={setSelectedKeyword}
                 minPrice={minPrice}
                 setMinPrice={setMinPrice}
                 maxPrice={maxPrice}
