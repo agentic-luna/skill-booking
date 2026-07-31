@@ -437,10 +437,11 @@ class AdminController {
                     where: { id },
                     data: { status: 'APPROVED' }
                 });
-                // 2. Change Event status back to PENDING so host can edit it
+                // 2. Change Event status to EDIT_MODE so host can edit it
+                // (it will return to PENDING status once the host saves their changes)
                 await tx.event.update({
                     where: { id: editRequest.eventId },
-                    data: { status: 'PENDING' }
+                    data: { status: 'EDIT_MODE' }
                 });
             });
             return api_response_1.ApiResponse.success(res, { message: 'Edit request approved. Event is now unlocked.' });

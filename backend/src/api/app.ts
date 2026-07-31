@@ -127,7 +127,7 @@ import boostedEventsRouter from './routes/boosted-events.routes';
 import integrationsRouter from './routes/integrations.routes';
 import wishlistRouter from './routes/wishlist.routes';
 import complaintsRouter from './routes/complaints.routes';
-
+import paymentRoutes from './routes/payment.routes';
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/notifications', notificationsRouter);
@@ -135,6 +135,7 @@ app.use('/api/v1/hosts', hostsRouter);
 app.use('/api/v1/events', eventsRouter);
 app.use('/api/v1/bookings', bookingsRouter);
 app.use('/api/v1/webhooks', webhooksRouter);
+app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/reviews', reviewsRouter);
 app.use('/api/v1/boosted-events', boostedEventsRouter);
 app.use('/api/v1/integrations', integrationsRouter);

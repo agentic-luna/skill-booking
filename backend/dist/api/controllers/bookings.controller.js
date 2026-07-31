@@ -54,8 +54,8 @@ class BookingsController {
     static async confirmPayment(req, res, next) {
         try {
             const { bookingId } = req.params;
-            const { paymentMethod } = req.body;
-            const result = await di_container_1.mediator.send(new confirm_booking_payment_1.ConfirmBookingPaymentCommand(bookingId, req.user.id, paymentMethod));
+            const { paymentMethod, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
+            const result = await di_container_1.mediator.send(new confirm_booking_payment_1.ConfirmBookingPaymentCommand(bookingId, req.user.id, paymentMethod, razorpayPaymentId, razorpayOrderId, razorpaySignature));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

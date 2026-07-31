@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HandlePaymentWebhookCommandHandler = exports.HandlePaymentWebhookCommand = void 0;
 const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../config/prisma");
 const commission_parser_1 = require("../../../utils/commission-parser");
 class HandlePaymentWebhookCommand {
     payload;
@@ -43,6 +44,21 @@ class HandlePaymentWebhookCommandHandler {
         }
         // 1. Update Booking status to CONFIRMED
         await this.bookingRepo.update(booking.id, { status: client_1.BookingStatus.CONFIRMED });
+        // Increment conversions for boosted events
+        try {
+            const boost = await prisma_1.prisma.boostedEvent.findFirst({
+                where: { eventId: booking.eventId, isActive: true, status: 'ACTIVE' }
+            });
+            if (boost) {
+                await prisma_1.prisma.boostedEvent.update({
+                    where: { id: boost.id },
+                    data: { conversions: { increment: 1 } }
+                });
+            }
+        }
+        catch (err) {
+            console.error("[Telemetry] Failed to increment boosted conversion in webhook", err);
+        }
         // 2. Platform revenue vs host liability
         const totalAmount = Number(booking.totalAmount);
         let platformRevenue = 0;

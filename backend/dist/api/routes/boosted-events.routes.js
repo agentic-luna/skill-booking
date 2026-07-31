@@ -9,6 +9,7 @@ const system_permissions_1 = require("../../security/system.permissions");
 const router = (0, express_1.Router)();
 router.get('/', boosted_events_controller_1.BoostedEventsController.getActiveBoostedEvents);
 router.get('/pricing', boosted_events_controller_1.BoostedEventsController.getPricing);
+router.get('/razorpay-key', boosted_events_controller_1.BoostedEventsController.getRazorpayKey);
 router.post('/', auth_1.authenticate, (0, authorize_1.requireRole)(client_1.UserRole.SUPERADMIN), (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_BOOST), boosted_events_controller_1.BoostedEventsController.boostEvent);
 router.post('/verify-payment', boosted_events_controller_1.BoostedEventsController.verifyBoostPayment);
 router.post('/request', auth_1.authenticate, boosted_events_controller_1.BoostedEventsController.requestBoost);

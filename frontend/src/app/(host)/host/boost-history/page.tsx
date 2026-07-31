@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Rocket, Calendar, IndianRupee, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Loader2, Rocket, Calendar, IndianRupee, CheckCircle2, Clock, XCircle, ChevronRight } from "lucide-react";
 import * as hostApi from "@/features/host/api/host.api";
 
 export default function BoostHistoryPage() {
@@ -79,39 +80,46 @@ export default function BoostHistoryPage() {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#a0f212]" />
             </div>
           ) : boosts.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              You haven't purchased any boosts yet.
+            <div className="text-center py-10 text-muted-foreground text-xs font-semibold">
+              You haven&apos;t purchased any event boosts yet.
             </div>
           ) : (
             <div className="space-y-4">
               {boosts.map((boost) => (
-                <div key={boost.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border/50 hover:bg-muted/30 transition-colors">
+                <Link
+                  key={boost.id}
+                  href={`/host/boost-history/${boost.id}`}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl border border-black/5 bg-[#0b0c01]/[0.02] hover:bg-black/[0.04] transition-all duration-300 group cursor-pointer"
+                >
                   <div className="flex flex-col space-y-1">
-                    <span className="font-semibold text-lg">{boost.event.title}</span>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
+                    <span className="font-extrabold text-base text-[#0b0c01] group-hover:text-primary transition-colors flex items-center gap-1.5">
+                      {boost.event.title}
+                    </span>
+                    <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-bold">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" />
                         {formatDate(boost.startDate)} - {formatDate(boost.endDate)}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <IndianRupee className="w-4 h-4" />
-                        {boost.price || "N/A"}
+                      <div className="flex items-center gap-1.5">
+                        <IndianRupee className="w-3.5 h-3.5" />
+                        ₹{boost.price || "N/A"}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-4 sm:mt-0">
-                    <span className={`px-2.5 py-1 text-xs font-bold rounded-full border ${getTierColor(boost.tier)}`}>
+                    <span className={`px-2.5 py-1 text-[10px] font-black rounded-full border tracking-wider uppercase ${getTierColor(boost.tier)}`}>
                       {boost.tier || 'BASIC'}
                     </span>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background border shadow-sm">
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-background border shadow-sm text-xs font-semibold">
                       {getStatusIcon(boost.status)}
-                      <span className="text-sm font-medium capitalize">{boost.status.toLowerCase()}</span>
+                      <span className="capitalize">{boost.status.toLowerCase()}</span>
                     </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

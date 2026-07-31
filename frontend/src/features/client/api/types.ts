@@ -116,6 +116,9 @@ export interface CheckoutResult {
 
 export interface ConfirmPaymentPayload {
   paymentMethod: string;
+  razorpayPaymentId?: string;
+  razorpayOrderId?: string;
+  razorpaySignature?: string;
 }
 
 export interface ConfirmPaymentResult {

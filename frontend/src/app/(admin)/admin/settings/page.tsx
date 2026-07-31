@@ -9,7 +9,6 @@ import { AlertCircle } from "lucide-react";
 import PlatformTab from "./_components/PlatformTab";
 import TemplatesTab from "./_components/TemplatesTab";
 import IntegrationsTab from "./_components/IntegrationsTab";
-import BoostSettingsTab from "./_components/BoostSettingsTab";
 
 export default function AdminSettingsPage() {
   const { error } = useAdminStore();
@@ -61,18 +60,11 @@ export default function AdminSettingsPage() {
           >
             Integrations
           </TabsTrigger>
-          <TabsTrigger
-            value="boost"
-            className="px-6 py-2.5 rounded-full text-sm font-bold transition-all data-[state=active]:bg-[#0b0c01] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground"
-          >
-            Boost Settings
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="platform"><PlatformTab /></TabsContent>
         <TabsContent value="templates"><TemplatesTab /></TabsContent>
         <TabsContent value="integrations"><IntegrationsTab /></TabsContent>
-        <TabsContent value="boost"><BoostSettingsTab /></TabsContent>
       </Tabs>
 
     </div>

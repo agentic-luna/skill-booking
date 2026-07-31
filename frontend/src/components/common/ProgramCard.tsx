@@ -29,8 +29,15 @@ export default function ProgramCard({ program }: ProgramCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         
         {/* Premium Glass Category Badge */}
-        <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-          {program.category || "General"}
+        <div className="absolute top-4 left-4 flex gap-2 z-10">
+          <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+            {program.category || "General"}
+          </div>
+          {program.isBoosted && (
+            <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse">
+              <span>★</span> FEATURED
+            </div>
+          )}
         </div>
 
         {/* Scarcity Tension Badge */}

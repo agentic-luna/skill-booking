@@ -25,6 +25,8 @@ const startServer = async () => {
         di_container_1.logger.info('[Prisma] Database connection established.');
         // Seed Superadmin user
         await (0, seed_1.seedSuperadmin)();
+        // Seed default boost pricing plans
+        await (0, seed_1.seedBoostPricing)();
         // Initialize notification worker queue listener with Clean Architecture dependency injection
         di_container_1.logger.info('[BullMQ] Starting background notification worker...');
         const notificationRepo = new notification_repository_1.PrismaNotificationRepository();

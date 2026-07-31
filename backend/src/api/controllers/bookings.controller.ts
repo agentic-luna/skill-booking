@@ -69,11 +69,14 @@ export class BookingsController {
   static async confirmPayment(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { bookingId } = req.params;
-      const { paymentMethod } = req.body;
+      const { paymentMethod, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
       const result = await mediator.send(new ConfirmBookingPaymentCommand(
         bookingId,
         req.user!.id,
-        paymentMethod
+        paymentMethod,
+        razorpayPaymentId,
+        razorpayOrderId,
+        razorpaySignature
       ));
       return ApiResponse.success(res, result);
     } catch (error) {

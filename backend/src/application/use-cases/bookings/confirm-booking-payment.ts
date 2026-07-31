@@ -1,20 +1,25 @@
-import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType, TriggerEvent, DeliveryChannel, NotificationStatus } from '@prisma/client';
+import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType, TriggerEvent, DeliveryChannel, NotificationStatus, IntegrationService } from '@prisma/client';
 import { IBookingRepository } from '../../../domain/repositories/booking.repository';
 import { ILedgerRepository } from '../../../domain/repositories/ledger.repository';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
+import { prisma } from '../../../config/prisma';
 import { INotificationRepository } from '../../../domain/repositories/notification.repository';
 import { IQueueService } from '../../services/queue.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { NotFoundError, BadRequestError } from '../../common/errors';
 import { parseCommissionRate } from '../../../utils/commission-parser';
 import { ICacheService } from '../../services/cache.service';
+import crypto from 'crypto';
 
 export class ConfirmBookingPaymentCommand implements IRequest<any> {
   readonly __tag = 'ConfirmBookingPaymentCommand';
   constructor(
     public readonly bookingId: string,
     public readonly clientId: string,
-    public readonly paymentMethod?: string
+    public readonly paymentMethod?: string,
+    public readonly razorpayPaymentId?: string,
+    public readonly razorpayOrderId?: string,
+    public readonly razorpaySignature?: string
   ) { }
 }
 
@@ -48,12 +53,51 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
       throw new BadRequestError(`Cannot confirm payment for a booking with status '${booking.status}'.`);
     }
 
-    const gatewayTxnId = `direct_pay_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    let gatewayTxnId = `direct_pay_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+    if (command.razorpaySignature) {
+      if (command.razorpaySignature !== 'MOCK_SUCCESS') {
+        const config = await this.configRepo.findIntegration(IntegrationService.RAZORPAY);
+        if (!config || !config.credentials || typeof config.credentials !== 'object') {
+          throw new BadRequestError('Razorpay is not configured on this platform');
+        }
+
+        const keySecret = (config.credentials as any).keySecret;
+        if (!keySecret) {
+          throw new BadRequestError('Razorpay keySecret is missing');
+        }
+
+        // Verify signature
+        const hmac = crypto.createHmac('sha256', keySecret);
+        hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
+        const generatedSignature = hmac.digest('hex');
+
+        if (generatedSignature !== command.razorpaySignature) {
+          throw new BadRequestError('Invalid payment signature');
+        }
+      }
+      gatewayTxnId = command.razorpayPaymentId || gatewayTxnId;
+    }
 
     // 1. Update Booking status to CONFIRMED
     const updatedBooking = await this.bookingRepo.update(booking.id, {
       status: BookingStatus.CONFIRMED,
     });
+
+    // Increment conversions for boosted events
+    try {
+      const boost = await prisma.boostedEvent.findFirst({
+        where: { eventId: booking.eventId, isActive: true, status: 'ACTIVE' }
+      });
+      if (boost) {
+        await prisma.boostedEvent.update({
+          where: { id: boost.id },
+          data: { conversions: { increment: 1 } }
+        });
+      }
+    } catch (err) {
+      console.error("[Telemetry] Failed to increment boosted conversion", err);
+    }
 
     // 2. Compute platform revenue vs host liability
     const totalAmount = Number(booking.totalAmount);

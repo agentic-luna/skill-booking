@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Sparkles, LayoutDashboard, UserCheck, CheckSquare, Settings,
-  Menu, LogOut, Bell, Radio, Wallet, Users, AlertTriangle
+  Menu, LogOut, Bell, Radio, Wallet, Users, AlertTriangle, Rocket
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -18,6 +18,7 @@ const menuItems = [
   { name: "Hosts Management", href: "/admin/hosts-management", icon: Users },
   { name: "Approvals", href: "/admin/approvals", icon: CheckSquare },
   { name: "Finance & Payouts", href: "/admin/finance", icon: Wallet },
+  { name: "Boost Management", href: "/admin/boost-management", icon: Rocket },
   { name: "Complaints", href: "/admin/complaints", icon: AlertTriangle },
   { name: "Broadcast Center", href: "/admin/broadcast", icon: Radio },
   { name: "Platform Settings", href: "/admin/settings", icon: Settings },

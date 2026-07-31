@@ -25,9 +25,19 @@ export default function HeroSection() {
             <h1 className="text-[36px] md:text-[48px] lg:text-[60px] font-extrabold text-gray-900 leading-[1.1] tracking-tight mb-4">
               <AnimatedHeroText />
             </h1>
-            <p className="text-gray-600 text-lg md:text-xl font-medium max-w-xl mb-8">
+            <p className="text-gray-600 text-lg md:text-xl font-medium max-w-xl mb-6">
               Search lowest prices on training event tickets.
             </p>
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(160,242,18,0.4)" }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push("/programs/featured")}
+              className="mb-8 inline-flex items-center gap-2.5 px-6 py-3.5 bg-[#0b0c01] text-white hover:bg-black rounded-full font-black text-xs tracking-widest uppercase shadow-[0_4px_20px_rgba(160,242,18,0.2)] border border-[#a0f212]/30 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-[#a0f212] animate-pulse" />
+              <span>Explore Pinned Spotlight Programs</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#a0f212]" />
+            </motion.button>
           </motion.div>
         </div>
       </div>

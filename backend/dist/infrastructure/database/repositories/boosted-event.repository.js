@@ -63,6 +63,11 @@ class PrismaBoostedEventRepository {
         });
         return items;
     }
+    async findById(id) {
+        return prisma_1.prisma.boostedEvent.findUnique({
+            where: { id }
+        });
+    }
     async delete(eventId) {
         await prisma_1.prisma.boostedEvent.delete({
             where: { eventId },

@@ -3,7 +3,6 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { Plus, Loader2, Clock, Users, Calendar, MapPin, Edit2, Trash2, Rocket } from "lucide-react";
-import { RequestBoostModal } from "./_components/RequestBoostModal";
 import { Button } from "@/components/ui/button";
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
@@ -52,7 +51,7 @@ export default function HostProgramsPage() {
       {/* Image Header */}
       <div className="h-48 relative overflow-hidden bg-gray-100">
         <img src={prog.imageUrl} alt={prog.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" />
-        
+
         {/* Status Badge */}
         {(() => {
           const isPast = prog.startDate < new Date();
@@ -79,17 +78,17 @@ export default function HostProgramsPage() {
             </div>
           );
         })()}
-        
+
         {/* Category Badge */}
         <div className="absolute top-4 right-4 bg-[#0b0c01]/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
           {prog.category}
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="p-6 flex-1 flex flex-col">
         <h2 className="text-xl font-extrabold text-[#0b0c01] leading-tight line-clamp-2">{prog.title}</h2>
-        
+
         <div className="mt-5 space-y-3">
           <div className="flex items-center text-sm font-semibold text-muted-foreground">
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mr-3 shrink-0"><Calendar className="h-4 w-4" /></div>
@@ -112,9 +111,9 @@ export default function HostProgramsPage() {
             <span>{prog.spotsLeft} / {prog.maxSpots}</span>
           </div>
           <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-[#a0f212] rounded-full transition-all duration-1000" 
-              style={{ width: `${Math.min(100, ((prog.maxSpots - prog.spotsLeft) / (prog.maxSpots || 1)) * 100)}%` }} 
+            <div
+              className="h-full bg-[#a0f212] rounded-full transition-all duration-1000"
+              style={{ width: `${Math.min(100, ((prog.maxSpots - prog.spotsLeft) / (prog.maxSpots || 1)) * 100)}%` }}
             />
           </div>
         </div>
@@ -128,13 +127,6 @@ export default function HostProgramsPage() {
                 <Edit2 className="w-4 h-4" />
               </button>
             </Link>
-            <button 
-              onClick={() => setBoostModalState({ isOpen: true, eventId: prog.id, title: prog.title })}
-              className="w-10 h-10 rounded-full bg-blue-50 hover:bg-blue-500 text-blue-600 hover:text-white flex items-center justify-center transition-colors shadow-sm"
-              title="Request Boost"
-            >
-              <Rocket className="w-4 h-4" />
-            </button>
             <button onClick={() => handleDelete(prog.id)} className="w-10 h-10 rounded-full bg-red-50 hover:bg-red-500 text-red-600 hover:text-white flex items-center justify-center transition-colors shadow-sm">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -157,7 +149,7 @@ export default function HostProgramsPage() {
           <p className="text-muted-foreground font-medium text-sm">Create, edit, and manage all your upcoming training workshops.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => setIsRepublishOpen(true)}
             className="rounded-2xl h-12 px-5 text-sm font-bold bg-white text-[#0b0c01] hover:bg-gray-50 border-gray-200 shadow-sm transition-all hover:-translate-y-0.5 duration-300 w-full sm:w-auto justify-center"
@@ -186,7 +178,7 @@ export default function HostProgramsPage() {
           </div>
           <Link href="/host/programs/create" className="mt-4">
             <Button className="rounded-2xl h-12 px-8 text-sm font-bold bg-[#0b0c01] text-white hover:bg-black/80 shadow-md">
-               Create Workshop
+              Create Workshop
             </Button>
           </Link>
         </div>
@@ -198,18 +190,13 @@ export default function HostProgramsPage() {
         </div>
       )}
 
-      <RepublishModal 
-        open={isRepublishOpen} 
-        onOpenChange={setIsRepublishOpen} 
-        events={myEvents} 
+      <RepublishModal
+        open={isRepublishOpen}
+        onOpenChange={setIsRepublishOpen}
+        events={myEvents}
       />
 
-      <RequestBoostModal 
-        isOpen={boostModalState.isOpen}
-        onClose={() => setBoostModalState({ isOpen: false, eventId: null, title: "" })}
-        eventId={boostModalState.eventId}
-        eventTitle={boostModalState.title}
-      />
+
     </div>
   );
 }

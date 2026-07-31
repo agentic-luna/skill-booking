@@ -83,7 +83,7 @@ export interface PlatformSetting {
 
 export interface UpsertPlatformPayload {
   key: string;
-  value: string;
+  value: any;
 }
 
 // ── Notification Logs ────────────────────────────────────────────────────

@@ -68,6 +68,44 @@ async function main() {
       },
     },
   });
+
+  const boostPricingKey = 'BOOST_PRICING';
+  await prisma.platformSetting.upsert({
+    where: { key: boostPricingKey },
+    update: {
+      value: [
+        { id: "basic-3", tier: "BASIC", days: 3, price: 299 },
+        { id: "basic-7", tier: "BASIC", days: 7, price: 599 },
+        { id: "basic-15", tier: "BASIC", days: 15, price: 999 },
+        { id: "basic-30", tier: "BASIC", days: 30, price: 1699 },
+        { id: "standard-3", tier: "STANDARD", days: 3, price: 699 },
+        { id: "standard-7", tier: "STANDARD", days: 7, price: 1299 },
+        { id: "standard-15", tier: "STANDARD", days: 15, price: 2199 },
+        { id: "standard-30", tier: "STANDARD", days: 30, price: 3799 },
+        { id: "pro-3", tier: "PRO", days: 3, price: 1999 },
+        { id: "pro-7", tier: "PRO", days: 7, price: 3999 },
+        { id: "pro-15", tier: "PRO", days: 15, price: 6999 },
+        { id: "pro-30", tier: "PRO", days: 30, price: 11999 }
+      ]
+    },
+    create: {
+      key: boostPricingKey,
+      value: [
+        { id: "basic-3", tier: "BASIC", days: 3, price: 299 },
+        { id: "basic-7", tier: "BASIC", days: 7, price: 599 },
+        { id: "basic-15", tier: "BASIC", days: 15, price: 999 },
+        { id: "basic-30", tier: "BASIC", days: 30, price: 1699 },
+        { id: "standard-3", tier: "STANDARD", days: 3, price: 699 },
+        { id: "standard-7", tier: "STANDARD", days: 7, price: 1299 },
+        { id: "standard-15", tier: "STANDARD", days: 15, price: 2199 },
+        { id: "standard-30", tier: "STANDARD", days: 30, price: 3799 },
+        { id: "pro-3", tier: "PRO", days: 3, price: 1999 },
+        { id: "pro-7", tier: "PRO", days: 7, price: 3999 },
+        { id: "pro-15", tier: "PRO", days: 15, price: 6999 },
+        { id: "pro-30", tier: "PRO", days: 30, price: 11999 }
+      ],
+    },
+  });
   console.log('[Seeder] Platform settings seeded successfully.');
 
 

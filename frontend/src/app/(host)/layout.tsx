@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Sparkles, LayoutDashboard, Calendar, Users, IndianRupee,
-  Menu, X, LogOut, UserCheck, ShieldCheck, Lock, CheckCircle2
+  Menu, X, LogOut, UserCheck, ShieldCheck, Lock, CheckCircle2, Rocket
 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -61,6 +61,7 @@ export default function HostLayout({
     { name: "Programs", href: "/host/programs", icon: Calendar },
     { name: "Participants", href: "/host/participants", icon: Users },
     { name: "Earnings", href: "/host/earnings", icon: IndianRupee },
+    { name: "Boost Pricing", href: "/host/boost-pricing", icon: Rocket },
     { name: "Boost History", href: "/host/boost-history", icon: Sparkles },
     { name: "KYC Verification", href: "/host/kyc", icon: ShieldCheck },
   ];

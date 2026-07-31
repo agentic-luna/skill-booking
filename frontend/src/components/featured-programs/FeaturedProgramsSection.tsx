@@ -43,7 +43,7 @@ function mapEventToProgram(event: any): Program {
     imageUrl: imageUrlStr,
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
-    isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'PRO'].includes(event.boostedEvent?.tier),
+    isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'STANDARD', 'PRO'].includes(event.boostedEvent?.tier),
     startTime: event.startTime,
   };
 }
@@ -61,7 +61,8 @@ export default function FeaturedProgramsSection() {
     .sort((a, b) => {
       const isBasicOrProBoosted = (e: any) =>
         e.boostedEvent?.isActive === true &&
-        ['BASIC', 'PRO'].includes(e.boostedEvent?.tier) &&
+        e.boostedEvent?.status === 'ACTIVE' &&
+        ['BASIC', 'STANDARD', 'PRO'].includes(e.boostedEvent?.tier) &&
         new Date(e.boostedEvent?.endDate) >= now;
       const aBoosted = isBasicOrProBoosted(a);
       const bBoosted = isBasicOrProBoosted(b);
@@ -85,16 +86,23 @@ export default function FeaturedProgramsSection() {
             </p>
           </div>
           
-          <Link href="/programs" className="group shrink-0">
-            <div className="flex items-center justify-center px-6 py-2.5 bg-bone-white border border-clay-shadow rounded-full shadow-sm transition-all duration-300 hover:shadow hover:bg-white hover:-translate-y-0.5">
-              <span className="text-sm font-semibold tracking-wide text-graphite-ink transition-colors">
-                Explore All Classes
-              </span>
-              <div className="ml-2 rounded-full bg-charcoal-slate/5 p-1 group-hover:bg-charcoal-slate/10 transition-colors">
-                <ArrowRight className="h-4 w-4 text-graphite-ink group-hover:translate-x-0.5 transition-transform" />
+          <div className="flex items-center gap-3">
+            <Link href="/programs/featured" className="group shrink-0">
+              <div className="flex items-center justify-center px-6 py-2.5 bg-[#a0f212]/10 border border-[#a0f212]/30 text-emerald-800 dark:text-[#a0f212] rounded-full shadow-sm transition-all duration-300 hover:shadow hover:-translate-y-0.5 text-xs font-bold gap-1">
+                ★ View Spotlight Page
               </div>
-            </div>
-          </Link>
+            </Link>
+            <Link href="/programs" className="group shrink-0">
+              <div className="flex items-center justify-center px-6 py-2.5 bg-bone-white border border-clay-shadow rounded-full shadow-sm transition-all duration-300 hover:shadow hover:bg-white hover:-translate-y-0.5">
+                <span className="text-xs font-semibold tracking-wide text-graphite-ink transition-colors">
+                  Explore All Classes
+                </span>
+                <div className="ml-2 rounded-full bg-charcoal-slate/5 p-1 group-hover:bg-charcoal-slate/10 transition-colors">
+                  <ArrowRight className="h-3.5 w-3.5 text-graphite-ink group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
+            </Link>
+          </div>
         </div>
 
         {/* Program Cards Grid */}

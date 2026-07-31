@@ -68,5 +68,6 @@ export function mapEventToProgram(event: any): Program {
     mode: event.mode,
     commission: event.commission,
     startTime: event.startTime,
+    isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'STANDARD', 'PRO'].includes(event.boostedEvent?.tier),
   };
 }

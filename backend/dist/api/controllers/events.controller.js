@@ -104,8 +104,8 @@ class EventsController {
                     error: { message: 'Access denied. You do not own this event.' },
                 });
             }
-            // 4. Verify status is PENDING (edit is only allowed before approval)
-            if (event.status !== 'PENDING') {
+            // 4. Verify status allows editing: PENDING (new event) or EDIT_MODE (admin-approved edit)
+            if (event.status !== 'PENDING' && event.status !== 'EDIT_MODE') {
                 throw new errors_1.BadRequestError('Cannot edit this event as it has already been approved or processed.');
             }
             // 5. Update event
@@ -164,9 +164,13 @@ class EventsController {
                     venueId = v.id;
                 }
             }
+            // If event was in EDIT_MODE, transition it back to PENDING after host saves,
+            // so the admin must re-approve the updated version.
+            const newStatus = event.status === 'EDIT_MODE' ? 'PENDING' : undefined;
             const updatedEvent = await prisma_1.prisma.event.update({
                 where: { id },
                 data: {
+                    ...(newStatus ? { status: newStatus } : {}),
                     title: title !== undefined ? title : event.title,
                     posterUrl: posterUrl !== undefined ? posterUrl : event.posterUrl,
                     mode: mode !== undefined ? mode : event.mode,

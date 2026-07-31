@@ -13,6 +13,7 @@ import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
 import { useClientAuthModalStore } from "@/features/auth/store/clientAuthModalStore";
 import { useBookingModalStore } from "@/features/client/store/bookingModalStore";
+import { API_BASE_URL } from "@/lib/config";
 
 import BookingModal from "./BookingModal";
 import BackButton from "@/components/common/BackButton";
@@ -118,6 +119,17 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       setIsWishlisted(wishlisted);
     }
   }, [program, wishlist]);
+
+  // Load Razorpay Script dynamically on client mount
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   if (loading && !program) {
     return (
@@ -226,23 +238,90 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
       if (!checkoutResult || !checkoutResult.booking) {
         throw new Error("Could not initialize checkout booking process");
       }
-      const confirmResult = await confirmPayment(checkoutResult.booking.id, {
-        paymentMethod: "CARD",
-      });
-      if (confirmResult.success) {
-        setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
-        setPaymentSuccess(true);
-        showAlert(
-          "Booking Confirmed!",
-          `Your ${spotsCount} seat${spotsCount > 1 ? "s" : ""} for "${program.title}" have been reserved. Check your email for the confirmation and invoice.`,
-          "success"
-        );
+
+      // Fetch dynamic active Razorpay Key ID
+      let activeKeyId: string | null = null;
+      try {
+        const keyRes = await fetch(`${API_BASE_URL}/boosted-events/razorpay-key`);
+        const keyData = await keyRes.json();
+        activeKeyId = keyData.success && keyData.data?.keyId ? keyData.data.keyId : null;
+      } catch (err) {
+        console.error("Failed to load dynamic Razorpay Key ID, falling back", err);
+      }
+
+      if (checkoutResult.razorpayOrder && activeKeyId) {
+        // Trigger real Razorpay checkout
+        const options = {
+          key: activeKeyId,
+          amount: checkoutResult.razorpayOrder.amount,
+          currency: checkoutResult.razorpayOrder.currency,
+          name: "BookMyTraining",
+          description: `Ticket Booking: ${program.title}`,
+          order_id: checkoutResult.razorpayOrder.id,
+          prefill: {
+            name: user?.name || "",
+            email: user?.email || "",
+            contact: user?.phone || "",
+          },
+          handler: async (response: any) => {
+            try {
+              setPaymentLoading(true);
+              const confirmResult = await confirmPayment(checkoutResult.booking.id, {
+                paymentMethod: "RAZORPAY",
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+
+              if (confirmResult.success) {
+                setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
+                setPaymentSuccess(true);
+                showAlert(
+                  "Booking Confirmed!",
+                  `Your ${spotsCount} seat${spotsCount > 1 ? "s" : ""} for "${program.title}" have been reserved. Check your email for details.`,
+                  "success"
+                );
+              } else {
+                showAlert("Payment Verification Failed", "We could not verify your payment signature.", "destructive");
+              }
+            } catch (err: any) {
+              showAlert("Payment Verification Error", err.message || "Failed to confirm booking.", "destructive");
+            } finally {
+              setPaymentLoading(false);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              setPaymentLoading(false);
+              showAlert("Payment Cancelled", "You closed the payment popup. No payment was charged.", "info");
+            }
+          },
+          theme: {
+            color: "#a0f212",
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
       } else {
-        showAlert("Payment Failed", "Could not confirm booking payment.", "destructive");
+        // Fall back to direct card checkout simulation
+        const confirmResult = await confirmPayment(checkoutResult.booking.id, {
+          paymentMethod: "CARD",
+        });
+        if (confirmResult.success) {
+          setProgram((prev) => prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - spotsCount) } : prev);
+          setPaymentSuccess(true);
+          showAlert(
+            "Booking Confirmed!",
+            `Your ${spotsCount} seat${spotsCount > 1 ? "s" : ""} for "${program.title}" have been reserved. (Simulated Payment)`,
+            "success"
+          );
+        } else {
+          showAlert("Payment Failed", "Could not confirm booking payment.", "destructive");
+        }
       }
     } catch (err: any) {
       showAlert("Checkout Error", err.message || "Failed to finalize booking.", "destructive");
-    } finally {
       setPaymentLoading(false);
     }
   };
@@ -278,9 +357,16 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
             {/* Header info */}
             <div className="space-y-3">
-              <span className="inline-block text-[10px] tracking-widest font-extrabold text-white bg-[#0b0c01] border border-[#a0f212]/20 px-3 py-1.5 rounded-full uppercase shadow-sm">
-                {program.category}
-              </span>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-block text-[10px] tracking-widest font-extrabold text-white bg-[#0b0c01] border border-[#a0f212]/20 px-3 py-1.5 rounded-full uppercase shadow-sm">
+                  {program.category}
+                </span>
+                {program.isBoosted && (
+                  <span className="inline-block text-[9px] tracking-widest font-black text-[#0b0c01] bg-[#a0f212] px-3.5 py-1.5 rounded-full uppercase shadow-[0_0_12px_rgba(160,242,18,0.3)] animate-pulse">
+                    ★ FEATURED SPOTLIGHT
+                  </span>
+                )}
+              </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
                 {program.title}
               </h1>

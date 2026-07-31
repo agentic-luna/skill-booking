@@ -22,11 +22,31 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
   ) {}
 
   async handle(command: VerifyBoostPaymentCommand): Promise<any> {
+    const dbBoost = await this.boostedRepo.findById(command.boostId);
+    if (!dbBoost) {
+      throw new NotFoundError('Boost request not found');
+    }
+
+    const now = new Date();
+    const startDate = new Date(dbBoost.startDate);
+    const endDate = new Date(dbBoost.endDate);
+
+    let initialStatus: 'ACTIVE' | 'APPROVED' | 'EXPIRED' = 'ACTIVE';
+    let isActive = true;
+
+    if (now < startDate) {
+      initialStatus = 'APPROVED';
+      isActive = false;
+    } else if (now > endDate) {
+      initialStatus = 'EXPIRED';
+      isActive = false;
+    }
+
     if (command.razorpaySignature === 'MOCK_SUCCESS') {
       // Bypass Razorpay config check and signature verification for testing
       const boost = await this.boostedRepo.update(command.boostId, {
-        status: 'ACTIVE',
-        isActive: true
+        status: initialStatus,
+        isActive
       } as any);
       return { success: true, boost };
     }
@@ -52,8 +72,8 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
 
     // Approve the boost
     const boost = await this.boostedRepo.update(command.boostId, {
-      status: 'ACTIVE',
-      isActive: true
+      status: initialStatus,
+      isActive
     } as any);
 
     return { success: true, boost };

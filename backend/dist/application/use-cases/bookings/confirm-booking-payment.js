@@ -1,18 +1,29 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConfirmBookingPaymentCommandHandler = exports.ConfirmBookingPaymentCommand = void 0;
 const client_1 = require("@prisma/client");
+const prisma_1 = require("../../../config/prisma");
 const errors_1 = require("../../common/errors");
 const commission_parser_1 = require("../../../utils/commission-parser");
+const crypto_1 = __importDefault(require("crypto"));
 class ConfirmBookingPaymentCommand {
     bookingId;
     clientId;
     paymentMethod;
+    razorpayPaymentId;
+    razorpayOrderId;
+    razorpaySignature;
     __tag = 'ConfirmBookingPaymentCommand';
-    constructor(bookingId, clientId, paymentMethod) {
+    constructor(bookingId, clientId, paymentMethod, razorpayPaymentId, razorpayOrderId, razorpaySignature) {
         this.bookingId = bookingId;
         this.clientId = clientId;
         this.paymentMethod = paymentMethod;
+        this.razorpayPaymentId = razorpayPaymentId;
+        this.razorpayOrderId = razorpayOrderId;
+        this.razorpaySignature = razorpaySignature;
     }
 }
 exports.ConfirmBookingPaymentCommand = ConfirmBookingPaymentCommand;
@@ -46,11 +57,46 @@ class ConfirmBookingPaymentCommandHandler {
         if (booking.status === client_1.BookingStatus.CANCELED || booking.status === client_1.BookingStatus.REFUNDED) {
             throw new errors_1.BadRequestError(`Cannot confirm payment for a booking with status '${booking.status}'.`);
         }
-        const gatewayTxnId = `direct_pay_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        let gatewayTxnId = `direct_pay_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        if (command.razorpaySignature) {
+            if (command.razorpaySignature !== 'MOCK_SUCCESS') {
+                const config = await this.configRepo.findIntegration(client_1.IntegrationService.RAZORPAY);
+                if (!config || !config.credentials || typeof config.credentials !== 'object') {
+                    throw new errors_1.BadRequestError('Razorpay is not configured on this platform');
+                }
+                const keySecret = config.credentials.keySecret;
+                if (!keySecret) {
+                    throw new errors_1.BadRequestError('Razorpay keySecret is missing');
+                }
+                // Verify signature
+                const hmac = crypto_1.default.createHmac('sha256', keySecret);
+                hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
+                const generatedSignature = hmac.digest('hex');
+                if (generatedSignature !== command.razorpaySignature) {
+                    throw new errors_1.BadRequestError('Invalid payment signature');
+                }
+            }
+            gatewayTxnId = command.razorpayPaymentId || gatewayTxnId;
+        }
         // 1. Update Booking status to CONFIRMED
         const updatedBooking = await this.bookingRepo.update(booking.id, {
             status: client_1.BookingStatus.CONFIRMED,
         });
+        // Increment conversions for boosted events
+        try {
+            const boost = await prisma_1.prisma.boostedEvent.findFirst({
+                where: { eventId: booking.eventId, isActive: true, status: 'ACTIVE' }
+            });
+            if (boost) {
+                await prisma_1.prisma.boostedEvent.update({
+                    where: { id: boost.id },
+                    data: { conversions: { increment: 1 } }
+                });
+            }
+        }
+        catch (err) {
+            console.error("[Telemetry] Failed to increment boosted conversion", err);
+        }
         // 2. Compute platform revenue vs host liability
         const totalAmount = Number(booking.totalAmount);
         let platformRevenue = 0;

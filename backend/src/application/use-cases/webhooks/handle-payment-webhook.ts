@@ -2,6 +2,7 @@ import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType, TriggerEven
 import { IBookingRepository } from '../../../domain/repositories/booking.repository';
 import { ILedgerRepository } from '../../../domain/repositories/ledger.repository';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
+import { prisma } from '../../../config/prisma';
 import { INotificationRepository } from '../../../domain/repositories/notification.repository';
 import { IQueueService } from '../../services/queue.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
@@ -45,6 +46,21 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
 
     // 1. Update Booking status to CONFIRMED
     await this.bookingRepo.update(booking.id, { status: BookingStatus.CONFIRMED });
+
+    // Increment conversions for boosted events
+    try {
+      const boost = await prisma.boostedEvent.findFirst({
+        where: { eventId: booking.eventId, isActive: true, status: 'ACTIVE' }
+      });
+      if (boost) {
+        await prisma.boostedEvent.update({
+          where: { id: boost.id },
+          data: { conversions: { increment: 1 } }
+        });
+      }
+    } catch (err) {
+      console.error("[Telemetry] Failed to increment boosted conversion in webhook", err);
+    }
 
     // 2. Platform revenue vs host liability
     const totalAmount = Number(booking.totalAmount);

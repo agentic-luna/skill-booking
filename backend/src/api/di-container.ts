@@ -96,6 +96,7 @@ import { SetupTwilioCommandHandler } from '../application/use-cases/integrations
 import { SetupSendgridCommandHandler } from '../application/use-cases/integrations/setup-sendgrid';
 import { SetupMetaWaCommandHandler } from '../application/use-cases/integrations/setup-meta-wa';
 import { SetupRazorpayCommandHandler } from '../application/use-cases/integrations/setup-razorpay';
+import { GetRazorpayPublicKeyQueryHandler } from '../application/use-cases/payments/get-razorpay-public-key';
 
 // 1. Initialize core logger & database repositories
 const logger = new WinstonLoggerService();
@@ -219,7 +220,13 @@ mediator.register('SetupTwilioCommand', new SetupTwilioCommandHandler(configRepo
 mediator.register('SetupSendgridCommand', new SetupSendgridCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupMetaWaCommand', new SetupMetaWaCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupRazorpayCommand', new SetupRazorpayCommandHandler(configRepo, cryptoService, cacheService));
-
+mediator.register(
+  'GetRazorpayPublicKeyQuery',
+  new GetRazorpayPublicKeyQueryHandler(
+    configRepo,
+    cryptoService
+  )
+);
 export { mediator, logger };
 export {
   userRepo,

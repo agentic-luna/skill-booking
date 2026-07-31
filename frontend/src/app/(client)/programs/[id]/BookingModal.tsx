@@ -131,8 +131,12 @@ export default function BookingModal(props: BookingModalProps) {
 
   const handleBack = () => store.setStep(Math.max(0, store.step - 1));
 
-  const handleRazorpayClick = () => {
-    store.setRazorpayAlert(true);
+  const handleRazorpayClick = async () => {
+    if (props.onConfirmBooking) {
+      await props.onConfirmBooking(store.qty);
+    } else {
+      store.setRazorpayAlert(true);
+    }
   };
 
   const handleFakePaymentApprove = async () => {

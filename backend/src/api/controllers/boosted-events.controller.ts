@@ -8,6 +8,7 @@ import { GetBoostRequestsQuery } from '../../application/use-cases/boosted-event
 import { VerifyBoostPaymentCommand } from '../../application/use-cases/boosted-events/verify-boost-payment';
 import { GetBoostPricingQuery } from '../../application/use-cases/boosted-events/get-boost-pricing';
 import { ApiResponse } from '../common/api-response';
+import { prisma } from '../../config/prisma';
 
 export class BoostedEventsController {
   static async getActiveBoostedEvents(req: Request, res: Response, next: NextFunction) {

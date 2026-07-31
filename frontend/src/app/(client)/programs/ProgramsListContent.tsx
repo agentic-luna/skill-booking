@@ -391,14 +391,15 @@ export default function ProgramsListContent() {
 
   // Sorting calculations
   const sortedPrograms = [...filteredPrograms].sort((a, b) => {
-    // Boost sorting priority: STANDARD and PRO boosted events go to the top
+    // Boost sorting priority: All active boosted events (BASIC, STANDARD, PRO) go to the top
     const now = new Date();
-    const isStandardOrProBoosted = (e: any) =>
+    const isEventBoosted = (e: any) =>
       e.boostedEvent?.isActive === true &&
-      ['STANDARD', 'PRO'].includes(e.boostedEvent?.tier) &&
+      e.boostedEvent?.status === 'ACTIVE' &&
+      ['BASIC', 'STANDARD', 'PRO'].includes(e.boostedEvent?.tier) &&
       new Date(e.boostedEvent?.endDate) >= now;
-    const aBoosted = isStandardOrProBoosted(a);
-    const bBoosted = isStandardOrProBoosted(b);
+    const aBoosted = isEventBoosted(a);
+    const bBoosted = isEventBoosted(b);
     
     if (aBoosted && !bBoosted) return -1;
     if (!aBoosted && bBoosted) return 1;
@@ -587,8 +588,15 @@ export default function ProgramsListContent() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                           {/* Premium Glass Badge */}
-                          <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-                            {prog.category || "General"}
+                          <div className="absolute top-4 left-4 flex gap-2 z-10">
+                            <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+                              {prog.category || "General"}
+                            </div>
+                            {prog.boostedEvent && prog.boostedEvent.isActive && prog.boostedEvent.status === "ACTIVE" && (
+                              <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse">
+                                <span>★</span> FEATURED
+                              </div>
+                            )}
                           </div>
 
                           {/* Scarcity Tension Badge */}
@@ -670,8 +678,15 @@ export default function ProgramsListContent() {
                               className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-                              {prog.category || "General"}
+                            <div className="absolute top-4 left-4 flex gap-2 z-10">
+                              <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+                                {prog.category || "General"}
+                              </div>
+                              {prog.boostedEvent && prog.boostedEvent.isActive && prog.boostedEvent.status === "ACTIVE" && (
+                                <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse">
+                                  <span>★</span> FEATURED
+                                </div>
+                              )}
                             </div>
 
                             {/* Scarcity Tension Badge */}

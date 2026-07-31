@@ -71,6 +71,12 @@ export class PrismaBoostedEventRepository implements IBoostedEventRepository {
     return items as any[];
   }
 
+  async findById(id: string): Promise<BoostedEvent | null> {
+    return prisma.boostedEvent.findUnique({
+      where: { id }
+    }) as any;
+  }
+
   async delete(eventId: string): Promise<boolean> {
     await prisma.boostedEvent.delete({
       where: { eventId },

@@ -99,6 +99,14 @@ class PrismaEventRepository {
         });
         if (!e)
             return null;
+        // Increment clicks for active boosted events
+        const bEvent = e.boostedEvent;
+        if (bEvent && bEvent.isActive && bEvent.status === 'ACTIVE') {
+            prisma_1.prisma.boostedEvent.update({
+                where: { id: bEvent.id },
+                data: { clicks: { increment: 1 } }
+            }).catch(err => console.error("[Telemetry] Failed to increment clicks", err));
+        }
         const mapped = mapEvent(e);
         const stats = await getHostRatingAndReviewsCount(e.hostId);
         mapped.rating = stats.rating;
@@ -133,14 +141,28 @@ class PrismaEventRepository {
                 },
                 {
                     keywords: {
-                        hasSome: [searchTerm],
+                        hasSome: [
+                            searchTerm,
+                            searchTerm.toLowerCase(),
+                            searchTerm.toUpperCase(),
+                            searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase(),
+                        ],
                     },
                 },
             ];
         }
         if (filters.keywords && filters.keywords.length > 0) {
+            const searchKeywords = filters.keywords.reduce((acc, kw) => {
+                acc.push(kw);
+                acc.push(kw.toLowerCase());
+                acc.push(kw.toUpperCase());
+                const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1).toLowerCase();
+                if (!acc.includes(capitalized))
+                    acc.push(capitalized);
+                return acc;
+            }, []);
             where.keywords = {
-                hasSome: filters.keywords,
+                hasSome: searchKeywords,
             };
         }
         if (filters.mode) {
@@ -213,12 +235,31 @@ class PrismaEventRepository {
             },
             orderBy,
         });
+        // Increment impressions for active boosted events
+        const activeBoostedIds = events
+            .filter(e => {
+            const b = e.boostedEvent;
+            return b !== null && b !== undefined && b.isActive && b.status === 'ACTIVE';
+        })
+            .map(e => e.boostedEvent.id);
+        if (activeBoostedIds.length > 0) {
+            prisma_1.prisma.boostedEvent.updateMany({
+                where: { id: { in: activeBoostedIds } },
+                data: { impressions: { increment: 1 } }
+            }).catch(err => console.error("[Telemetry] Failed to increment impressions", err));
+        }
         const mappedEvents = events.map(mapEvent);
         for (const me of mappedEvents) {
             const stats = await getHostRatingAndReviewsCount(me.hostId);
             me.rating = stats.rating;
             me.reviewsCount = stats.reviewsCount;
         }
+        // Sort active boosted events to the top ("Top Event Listings")
+        mappedEvents.sort((a, b) => {
+            const aBoosted = a.boostedEvent && a.boostedEvent.isActive && a.boostedEvent.status === 'ACTIVE' ? 1 : 0;
+            const bBoosted = b.boostedEvent && b.boostedEvent.isActive && b.boostedEvent.status === 'ACTIVE' ? 1 : 0;
+            return bBoosted - aBoosted;
+        });
         return mappedEvents;
     }
     async create(data) {

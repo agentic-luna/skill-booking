@@ -13,6 +13,7 @@ export interface IBoostedEventRepository {
   findActiveBoostedEvents(): Promise<BoostedEvent[]>;
   update(id: string, data: any): Promise<BoostedEvent>;
   findAllBoostRequests(): Promise<BoostedEvent[]>;
+  findById(id: string): Promise<BoostedEvent | null>;
 
   delete(eventId: string): Promise<boolean>;
 }

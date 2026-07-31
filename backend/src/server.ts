@@ -2,7 +2,7 @@ import http from 'http';
 import app from './app';
 import { env } from './config/environment';
 import { prisma } from './config/prisma';
-import { seedSuperadmin } from './config/seed';
+import { seedSuperadmin, seedBoostPricing } from './config/seed';
 import { initSocket } from './config/socket';
 import { commsService, logger } from './api/di-container';
 
@@ -25,6 +25,9 @@ const startServer = async () => {
 
     // Seed Superadmin user
     await seedSuperadmin();
+
+    // Seed default boost pricing plans
+    await seedBoostPricing();
 
     // Initialize notification worker queue listener with Clean Architecture dependency injection
     logger.info('[BullMQ] Starting background notification worker...');
