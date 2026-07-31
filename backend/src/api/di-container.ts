@@ -60,6 +60,7 @@ import { CheckoutCommandHandler } from '../application/use-cases/bookings/checko
 import { CancelBookingCommandHandler } from '../application/use-cases/bookings/cancel-booking';
 import { GetMyBookingsQueryHandler } from '../application/use-cases/bookings/get-my-bookings';
 import { ConfirmBookingPaymentCommandHandler } from '../application/use-cases/bookings/confirm-booking-payment';
+import { GetCancellationQuoteQueryHandler } from '../application/use-cases/bookings/get-cancellation-quote';
 
 import { HandlePaymentWebhookCommandHandler } from '../application/use-cases/webhooks/handle-payment-webhook';
 
@@ -79,6 +80,7 @@ import { MarkNotificationReadCommandHandler } from '../application/use-cases/not
 import { CreateEventReviewCommandHandler } from '../application/use-cases/reviews/create-review';
 import { GetEventReviewsQueryHandler } from '../application/use-cases/reviews/get-reviews';
 import { GetHostReviewsQueryHandler } from '../application/use-cases/reviews/get-host-reviews';
+import { GetMyReviewForEventQueryHandler } from '../application/use-cases/reviews/get-my-review';
 
 import { AddToWishlistCommandHandler, RemoveFromWishlistCommandHandler, GetUserWishlistQueryHandler } from '../application/use-cases/wishlist/manage-wishlist';
 import { ToggleEventLikeCommandHandler, GetUserLikedEventsQueryHandler } from '../application/use-cases/likes/manage-event-likes';
@@ -168,6 +170,7 @@ mediator.register('CheckoutCommand', new CheckoutCommandHandler(eventRepo, booki
 mediator.register('CancelBookingCommand', new CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
 mediator.register('GetMyBookingsQuery', new GetMyBookingsQueryHandler(bookingRepo));
 mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
+mediator.register('GetCancellationQuoteQuery', new GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
@@ -193,6 +196,7 @@ mediator.register('MarkNotificationReadCommand', new MarkNotificationReadCommand
 mediator.register('CreateEventReviewCommand', new CreateEventReviewCommandHandler(reviewRepo, bookingRepo, eventRepo, userRepo));
 mediator.register('GetEventReviewsQuery', new GetEventReviewsQueryHandler(reviewRepo, eventRepo));
 mediator.register('GetHostReviewsQuery', new GetHostReviewsQueryHandler(reviewRepo));
+mediator.register('GetMyReviewForEventQuery', new GetMyReviewForEventQueryHandler(reviewRepo));
 
 // 12. Register Wishlist & Likes handlers
 mediator.register('AddToWishlistCommand', new AddToWishlistCommandHandler(wishlistRepo, eventRepo));

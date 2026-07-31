@@ -9,7 +9,7 @@ import type { ClientBooking } from "@/features/client/api/types";
 interface BookingTabsProps {
   activeBookings: ClientBooking[];
   pastBookings: ClientBooking[];
-  onCancel: (id: string) => void;
+  onCancel: (booking: any) => void;
   onWriteReview: (booking: ClientBooking) => void;
 }
 

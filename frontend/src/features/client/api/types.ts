@@ -2,7 +2,7 @@
 
 export type EventMode = "ONLINE" | "OFFLINE";
 export type EventStatus = "PENDING" | "APPROVED" | "CANCELED";
-export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "REFUNDED";
+export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELED" | "CANCELLED" | "COMPLETED" | "REFUNDED";
 
 export interface HostUserDetail {
   firstName: string;
@@ -85,6 +85,13 @@ export interface ClientBooking {
   status: BookingStatus;
   createdAt: string;
   event: ClientEvent;
+  refundRequest?: {
+    id: string;
+    reason: string | null;
+    status: "PENDING" | "APPROVED" | "DECLINED";
+    refundAmount: number;
+    refundPercentage: number;
+  } | null;
 }
 
 export interface CheckoutPayload {

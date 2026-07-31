@@ -39,6 +39,16 @@ router.post(
   BookingsController.confirmPayment as any
 );
 
+router.get(
+  '/:bookingId/cancellation-quote',
+  requirePermission(SystemPermissions.CLIENT_BOOKINGS_CANCEL_OWN) as any,
+  requireResourceOwner(async (req) => {
+    const booking = await bookingRepo.findById(req.params.bookingId);
+    return booking?.clientId;
+  }) as any,
+  BookingsController.cancellationQuote as any
+);
+
 router.post(
   '/:bookingId/cancel',
   requirePermission(SystemPermissions.CLIENT_BOOKINGS_CANCEL_OWN) as any,

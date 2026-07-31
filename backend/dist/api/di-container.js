@@ -54,6 +54,7 @@ const checkout_1 = require("../application/use-cases/bookings/checkout");
 const cancel_booking_1 = require("../application/use-cases/bookings/cancel-booking");
 const get_my_bookings_1 = require("../application/use-cases/bookings/get-my-bookings");
 const confirm_booking_payment_1 = require("../application/use-cases/bookings/confirm-booking-payment");
+const get_cancellation_quote_1 = require("../application/use-cases/bookings/get-cancellation-quote");
 const handle_payment_webhook_1 = require("../application/use-cases/webhooks/handle-payment-webhook");
 const get_configs_1 = require("../application/use-cases/admin/get-configs");
 const update_config_1 = require("../application/use-cases/admin/update-config");
@@ -69,6 +70,7 @@ const mark_notification_read_1 = require("../application/use-cases/notifications
 const create_review_1 = require("../application/use-cases/reviews/create-review");
 const get_reviews_1 = require("../application/use-cases/reviews/get-reviews");
 const get_host_reviews_1 = require("../application/use-cases/reviews/get-host-reviews");
+const get_my_review_1 = require("../application/use-cases/reviews/get-my-review");
 const manage_wishlist_1 = require("../application/use-cases/wishlist/manage-wishlist");
 const manage_event_likes_1 = require("../application/use-cases/likes/manage-event-likes");
 const boost_event_1 = require("../application/use-cases/boosted-events/boost-event");
@@ -163,6 +165,7 @@ mediator.register('CheckoutCommand', new checkout_1.CheckoutCommandHandler(event
 mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
 mediator.register('GetMyBookingsQuery', new get_my_bookings_1.GetMyBookingsQueryHandler(bookingRepo));
 mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
+mediator.register('GetCancellationQuoteQuery', new get_cancellation_quote_1.GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
 // 9. Register Admin handlers
@@ -184,6 +187,7 @@ mediator.register('MarkNotificationReadCommand', new mark_notification_read_1.Ma
 mediator.register('CreateEventReviewCommand', new create_review_1.CreateEventReviewCommandHandler(reviewRepo, bookingRepo, eventRepo, userRepo));
 mediator.register('GetEventReviewsQuery', new get_reviews_1.GetEventReviewsQueryHandler(reviewRepo, eventRepo));
 mediator.register('GetHostReviewsQuery', new get_host_reviews_1.GetHostReviewsQueryHandler(reviewRepo));
+mediator.register('GetMyReviewForEventQuery', new get_my_review_1.GetMyReviewForEventQueryHandler(reviewRepo));
 // 12. Register Wishlist & Likes handlers
 mediator.register('AddToWishlistCommand', new manage_wishlist_1.AddToWishlistCommandHandler(wishlistRepo, eventRepo));
 mediator.register('RemoveFromWishlistCommand', new manage_wishlist_1.RemoveFromWishlistCommandHandler(wishlistRepo));

@@ -5,11 +5,13 @@ class GetHostReviewsQuery {
     hostId;
     page;
     limit;
+    rating;
     __tag = 'GetHostReviewsQuery';
-    constructor(hostId, page = 1, limit = 5) {
+    constructor(hostId, page = 1, limit = 5, rating) {
         this.hostId = hostId;
         this.page = page;
         this.limit = limit;
+        this.rating = rating;
     }
 }
 exports.GetHostReviewsQuery = GetHostReviewsQuery;
@@ -19,8 +21,8 @@ class GetHostReviewsQueryHandler {
         this.reviewRepo = reviewRepo;
     }
     async handle(query) {
-        const { hostId, page, limit } = query;
-        const result = await this.reviewRepo.findByHostId(hostId, page, limit);
+        const { hostId, page, limit, rating } = query;
+        const result = await this.reviewRepo.findByHostId(hostId, page, limit, rating);
         const stats = await this.reviewRepo.findAverageRatingForHost(hostId);
         return {
             reviews: result.reviews,
@@ -28,6 +30,7 @@ class GetHostReviewsQueryHandler {
             stats: {
                 averageRating: stats.averageRating,
                 totalReviews: stats.totalReviews,
+                breakdown: stats.breakdown,
             },
         };
     }

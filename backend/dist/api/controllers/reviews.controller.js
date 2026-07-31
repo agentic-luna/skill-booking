@@ -5,6 +5,7 @@ const di_container_1 = require("../di-container");
 const create_review_1 = require("../../application/use-cases/reviews/create-review");
 const get_reviews_1 = require("../../application/use-cases/reviews/get-reviews");
 const get_host_reviews_1 = require("../../application/use-cases/reviews/get-host-reviews");
+const get_my_review_1 = require("../../application/use-cases/reviews/get-my-review");
 const api_response_1 = require("../common/api-response");
 class ReviewsController {
     static async createReview(req, res, next) {
@@ -37,7 +38,18 @@ class ReviewsController {
             const { hostId } = req.params;
             const page = Number(req.query.page) || 1;
             const limit = Number(req.query.limit) || 5;
-            const result = await di_container_1.mediator.send(new get_host_reviews_1.GetHostReviewsQuery(hostId, page, limit));
+            const rating = req.query.rating ? Number(req.query.rating) : undefined;
+            const result = await di_container_1.mediator.send(new get_host_reviews_1.GetHostReviewsQuery(hostId, page, limit, rating));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getMyReviewForEvent(req, res, next) {
+        try {
+            const { eventId } = req.params;
+            const result = await di_container_1.mediator.send(new get_my_review_1.GetMyReviewForEventQuery(req.user.id, eventId));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

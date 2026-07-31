@@ -7,13 +7,15 @@ import { IPaymentGatewayProvider } from '../../../infrastructure/services/provid
 import { NotFoundError, ForbiddenError, BadRequestError } from '../../common/errors';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { ICacheService } from '../../services/cache.service';
+import { prisma } from '../../../config/prisma';
 
 export class CancelBookingCommand implements IRequest<any> {
   readonly __tag = 'CancelBookingCommand';
   constructor(
     public readonly bookingId: string,
     public readonly userId: string,
-    public readonly role: string
+    public readonly role: string,
+    public readonly reason?: string
   ) {}
 }
 
@@ -28,7 +30,7 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
   ) {}
 
   async handle(command: CancelBookingCommand): Promise<any> {
-    const { bookingId, userId, role } = command;
+    const { bookingId, userId, role, reason } = command;
 
     const booking = await this.bookingRepo.findById(bookingId);
     if (!booking) {
@@ -44,19 +46,21 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
     }
 
     const event = booking.event;
+    const now = new Date();
+    const eventStartTime = new Date(event.startTime);
+    const hoursDiff = (eventStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (event.status === 'COMPLETED' || event.status === 'CANCELED' || hoursDiff <= 0) {
+      throw new BadRequestError('This event has already started, completed, or been canceled, so this booking cannot be canceled.');
+    }
+
     const totalAmount = Number(booking.totalAmount);
 
     // Fetch refund matrix setting
     const setting = await this.configRepo.findPlatformSetting('refund_matrix');
 
     let refundPercentage = 100;
-    const now = new Date();
-    const eventStartTime = new Date(event.startTime);
-    const hoursDiff = (eventStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    if (hoursDiff <= 0) {
-      refundPercentage = 0; // Event started
-    } else if (setting && setting.value) {
+    if (setting && setting.value) {
       const matrix = setting.value as Array<{ hoursBefore: number; refundPercentage: number }>;
       if (Array.isArray(matrix)) {
         const sorted = [...matrix].sort((a, b) => b.hoursBefore - a.hoursBefore);
@@ -70,49 +74,19 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
     // Replenish seats
     await this.eventRepo.incrementSeats(event.id, booking.seatCount);
 
-    const updatedStatus = refundAmount > 0 ? BookingStatus.REFUNDED : BookingStatus.CANCELED;
-    const updatedBooking = await this.bookingRepo.update(bookingId, { status: updatedStatus });
+    // Always update status to CANCELED (actual refund happens on Super Admin approval)
+    const updatedBooking = await this.bookingRepo.update(bookingId, { status: BookingStatus.CANCELED });
 
-    // Handle ledger refund logs and trigger payment gateway refund
-    const ledgers = await this.ledgerRepo.findMany({
-      bookingId,
-      type: LedgerTxnType.PAYMENT_CAPTURE,
-    });
-
-    const paymentLedger = ledgers.find((l) => l.status === LedgerStatus.HELD);
-
-    if (paymentLedger && refundAmount > 0) {
-      // Trigger payment gateway refund
-      const refundResult = await this.paymentGateway.initiateRefund(
-        paymentLedger.gatewayTxnId,
-        refundAmount,
-        { bookingId, bookingRef: booking.bookingRef }
-      );
-
-      const commissionPct =
-        event.commission?.commissionType === CommissionType.PERCENTAGE
-          ? Number(event.commission.platformValue) / 100
-          : 0.1; // Default 10%
-
-      const lostHostLiability = refundAmount * (1 - commissionPct);
-      const lostPlatformRevenue = refundAmount * commissionPct;
-
-      // Register REFUND ledger log
-      await this.ledgerRepo.create({
+    // Create a RefundRequest record
+    const refundRequest = await prisma.refundRequest.create({
+      data: {
         bookingId,
-        gatewayTxnId: refundResult.refundId,
-        type: LedgerTxnType.REFUND,
-        amountCaptured: -refundAmount,
-        platformRevenue: -lostPlatformRevenue,
-        hostLiability: -lostHostLiability,
-        status: LedgerStatus.REFUNDED_TO_CLIENT,
-      });
-
-      // Update payment ledger status
-      await this.ledgerRepo.update(paymentLedger.id, {
-        status: LedgerStatus.REFUNDED_TO_CLIENT,
-      });
-    }
+        reason: reason || 'Client cancellation request',
+        refundAmount,
+        refundPercentage,
+        status: refundAmount > 0 ? 'PENDING' : 'APPROVED',
+      },
+    });
 
     // Clear search cache when seats count or booking status changes
     await this.cacheService.delPattern('events:search:*');
@@ -121,6 +95,7 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
       booking: updatedBooking,
       refundAmount,
       refundPercentage,
+      refundRequest,
     };
   }
 }

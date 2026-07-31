@@ -71,10 +71,19 @@ export const confirmPayment = (bookingId: string, payload: ConfirmPaymentPayload
     body: JSON.stringify(payload),
   }).then(r => r.data);
 
-export const cancelBooking = (bookingId: string) =>
-  request<ApiData<CancelBookingResult>>(`/bookings/${bookingId}/cancel`, {
+export const cancelBooking = (bookingId: string, reason?: string) =>
+  request<ApiData<any>>(`/bookings/${bookingId}/cancel`, {
     method: "POST",
+    body: JSON.stringify({ reason }),
   }).then(r => r.data);
+
+export const getCancellationQuote = (bookingId: string) =>
+  request<ApiData<{
+    totalAmount: number;
+    refundPercentage: number;
+    refundAmount: number;
+    hoursDiff: number;
+  }>>(`/bookings/${bookingId}/cancellation-quote`).then(r => r.data);
 
 // ── Reviews ───────────────────────────────────────────────────────────────
 
@@ -87,8 +96,13 @@ export const submitReview = (payload: SubmitReviewPayload) =>
 export const getEventReviews = (eventId: string) =>
   request<ApiData<{ reviews: EventReview[]; stats: any }>>(`/reviews/event/${eventId}`).then(r => r.data);
 
-export const getHostReviews = (hostId: string, page = 1, limit = 5) =>
-  request<ApiData<{ reviews: EventReview[]; total: number; stats: any }>>(`/reviews/host/${hostId}?page=${page}&limit=${limit}`).then(r => r.data);
+export const getHostReviews = (hostId: string, page = 1, limit = 5, rating?: number) =>
+  request<ApiData<{ reviews: EventReview[]; total: number; stats: any }>>(
+    `/reviews/host/${hostId}?page=${page}&limit=${limit}${rating !== undefined ? `&rating=${rating}` : ""}`
+  ).then(r => r.data);
+
+export const getMyReviewForEvent = (eventId: string) =>
+  request<ApiData<{ review: EventReview | null }>>(`/reviews/my-review/${eventId}`).then(r => r.data);
 
 // ── Notifications ─────────────────────────────────────────────────────────
 

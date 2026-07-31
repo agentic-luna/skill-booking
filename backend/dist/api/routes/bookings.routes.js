@@ -23,6 +23,10 @@ router.post('/:bookingId/confirm-payment', (0, authorize_1.requirePermission)(sy
     const booking = await di_container_1.bookingRepo.findById(req.params.bookingId);
     return booking?.clientId;
 }), bookings_controller_1.BookingsController.confirmPayment);
+router.get('/:bookingId/cancellation-quote', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_CANCEL_OWN), (0, authorize_1.requireResourceOwner)(async (req) => {
+    const booking = await di_container_1.bookingRepo.findById(req.params.bookingId);
+    return booking?.clientId;
+}), bookings_controller_1.BookingsController.cancellationQuote);
 router.post('/:bookingId/cancel', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_BOOKINGS_CANCEL_OWN), (0, authorize_1.requireResourceOwner)(async (req) => {
     const booking = await di_container_1.bookingRepo.findById(req.params.bookingId);
     return booking?.clientId;

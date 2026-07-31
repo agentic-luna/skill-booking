@@ -30,8 +30,14 @@ class PrismaBookingRepository {
                 event: {
                     include: {
                         commission: true,
+                        host: {
+                            include: {
+                                user: true,
+                            },
+                        },
                     },
                 },
+                refundRequest: true,
             },
         });
         return mapBooking(b);
@@ -59,8 +65,17 @@ class PrismaBookingRepository {
         const list = await prisma_1.prisma.booking.findMany({
             where: filters,
             include: {
-                event: true,
+                event: {
+                    include: {
+                        host: {
+                            include: {
+                                user: true,
+                            },
+                        },
+                    },
+                },
                 client: true,
+                refundRequest: true,
             },
             orderBy: { createdAt: 'desc' },
         });

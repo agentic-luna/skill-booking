@@ -49,13 +49,24 @@ export class CreateEventReviewCommandHandler implements IRequestHandler<CreateEv
       throw new ForbiddenError('Only attended clients with a confirmed booking can review this event.');
     }
 
-    const review = await this.reviewRepo.create({
-      eventId: data.eventId,
-      bookingId: data.bookingId || bookings[0].id,
-      clientId,
-      rating: Number(data.rating),
-      comment: data.comment || null,
-    });
+    const existingReview = await this.reviewRepo.findUnique(clientId, data.eventId);
+
+    let review;
+    if (existingReview) {
+      review = await this.reviewRepo.update(
+        existingReview.id,
+        Number(data.rating),
+        data.comment || null
+      );
+    } else {
+      review = await this.reviewRepo.create({
+        eventId: data.eventId,
+        bookingId: data.bookingId || bookings[0].id,
+        clientId,
+        rating: Number(data.rating),
+        comment: data.comment || null,
+      });
+    }
 
     // Recalculate event average rating
     const eventStats = await this.reviewRepo.findAverageRatingForEvent(data.eventId);

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Mail, CheckCircle2, MessageSquare,
-  TicketCheck, Calendar, Clock, User, ShieldCheck, Loader2
+  TicketCheck, Calendar, Clock, User, ShieldCheck, Loader2, AlertTriangle
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,7 +21,13 @@ interface StudentRosterItem {
   spots: number;
   paid: number;
   date: string;
-  status: "confirmed" | "completed" | "cancelled" | "refunded" | "initiated";
+  status: "confirmed" | "completed" | "canceled" | "refunded" | "initiated";
+  refundRequest?: {
+    reason: string | null;
+    status: "PENDING" | "APPROVED" | "DECLINED";
+    refundAmount: number;
+    refundPercentage: number;
+  } | null;
 }
 
 export default function ParticipantDetailPage() {
@@ -85,6 +91,12 @@ export default function ParticipantDetailPage() {
       paid: Number(b.totalAmount),
       date: new Date(b.createdAt).toLocaleDateString(),
       status: b.status.toLowerCase() as any,
+      refundRequest: b.refundRequest ? {
+        reason: b.refundRequest.reason,
+        status: b.refundRequest.status,
+        refundAmount: Number(b.refundRequest.refundAmount),
+        refundPercentage: Number(b.refundRequest.refundPercentage),
+      } : null
     };
   });
 
@@ -245,6 +257,97 @@ export default function ParticipantDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Cancelled / Refunded Registrations */}
+      {(() => {
+        const cancelledStudents = students.filter(
+          (s) => s.status === "canceled" || s.status === "refunded"
+        );
+        return (
+          <div className="space-y-4 pt-6 border-t border-border/30">
+            <div className="flex items-center space-x-2 text-sm font-bold text-muted-foreground uppercase tracking-wide">
+              <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+              <span>Cancelled & Refunded Registrations ({cancelledStudents.length})</span>
+            </div>
+
+            {cancelledStudents.length > 0 ? (
+              <div className="overflow-hidden rounded-2xl border border-border/30 bg-card shadow-2xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-muted/40 border-b border-border/30 font-bold text-muted-foreground">
+                        <th className="p-4">Participant</th>
+                        <th className="p-4">Tickets</th>
+                        <th className="p-4">Paid Amount</th>
+                        <th className="p-4">Cancellation Reason</th>
+                        <th className="p-4">Refund Estimation</th>
+                        <th className="p-4">Refund Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/20">
+                      {cancelledStudents.map((student) => {
+                        const req = student.refundRequest;
+                        return (
+                          <tr key={student.id} className="hover:bg-muted/15 transition-colors">
+                            <td className="p-4">
+                              <div className="font-bold text-foreground">{student.name}</div>
+                              <div className="text-[10px] text-muted-foreground">{student.email}</div>
+                            </td>
+                            <td className="p-4 font-semibold text-muted-foreground">
+                              {student.spots} spot{student.spots > 1 ? "s" : ""}
+                            </td>
+                            <td className="p-4 font-bold text-foreground font-mono">
+                              ₹{student.paid}
+                            </td>
+                            <td className="p-4 text-muted-foreground italic max-w-[200px] truncate" title={req?.reason || "No reason provided"}>
+                              "{req?.reason || "No reason provided"}"
+                            </td>
+                            <td className="p-4">
+                              {req ? (
+                                <div className="space-y-0.5">
+                                  <span className="font-bold text-foreground font-mono">₹{req.refundAmount.toFixed(2)}</span>
+                                  <span className="text-[10px] text-muted-foreground block">({req.refundPercentage}% refund)</span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground italic">No refund requested</span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              {req ? (
+                                (() => {
+                                  let badgeStyle = "bg-amber-500/10 text-amber-700 border-amber-500/25";
+                                  if (req.status === "APPROVED") {
+                                    badgeStyle = "bg-emerald-500/10 text-emerald-700 border-emerald-500/25";
+                                  } else if (req.status === "DECLINED") {
+                                    badgeStyle = "bg-rose-500/10 text-rose-700 border-rose-500/25";
+                                  }
+                                  return (
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${badgeStyle}`}>
+                                      {req.status === "PENDING" ? "Pending Admin Approval" : req.status}
+                                    </span>
+                                  );
+                                })()
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full border border-border bg-muted/20 text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
+                                  Cancelled
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 bg-card rounded-2xl border border-border/40 text-center space-y-2">
+                <span className="text-xs text-muted-foreground italic">No cancelled bookings for this workshop.</span>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

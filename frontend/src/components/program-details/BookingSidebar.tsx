@@ -31,6 +31,39 @@ export default function BookingSidebar({
     program.status?.toLowerCase() === "canceled" ||
     (program.startTime ? new Date(program.startTime) < new Date() : false);
 
+  const getFormattedDate = () => {
+    if (!program.startTime) return program.date;
+    try {
+      const startDate = new Date(program.startTime);
+      const startFormatted = startDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+
+      if (program.date.includes(" to ")) {
+        const parts = program.date.split(" to ");
+        const endDateStr = parts[1];
+        if (endDateStr) {
+          const endDate = new Date(endDateStr);
+          if (!isNaN(endDate.getTime())) {
+            const endFormatted = endDate.toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            });
+            return `${startFormatted} to ${endFormatted}`;
+          }
+        }
+      }
+      return startFormatted;
+    } catch (e) {
+      return program.date;
+    }
+  };
+
   return (
     <div className="sticky top-24 bg-card border border-border/40 rounded-2xl p-6 shadow-md space-y-6">
       <div className="flex justify-between items-end border-b pb-4">
@@ -132,7 +165,7 @@ export default function BookingSidebar({
           <Calendar className="h-4.5 w-4.5 text-foreground mr-3 shrink-0" />
           <div>
             <div className="font-bold text-foreground">Date</div>
-            <div>{program.date}</div>
+            <div>{getFormattedDate()}</div>
           </div>
         </div>
         <div className="flex items-center">

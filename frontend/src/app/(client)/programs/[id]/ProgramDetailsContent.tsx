@@ -54,10 +54,12 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     removeFromWishlist,
     reviews,
     reviewsTotalCount,
+    reviewsStats,
     fetchHostReviews
   } = useClientStore();
 
   const [reviewsPage, setReviewsPage] = useState(1);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,9 +73,9 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
   useEffect(() => {
     if (program?.hostId && program.hostId !== "preview") {
-      fetchHostReviews(program.hostId, reviewsPage, 5);
+      fetchHostReviews(program.hostId, reviewsPage, 5, selectedRating || undefined);
     }
-  }, [program?.hostId, reviewsPage, fetchHostReviews]);
+  }, [program?.hostId, reviewsPage, selectedRating, fetchHostReviews]);
 
   useEffect(() => {
     if (programId === "preview") {
@@ -333,6 +335,9 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               reviewsTotalCount={reviewsTotalCount}
               reviewsPage={reviewsPage}
               setReviewsPage={setReviewsPage}
+              reviewsStats={reviewsStats}
+              selectedRating={selectedRating}
+              setSelectedRating={setSelectedRating}
             />
           </div>
 

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminController = void 0;
 const prisma_1 = require("../../config/prisma");
 const di_container_1 = require("../di-container");
+const client_1 = require("@prisma/client");
 const get_configs_1 = require("../../application/use-cases/admin/get-configs");
 const update_config_1 = require("../../application/use-cases/admin/update-config");
 const get_templates_1 = require("../../application/use-cases/admin/get-templates");
@@ -243,10 +244,57 @@ class AdminController {
             const { id } = req.params;
             const refundRequest = await prisma_1.prisma.refundRequest.findUnique({
                 where: { id },
-                include: { booking: true },
+                include: {
+                    booking: {
+                        include: {
+                            event: {
+                                include: {
+                                    commission: true,
+                                },
+                            },
+                        },
+                    },
+                },
             });
             if (!refundRequest) {
                 throw new errors_1.BadRequestError('Refund request not found');
+            }
+            if (refundRequest.status === 'APPROVED') {
+                throw new errors_1.BadRequestError('Refund request is already approved.');
+            }
+            const booking = refundRequest.booking;
+            const event = booking.event;
+            const refundAmount = Number(refundRequest.refundAmount);
+            if (refundAmount > 0) {
+                // Trigger payment gateway refund
+                const ledgers = await di_container_1.ledgerRepo.findMany({
+                    bookingId: booking.id,
+                    type: client_1.LedgerTxnType.PAYMENT_CAPTURE,
+                });
+                const paymentLedger = ledgers.find((l) => l.status === client_1.LedgerStatus.HELD);
+                if (!paymentLedger) {
+                    throw new errors_1.BadRequestError('Held payment ledger record not found for this booking.');
+                }
+                const refundResult = await di_container_1.paymentGatewayProvider.initiateRefund(paymentLedger.gatewayTxnId, refundAmount, { bookingId: booking.id, bookingRef: booking.bookingRef });
+                const commissionPct = event.commission?.commissionType === client_1.CommissionType.PERCENTAGE
+                    ? Number(event.commission.platformValue) / 100
+                    : 0.1; // Default 10%
+                const lostHostLiability = refundAmount * (1 - commissionPct);
+                const lostPlatformRevenue = refundAmount * commissionPct;
+                // Register REFUND ledger log
+                await di_container_1.ledgerRepo.create({
+                    bookingId: booking.id,
+                    gatewayTxnId: refundResult.refundId,
+                    type: client_1.LedgerTxnType.REFUND,
+                    amountCaptured: -refundAmount,
+                    platformRevenue: -lostPlatformRevenue,
+                    hostLiability: -lostHostLiability,
+                    status: client_1.LedgerStatus.REFUNDED_TO_CLIENT,
+                });
+                // Update payment ledger status
+                await di_container_1.ledgerRepo.update(paymentLedger.id, {
+                    status: client_1.LedgerStatus.REFUNDED_TO_CLIENT,
+                });
             }
             const [updatedRequest, updatedBooking] = await prisma_1.prisma.$transaction([
                 prisma_1.prisma.refundRequest.update({
@@ -255,11 +303,7 @@ class AdminController {
                 }),
                 prisma_1.prisma.booking.update({
                     where: { id: refundRequest.bookingId },
-                    data: { status: 'REFUNDED' },
-                }),
-                prisma_1.prisma.transactionLedger.updateMany({
-                    where: { bookingId: refundRequest.bookingId },
-                    data: { status: 'REFUNDED_TO_CLIENT' },
+                    data: { status: client_1.BookingStatus.REFUNDED },
                 }),
             ]);
             return api_response_1.ApiResponse.success(res, {

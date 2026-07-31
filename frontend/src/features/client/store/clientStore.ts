@@ -17,6 +17,11 @@ interface ClientState {
   notifications: InAppNotification[];
   reviews: EventReview[];
   reviewsTotalCount: number;
+  reviewsStats: {
+    averageRating: number;
+    totalReviews: number;
+    breakdown?: Record<string, number>;
+  } | null;
 
   fetchEvents: (filters?: SearchEventsFilter) => Promise<void>;
   fetchEventDetails: (id: string) => Promise<ClientEvent>;
@@ -28,9 +33,16 @@ interface ClientState {
   fetchBookings: () => Promise<void>;
   checkoutBooking: (payload: CheckoutPayload) => Promise<CheckoutResult>;
   confirmPayment: (bookingId: string, payload: ConfirmPaymentPayload) => Promise<ConfirmPaymentResult>;
-  cancelBooking: (bookingId: string) => Promise<CancelBookingResult>;
+  cancelBooking: (bookingId: string, reason?: string) => Promise<any>;
+  getCancellationQuote: (bookingId: string) => Promise<{
+    totalAmount: number;
+    refundPercentage: number;
+    refundAmount: number;
+    hoursDiff: number;
+  }>;
   fetchReviews: (eventId: string) => Promise<void>;
-  fetchHostReviews: (hostId: string, page?: number, limit?: number) => Promise<void>;
+  fetchHostReviews: (hostId: string, page?: number, limit?: number, rating?: number) => Promise<void>;
+  fetchMyReviewForEvent: (eventId: string) => Promise<EventReview | null>;
   submitReview: (payload: SubmitReviewPayload) => Promise<EventReview>;
   fetchNotifications: () => Promise<void>;
   readNotification: (id: string) => Promise<void>;
@@ -63,6 +75,7 @@ export const useClientStore = create<ClientState>((set, get) => ({
   notifications: [],
   reviews: [],
   reviewsTotalCount: 0,
+  reviewsStats: null,
 
   fetchEvents: (filters) => withLoading(set, async () => {
     const events = await api.getEvents(filters);
@@ -111,9 +124,14 @@ export const useClientStore = create<ClientState>((set, get) => ({
     return result;
   }),
 
-  cancelBooking: (bookingId) => withLoading(set, async () => {
-    const result = await api.cancelBooking(bookingId);
+  cancelBooking: (bookingId, reason) => withLoading(set, async () => {
+    const result = await api.cancelBooking(bookingId, reason);
     await get().fetchBookings();
+    return result;
+  }),
+
+  getCancellationQuote: (bookingId) => withLoading(set, async () => {
+    const result = await api.getCancellationQuote(bookingId);
     return result;
   }),
 
@@ -122,12 +140,18 @@ export const useClientStore = create<ClientState>((set, get) => ({
     set({ reviews: result.reviews || [] });
   }),
 
-  fetchHostReviews: (hostId, page = 1, limit = 5) => withLoading(set, async () => {
-    const result = await api.getHostReviews(hostId, page, limit);
-    set({ 
-      reviews: result.reviews || [],
-      reviewsTotalCount: result.total || 0
-    });
+  fetchHostReviews: (hostId, page = 1, limit = 5, rating) => withLoading(set, async () => {
+     const result = await api.getHostReviews(hostId, page, limit, rating);
+     set({ 
+       reviews: result.reviews || [],
+       reviewsTotalCount: result.total || 0,
+       reviewsStats: result.stats || null
+     });
+   }),
+
+  fetchMyReviewForEvent: (eventId) => withLoading(set, async () => {
+    const result = await api.getMyReviewForEvent(eventId);
+    return result.review || null;
   }),
 
   submitReview: (payload) => withLoading(set, async () => {

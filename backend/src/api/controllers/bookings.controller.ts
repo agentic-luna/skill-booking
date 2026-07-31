@@ -4,6 +4,7 @@ import { prisma } from '../../config/prisma';
 import { mediator, ticketGenService } from '../di-container';
 import { CheckoutCommand } from '../../application/use-cases/bookings/checkout';
 import { CancelBookingCommand } from '../../application/use-cases/bookings/cancel-booking';
+import { GetCancellationQuoteQuery } from '../../application/use-cases/bookings/get-cancellation-quote';
 import { GetMyBookingsQuery } from '../../application/use-cases/bookings/get-my-bookings';
 import { ConfirmBookingPaymentCommand } from '../../application/use-cases/bookings/confirm-booking-payment';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -29,12 +30,28 @@ export class BookingsController {
   static async cancel(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { bookingId } = req.params;
+      const { reason } = req.body;
       const cancellation = await mediator.send(new CancelBookingCommand(
+        bookingId,
+        req.user!.id,
+        req.user!.role,
+        reason
+      ));
+      return ApiResponse.success(res, cancellation);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async cancellationQuote(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { bookingId } = req.params;
+      const result = await mediator.send(new GetCancellationQuoteQuery(
         bookingId,
         req.user!.id,
         req.user!.role
       ));
-      return ApiResponse.success(res, cancellation);
+      return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
     }

@@ -9,5 +9,6 @@ const router = Router();
 router.post('/', authenticate as any, requirePermission(SystemPermissions.CLIENT_REVIEWS_CREATE) as any, ReviewsController.createReview as any);
 router.get('/event/:eventId', ReviewsController.getEventReviews);
 router.get('/host/:hostId', ReviewsController.getHostReviews);
+router.get('/my-review/:eventId', authenticate as any, ReviewsController.getMyReviewForEvent as any);
 
 export default router;

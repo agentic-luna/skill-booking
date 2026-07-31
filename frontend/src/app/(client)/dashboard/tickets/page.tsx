@@ -24,7 +24,7 @@ export default function BookingsPage() {
 
   const { bookings, fetchBookings, cancelBooking, loading } = useClientStore();
 
-  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null);
+  const [cancellingBooking, setCancellingBooking] = useState<ClientBooking | null>(null);
   const [reviewingBooking, setReviewingBooking] = useState<ClientBooking | null>(null);
 
   useEffect(() => {
@@ -54,20 +54,25 @@ export default function BookingsPage() {
     );
   }
 
-  const handleConfirmCancel = async () => {
-    if (!cancellingBookingId) return;
+  const handleConfirmCancel = async (reason: string) => {
+    if (!cancellingBooking) return;
     try {
-      const result = await cancelBooking(cancellingBookingId);
-      if (result.success) {
+      const result = await cancelBooking(cancellingBooking.id, reason);
+      const refundAmt = result.refundAmount || 0;
+      if (refundAmt > 0) {
         showAlert(
-          "Booking Cancelled",
-          `Your reservation has been successfully cancelled. A dynamic refund of ₹${result.refundAmount || 0} was processed.`,
+          "Cancellation Requested",
+          `Your request has been submitted. A refund of ₹${refundAmt} (${result.refundPercentage}%) has been requested and is pending approval from the Super Admin.`,
           "success"
         );
       } else {
-        showAlert("Cancellation Issue", "We could not cancel this booking.", "warning");
+        showAlert(
+          "Booking Cancelled",
+          "Your reservation has been cancelled. No refund was applicable.",
+          "success"
+        );
       }
-      setCancellingBookingId(null);
+      setCancellingBooking(null);
     } catch (err: any) {
       showAlert("Cancellation Error", err.message || "Failed to cancel ticket booking.", "destructive");
     }
@@ -75,7 +80,7 @@ export default function BookingsPage() {
 
   const activeBookings = bookings.filter((b) => b.status === "CONFIRMED" || b.status === "PENDING");
   const pastBookings = bookings.filter((b) =>
-    ["COMPLETED", "CANCELLED", "REFUNDED"].includes(b.status)
+    ["COMPLETED", "CANCELLED", "CANCELED", "REFUNDED"].includes(b.status)
   );
 
   return (
@@ -92,15 +97,16 @@ export default function BookingsPage() {
           <BookingTabs
             activeBookings={activeBookings}
             pastBookings={pastBookings}
-            onCancel={setCancellingBookingId}
+            onCancel={setCancellingBooking}
             onWriteReview={setReviewingBooking}
           />
         </div>
       </main>
 
       <CancelDialog
-        open={cancellingBookingId !== null}
-        onClose={() => setCancellingBookingId(null)}
+        open={cancellingBooking !== null}
+        onClose={() => setCancellingBooking(null)}
+        booking={cancellingBooking}
         onConfirm={handleConfirmCancel}
       />
 

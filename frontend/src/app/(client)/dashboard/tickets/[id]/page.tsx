@@ -236,6 +236,24 @@ export default function SingleBookingDetailPage() {
               </div>
               <div className="flex items-center gap-3">
                 {getStatusBadge(booking.status)}
+                {booking.refundRequest && (
+                  (() => {
+                    let badgeStyle = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+                    let label = "Refund in Processing";
+                    if (booking.refundRequest.status === "APPROVED") {
+                      badgeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+                      label = `Refunded (₹${booking.refundRequest.refundAmount.toFixed(0)})`;
+                    } else if (booking.refundRequest.status === "DECLINED") {
+                      badgeStyle = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
+                      label = "Refund Declined";
+                    }
+                    return (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${badgeStyle}`} title={`Reason: ${booking.refundRequest.reason || 'None'}`}>
+                        {label}
+                      </span>
+                    );
+                  })()
+                )}
                 <span className="text-xs text-muted-foreground">
                   Booked on {new Date(booking.createdAt).toLocaleDateString()}
                 </span>

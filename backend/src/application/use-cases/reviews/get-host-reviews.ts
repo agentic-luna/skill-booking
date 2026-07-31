@@ -6,7 +6,8 @@ export class GetHostReviewsQuery implements IRequest<any> {
   constructor(
     public readonly hostId: string,
     public readonly page = 1,
-    public readonly limit = 5
+    public readonly limit = 5,
+    public readonly rating?: number
   ) {}
 }
 
@@ -14,8 +15,8 @@ export class GetHostReviewsQueryHandler implements IRequestHandler<GetHostReview
   constructor(private reviewRepo: IEventReviewRepository) {}
 
   async handle(query: GetHostReviewsQuery): Promise<any> {
-    const { hostId, page, limit } = query;
-    const result = await this.reviewRepo.findByHostId(hostId, page, limit);
+    const { hostId, page, limit, rating } = query;
+    const result = await this.reviewRepo.findByHostId(hostId, page, limit, rating);
     const stats = await this.reviewRepo.findAverageRatingForHost(hostId);
     return {
       reviews: result.reviews,
@@ -23,6 +24,7 @@ export class GetHostReviewsQueryHandler implements IRequestHandler<GetHostReview
       stats: {
         averageRating: stats.averageRating,
         totalReviews: stats.totalReviews,
+        breakdown: stats.breakdown,
       },
     };
   }

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/prisma';
-import { mediator, configRepo, cacheService, notificationRepo, eventRepo, logger, commsService } from '../di-container';
+import { mediator, configRepo, cacheService, notificationRepo, eventRepo, logger, commsService, paymentGatewayProvider, ledgerRepo } from '../di-container';
+import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType } from '@prisma/client';
 import { GetConfigsQuery } from '../../application/use-cases/admin/get-configs';
 import { UpdateConfigCommand } from '../../application/use-cases/admin/update-config';
 import { GetTemplatesQuery } from '../../application/use-cases/admin/get-templates';
@@ -271,10 +272,72 @@ export class AdminController {
       const { id } = req.params;
       const refundRequest = await prisma.refundRequest.findUnique({
         where: { id },
-        include: { booking: true },
+        include: {
+          booking: {
+            include: {
+              event: {
+                include: {
+                  commission: true,
+                },
+              },
+            },
+          },
+        },
       });
+
       if (!refundRequest) {
         throw new BadRequestError('Refund request not found');
+      }
+
+      if (refundRequest.status === 'APPROVED') {
+        throw new BadRequestError('Refund request is already approved.');
+      }
+
+      const booking = refundRequest.booking;
+      const event = booking.event;
+      const refundAmount = Number(refundRequest.refundAmount);
+
+      if (refundAmount > 0) {
+        // Trigger payment gateway refund
+        const ledgers = await ledgerRepo.findMany({
+          bookingId: booking.id,
+          type: LedgerTxnType.PAYMENT_CAPTURE,
+        });
+        const paymentLedger = ledgers.find((l) => l.status === LedgerStatus.HELD);
+
+        if (!paymentLedger) {
+          throw new BadRequestError('Held payment ledger record not found for this booking.');
+        }
+
+        const refundResult = await paymentGatewayProvider.initiateRefund(
+          paymentLedger.gatewayTxnId,
+          refundAmount,
+          { bookingId: booking.id, bookingRef: booking.bookingRef }
+        );
+
+        const commissionPct =
+          event.commission?.commissionType === CommissionType.PERCENTAGE
+            ? Number(event.commission.platformValue) / 100
+            : 0.1; // Default 10%
+
+        const lostHostLiability = refundAmount * (1 - commissionPct);
+        const lostPlatformRevenue = refundAmount * commissionPct;
+
+        // Register REFUND ledger log
+        await ledgerRepo.create({
+          bookingId: booking.id,
+          gatewayTxnId: refundResult.refundId,
+          type: LedgerTxnType.REFUND,
+          amountCaptured: -refundAmount,
+          platformRevenue: -lostPlatformRevenue,
+          hostLiability: -lostHostLiability,
+          status: LedgerStatus.REFUNDED_TO_CLIENT,
+        });
+
+        // Update payment ledger status
+        await ledgerRepo.update(paymentLedger.id, {
+          status: LedgerStatus.REFUNDED_TO_CLIENT,
+        });
       }
 
       const [updatedRequest, updatedBooking] = await prisma.$transaction([
@@ -284,11 +347,7 @@ export class AdminController {
         }),
         prisma.booking.update({
           where: { id: refundRequest.bookingId },
-          data: { status: 'REFUNDED' },
-        }),
-        prisma.transactionLedger.updateMany({
-          where: { bookingId: refundRequest.bookingId },
-          data: { status: 'REFUNDED_TO_CLIENT' },
+          data: { status: BookingStatus.REFUNDED },
         }),
       ]);
 

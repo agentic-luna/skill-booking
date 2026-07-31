@@ -31,8 +31,14 @@ export class PrismaBookingRepository implements IBookingRepository {
         event: {
           include: {
             commission: true,
+            host: {
+              include: {
+                user: true,
+              },
+            },
           },
         },
+        refundRequest: true,
       },
     });
     return mapBooking(b);
@@ -62,8 +68,17 @@ export class PrismaBookingRepository implements IBookingRepository {
     const list = await prisma.booking.findMany({
       where: filters,
       include: {
-        event: true,
+        event: {
+          include: {
+            host: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
         client: true,
+        refundRequest: true,
       },
       orderBy: { createdAt: 'desc' },
     });

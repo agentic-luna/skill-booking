@@ -237,6 +237,7 @@ export class UsersController {
         include: {
           client: true,
           event: true,
+          refundRequest: true,
         },
         orderBy: { createdAt: 'desc' },
       });

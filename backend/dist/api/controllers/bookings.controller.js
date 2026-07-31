@@ -5,6 +5,7 @@ const prisma_1 = require("../../config/prisma");
 const di_container_1 = require("../di-container");
 const checkout_1 = require("../../application/use-cases/bookings/checkout");
 const cancel_booking_1 = require("../../application/use-cases/bookings/cancel-booking");
+const get_cancellation_quote_1 = require("../../application/use-cases/bookings/get-cancellation-quote");
 const get_my_bookings_1 = require("../../application/use-cases/bookings/get-my-bookings");
 const confirm_booking_payment_1 = require("../../application/use-cases/bookings/confirm-booking-payment");
 const api_response_1 = require("../common/api-response");
@@ -23,8 +24,19 @@ class BookingsController {
     static async cancel(req, res, next) {
         try {
             const { bookingId } = req.params;
-            const cancellation = await di_container_1.mediator.send(new cancel_booking_1.CancelBookingCommand(bookingId, req.user.id, req.user.role));
+            const { reason } = req.body;
+            const cancellation = await di_container_1.mediator.send(new cancel_booking_1.CancelBookingCommand(bookingId, req.user.id, req.user.role, reason));
             return api_response_1.ApiResponse.success(res, cancellation);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async cancellationQuote(req, res, next) {
+        try {
+            const { bookingId } = req.params;
+            const result = await di_container_1.mediator.send(new get_cancellation_quote_1.GetCancellationQuoteQuery(bookingId, req.user.id, req.user.role));
+            return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
             next(error);
