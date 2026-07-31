@@ -14,11 +14,16 @@ export class WebhooksController {
    */
   static async handleRazorpayWebhook(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log('[Webhook] Incoming Razorpay Webhook Request received.');
+      console.log('[Webhook] Headers:', JSON.stringify(req.headers, null, 2));
+      console.log('[Webhook] Body:', JSON.stringify(req.body, null, 2));
+
       // --- Signature Verification ---
       const signature = req.headers['x-razorpay-signature'] as string | undefined;
 
       if (!signature) {
         logger.warn('[Webhook] Missing x-razorpay-signature header — rejecting request');
+        console.warn('[Webhook] Missing x-razorpay-signature header');
         return res.status(401).json({
           success: false,
           error: { message: 'Missing webhook signature header.' },
@@ -41,6 +46,7 @@ export class WebhooksController {
           event: req.body?.event,
           ip: req.ip,
         });
+        console.warn('[Webhook] Invalid Razorpay signature');
         return res.status(401).json({
           success: false,
           error: { message: 'Webhook signature verification failed.' },
@@ -49,6 +55,7 @@ export class WebhooksController {
 
       // --- Process Event ---
       logger.info('[Webhook] Received verified Razorpay event: ' + req.body?.event);
+      console.log('[Webhook] Razorpay Webhook Signature Verified Successfully. Event:', req.body?.event);
       const result = await mediator.send(new HandlePaymentWebhookCommand(req.body));
       return ApiResponse.success(res, result);
     } catch (error: any) {
