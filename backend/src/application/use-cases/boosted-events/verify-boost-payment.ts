@@ -1,5 +1,6 @@
 import { IBoostedEventRepository } from '../../../domain/repositories/boosted-event.repository';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
+import { ICryptoService } from '../../services/crypto.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { BadRequestError, NotFoundError } from '../../common/errors';
 import crypto from 'crypto';
@@ -18,7 +19,8 @@ export class VerifyBoostPaymentCommand implements IRequest<any> {
 export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyBoostPaymentCommand, any> {
   constructor(
     private boostedRepo: IBoostedEventRepository,
-    private configRepo: IConfigRepository
+    private configRepo: IConfigRepository,
+    private cryptoService: ICryptoService
   ) {}
 
   async handle(command: VerifyBoostPaymentCommand): Promise<any> {
@@ -56,7 +58,8 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
       throw new BadRequestError('Razorpay is not configured on this platform');
     }
 
-    const keySecret = (config.credentials as any).keySecret;
+    const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+    const keySecret = decrypted?.keySecret;
     if (!keySecret) {
       throw new BadRequestError('Razorpay keySecret is missing');
     }

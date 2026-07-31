@@ -212,7 +212,7 @@ mediator.register('GetBoostedEventsQuery', new GetBoostedEventsQueryHandler(boos
 mediator.register('RequestBoostCommand', new RequestBoostCommandHandler(boostedRepo, commsService, configRepo));
 mediator.register('UpdateBoostStatusCommand', new UpdateBoostStatusCommandHandler(boostedRepo));
 mediator.register('GetBoostRequestsQuery', new GetBoostRequestsQueryHandler(boostedRepo));
-mediator.register('VerifyBoostPaymentCommand', new VerifyBoostPaymentCommandHandler(boostedRepo, configRepo));
+mediator.register('VerifyBoostPaymentCommand', new VerifyBoostPaymentCommandHandler(boostedRepo, configRepo, cryptoService));
 mediator.register('GetBoostPricingQuery', new GetBoostPricingQueryHandler(configRepo));
 
 // Integrations
