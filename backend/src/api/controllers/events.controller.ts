@@ -123,8 +123,8 @@ export class EventsController {
         });
       }
 
-      // 4. Verify status is PENDING (edit is only allowed before approval)
-      if (event.status !== 'PENDING') {
+      // 4. Verify status allows editing: PENDING (new event) or EDIT_MODE (admin-approved edit)
+      if (event.status !== 'PENDING' && event.status !== 'EDIT_MODE') {
         throw new BadRequestError('Cannot edit this event as it has already been approved or processed.');
       }
 
@@ -185,9 +185,14 @@ export class EventsController {
         }
       }
 
+      // If event was in EDIT_MODE, transition it back to PENDING after host saves,
+      // so the admin must re-approve the updated version.
+      const newStatus = event.status === 'EDIT_MODE' ? 'PENDING' : undefined;
+
       const updatedEvent: any = await prisma.event.update({
         where: { id },
         data: {
+          ...(newStatus ? { status: newStatus as any } : {}),
           title: title !== undefined ? title : event.title,
           posterUrl: posterUrl !== undefined ? posterUrl : event.posterUrl,
           mode: mode !== undefined ? (mode as EventMode) : event.mode,

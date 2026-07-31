@@ -76,7 +76,9 @@ enum EventStatus {
   REJECTED
   COMPLETED
   CANCELED
+  EDIT_MODE
 }
+
 
 enum EditRequestStatus {
   PENDING

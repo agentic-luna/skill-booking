@@ -23,6 +23,11 @@ export default function AdminApprovalsPage() {
   const [commissionType, setCommissionType] = useState<"PERCENTAGE" | "FIXED">("PERCENTAGE");
   const [platformValue, setPlatformValue] = useState<string>("10");
 
+  // Edit request confirm dialog state
+  type EditConfirmAction = { type: "reject" | "approve"; id: string; title: string } | null;
+  const [editConfirm, setEditConfirm] = useState<EditConfirmAction>(null);
+  const [editActionLoading, setEditActionLoading] = useState(false);
+
   const showAlert = useAlertStore((s) => s.showAlert);
   const {
     eventQueue,
@@ -85,6 +90,25 @@ export default function AdminApprovalsPage() {
       }
     } catch (err: any) {
       showAlert("Decline Failed", err.message || "Could not decline listing.", "destructive");
+    }
+  };
+
+  const handleEditConfirm = async () => {
+    if (!editConfirm) return;
+    setEditActionLoading(true);
+    try {
+      if (editConfirm.type === "reject") {
+        await rejectEditRequest(editConfirm.id);
+        showAlert("Rejected", "Edit request rejected.", "success");
+      } else {
+        await approveEditRequest(editConfirm.id);
+        showAlert("Approved", "Event is now unlocked for edits.", "success");
+      }
+    } catch (err: any) {
+      showAlert("Error", err.message || "Action failed.", "destructive");
+    } finally {
+      setEditActionLoading(false);
+      setEditConfirm(null);
     }
   };
 
@@ -219,27 +243,13 @@ export default function AdminApprovalsPage() {
                   <Button
                     variant="outline"
                     className="flex-1 rounded-xl text-xs font-bold border-destructive/20 text-destructive hover:bg-destructive/10"
-                    onClick={async () => {
-                      if(confirm("Reject this edit request?")) {
-                        try {
-                          await rejectEditRequest(req.id);
-                          showAlert("Rejected", "Edit request rejected.", "success");
-                        } catch (err: any) {}
-                      }
-                    }}
+                    onClick={() => setEditConfirm({ type: "reject", id: req.id, title: req.event?.title || "this event" })}
                   >
                     Reject
                   </Button>
                   <Button
                     className="flex-1 rounded-xl text-xs font-bold bg-[#0b0c01] text-white hover:bg-black/80"
-                    onClick={async () => {
-                      if(confirm("Approve edit access? The event will be unlocked and moved back to pending status.")) {
-                        try {
-                          await approveEditRequest(req.id);
-                          showAlert("Approved", "Event is now unlocked for edits.", "success");
-                        } catch (err: any) {}
-                      }
-                    }}
+                    onClick={() => setEditConfirm({ type: "approve", id: req.id, title: req.event?.title || "this event" })}
                   >
                     Unlock Event
                   </Button>
@@ -269,6 +279,73 @@ export default function AdminApprovalsPage() {
           setApproveTargetId(null);
         }}
       />
+
+      {/* EDIT REQUEST CONFIRM DIALOG */}
+      {editConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => !editActionLoading && setEditConfirm(null)}
+          />
+          {/* Dialog Panel */}
+          <div className="relative z-10 bg-card border border-black/10 dark:border-white/10 rounded-[28px] shadow-2xl p-7 w-full max-w-sm mx-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex flex-col gap-4">
+              {/* Icon + Title */}
+              <div className="flex items-center gap-3">
+                <span className={`p-2.5 rounded-xl ${editConfirm.type === "reject" ? "bg-destructive/10" : "bg-[#a0f212]/10"}`}>
+                  {editConfirm.type === "reject" ? (
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                  ) : (
+                    <CheckSquare className="h-5 w-5 text-[#a0f212]" />
+                  )}
+                </span>
+                <div>
+                  <p className="font-bold text-sm text-foreground">
+                    {editConfirm.type === "reject" ? "Reject Edit Request?" : "Unlock Event for Edits?"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{editConfirm.title}</p>
+                </div>
+              </div>
+
+              {/* Body */}
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {editConfirm.type === "reject"
+                  ? "The edit request will be marked as rejected. The host will not be allowed to make changes to this event."
+                  : "The event will be unlocked and its status moved back to Pending so the host can make edits. It will need re-approval before going live."}
+              </p>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl text-xs font-bold h-10"
+                  onClick={() => setEditConfirm(null)}
+                  disabled={editActionLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className={`flex-1 rounded-xl text-xs font-bold h-10 ${
+                    editConfirm.type === "reject"
+                      ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      : "bg-[#0b0c01] text-white hover:bg-[#1a1c02]"
+                  }`}
+                  onClick={handleEditConfirm}
+                  disabled={editActionLoading}
+                >
+                  {editActionLoading ? (
+                    <span className="flex items-center gap-1.5">
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      {editConfirm.type === "reject" ? "Rejecting..." : "Unlocking..."}
+                    </span>
+                  ) : editConfirm.type === "reject" ? "Yes, Reject" : "Yes, Unlock"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

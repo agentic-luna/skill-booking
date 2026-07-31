@@ -52,7 +52,9 @@ export default function EditProgramPage() {
     async function loadProgram() {
       try {
         const details = await getEventDetails(programId);
-        if (details.status.toLowerCase() === "approved") {
+        // Only lock the form for truly non-editable statuses
+        const nonEditableStatuses = ['approved', 'rejected', 'canceled'];
+        if (nonEditableStatuses.includes(details.status.toLowerCase())) {
           setProgram(details);
           setIsApprovedLocked(true);
           setPageLoading(false);
@@ -212,25 +214,32 @@ export default function EditProgramPage() {
   }
 
   if (isApprovedLocked) {
+    const isApproved = program?.status?.toLowerCase() === 'approved';
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 bg-gray-50 border border-black/5 rounded-[40px] p-8">
         <div className="w-16 h-16 bg-white shadow-sm border border-black/5 rounded-full flex items-center justify-center mb-2">
-          <Lock className="h-8 w-8 text-amber-500" />
+          <Lock className={`h-8 w-8 ${isApproved ? "text-amber-500" : "text-destructive"}`} />
         </div>
-        <h2 className="text-2xl font-extrabold text-[#0b0c01]">Program Locked</h2>
+        <h2 className="text-2xl font-extrabold text-[#0b0c01]">
+          {isApproved ? "Program Locked" : "Program Cannot Be Edited"}
+        </h2>
         <p className="text-sm text-muted-foreground max-w-md font-medium">
-          This workshop is currently live and approved. To protect attendees who may have already booked tickets, core details cannot be directly edited.
+          {isApproved
+            ? "This workshop is currently live and approved. To protect attendees who may have already booked tickets, core details cannot be directly edited."
+            : `This workshop has a status of "${program?.status}" and cannot be edited. Contact support if you believe this is an error.`}
         </p>
 
-        <div className="w-full max-w-md mt-4 space-y-2 text-left">
-          <label className="text-sm font-bold text-foreground">Reason for Edit (Optional)</label>
-          <textarea 
-            className="w-full rounded-xl border border-black/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[80px]"
-            placeholder="E.g., Need to update physical venue location..."
-            value={editReason}
-            onChange={(e) => setEditReason(e.target.value)}
-          />
-        </div>
+        {isApproved && (
+          <div className="w-full max-w-md mt-4 space-y-2 text-left">
+            <label className="text-sm font-bold text-foreground">Reason for Edit (Optional)</label>
+            <textarea 
+              className="w-full rounded-xl border border-black/10 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[80px]"
+              placeholder="E.g., Need to update physical venue location..."
+              value={editReason}
+              onChange={(e) => setEditReason(e.target.value)}
+            />
+          </div>
+        )}
 
         <div className="flex gap-4 mt-8 pt-4">
           <Link href="/host/programs">
@@ -238,29 +247,32 @@ export default function EditProgramPage() {
               Back to Programs
             </Button>
           </Link>
-          <Button 
-            disabled={isSubmitting}
-            onClick={async () => {
-              setIsSubmitting(true);
-              try {
-                await requestEditAccess(programId, editReason);
-                showAlert("Request Sent", "Admin has been notified of your request to edit this live program.", "success");
-                router.push("/host/programs");
-              } catch (err: any) {
-                showAlert("Request Failed", err.message || "Failed to submit request.", "destructive");
-              } finally {
-                setIsSubmitting(false);
-              }
-            }} 
-            className="rounded-xl text-sm font-bold h-11 px-6 bg-[#0b0c01] text-white hover:bg-black/80 shadow-xl"
-          >
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Request Edit Access
-          </Button>
+          {isApproved && (
+            <Button 
+              disabled={isSubmitting}
+              onClick={async () => {
+                setIsSubmitting(true);
+                try {
+                  await requestEditAccess(programId, editReason);
+                  showAlert("Request Sent", "Admin has been notified of your request to edit this live program.", "success");
+                  router.push("/host/programs");
+                } catch (err: any) {
+                  showAlert("Request Failed", err.message || "Failed to submit request.", "destructive");
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }} 
+              className="rounded-xl text-sm font-bold h-11 px-6 bg-[#0b0c01] text-white hover:bg-black/80 shadow-xl"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Request Edit Access
+            </Button>
+          )}
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="space-y-8 pb-12">
@@ -292,13 +304,30 @@ export default function EditProgramPage() {
                 ? "bg-emerald-500"
                 : program.status.toLowerCase() === "pending"
                 ? "bg-amber-500"
+                : program.status.toLowerCase() === "edit_mode"
+                ? "bg-blue-500"
                 : "bg-destructive"
             }`}
           >
-            {program.status}
+            {program.status.toLowerCase() === "edit_mode" ? "Edit Mode" : program.status}
           </span>
         </div>
       </div>
+
+      {/* EDIT_MODE banner: inform host that saving will trigger re-approval */}
+      {program.status.toLowerCase() === "edit_mode" && (
+        <div className="flex items-start gap-3 p-4 bg-blue-500/8 border border-blue-500/20 rounded-2xl text-sm">
+          <div className="p-1.5 rounded-lg bg-blue-500/10 shrink-0 mt-0.5">
+            <Lock className="h-4 w-4 text-blue-500" />
+          </div>
+          <div>
+            <p className="font-bold text-foreground text-sm">Edit Mode Active</p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              Admin has unlocked this event for editing. Once you save your changes, the event will be submitted for re-approval and will not be visible to the public until approved again.
+            </p>
+          </div>
+        </div>
+      )}
 
       <form id="edit-program-form" onSubmit={handleSubmit(onSubmit, onError)} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

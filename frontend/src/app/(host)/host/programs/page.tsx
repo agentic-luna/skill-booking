@@ -65,9 +65,12 @@ export default function HostProgramsPage() {
           } else if (prog.status === 'approved') {
             displayStatus = "Live";
             badgeColors = "bg-emerald-500/90 text-white";
-          } else {
-            displayStatus = "Pending";
+          } else if (prog.status === 'edit_mode') {
+            displayStatus = "Edit Mode";
             badgeColors = "bg-blue-500/90 text-white";
+          } else {
+            displayStatus = "Pending Review";
+            badgeColors = "bg-amber-500/90 text-white";
           }
 
           return (
