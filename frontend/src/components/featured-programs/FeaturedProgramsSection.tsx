@@ -35,8 +35,8 @@ function mapEventToProgram(event: any): Program {
       return startStr;
     })(),
     time: event.startTime 
-      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
-      : "10:00 AM EST",
+      ? new Date(event.startTime).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: '2-digit', minute: '2-digit' }) + " IST"
+      : "10:00 AM IST",
     spotsLeft: event.availableSeats ?? 0,
     maxSpots: event.totalSeats ?? 20,
     location: locationStr,
@@ -44,6 +44,7 @@ function mapEventToProgram(event: any): Program {
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
     isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'PRO'].includes(event.boostedEvent?.tier),
+    startTime: event.startTime,
   };
 }
 

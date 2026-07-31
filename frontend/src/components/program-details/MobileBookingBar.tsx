@@ -13,6 +13,13 @@ export default function MobileBookingBar({
   user,
   onBookClick,
 }: MobileBookingBarProps) {
+  const isFinished =
+    program.status?.toLowerCase() === "completed" ||
+    program.status?.toLowerCase() === "finished" ||
+    program.status?.toLowerCase() === "cancelled" ||
+    program.status?.toLowerCase() === "canceled" ||
+    (program.startTime ? new Date(program.startTime) < new Date() : false);
+
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/50 p-4 pb-safe-bottom shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-between gap-4 max-w-md mx-auto">
@@ -24,15 +31,23 @@ export default function MobileBookingBar({
             <span className="text-xl font-black text-foreground">
               ₹{program.price}
             </span>
-            {program.spotsLeft > 0 && (
+            {isFinished ? (
+              <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-md">
+                Finished
+              </span>
+            ) : program.spotsLeft > 0 ? (
               <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-950/20 px-1.5 py-0.5 rounded-md animate-pulse">
                 🔥 {program.spotsLeft} left
               </span>
-            )}
+            ) : null}
           </div>
         </div>
         <div className="flex-1 max-w-[200px]">
-          {user?.role === "host" || user?.role === "admin" ? (
+          {isFinished ? (
+            <div className="text-xs font-extrabold text-destructive text-center bg-destructive/10 p-2.5 rounded-xl border border-destructive/20">
+              Currently Unavailable
+            </div>
+          ) : user?.role === "host" || user?.role === "admin" ? (
             <div className="text-[9px] font-extrabold text-muted-foreground text-center bg-muted/40 p-2 rounded-xl border">
               Disabled for {user.role}
             </div>

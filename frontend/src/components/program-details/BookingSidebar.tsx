@@ -24,6 +24,12 @@ export default function BookingSidebar({
   const spotsLeft = program.spotsLeft ?? 0;
   const bookedSeats = Math.max(0, maxSpots - spotsLeft);
   const fillPercentage = maxSpots > 0 ? Math.round((bookedSeats / maxSpots) * 100) : 0;
+  const isFinished =
+    program.status?.toLowerCase() === "completed" ||
+    program.status?.toLowerCase() === "finished" ||
+    program.status?.toLowerCase() === "cancelled" ||
+    program.status?.toLowerCase() === "canceled" ||
+    (program.startTime ? new Date(program.startTime) < new Date() : false);
 
   return (
     <div className="sticky top-24 bg-card border border-border/40 rounded-2xl p-6 shadow-md space-y-6">
@@ -35,19 +41,31 @@ export default function BookingSidebar({
         <div className="text-right">
           <span
             className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
-              spotsLeft <= 5
+              isFinished
                 ? "bg-destructive/10 text-destructive"
-                : "bg-emerald-500/10 text-emerald-600"
+                : spotsLeft <= 5
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-emerald-500/10 text-emerald-600"
             }`}
           >
-            {spotsLeft === 0 ? "Fully Booked" : `${spotsLeft} spots left`}
+            {isFinished ? "Unavailable" : spotsLeft === 0 ? "Fully Booked" : `${spotsLeft} spots left`}
           </span>
         </div>
       </div>
 
       {/* Scarcity / Tension Creation Card */}
       <div className="space-y-3">
-        {spotsLeft === 0 ? (
+        {isFinished ? (
+          <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-3 flex gap-2.5 items-start text-destructive text-xs font-semibold">
+            <span className="text-base leading-none">⚠️</span>
+            <div className="space-y-0.5 w-full">
+              <p className="font-extrabold text-foreground leading-none">Workshop Concluded</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                This event has already finished and is no longer accepting registrations.
+              </p>
+            </div>
+          </div>
+        ) : spotsLeft === 0 ? (
           <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-3 flex gap-2.5 items-start text-red-700 dark:text-red-400 text-xs font-semibold">
             <span className="text-base leading-none">🚫</span>
             <div className="space-y-0.5 w-full">
@@ -96,7 +114,7 @@ export default function BookingSidebar({
             </div>
             {/* Visual Progress Bar */}
             <div className="space-y-1 pt-1 border-t border-emerald-500/10">
-              <div className="flex justify-between text-[9px] text-emerald-800/60 dark:text-emerald-400/60 font-bold uppercase tracking-wider">
+              <div className="flex justify-between text-[9px] text-emerald-800/60 dark:text-amber-400/60 font-bold uppercase tracking-wider">
                 <span>Seats Taken</span>
                 <span>{fillPercentage}%</span>
               </div>
@@ -146,7 +164,34 @@ export default function BookingSidebar({
 
       {/* Action Buttons */}
       <div className="space-y-2 pt-2">
-        {user?.role === "host" || user?.role === "admin" ? (
+        {isFinished ? (
+          <div className="space-y-2.5">
+            <div className="text-center p-3.5 bg-destructive/10 dark:bg-destructive/5 rounded-xl border border-destructive/25 text-sm text-destructive font-extrabold shadow-sm">
+              Currently Unavailable
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm"
+                onClick={onWishlistToggle}
+              >
+                <Heart
+                  className={`mr-1.5 h-4 w-4 ${
+                    isWishlisted ? "fill-red-500 text-red-500" : ""
+                  }`}
+                />
+                {isWishlisted ? "Wishlisted" : "Wishlist"}
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-xl h-10 text-xs text-foreground border-border/60 hover:bg-muted/50 transition-colors shadow-sm"
+                onClick={onShareClick}
+              >
+                <Share2 className="mr-1.5 h-4 w-4" /> Share Event
+              </Button>
+            </div>
+          </div>
+        ) : user?.role === "host" || user?.role === "admin" ? (
           <div className="space-y-2.5">
             <div className="text-center p-3 bg-muted/30 rounded-xl border text-[11px] text-muted-foreground font-bold">
               Booking disabled for {user.role === "admin" ? "Admin" : "Host"} accounts

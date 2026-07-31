@@ -57,8 +57,8 @@ export function mapEventToProgram(event: any): Program {
       return startStr;
     })(),
     time: event.startTime 
-      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
-      : "10:00 AM EST",
+      ? new Date(event.startTime).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: '2-digit', minute: '2-digit' }) + " IST"
+      : "10:00 AM IST",
     spotsLeft: event.availableSeats ?? 0,
     maxSpots: event.totalSeats ?? 20,
     location: locationStr,
@@ -67,5 +67,6 @@ export function mapEventToProgram(event: any): Program {
     featured: true,
     mode: event.mode,
     commission: event.commission,
+    startTime: event.startTime,
   };
 }

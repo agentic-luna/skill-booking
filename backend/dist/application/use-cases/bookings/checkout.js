@@ -40,6 +40,9 @@ class CheckoutCommandHandler {
         if (event.status !== client_1.EventStatus.APPROVED) {
             throw new errors_1.BadRequestError('Event booking is not open');
         }
+        if (event.startTime && event.startTime < new Date()) {
+            throw new errors_1.BadRequestError('This event has already started/finished and cannot be booked.');
+        }
         if (event.availableSeats < seatCount) {
             throw new errors_1.BadRequestError(`Insufficient seats available. Only ${event.availableSeats} seats remaining.`);
         }

@@ -31,6 +31,7 @@ export interface Program {
     commissionType: "FIXED" | "PERCENTAGE";
     platformValue: number;
   } | null;
+  startTime?: string;
 }
 
 export const MOCK_PROGRAMS: Program[] = [
@@ -47,7 +48,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 99,
     duration: "6 hours (2 days)",
     date: typeof window !== "undefined" ? new Date().toISOString().split("T")[0] : "2026-07-12",
-    time: "10:00 AM - 1:00 PM EST",
+    time: "10:00 AM - 1:00 PM IST",
     spotsLeft: 5,
     maxSpots: 20,
     location: "Online (Live Zoom Link)",
@@ -69,7 +70,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 75,
     duration: "4 hours (Single Day)",
     date: "2026-07-20",
-    time: "02:00 PM - 6:00 PM EST",
+    time: "02:00 PM - 6:00 PM IST",
     spotsLeft: 8,
     maxSpots: 12,
     location: "Healing Sanctuary, Ernakulam",
@@ -91,7 +92,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 120,
     duration: "10 hours (3 days)",
     date: "2026-07-18",
-    time: "09:00 AM - 12:30 PM EST",
+    time: "09:00 AM - 12:30 PM IST",
     spotsLeft: 15,
     maxSpots: 30,
     location: "Kochi Cultural Center, Ernakulam",
@@ -113,7 +114,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 150,
     duration: "3.5 hours",
     date: "2026-07-22",
-    time: "04:30 PM - 8:00 PM EST",
+    time: "04:30 PM - 8:00 PM IST",
     spotsLeft: 3,
     maxSpots: 10,
     location: "Grand Hyatt Business Hub, Kochi",
@@ -135,7 +136,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 110,
     duration: "5 hours",
     date: "2026-07-29",
-    time: "11:00 AM - 4:00 PM EST",
+    time: "11:00 AM - 4:00 PM IST",
     spotsLeft: 12,
     maxSpots: 25,
     location: "Online (Live Zoom Link)",
@@ -157,7 +158,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 130,
     duration: "3 hours",
     date: "2026-08-02",
-    time: "01:00 PM - 4:00 PM EST",
+    time: "01:00 PM - 4:00 PM IST",
     spotsLeft: 4,
     maxSpots: 15,
     location: "Varkala Cliff Retreat, Thiruvananthapuram",
@@ -178,7 +179,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 135,
     duration: "4 hours",
     date: "2026-08-05",
-    time: "09:00 AM - 1:00 PM EST",
+    time: "09:00 AM - 1:00 PM IST",
     spotsLeft: 6,
     maxSpots: 8,
     location: "Studio 404, Ernakulam",
@@ -199,7 +200,7 @@ export const MOCK_PROGRAMS: Program[] = [
     price: 145,
     duration: "4 hours",
     date: "2026-08-10",
-    time: "10:00 AM - 2:00 PM EST",
+    time: "10:00 AM - 2:00 PM IST",
     spotsLeft: 4,
     maxSpots: 10,
     location: "Online (Live Zoom Link)",
@@ -236,7 +237,7 @@ export const MOCK_BOOKINGS: Booking[] = [
     status: "confirmed",
     spotsBooked: 1,
     date: "2026-07-15",
-    time: "10:00 AM - 1:00 PM EST",
+    time: "10:00 AM - 1:00 PM IST",
     location: "Online (Live Zoom Link)",
     hostName: "Sarah Jenkins",
   },
@@ -250,7 +251,7 @@ export const MOCK_BOOKINGS: Booking[] = [
     status: "completed",
     spotsBooked: 1,
     date: "2026-05-20",
-    time: "09:00 AM - 12:30 PM EST",
+    time: "09:00 AM - 12:30 PM IST",
     location: "Iron Gym, Chicago IL",
     hostName: "Coach David Miller",
   }

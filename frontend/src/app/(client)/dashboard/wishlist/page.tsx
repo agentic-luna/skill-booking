@@ -35,14 +35,15 @@ function mapEventToProgram(event: any): Program {
     duration: event.duration || "2 hours",
     date: event.startTime ? event.startTime.split("T")[0] : "2026-07-12",
     time: event.startTime 
-      ? new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " EST"
-      : "10:00 AM EST",
+      ? new Date(event.startTime).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: '2-digit', minute: '2-digit' }) + " IST"
+      : "10:00 AM IST",
     spotsLeft: event.availableSeats ?? 0,
     maxSpots: event.totalSeats ?? 20,
     location: locationStr,
     imageUrl: imageUrlStr,
     status: event.status ? event.status.toLowerCase() : "approved",
     featured: true,
+    startTime: event.startTime,
   };
 }
 

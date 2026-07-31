@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Program, MOCK_PROGRAMS } from "@/constants/mockData";
+import { Program } from "@/constants/mockData";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useClientStore } from "@/features/client/store/clientStore";
@@ -35,9 +35,7 @@ interface ProgramDetailsProps {
 export default function ProgramDetailsContent({ programId, initialProgram }: ProgramDetailsProps) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-  const [program, setProgram] = useState<Program | undefined>(
-    initialProgram || MOCK_PROGRAMS.find((p) => p.id === programId)
-  );
+  const [program, setProgram] = useState<Program | undefined>(initialProgram);
 
   // States
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -154,16 +152,46 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     );
   }
 
-  const handleBookClick = () => {
-    if (!isAuthenticated) {
-      openClientAuthModal("login", () => {
-        useBookingModalStore.getState().openBookingModal(program, useAuthStore.getState().user);
-        setCheckoutOpen(true);
-      });
-      return;
+  const handleBookClick = async () => {
+    if (!program) return;
+    try {
+      // Fetch latest event details to verify status before booking
+      const details = await fetchEventDetails(program.id);
+      const latestProgram = mapEventToProgram(details);
+
+      const isFinished =
+        latestProgram.status?.toLowerCase() === "completed" ||
+        latestProgram.status?.toLowerCase() === "finished" ||
+        latestProgram.status?.toLowerCase() === "cancelled" ||
+        latestProgram.status?.toLowerCase() === "canceled" ||
+        (latestProgram.startTime ? new Date(latestProgram.startTime) < new Date() : false);
+
+      if (isFinished) {
+        showAlert("Workshop Concluded", "This event has already finished and is no longer accepting bookings.", "destructive");
+        setProgram(latestProgram);
+        return;
+      }
+
+      if (latestProgram.spotsLeft === 0) {
+        showAlert("Registration Closed", "All seats for this workshop have been booked.", "destructive");
+        setProgram(latestProgram);
+        return;
+      }
+
+      setProgram(latestProgram);
+
+      if (!isAuthenticated) {
+        openClientAuthModal("login", () => {
+          useBookingModalStore.getState().openBookingModal(latestProgram, useAuthStore.getState().user);
+          setCheckoutOpen(true);
+        });
+        return;
+      }
+      useBookingModalStore.getState().openBookingModal(latestProgram, user);
+      setCheckoutOpen(true);
+    } catch (err: any) {
+      showAlert("Error", "Could not verify event status. Please try again.", "destructive");
     }
-    useBookingModalStore.getState().openBookingModal(program, user);
-    setCheckoutOpen(true);
   };
 
   const handleWishlistToggle = async () => {

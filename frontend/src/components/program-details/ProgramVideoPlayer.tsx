@@ -11,10 +11,11 @@ interface ProgramVideoPlayerProps {
 export default function ProgramVideoPlayer({ videoUrls }: ProgramVideoPlayerProps) {
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
 
-  // Fallback to a default video if none are provided
-  const videos = videoUrls && videoUrls.length > 0
-    ? videoUrls
-    : ["https://www.youtube.com/embed/tgbNymZ7vqY"];
+  if (!videoUrls || videoUrls.length === 0) {
+    return null;
+  }
+
+  const videos = videoUrls;
 
   const getEmbedUrl = (url: string): string => {
     if (!url) return "";

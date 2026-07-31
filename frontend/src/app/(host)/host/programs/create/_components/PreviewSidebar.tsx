@@ -228,7 +228,7 @@ export default function PreviewSidebar({
                     price: Number(values.price) || 0,
                     duration: values.duration || "2 hours",
                     date: dateStr,
-                    time: values.time ? `${values.time} EST` : "10:00 AM EST",
+                    time: values.time ? `${values.time} IST` : "10:00 AM IST",
                     spotsLeft: Number(values.maxSpots) || 10,
                     maxSpots: Number(values.maxSpots) || 10,
                     location: locationStr,

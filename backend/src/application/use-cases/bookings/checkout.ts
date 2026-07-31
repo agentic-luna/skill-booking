@@ -40,6 +40,10 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       throw new BadRequestError('Event booking is not open');
     }
 
+    if (event.startTime && event.startTime < new Date()) {
+      throw new BadRequestError('This event has already started/finished and cannot be booked.');
+    }
+
     if (event.availableSeats < seatCount) {
       throw new BadRequestError(`Insufficient seats available. Only ${event.availableSeats} seats remaining.`);
     }
