@@ -90,6 +90,31 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     }
   }
 
+  async verifyPaymentSignature(orderId: string, paymentId: string, signature: string): Promise<boolean> {
+    try {
+      const { keySecret } = await this.getRazorpayClient();
+
+      if (!keySecret) {
+        this.logger.warn('[RazorpayProvider] keySecret not found — cannot verify payment signature');
+        return false;
+      }
+
+      const expectedSignature = crypto
+        .createHmac('sha256', keySecret)
+        .update(`${orderId}|${paymentId}`)
+        .digest('hex');
+
+      const isValid = expectedSignature === signature;
+      if (!isValid) {
+        this.logger.warn('[RazorpayProvider] Payment signature mismatch', { orderId, paymentId });
+      }
+      return isValid;
+    } catch (err) {
+      this.logger.error('[RazorpayProvider] Payment signature validation error', err);
+      return false;
+    }
+  }
+
   async initiateRefund(
     paymentId: string,
     amount: number,
