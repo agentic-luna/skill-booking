@@ -65,8 +65,8 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
   }
 
-  async verifyWebhookSignature(
-    payload: string | object,
+async verifyWebhookSignature(
+  payload: string | Buffer | object,
     signature: string,
     secret?: string
   ): Promise<boolean> {
@@ -74,10 +74,15 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
 
     const activeSecret = secret || webhookSecret!;
 
-    const body =
-      typeof payload === "string"
-        ? payload
-        : JSON.stringify(payload);
+    let body: string;
+
+    if (Buffer.isBuffer(payload)) {
+      body = payload.toString("utf8");
+    } else if (typeof payload === "string") {
+      body = payload;
+    } else {
+      body = JSON.stringify(payload);
+    }
 
     const expectedSignature = crypto
       .createHmac("sha256", activeSecret)

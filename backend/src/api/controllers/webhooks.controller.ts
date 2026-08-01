@@ -32,13 +32,20 @@ export class WebhooksController {
 
       // Use the raw body for signature verification if captured, otherwise fall back to
       // serialising the parsed body (Razorpay sends compact JSON so this is equivalent).
-      const rawBody: string =
-        (req as any).rawBody ??
-        (Buffer.isBuffer(req.body) ? req.body.toString('utf-8') : JSON.stringify(req.body));
+      const rawBody = Buffer.isBuffer((req as any).rawBody)
+        ? (req as any).rawBody.toString("utf8")
+        : JSON.stringify(req.body);
 
+      console.log("Raw body is buffer:", Buffer.isBuffer((req as any).rawBody));
+      console.log("Raw body length:", rawBody.length);
+
+      console.log("typeof rawBody:", typeof rawBody);
+console.log("Is rawBody Buffer:", Buffer.isBuffer((req as any).rawBody));
+console.log("Raw Body Preview:", rawBody.substring(0, 200));
+      
       const isValidSignature = await paymentGatewayProvider.verifyWebhookSignature(
         rawBody,
-        signature
+        signature 
       );
 
       if (!isValidSignature) {
