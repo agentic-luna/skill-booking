@@ -22,6 +22,9 @@ export class GetRazorpayPublicKeyQueryHandler
 
         const credentials = this.cryptoService.decryptCredentials(config.credentials);
 
+
+
+        console.log(credentials, "_______+++++++++________")
         return {
             keyId: credentials.keyId ?? null,
         };

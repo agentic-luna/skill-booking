@@ -69,8 +69,11 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     try {
       let activeSecret = secret;
       if (!activeSecret) {
-        const { webhookSecret, keySecret } = await this.getRazorpayClient();
-        activeSecret = webhookSecret || keySecret;
+        const { webhookSecret } = await this.getRazorpayClient();
+
+        console.log("Webhook Secret:", webhookSecret);
+        console.log("Length:", webhookSecret?.length);
+        activeSecret = webhookSecret;
       }
 
       if (!activeSecret) {
