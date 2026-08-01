@@ -192,18 +192,29 @@ export default function BoostPricingPage() {
     return fallback;
   };
 
-  // Set default selected event from query param or first event
+  // Filter events to only show approved events whose start date is less than current date
+  const selectableEvents = myEvents.filter((evt) => {
+    const isApproved = evt?.status?.toUpperCase() === "APPROVED";
+    const dateStr = evt?.startTime || evt?.startDate;
+    if (!dateStr || !isApproved) return false;
+    const eventDate = new Date(dateStr);
+    return !isNaN(eventDate.getTime()) && eventDate < new Date();
+  });
+
+  // Set default selected event from query param or first selectable event
   useEffect(() => {
-    if (eventIdParam) {
+    if (eventIdParam && selectableEvents.some((e) => e.id === eventIdParam)) {
       setSelectedEventId(eventIdParam);
-    } else if (myEvents.length > 0 && !selectedEventId) {
-      setSelectedEventId(myEvents[0].id);
+    } else if (selectableEvents.length > 0 && (!selectedEventId || !selectableEvents.some((e) => e.id === selectedEventId))) {
+      setSelectedEventId(selectableEvents[0].id);
+    } else if (selectableEvents.length === 0) {
+      setSelectedEventId("");
     }
-  }, [myEvents, eventIdParam]);
+  }, [selectableEvents, eventIdParam]);
 
   const handleCheckout = async (tier: "BASIC" | "STANDARD" | "PRO") => {
-    if (!selectedEventId) {
-      showAlert("Event Required", "Please select a workshop event to boost first.", "destructive");
+    if (!selectedEventId || !selectableEvents.some((e) => e.id === selectedEventId)) {
+      showAlert("Event Required", "Please select an active approved event to boost first.", "destructive");
       // Scroll to event selector
       const element = document.getElementById("event-selector-section");
       if (element) {
@@ -263,7 +274,7 @@ export default function BoostPricingPage() {
     }
   };
 
-  const selectedEvent = myEvents.find(e => e.id === selectedEventId);
+  const selectedEvent = selectableEvents.find(e => e.id === selectedEventId);
 
   return (
     <div className="min-h-screen bg-[#07130e] text-[#ecfdf5] py-12 px-4 sm:px-6 lg:px-8 space-y-24 overflow-hidden rounded-[30px] border border-[#a0f212]/10 relative">
@@ -323,21 +334,21 @@ export default function BoostPricingPage() {
             <label className="text-xs font-black uppercase tracking-wider text-[#a0f212]">
               Step 1: Select Event to Boost
             </label>
-            {myEvents.length === 0 && (
+            {selectableEvents.length === 0 && (
               <span className="text-[10px] text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                No active workshops found
+                No active events
               </span>
             )}
           </div>
 
-          {myEvents.length > 0 ? (
+          {selectableEvents.length > 0 ? (
             <div className="relative">
               <select
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
                 className="w-full bg-[#07130e]/80 border border-emerald-900 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:ring-2 focus:ring-[#a0f212]/50 transition-all cursor-pointer font-bold"
               >
-                {myEvents.map((evt) => (
+                {selectableEvents.map((evt) => (
                   <option key={evt.id} value={evt.id} className="bg-[#07130e] text-white">
                     {evt.title} ({evt.status})
                   </option>
@@ -347,7 +358,7 @@ export default function BoostPricingPage() {
           ) : (
             <div className="text-center py-4 space-y-4">
               <p className="text-xs text-emerald-100/40 font-semibold">
-                You haven&apos;t created any active workshops yet.
+                You have no active events.
               </p>
               <Button
                 onClick={() => router.push("/host/programs/create")}

@@ -3,7 +3,7 @@ import { IConfigRepository } from '../../../domain/repositories/config.repositor
 import { ICommunicationService } from '../../services/communication.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 
-import { ConflictError } from '../../common/errors';
+import { ConflictError, NotFoundError, BadRequestError } from '../../common/errors';
 import { prisma } from '../../../config/prisma';
 
 export class RequestBoostCommand implements IRequest<any> {
@@ -25,8 +25,26 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
   async handle(command: RequestBoostCommand): Promise<any> {
     const { eventId, tier } = command;
 
-    // Check for existing active non-expired boost campaign
     const now = new Date();
+
+    // Check if target event exists and meets boosting requirements
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundError('Event not found');
+    }
+
+    if (event.status !== 'APPROVED') {
+      throw new BadRequestError('Only approved events can be boosted.');
+    }
+
+    if (event.startTime >= now) {
+      throw new BadRequestError('Only events with a start date less than current date can be boosted.');
+    }
+
+    // Check for existing active non-expired boost campaign
     const existingActiveBoost = await prisma.boostedEvent.findFirst({
       where: {
         eventId,
