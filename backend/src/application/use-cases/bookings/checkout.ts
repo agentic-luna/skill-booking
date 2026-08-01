@@ -90,8 +90,17 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       bookingRef
     );
 
+    // Save razorpayOrderId into the booking
+    let updatedBooking = booking;
+    if (razorpayOrder && razorpayOrder.id) {
+      updatedBooking = await this.bookingRepo.updatePaymentDetails(booking.id, {
+        razorpayOrderId: razorpayOrder.id,
+        paymentGateway: 'RAZORPAY',
+      });
+    }
+
     return {
-      booking,
+      booking: updatedBooking,
       eventTitle: event.title,
       razorpayOrder,
     };

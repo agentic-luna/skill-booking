@@ -16,7 +16,11 @@ const app = (0, express_1.default)();
 // Global Middleware
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)());
-app.use(express_1.default.json());
+app.use(express_1.default.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    },
+}));
 app.use(express_1.default.urlencoded({ extended: true }));
 // Swagger API Documentation
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_spec_1.default));
@@ -120,6 +124,7 @@ const boosted_events_routes_1 = __importDefault(require("./routes/boosted-events
 const integrations_routes_1 = __importDefault(require("./routes/integrations.routes"));
 const wishlist_routes_1 = __importDefault(require("./routes/wishlist.routes"));
 const complaints_routes_1 = __importDefault(require("./routes/complaints.routes"));
+const payment_routes_1 = __importDefault(require("./routes/payment.routes"));
 app.use('/api/v1/auth', auth_routes_1.default);
 app.use('/api/v1/admin', admin_routes_1.default);
 app.use('/api/v1/notifications', notifications_routes_1.default);
@@ -127,6 +132,7 @@ app.use('/api/v1/hosts', users_routes_1.default);
 app.use('/api/v1/events', events_routes_1.default);
 app.use('/api/v1/bookings', bookings_routes_1.default);
 app.use('/api/v1/webhooks', webhooks_routes_1.default);
+app.use('/api/v1/payments', payment_routes_1.default);
 app.use('/api/v1/reviews', reviews_routes_1.default);
 app.use('/api/v1/boosted-events', boosted_events_routes_1.default);
 app.use('/api/v1/integrations', integrations_routes_1.default);

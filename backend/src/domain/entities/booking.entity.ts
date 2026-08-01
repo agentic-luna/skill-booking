@@ -12,6 +12,12 @@ export interface Booking {
   status: BookingStatus;
   commissionType?: string | null;
   platformValue?: number | null;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  paymentMethod?: string | null;
+  paymentCapturedAt?: Date | null;
+  paymentGateway?: string | null;
+  webhookProcessed?: boolean;
   createdAt: Date;
   updatedAt: Date;
   client?: User;

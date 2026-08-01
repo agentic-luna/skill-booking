@@ -10,22 +10,7 @@ const get_boost_requests_1 = require("../../application/use-cases/boosted-events
 const verify_boost_payment_1 = require("../../application/use-cases/boosted-events/verify-boost-payment");
 const get_boost_pricing_1 = require("../../application/use-cases/boosted-events/get-boost-pricing");
 const api_response_1 = require("../common/api-response");
-const prisma_1 = require("../../config/prisma");
 class BoostedEventsController {
-    static async getRazorpayKey(req, res, next) {
-        try {
-            const config = await prisma_1.prisma.integrationConfig.findUnique({
-                where: { serviceName: 'RAZORPAY' }
-            });
-            const keyId = config?.isActive && config.credentials && typeof config.credentials === 'object'
-                ? config.credentials.keyId
-                : null;
-            return api_response_1.ApiResponse.success(res, { keyId });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
     static async getActiveBoostedEvents(req, res, next) {
         try {
             const result = await di_container_1.mediator.send(new get_boosted_events_1.GetBoostedEventsQuery());

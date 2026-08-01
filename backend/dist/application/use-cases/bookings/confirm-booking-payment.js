@@ -31,20 +31,25 @@ class ConfirmBookingPaymentCommandHandler {
     bookingRepo;
     ledgerRepo;
     configRepo;
+    cryptoService;
     notificationRepo;
     queueService;
     cacheService;
-    constructor(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService) {
+    constructor(bookingRepo, ledgerRepo, configRepo, cryptoService, notificationRepo, queueService, cacheService) {
         this.bookingRepo = bookingRepo;
         this.ledgerRepo = ledgerRepo;
         this.configRepo = configRepo;
+        this.cryptoService = cryptoService;
         this.notificationRepo = notificationRepo;
         this.queueService = queueService;
         this.cacheService = cacheService;
     }
     async handle(command) {
-        const { bookingId, clientId, paymentMethod } = command;
-        const booking = await this.bookingRepo.findById(bookingId);
+        const { bookingId, clientId, paymentMethod, razorpayOrderId, razorpayPaymentId } = command;
+        let booking = await this.bookingRepo.findById(bookingId);
+        if (!booking && razorpayOrderId) {
+            booking = await this.bookingRepo.findByRazorpayOrderId(razorpayOrderId);
+        }
         if (!booking) {
             throw new errors_1.NotFoundError('Booking record not found.');
         }
@@ -64,7 +69,8 @@ class ConfirmBookingPaymentCommandHandler {
                 if (!config || !config.credentials || typeof config.credentials !== 'object') {
                     throw new errors_1.BadRequestError('Razorpay is not configured on this platform');
                 }
-                const keySecret = config.credentials.keySecret;
+                const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+                const keySecret = decrypted?.keySecret;
                 if (!keySecret) {
                     throw new errors_1.BadRequestError('Razorpay keySecret is missing');
                 }
@@ -78,9 +84,12 @@ class ConfirmBookingPaymentCommandHandler {
             }
             gatewayTxnId = command.razorpayPaymentId || gatewayTxnId;
         }
-        // 1. Update Booking status to CONFIRMED
-        const updatedBooking = await this.bookingRepo.update(booking.id, {
-            status: client_1.BookingStatus.CONFIRMED,
+        // 1. Mark payment captured & confirm booking
+        const updatedBooking = await this.bookingRepo.markPaymentCaptured(booking.id, {
+            razorpayPaymentId: razorpayPaymentId || gatewayTxnId,
+            paymentMethod: paymentMethod || 'RAZORPAY',
+            paymentCapturedAt: new Date(),
+            paymentGateway: 'RAZORPAY',
         });
         // Increment conversions for boosted events
         try {
@@ -131,16 +140,23 @@ class ConfirmBookingPaymentCommandHandler {
             }
         }
         const hostLiability = totalAmount - platformRevenue;
-        // 3. Write Payment capture entry to Transaction Ledger
-        const ledgerEntry = await this.ledgerRepo.create({
-            bookingId: booking.id,
-            gatewayTxnId,
-            type: client_1.LedgerTxnType.PAYMENT_CAPTURE,
-            amountCaptured: totalAmount,
-            platformRevenue,
-            hostLiability,
-            status: client_1.LedgerStatus.HELD,
-        });
+        // 3. Write Payment capture entry to Transaction Ledger idempotently
+        let ledgerEntry = null;
+        const existingLedger = await this.ledgerRepo.findMany({ gatewayTxnId });
+        if (!existingLedger || existingLedger.length === 0) {
+            ledgerEntry = await this.ledgerRepo.create({
+                bookingId: booking.id,
+                gatewayTxnId,
+                type: client_1.LedgerTxnType.PAYMENT_CAPTURE,
+                amountCaptured: totalAmount,
+                platformRevenue,
+                hostLiability,
+                status: client_1.LedgerStatus.HELD,
+            });
+        }
+        else {
+            ledgerEntry = existingLedger[0];
+        }
         // 4. Resolve notification templates and enqueue background dispatch
         try {
             const fullBooking = await this.bookingRepo.findFirstByRef(booking.bookingRef);

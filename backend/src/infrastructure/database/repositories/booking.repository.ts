@@ -64,6 +64,48 @@ export class PrismaBookingRepository implements IBookingRepository {
     return mapBooking(b);
   }
 
+  async findByRazorpayOrderId(razorpayOrderId: string): Promise<any> {
+    if (!razorpayOrderId) return null;
+    const b = await prisma.booking.findUnique({
+      where: { razorpayOrderId },
+      include: {
+        client: true,
+        event: {
+          include: {
+            commission: true,
+            host: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return mapBooking(b);
+  }
+
+  async findByRazorpayPaymentId(razorpayPaymentId: string): Promise<any> {
+    if (!razorpayPaymentId) return null;
+    const b = await prisma.booking.findFirst({
+      where: { razorpayPaymentId },
+      include: {
+        client: true,
+        event: {
+          include: {
+            commission: true,
+            host: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return mapBooking(b);
+  }
+
   async findMany(filters: any): Promise<Booking[]> {
     const list = await prisma.booking.findMany({
       where: filters,
@@ -94,6 +136,11 @@ export class PrismaBookingRepository implements IBookingRepository {
     status?: BookingStatus;
     commissionType?: any;
     platformValue?: number | null;
+    razorpayOrderId?: string | null;
+    razorpayPaymentId?: string | null;
+    paymentMethod?: string | null;
+    paymentGateway?: string | null;
+    webhookProcessed?: boolean;
   }): Promise<Booking> {
     const created = await prisma.booking.create({ data });
     return mapBooking(created);
@@ -103,6 +150,41 @@ export class PrismaBookingRepository implements IBookingRepository {
     const updated = await prisma.booking.update({
       where: { id },
       data,
+    });
+    return mapBooking(updated);
+  }
+
+  async updatePaymentDetails(bookingId: string, details: {
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    paymentMethod?: string;
+    paymentCapturedAt?: Date;
+    paymentGateway?: string;
+    webhookProcessed?: boolean;
+  }): Promise<Booking> {
+    const updated = await prisma.booking.update({
+      where: { id: bookingId },
+      data: details,
+    });
+    return mapBooking(updated);
+  }
+
+  async markPaymentCaptured(bookingId: string, details: {
+    razorpayPaymentId: string;
+    paymentMethod?: string;
+    paymentCapturedAt?: Date;
+    paymentGateway?: string;
+  }): Promise<Booking> {
+    const updated = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: BookingStatus.CONFIRMED,
+        razorpayPaymentId: details.razorpayPaymentId,
+        paymentMethod: details.paymentMethod || 'RAZORPAY',
+        paymentCapturedAt: details.paymentCapturedAt || new Date(),
+        paymentGateway: details.paymentGateway || 'RAZORPAY',
+        webhookProcessed: true,
+      },
     });
     return mapBooking(updated);
   }

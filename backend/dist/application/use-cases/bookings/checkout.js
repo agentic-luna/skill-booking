@@ -51,8 +51,17 @@ class CheckoutCommandHandler {
         if (!success) {
             throw new errors_1.ConflictError('Booking failed due to temporary ticket race conditions. Please retry.');
         }
-        const ticketPrice = event.price || 500;
-        const totalAmount = customAmount || seatCount * ticketPrice;
+        const ticketPrice = event.price;
+        let baseAmount = customAmount || seatCount * ticketPrice;
+        // Calculate platform fee commission if defined
+        let platformFee = 0;
+        if (event.commission) {
+            if (event.commission.commissionType === 'PERCENTAGE') {
+                const platformValue = Number(event.commission.platformValue) || 0;
+                platformFee = Math.round(baseAmount * (platformValue / 100) * 100) / 100;
+            }
+        }
+        const totalAmount = baseAmount + platformFee;
         const bookingRef = `BK-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
         const booking = await this.bookingRepo.create({
             bookingRef,
@@ -68,8 +77,16 @@ class CheckoutCommandHandler {
         await this.cacheService.delPattern('events:search:*');
         // Create checkout order on payment gateway
         const razorpayOrder = await this.commsService.createRazorpayOrder(totalAmount, 'INR', bookingRef);
+        // Save razorpayOrderId into the booking
+        let updatedBooking = booking;
+        if (razorpayOrder && razorpayOrder.id) {
+            updatedBooking = await this.bookingRepo.updatePaymentDetails(booking.id, {
+                razorpayOrderId: razorpayOrder.id,
+                paymentGateway: 'RAZORPAY',
+            });
+        }
         return {
-            booking,
+            booking: updatedBooking,
             eventTitle: event.title,
             razorpayOrder,
         };

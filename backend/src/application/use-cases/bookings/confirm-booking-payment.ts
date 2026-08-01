@@ -36,9 +36,13 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
   ) { }
 
   async handle(command: ConfirmBookingPaymentCommand): Promise<any> {
-    const { bookingId, clientId, paymentMethod } = command;
+    const { bookingId, clientId, paymentMethod, razorpayOrderId, razorpayPaymentId } = command;
 
-    const booking = await this.bookingRepo.findById(bookingId);
+    let booking = await this.bookingRepo.findById(bookingId);
+    if (!booking && razorpayOrderId) {
+      booking = await this.bookingRepo.findByRazorpayOrderId(razorpayOrderId);
+    }
+
     if (!booking) {
       throw new NotFoundError('Booking record not found.');
     }
@@ -82,9 +86,12 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
       gatewayTxnId = command.razorpayPaymentId || gatewayTxnId;
     }
 
-    // 1. Update Booking status to CONFIRMED
-    const updatedBooking = await this.bookingRepo.update(booking.id, {
-      status: BookingStatus.CONFIRMED,
+    // 1. Mark payment captured & confirm booking
+    const updatedBooking = await this.bookingRepo.markPaymentCaptured(booking.id, {
+      razorpayPaymentId: razorpayPaymentId || gatewayTxnId,
+      paymentMethod: paymentMethod || 'RAZORPAY',
+      paymentCapturedAt: new Date(),
+      paymentGateway: 'RAZORPAY',
     });
 
     // Increment conversions for boosted events
@@ -136,16 +143,22 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
 
     const hostLiability = totalAmount - platformRevenue;
 
-    // 3. Write Payment capture entry to Transaction Ledger
-    const ledgerEntry = await this.ledgerRepo.create({
-      bookingId: booking.id,
-      gatewayTxnId,
-      type: LedgerTxnType.PAYMENT_CAPTURE,
-      amountCaptured: totalAmount,
-      platformRevenue,
-      hostLiability,
-      status: LedgerStatus.HELD,
-    });
+    // 3. Write Payment capture entry to Transaction Ledger idempotently
+    let ledgerEntry = null;
+    const existingLedger = await this.ledgerRepo.findMany({ gatewayTxnId });
+    if (!existingLedger || existingLedger.length === 0) {
+      ledgerEntry = await this.ledgerRepo.create({
+        bookingId: booking.id,
+        gatewayTxnId,
+        type: LedgerTxnType.PAYMENT_CAPTURE,
+        amountCaptured: totalAmount,
+        platformRevenue,
+        hostLiability,
+        status: LedgerStatus.HELD,
+      });
+    } else {
+      ledgerEntry = existingLedger[0];
+    }
 
     // 4. Resolve notification templates and enqueue background dispatch
     try {

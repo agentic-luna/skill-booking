@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaBookingRepository = void 0;
+const client_1 = require("@prisma/client");
 const prisma_1 = require("../../../config/prisma");
 function mapBooking(b) {
     if (!b)
@@ -61,6 +62,48 @@ class PrismaBookingRepository {
         });
         return mapBooking(b);
     }
+    async findByRazorpayOrderId(razorpayOrderId) {
+        if (!razorpayOrderId)
+            return null;
+        const b = await prisma_1.prisma.booking.findUnique({
+            where: { razorpayOrderId },
+            include: {
+                client: true,
+                event: {
+                    include: {
+                        commission: true,
+                        host: {
+                            include: {
+                                user: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return mapBooking(b);
+    }
+    async findByRazorpayPaymentId(razorpayPaymentId) {
+        if (!razorpayPaymentId)
+            return null;
+        const b = await prisma_1.prisma.booking.findFirst({
+            where: { razorpayPaymentId },
+            include: {
+                client: true,
+                event: {
+                    include: {
+                        commission: true,
+                        host: {
+                            include: {
+                                user: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return mapBooking(b);
+    }
     async findMany(filters) {
         const list = await prisma_1.prisma.booking.findMany({
             where: filters,
@@ -89,6 +132,27 @@ class PrismaBookingRepository {
         const updated = await prisma_1.prisma.booking.update({
             where: { id },
             data,
+        });
+        return mapBooking(updated);
+    }
+    async updatePaymentDetails(bookingId, details) {
+        const updated = await prisma_1.prisma.booking.update({
+            where: { id: bookingId },
+            data: details,
+        });
+        return mapBooking(updated);
+    }
+    async markPaymentCaptured(bookingId, details) {
+        const updated = await prisma_1.prisma.booking.update({
+            where: { id: bookingId },
+            data: {
+                status: client_1.BookingStatus.CONFIRMED,
+                razorpayPaymentId: details.razorpayPaymentId,
+                paymentMethod: details.paymentMethod || 'RAZORPAY',
+                paymentCapturedAt: details.paymentCapturedAt || new Date(),
+                paymentGateway: details.paymentGateway || 'RAZORPAY',
+                webhookProcessed: true,
+            },
         });
         return mapBooking(updated);
     }

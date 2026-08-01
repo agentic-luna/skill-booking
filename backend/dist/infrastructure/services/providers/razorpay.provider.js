@@ -61,25 +61,49 @@ class RazorpayPaymentGatewayProvider {
         return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
     }
     async verifyWebhookSignature(payload, signature, secret) {
+        const { webhookSecret } = await this.getRazorpayClient();
+        const activeSecret = secret || webhookSecret;
+        let body;
+        if (Buffer.isBuffer(payload)) {
+            body = payload.toString("utf8");
+        }
+        else if (typeof payload === "string") {
+            body = payload;
+        }
+        else {
+            body = JSON.stringify(payload);
+        }
+        const expectedSignature = crypto_1.default
+            .createHmac("sha256", activeSecret)
+            .update(body)
+            .digest("hex");
+        console.log("==================================");
+        console.log("Secret:", activeSecret);
+        console.log("Received:", signature);
+        console.log("Expected:", expectedSignature);
+        console.log("Body Length:", body.length);
+        console.log("==================================");
+        return expectedSignature === signature;
+    }
+    async verifyPaymentSignature(orderId, paymentId, signature) {
         try {
-            let activeSecret = secret;
-            if (!activeSecret) {
-                const { webhookSecret, keySecret } = await this.getRazorpayClient();
-                activeSecret = webhookSecret || keySecret;
-            }
-            if (!activeSecret) {
-                this.logger.warn('[RazorpayProvider] Webhook secret not found for signature verification');
+            const { keySecret } = await this.getRazorpayClient();
+            if (!keySecret) {
+                this.logger.warn('[RazorpayProvider] keySecret not found — cannot verify payment signature');
                 return false;
             }
-            const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
             const expectedSignature = crypto_1.default
-                .createHmac('sha256', activeSecret)
-                .update(body)
+                .createHmac('sha256', keySecret)
+                .update(`${orderId}|${paymentId}`)
                 .digest('hex');
-            return expectedSignature === signature;
+            const isValid = expectedSignature === signature;
+            if (!isValid) {
+                this.logger.warn('[RazorpayProvider] Payment signature mismatch', { orderId, paymentId });
+            }
+            return isValid;
         }
         catch (err) {
-            this.logger.error('[RazorpayProvider] Webhook signature validation error', err);
+            this.logger.error('[RazorpayProvider] Payment signature validation error', err);
             return false;
         }
     }

@@ -27,25 +27,65 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
   async handle(command: HandlePaymentWebhookCommand): Promise<any> {
     const { payload } = command;
 
-    // Retrieve and verify booking
-    const gatewayTxnId = payload.paymentId || payload.razorpay_payment_id || payload.payload?.payment?.entity?.id;
-    const bookingRef = payload.bookingRef || payload.razorpay_order_id || payload.payload?.payment?.entity?.order_id || payload.payload?.payment?.entity?.notes?.bookingRef;
-    
-    if (!bookingRef) {
-      throw new Error('Booking reference not provided in payload');
+    // Extract Razorpay payment details from payload
+    const razorpayOrderId =
+      payload.payload?.payment?.entity?.order_id ||
+      payload.payload?.order?.entity?.id ||
+      payload.razorpay_order_id ||
+      payload.razorpayOrderId ||
+      payload.order_id;
+
+    const razorpayPaymentId =
+      payload.payload?.payment?.entity?.id ||
+      payload.razorpay_payment_id ||
+      payload.razorpayPaymentId ||
+      payload.paymentId;
+
+    const paymentMethod =
+      payload.payload?.payment?.entity?.method ||
+      payload.paymentMethod ||
+      'RAZORPAY';
+
+    const capturedAtRaw = payload.payload?.payment?.entity?.created_at;
+    const paymentCapturedAt = capturedAtRaw ? new Date(capturedAtRaw * 1000) : new Date();
+
+    const bookingRef =
+      payload.payload?.payment?.entity?.notes?.bookingRef ||
+      payload.bookingRef;
+
+    // Find booking primarily using razorpayOrderId
+    let booking = null;
+    if (razorpayOrderId) {
+      booking = await this.bookingRepo.findByRazorpayOrderId(razorpayOrderId);
     }
 
-    const booking = await this.bookingRepo.findFirstByRef(bookingRef);
+    // Fall back to searching by bookingRef if not found by orderId
+    if (!booking && bookingRef) {
+      booking = await this.bookingRepo.findFirstByRef(bookingRef);
+    }
+
     if (!booking) {
-      throw new Error(`Booking not found for reference: ${bookingRef}`);
+      throw new Error(`Booking not found for orderId: ${razorpayOrderId || 'N/A'} / ref: ${bookingRef || 'N/A'}`);
     }
 
-    if (booking.status === BookingStatus.CONFIRMED) {
-      return booking; // Already processed
+    // Idempotency check: avoid double processing if already confirmed or webhook processed
+    if (booking.status === BookingStatus.CONFIRMED || booking.webhookProcessed) {
+      return {
+        status: 'already_processed',
+        bookingId: booking.id,
+        gatewayTxnId: razorpayPaymentId || booking.razorpayPaymentId,
+      };
     }
 
-    // 1. Update Booking status to CONFIRMED
-    await this.bookingRepo.update(booking.id, { status: BookingStatus.CONFIRMED });
+    const gatewayTxnId = razorpayPaymentId || booking.razorpayPaymentId || `pay_wh_${booking.id}`;
+
+    // 1. Mark payment as captured & confirm booking
+    const updatedBooking = await this.bookingRepo.markPaymentCaptured(booking.id, {
+      razorpayPaymentId: gatewayTxnId,
+      paymentMethod,
+      paymentCapturedAt,
+      paymentGateway: 'RAZORPAY',
+    });
 
     // Increment conversions for boosted events
     try {
@@ -97,55 +137,60 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
 
     const hostLiability = totalAmount - platformRevenue;
 
-    // 3. Write Payment capture to Ledger
-    await this.ledgerRepo.create({
-      bookingId: booking.id,
-      gatewayTxnId,
-      type: LedgerTxnType.PAYMENT_CAPTURE,
-      amountCaptured: totalAmount,
-      platformRevenue,
-      hostLiability,
-      status: LedgerStatus.HELD,
-    });
+    // 3. Write Payment capture to Ledger idempotently
+    const existingLedger = await this.ledgerRepo.findMany({ gatewayTxnId });
+    if (!existingLedger || existingLedger.length === 0) {
+      await this.ledgerRepo.create({
+        bookingId: booking.id,
+        gatewayTxnId,
+        type: LedgerTxnType.PAYMENT_CAPTURE,
+        amountCaptured: totalAmount,
+        platformRevenue,
+        hostLiability,
+        status: LedgerStatus.HELD,
+      });
+    }
 
     // 4. Resolve notification templates and enqueue background job dispatch
     const client = booking.client;
     const event = booking.event;
 
-    const templates = await this.configRepo.findTemplates({
-      triggerEvent: TriggerEvent.BOOKING_CONFIRMED,
-      isActive: true,
-    });
-
-    for (const temp of templates) {
-      let content = temp.bodyContent;
-      const userName = `${client.firstName} ${client.lastName}`;
-      const replacements = {
-        '{{userName}}': userName,
-        '{{eventTitle}}': event.title,
-        '{{bookingRef}}': booking.bookingRef,
-        '{{seatCount}}': booking.seatCount.toString(),
-        '{{totalAmount}}': booking.totalAmount.toString(),
-      };
-
-      for (const [placeholder, value] of Object.entries(replacements)) {
-        content = content.replace(new RegExp(placeholder, 'g'), value);
-      }
-
-      const recipient = temp.channel === DeliveryChannel.EMAIL ? client.email : client.phone;
-
-      const log = await this.notificationRepo.create({
-        userId: client.id,
-        channel: temp.channel,
+    if (client && event) {
+      const templates = await this.configRepo.findTemplates({
         triggerEvent: TriggerEvent.BOOKING_CONFIRMED,
-        recipient,
-        content,
-        status: temp.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
-        sentAt: temp.channel === DeliveryChannel.IN_APP ? new Date() : null,
+        isActive: true,
       });
 
-      if (temp.channel !== DeliveryChannel.IN_APP) {
-        await this.queueService.addNotificationJob(log.id);
+      for (const temp of templates) {
+        let content = temp.bodyContent;
+        const userName = `${client.firstName} ${client.lastName}`;
+        const replacements = {
+          '{{userName}}': userName,
+          '{{eventTitle}}': event.title,
+          '{{bookingRef}}': booking.bookingRef,
+          '{{seatCount}}': booking.seatCount.toString(),
+          '{{totalAmount}}': booking.totalAmount.toString(),
+        };
+
+        for (const [placeholder, value] of Object.entries(replacements)) {
+          content = content.replace(new RegExp(placeholder, 'g'), value);
+        }
+
+        const recipient = temp.channel === DeliveryChannel.EMAIL ? client.email : client.phone;
+
+        const log = await this.notificationRepo.create({
+          userId: client.id,
+          channel: temp.channel,
+          triggerEvent: TriggerEvent.BOOKING_CONFIRMED,
+          recipient,
+          content,
+          status: temp.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+          sentAt: temp.channel === DeliveryChannel.IN_APP ? new Date() : null,
+        });
+
+        if (temp.channel !== DeliveryChannel.IN_APP) {
+          await this.queueService.addNotificationJob(log.id);
+        }
       }
     }
 

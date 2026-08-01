@@ -84,6 +84,7 @@ const setup_twilio_1 = require("../application/use-cases/integrations/setup-twil
 const setup_sendgrid_1 = require("../application/use-cases/integrations/setup-sendgrid");
 const setup_meta_wa_1 = require("../application/use-cases/integrations/setup-meta-wa");
 const setup_razorpay_1 = require("../application/use-cases/integrations/setup-razorpay");
+const get_razorpay_public_key_1 = require("../application/use-cases/payments/get-razorpay-public-key");
 // 1. Initialize core logger & database repositories
 const logger = new winston_logger_1.WinstonLoggerService();
 exports.logger = logger;
@@ -164,7 +165,7 @@ mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommand
 mediator.register('CheckoutCommand', new checkout_1.CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
 mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
 mediator.register('GetMyBookingsQuery', new get_my_bookings_1.GetMyBookingsQueryHandler(bookingRepo));
-mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
+mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, cryptoService, notificationRepo, queueService, cacheService));
 mediator.register('GetCancellationQuoteQuery', new get_cancellation_quote_1.GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
@@ -200,10 +201,11 @@ mediator.register('GetBoostedEventsQuery', new get_boosted_events_1.GetBoostedEv
 mediator.register('RequestBoostCommand', new request_boost_1.RequestBoostCommandHandler(boostedRepo, commsService, configRepo));
 mediator.register('UpdateBoostStatusCommand', new update_boost_status_1.UpdateBoostStatusCommandHandler(boostedRepo));
 mediator.register('GetBoostRequestsQuery', new get_boost_requests_1.GetBoostRequestsQueryHandler(boostedRepo));
-mediator.register('VerifyBoostPaymentCommand', new verify_boost_payment_1.VerifyBoostPaymentCommandHandler(boostedRepo, configRepo));
+mediator.register('VerifyBoostPaymentCommand', new verify_boost_payment_1.VerifyBoostPaymentCommandHandler(boostedRepo, configRepo, cryptoService));
 mediator.register('GetBoostPricingQuery', new get_boost_pricing_1.GetBoostPricingQueryHandler(configRepo));
 // Integrations
 mediator.register('SetupTwilioCommand', new setup_twilio_1.SetupTwilioCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupSendgridCommand', new setup_sendgrid_1.SetupSendgridCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupMetaWaCommand', new setup_meta_wa_1.SetupMetaWaCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupRazorpayCommand', new setup_razorpay_1.SetupRazorpayCommandHandler(configRepo, cryptoService, cacheService));
+mediator.register('GetRazorpayPublicKeyQuery', new get_razorpay_public_key_1.GetRazorpayPublicKeyQueryHandler(configRepo, cryptoService));

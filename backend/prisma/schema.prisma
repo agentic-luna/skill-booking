@@ -79,7 +79,6 @@ enum EventStatus {
   EDIT_MODE
 }
 
-
 enum EditRequestStatus {
   PENDING
   APPROVED
@@ -116,6 +115,9 @@ enum LedgerTxnType {
   PAYMENT_CAPTURE
   ESCROW_RELEASE
   REFUND
+  SETTLEMENT
+  REFUND_ADJUSTMENT
+  MANUAL_ADJUSTMENT
 }
 
 enum LedgerStatus {
@@ -349,8 +351,17 @@ model Review {
 }
 
 model Booking {
-  id             String          @id @default(uuid()) @db.Uuid
-  bookingRef     String          @unique
+  id         String @id @default(uuid()) @db.Uuid
+  bookingRef String @unique
+
+  razorpayOrderId   String?   @unique
+  razorpayPaymentId String?   @unique
+  razorpaySignature String?
+  paymentMethod     String?
+  paymentCapturedAt DateTime?
+  paymentGateway    String?   @default("RAZORPAY")
+  webhookProcessed  Boolean   @default(false)
+
   clientId       String          @db.Uuid
   eventId        String          @db.Uuid
   seatCount      Int

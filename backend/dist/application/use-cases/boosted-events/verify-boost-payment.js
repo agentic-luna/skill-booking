@@ -24,9 +24,11 @@ exports.VerifyBoostPaymentCommand = VerifyBoostPaymentCommand;
 class VerifyBoostPaymentCommandHandler {
     boostedRepo;
     configRepo;
-    constructor(boostedRepo, configRepo) {
+    cryptoService;
+    constructor(boostedRepo, configRepo, cryptoService) {
         this.boostedRepo = boostedRepo;
         this.configRepo = configRepo;
+        this.cryptoService = cryptoService;
     }
     async handle(command) {
         const dbBoost = await this.boostedRepo.findById(command.boostId);
@@ -58,7 +60,8 @@ class VerifyBoostPaymentCommandHandler {
         if (!config || !config.credentials || typeof config.credentials !== 'object') {
             throw new errors_1.BadRequestError('Razorpay is not configured on this platform');
         }
-        const keySecret = config.credentials.keySecret;
+        const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+        const keySecret = decrypted?.keySecret;
         if (!keySecret) {
             throw new errors_1.BadRequestError('Razorpay keySecret is missing');
         }
