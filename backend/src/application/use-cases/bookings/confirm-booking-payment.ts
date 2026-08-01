@@ -62,26 +62,24 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
     let gatewayTxnId = `direct_pay_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
     if (command.razorpaySignature) {
-      if (command.razorpaySignature !== 'MOCK_SUCCESS') {
-        const config = await this.configRepo.findIntegration(IntegrationService.RAZORPAY);
-        if (!config || !config.credentials || typeof config.credentials !== 'object') {
-          throw new BadRequestError('Razorpay is not configured on this platform');
-        }
+      const config = await this.configRepo.findIntegration(IntegrationService.RAZORPAY);
+      if (!config || !config.credentials || typeof config.credentials !== 'object') {
+        throw new BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
+      }
 
-        const decrypted = this.cryptoService.decryptCredentials(config.credentials);
-        const keySecret = decrypted?.keySecret;
-        if (!keySecret) {
-          throw new BadRequestError('Razorpay keySecret is missing');
-        }
+      const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+      const keySecret = decrypted?.keySecret;
+      if (!keySecret) {
+        throw new BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
+      }
 
-        // Verify signature
-        const hmac = crypto.createHmac('sha256', keySecret);
-        hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
-        const generatedSignature = hmac.digest('hex');
+      // Verify signature
+      const hmac = crypto.createHmac('sha256', keySecret);
+      hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
+      const generatedSignature = hmac.digest('hex');
 
-        if (generatedSignature !== command.razorpaySignature) {
-          throw new BadRequestError('Invalid payment signature');
-        }
+      if (generatedSignature !== command.razorpaySignature) {
+        throw new BadRequestError('Invalid payment signature');
       }
       gatewayTxnId = command.razorpayPaymentId || gatewayTxnId;
     }

@@ -51,28 +51,15 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
       isActive = false;
     }
 
-    if (razorpaySignature === 'MOCK_SUCCESS') {
-      // Bypass signature check for sentinel mock calls
-      const boost = await this.boostedRepo.markPaymentCaptured(dbBoost.id, {
-        razorpayPaymentId: razorpayPaymentId || `pay_mock_${dbBoost.id}`,
-        paymentMethod: 'RAZORPAY',
-        paymentCapturedAt: new Date(),
-        paymentGateway: 'RAZORPAY',
-        status: initialStatus,
-        isActive,
-      });
-      return { success: true, boost };
-    }
-
     const config = await this.configRepo.findIntegration(IntegrationService.RAZORPAY);
     if (!config || !config.credentials || typeof config.credentials !== 'object') {
-      throw new BadRequestError('Razorpay is not configured on this platform');
+      throw new BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
     }
 
     const decrypted = this.cryptoService.decryptCredentials(config.credentials);
     const keySecret = decrypted?.keySecret;
     if (!keySecret) {
-      throw new BadRequestError('Razorpay keySecret is missing');
+      throw new BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
     }
 
     // Verify signature

@@ -76,7 +76,7 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
 
     // Fetch dynamic pricing
     const pricingConfig = await this.configRepo.findPlatformSetting('BOOST_PRICING');
-    let amount = 500; // default fallback
+    let amount: number | null = null;
 
     if (pricingConfig && pricingConfig.value) {
       let parsed = pricingConfig.value;
@@ -93,31 +93,14 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
             p.tier.toUpperCase() === command.tier.toUpperCase() &&
             Number(p.days) === Number(command.durationDays)
         );
-        if (plan && plan.price !== undefined) {
+        if (plan && plan.price !== undefined && plan.price !== null) {
           amount = Number(plan.price);
         }
       }
-    } else {
-      // Hardcoded fallback matching default array from GetBoostPricingQueryHandler
-      const fallbacks = [
-        { tier: "BASIC", days: 7, price: 400 },
-        { tier: "BASIC", days: 15, price: 800 },
-        { tier: "BASIC", days: 30, price: 2000 },
-        { tier: "STANDARD", days: 7, price: 600 },
-        { tier: "STANDARD", days: 15, price: 1200 },
-        { tier: "STANDARD", days: 30, price: 3000 },
-        { tier: "PRO", days: 7, price: 1000 },
-        { tier: "PRO", days: 15, price: 2000 },
-        { tier: "PRO", days: 30, price: 5000 },
-      ];
-      const plan = fallbacks.find(
-        (p: any) =>
-          p.tier.toUpperCase() === command.tier.toUpperCase() &&
-          Number(p.days) === Number(command.durationDays)
-      );
-      if (plan) {
-        amount = plan.price;
-      }
+    }
+
+    if (amount === null || isNaN(amount)) {
+      throw new BadRequestError('Boost pricing is not configured. Admin has to configure boost pricing.');
     }
 
     const boostRequest = await this.boostedRepo.upsert(command.eventId, {

@@ -84,17 +84,14 @@ export class PaymentController {
       }
 
       // Verify the Razorpay payment signature via the provider before confirming.
-      // Skip verification only for the explicit mock sentinel (dev/test environments).
-      if (razorpaySignature !== 'MOCK_SUCCESS') {
-        const isValid = await paymentGatewayProvider.verifyPaymentSignature(
-          razorpayOrderId,
-          razorpayPaymentId,
-          razorpaySignature
-        );
+      const isValid = await paymentGatewayProvider.verifyPaymentSignature(
+        razorpayOrderId,
+        razorpayPaymentId,
+        razorpaySignature
+      );
 
-        if (!isValid) {
-          throw new BadRequestError('Payment signature verification failed. The payment could not be confirmed.');
-        }
+      if (!isValid) {
+        throw new BadRequestError('Payment signature verification failed. The payment could not be confirmed.');
       }
 
       // Signature is valid — delegate confirmation to the existing use case.

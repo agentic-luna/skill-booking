@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetRazorpayPublicKeyQueryHandler = exports.GetRazorpayPublicKeyQuery = void 0;
+const errors_1 = require("../../common/errors");
 class GetRazorpayPublicKeyQuery {
     __tag = 'GetRazorpayPublicKeyQuery';
 }
@@ -15,12 +16,14 @@ class GetRazorpayPublicKeyQueryHandler {
     async handle() {
         const config = await this.configRepository.findIntegration('RAZORPAY');
         if (!config || !config.isActive) {
-            return { keyId: null };
+            throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
         }
         const credentials = this.cryptoService.decryptCredentials(config.credentials);
-        console.log(credentials, "_______+++++++++________");
+        if (!credentials || !credentials.keyId) {
+            throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
+        }
         return {
-            keyId: credentials.keyId ?? null,
+            keyId: credentials.keyId,
         };
     }
 }

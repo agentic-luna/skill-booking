@@ -76,20 +76,11 @@ export function useRazorpayCheckout(opts: UseRazorpayCheckoutOptions = {}) {
         setState("awaiting_payment");
         const keyId = await getRazorpayPublicKey();
 
-        if (!keyId || !razorpayOrder?.id) {
-          // No live Razorpay config — use MOCK_SUCCESS sentinel
-          setState("verifying");
-          const verif = await verifyPayment({
-            bookingId: booking.id,
-            razorpayPaymentId: "mock_pay_" + Date.now(),
-            razorpayOrderId: razorpayOrder?.id || "mock_order_" + Date.now(),
-            razorpaySignature: "MOCK_SUCCESS",
-          });
-          const checkoutResult: RazorpayCheckoutResult = { booking, verification: verif };
-          setResult(checkoutResult);
-          setState("success");
-          opts.onSuccess?.(checkoutResult);
-          return checkoutResult;
+        if (!keyId) {
+          throw new Error("Payment gateway is not configured. Admin has to configure Razorpay credentials.");
+        }
+        if (!razorpayOrder?.id) {
+          throw new Error("Failed to initialize payment gateway order.");
         }
 
         // ─── Step 3: Load SDK + Open real Razorpay modal ─────────────────

@@ -56,12 +56,9 @@ class PaymentController {
                 throw new errors_1.BadRequestError('bookingId, razorpayPaymentId, razorpayOrderId, and razorpaySignature are all required.');
             }
             // Verify the Razorpay payment signature via the provider before confirming.
-            // Skip verification only for the explicit mock sentinel (dev/test environments).
-            if (razorpaySignature !== 'MOCK_SUCCESS') {
-                const isValid = await di_container_1.paymentGatewayProvider.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
-                if (!isValid) {
-                    throw new errors_1.BadRequestError('Payment signature verification failed. The payment could not be confirmed.');
-                }
+            const isValid = await di_container_1.paymentGatewayProvider.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+            if (!isValid) {
+                throw new errors_1.BadRequestError('Payment signature verification failed. The payment could not be confirmed.');
             }
             // Signature is valid — delegate confirmation to the existing use case.
             // Pass the already-verified signature so the use case skips its own crypto check.

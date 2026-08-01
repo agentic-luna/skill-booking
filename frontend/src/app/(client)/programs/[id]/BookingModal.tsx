@@ -164,12 +164,6 @@ export default function BookingModal(props: BookingModalProps) {
     }
   };
 
-  // For the mock dialog: same flow, hook auto-detects no keyId and uses MOCK_SUCCESS
-  const handleFakePaymentApprove = async () => {
-    store.setRazorpayAlert(false);
-    await handleRazorpayClick();
-  };
-
   const handleClose = () => {
     if (props.onClose) props.onClose();
     if (props.onOpenChange) props.onOpenChange(false);
@@ -545,40 +539,6 @@ export default function BookingModal(props: BookingModalProps) {
               </div>
             </>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Razorpay UPI / Payment Modal Simulation */}
-      <Dialog open={store.razorpayAlert} onOpenChange={store.setRazorpayAlert}>
-        <DialogContent className="sm:max-w-md rounded-2xl p-6 border-2 border-blue-500/30 bg-background shadow-2xl">
-          <div className="text-center space-y-4">
-            <div className="mx-auto w-14 h-14 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex items-center justify-center">
-              <CreditCard className="h-7 w-7 text-blue-500" />
-            </div>
-
-            <div className="space-y-1">
-              <div className="text-xs font-extrabold text-blue-500 uppercase tracking-wider">Razorpay Gateway Simulation</div>
-              <h3 className="text-lg font-black text-foreground">Complete Payment ₹{summary.total.toFixed(2)}</h3>
-              <p className="text-xs text-muted-foreground">
-                Select your preferred UPI app or click approve to simulate gateway payment callback.
-              </p>
-            </div>
-
-            <div className="p-3 bg-muted/40 rounded-xl border text-xs text-left space-y-1.5">
-              <div className="flex justify-between"><span className="text-muted-foreground">Merchant</span><span className="font-bold text-foreground">BookMyTraining Pvt Ltd</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-extrabold text-emerald-600">₹{summary.total.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">UPI Methods</span><span className="font-semibold text-foreground">GPay / PhonePe / Paytm</span></div>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1 text-xs rounded-xl h-10" onClick={() => store.setRazorpayAlert(false)}>
-                Cancel
-              </Button>
-              <Button className="flex-1 text-xs rounded-xl h-10 font-bold bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleFakePaymentApprove}>
-                Approve Payment ✓
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </>

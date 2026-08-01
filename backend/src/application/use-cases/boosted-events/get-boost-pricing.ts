@@ -74,20 +74,7 @@ export class GetBoostPricingQueryHandler implements IRequestHandler<GetBoostPric
       }
     }
 
-    // Default fallback if not configured by admin
-    return [
-      { id: "def-basic-3", tier: "BASIC", days: 3, price: 299, features: basicFeatures },
-      { id: "def-basic-7", tier: "BASIC", days: 7, price: 599, features: basicFeatures },
-      { id: "def-basic-15", tier: "BASIC", days: 15, price: 999, features: basicFeatures },
-      { id: "def-basic-30", tier: "BASIC", days: 30, price: 1699, features: basicFeatures },
-      { id: "def-standard-3", tier: "STANDARD", days: 3, price: 699, features: standardFeatures },
-      { id: "def-standard-7", tier: "STANDARD", days: 7, price: 1299, features: standardFeatures },
-      { id: "def-standard-15", tier: "STANDARD", days: 15, price: 2199, features: standardFeatures },
-      { id: "def-standard-30", tier: "STANDARD", days: 30, price: 3799, features: standardFeatures },
-      { id: "def-pro-3", tier: "PRO", days: 3, price: 1999, features: proFeatures },
-      { id: "def-pro-7", tier: "PRO", days: 7, price: 3999, features: proFeatures },
-      { id: "def-pro-15", tier: "PRO", days: 15, price: 6999, features: proFeatures },
-      { id: "def-pro-30", tier: "PRO", days: 30, price: 11999, features: proFeatures },
-    ];
+    // If not configured by admin, return empty array
+    return [];
   }
 }

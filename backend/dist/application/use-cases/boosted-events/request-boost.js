@@ -26,8 +26,21 @@ class RequestBoostCommandHandler {
     }
     async handle(command) {
         const { eventId, tier } = command;
-        // Check for existing active non-expired boost campaign
         const now = new Date();
+        // Check if target event exists and meets boosting requirements
+        const event = await prisma_1.prisma.event.findUnique({
+            where: { id: eventId },
+        });
+        if (!event) {
+            throw new errors_1.NotFoundError('Event not found');
+        }
+        if (event.status !== 'APPROVED') {
+            throw new errors_1.BadRequestError('Only approved events can be boosted.');
+        }
+        if (event.startTime >= now) {
+            throw new errors_1.BadRequestError('Only events with a start date less than current date can be boosted.');
+        }
+        // Check for existing active non-expired boost campaign
         const existingActiveBoost = await prisma_1.prisma.boostedEvent.findFirst({
             where: {
                 eventId,
@@ -54,7 +67,7 @@ class RequestBoostCommandHandler {
         endDate.setDate(endDate.getDate() + durationDays);
         // Fetch dynamic pricing
         const pricingConfig = await this.configRepo.findPlatformSetting('BOOST_PRICING');
-        let amount = 500; // default fallback
+        let amount = null;
         if (pricingConfig && pricingConfig.value) {
             let parsed = pricingConfig.value;
             if (typeof parsed === 'string') {
@@ -68,29 +81,13 @@ class RequestBoostCommandHandler {
             if (Array.isArray(parsed) && parsed.length > 0) {
                 const plan = parsed.find((p) => p.tier.toUpperCase() === command.tier.toUpperCase() &&
                     Number(p.days) === Number(command.durationDays));
-                if (plan && plan.price !== undefined) {
+                if (plan && plan.price !== undefined && plan.price !== null) {
                     amount = Number(plan.price);
                 }
             }
         }
-        else {
-            // Hardcoded fallback matching default array from GetBoostPricingQueryHandler
-            const fallbacks = [
-                { tier: "BASIC", days: 7, price: 400 },
-                { tier: "BASIC", days: 15, price: 800 },
-                { tier: "BASIC", days: 30, price: 2000 },
-                { tier: "STANDARD", days: 7, price: 600 },
-                { tier: "STANDARD", days: 15, price: 1200 },
-                { tier: "STANDARD", days: 30, price: 3000 },
-                { tier: "PRO", days: 7, price: 1000 },
-                { tier: "PRO", days: 15, price: 2000 },
-                { tier: "PRO", days: 30, price: 5000 },
-            ];
-            const plan = fallbacks.find((p) => p.tier.toUpperCase() === command.tier.toUpperCase() &&
-                Number(p.days) === Number(command.durationDays));
-            if (plan) {
-                amount = plan.price;
-            }
+        if (amount === null || isNaN(amount)) {
+            throw new errors_1.BadRequestError('Boost pricing is not configured. Admin has to configure boost pricing.');
         }
         const boostRequest = await this.boostedRepo.upsert(command.eventId, {
             priority: command.tier === 'PRO' ? 3 : command.tier === 'STANDARD' ? 2 : 1,

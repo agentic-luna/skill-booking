@@ -64,23 +64,21 @@ class ConfirmBookingPaymentCommandHandler {
         }
         let gatewayTxnId = `direct_pay_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
         if (command.razorpaySignature) {
-            if (command.razorpaySignature !== 'MOCK_SUCCESS') {
-                const config = await this.configRepo.findIntegration(client_1.IntegrationService.RAZORPAY);
-                if (!config || !config.credentials || typeof config.credentials !== 'object') {
-                    throw new errors_1.BadRequestError('Razorpay is not configured on this platform');
-                }
-                const decrypted = this.cryptoService.decryptCredentials(config.credentials);
-                const keySecret = decrypted?.keySecret;
-                if (!keySecret) {
-                    throw new errors_1.BadRequestError('Razorpay keySecret is missing');
-                }
-                // Verify signature
-                const hmac = crypto_1.default.createHmac('sha256', keySecret);
-                hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
-                const generatedSignature = hmac.digest('hex');
-                if (generatedSignature !== command.razorpaySignature) {
-                    throw new errors_1.BadRequestError('Invalid payment signature');
-                }
+            const config = await this.configRepo.findIntegration(client_1.IntegrationService.RAZORPAY);
+            if (!config || !config.credentials || typeof config.credentials !== 'object') {
+                throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
+            }
+            const decrypted = this.cryptoService.decryptCredentials(config.credentials);
+            const keySecret = decrypted?.keySecret;
+            if (!keySecret) {
+                throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
+            }
+            // Verify signature
+            const hmac = crypto_1.default.createHmac('sha256', keySecret);
+            hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
+            const generatedSignature = hmac.digest('hex');
+            if (generatedSignature !== command.razorpaySignature) {
+                throw new errors_1.BadRequestError('Invalid payment signature');
             }
             gatewayTxnId = command.razorpayPaymentId || gatewayTxnId;
         }

@@ -7,6 +7,7 @@ exports.RazorpayPaymentGatewayProvider = void 0;
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
 const client_1 = require("@prisma/client");
+const errors_1 = require("../../../application/common/errors");
 class RazorpayPaymentGatewayProvider {
     configRepo;
     cryptoService;
@@ -36,29 +37,28 @@ class RazorpayPaymentGatewayProvider {
             }
         }
         catch (e) {
-            this.logger.warn('[RazorpayProvider] Decryption fallback to mock.', { error: e });
+            this.logger.warn('[RazorpayProvider] Decryption error for credentials.', { error: e });
         }
         return { client: null };
     }
     async createOrder(amount, currency, receipt) {
         const { client } = await this.getRazorpayClient();
-        const mockOrderId = `order_${Math.random().toString(36).substring(2, 15)}`;
-        if (client) {
-            try {
-                const order = await client.orders.create({
-                    amount: Math.round(amount * 100), // convert to paise
-                    currency: currency || 'INR',
-                    receipt,
-                });
-                this.logger.info(`[RazorpayProvider] Created real order ${order.id} for ${amount} ${currency}`);
-                return { id: order.id, amount, currency: currency || 'INR', receipt };
-            }
-            catch (err) {
-                this.logger.error('[RazorpayProvider] Failed to create Razorpay Order via SDK', err);
-            }
+        if (!client) {
+            throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
         }
-        this.logger.warn(`[Mock Razorpay] Active credentials not found. Created mock order ${mockOrderId} for amount ${amount} ${currency}`);
-        return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
+        try {
+            const order = await client.orders.create({
+                amount: Math.round(amount * 100), // convert to paise
+                currency: currency || 'INR',
+                receipt,
+            });
+            this.logger.info(`[RazorpayProvider] Created real order ${order.id} for ${amount} ${currency}`);
+            return { id: order.id, amount, currency: currency || 'INR', receipt };
+        }
+        catch (err) {
+            this.logger.error('[RazorpayProvider] Failed to create Razorpay Order via SDK', err);
+            throw new errors_1.BadRequestError(`Razorpay order creation failed: ${err.message || 'Payment gateway error'}`);
+        }
     }
     async verifyWebhookSignature(payload, signature, secret) {
         const { webhookSecret } = await this.getRazorpayClient();
@@ -77,12 +77,6 @@ class RazorpayPaymentGatewayProvider {
             .createHmac("sha256", activeSecret)
             .update(body)
             .digest("hex");
-        console.log("==================================");
-        console.log("Secret:", activeSecret);
-        console.log("Received:", signature);
-        console.log("Expected:", expectedSignature);
-        console.log("Body Length:", body.length);
-        console.log("==================================");
         return expectedSignature === signature;
     }
     async verifyPaymentSignature(orderId, paymentId, signature) {
@@ -109,47 +103,43 @@ class RazorpayPaymentGatewayProvider {
     }
     async initiateRefund(paymentId, amount, notes) {
         const { client } = await this.getRazorpayClient();
-        const mockRefundId = `rfnd_${Math.random().toString(36).substring(2, 15)}`;
-        if (client) {
-            try {
-                const refund = await client.payments.refund(paymentId, {
-                    amount: Math.round(amount * 100),
-                    notes,
-                });
-                this.logger.info(`[RazorpayProvider] Real refund of ${amount} INR processed for payment ${paymentId}`, { refundId: refund.id });
-                return { success: true, refundId: refund.id, amount };
-            }
-            catch (err) {
-                this.logger.error(`[RazorpayProvider] Live refund failed for payment ${paymentId}`, err);
-            }
+        if (!client) {
+            throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
         }
-        this.logger.warn(`[Mock Razorpay] Active credentials not found. Refund of ${amount} INR processed for payment ${paymentId}`, { refundId: mockRefundId });
-        return { success: true, refundId: mockRefundId, amount };
+        try {
+            const refund = await client.payments.refund(paymentId, {
+                amount: Math.round(amount * 100),
+                notes,
+            });
+            this.logger.info(`[RazorpayProvider] Real refund of ${amount} INR processed for payment ${paymentId}`, { refundId: refund.id });
+            return { success: true, refundId: refund.id, amount };
+        }
+        catch (err) {
+            this.logger.error(`[RazorpayProvider] Live refund failed for payment ${paymentId}`, err);
+            throw new errors_1.BadRequestError(`Razorpay refund failed: ${err.message || 'Payment gateway error'}`);
+        }
     }
     async transferPayout(destinationBankDetail, amount) {
         const { client } = await this.getRazorpayClient();
-        const mockPayoutId = `payout_${Math.random().toString(36).substring(2, 15)}`;
-        if (client) {
-            try {
-                if (client.transfers?.create) {
-                    const transfer = await client.transfers.create({
-                        account: destinationBankDetail.accountNumber,
-                        amount: Math.round(amount * 100),
-                        currency: 'INR',
-                    });
-                    this.logger.info(`[RazorpayProvider] Initiated live transfer ${transfer.id} of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
-                    return { success: true, payoutId: transfer.id };
-                }
-                this.logger.info(`[RazorpayProvider] Initiated live transfer of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
-                return { success: true, payoutId: mockPayoutId };
-            }
-            catch (err) {
-                this.logger.error('[RazorpayProvider] Live transfer failed', err);
-                return { success: false, payoutId: '', error: err.message };
-            }
+        if (!client) {
+            throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
         }
-        this.logger.warn(`[Mock Razorpay Route] Active credentials not found. Payout of ${amount} INR initiated to account ${destinationBankDetail.accountNumber} (${destinationBankDetail.bankName})`);
-        return { success: true, payoutId: mockPayoutId };
+        try {
+            if (client.transfers?.create) {
+                const transfer = await client.transfers.create({
+                    account: destinationBankDetail.accountNumber,
+                    amount: Math.round(amount * 100),
+                    currency: 'INR',
+                });
+                this.logger.info(`[RazorpayProvider] Initiated live transfer ${transfer.id} of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
+                return { success: true, payoutId: transfer.id };
+            }
+            throw new errors_1.BadRequestError('Razorpay transfer service is not supported by current client configuration.');
+        }
+        catch (err) {
+            this.logger.error('[RazorpayProvider] Live transfer failed', err);
+            return { success: false, payoutId: '', error: err.message };
+        }
     }
 }
 exports.RazorpayPaymentGatewayProvider = RazorpayPaymentGatewayProvider;
