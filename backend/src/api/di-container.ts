@@ -92,6 +92,8 @@ import { UpdateBoostStatusCommandHandler } from '../application/use-cases/booste
 import { GetBoostRequestsQueryHandler } from '../application/use-cases/boosted-events/get-boost-requests';
 import { VerifyBoostPaymentCommandHandler } from '../application/use-cases/boosted-events/verify-boost-payment';
 import { GetBoostPricingQueryHandler } from '../application/use-cases/boosted-events/get-boost-pricing';
+import { GetBoostAnalyticsQueryHandler } from '../application/use-cases/boosted-events/get-boost-analytics';
+import { TrackBoostClickCommandHandler } from '../application/use-cases/boosted-events/track-boost-click';
 import { SetupTwilioCommandHandler } from '../application/use-cases/integrations/setup-twilio';
 import { SetupSendgridCommandHandler } from '../application/use-cases/integrations/setup-sendgrid';
 import { SetupMetaWaCommandHandler } from '../application/use-cases/integrations/setup-meta-wa';
@@ -174,7 +176,7 @@ mediator.register('ConfirmBookingPaymentCommand', new ConfirmBookingPaymentComma
 mediator.register('GetCancellationQuoteQuery', new GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 
 // 8. Register Webhook handlers
-mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
+mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService, boostedRepo));
 
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new AdminLoginCommandHandler(userRepo, cacheService));
@@ -214,6 +216,8 @@ mediator.register('UpdateBoostStatusCommand', new UpdateBoostStatusCommandHandle
 mediator.register('GetBoostRequestsQuery', new GetBoostRequestsQueryHandler(boostedRepo));
 mediator.register('VerifyBoostPaymentCommand', new VerifyBoostPaymentCommandHandler(boostedRepo, configRepo, cryptoService));
 mediator.register('GetBoostPricingQuery', new GetBoostPricingQueryHandler(configRepo));
+mediator.register('GetBoostAnalyticsQuery', new GetBoostAnalyticsQueryHandler(boostedRepo));
+mediator.register('TrackBoostClickCommand', new TrackBoostClickCommandHandler());
 
 // Integrations
 mediator.register('SetupTwilioCommand', new SetupTwilioCommandHandler(configRepo, cryptoService, cacheService));

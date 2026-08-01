@@ -280,11 +280,16 @@ export class PrismaEventRepository implements IEventRepository {
       me.reviewsCount = stats.reviewsCount;
     }
 
-    // Sort active boosted events to the top ("Top Event Listings")
+    // Sort active boosted events by boost tier ranking ("Highest Search Ranking" & "Search Priority")
     mappedEvents.sort((a, b) => {
-      const aBoosted = a.boostedEvent && a.boostedEvent.isActive && a.boostedEvent.status === 'ACTIVE' ? 1 : 0;
-      const bBoosted = b.boostedEvent && b.boostedEvent.isActive && b.boostedEvent.status === 'ACTIVE' ? 1 : 0;
-      return bBoosted - aBoosted;
+      const getRank = (e: any) => {
+        if (!e.boostedEvent || !e.boostedEvent.isActive || e.boostedEvent.status !== 'ACTIVE') return 0;
+        const tier = (e.boostedEvent.tier || '').toUpperCase();
+        if (tier === 'PRO') return 3; // Highest Search Ranking
+        if (tier === 'STANDARD') return 2; // Search Priority
+        return 1; // BASIC Top Event Listings
+      };
+      return getRank(b) - getRank(a);
     });
 
     return mappedEvents;

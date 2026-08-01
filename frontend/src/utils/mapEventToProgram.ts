@@ -69,5 +69,10 @@ export function mapEventToProgram(event: any): Program {
     commission: event.commission,
     startTime: event.startTime,
     isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'STANDARD', 'PRO'].includes(event.boostedEvent?.tier),
+    boostTier: (event.boostedEvent?.tier || '').toUpperCase(),
+    hasSearchPriority: ['STANDARD', 'PRO'].includes((event.boostedEvent?.tier || '').toUpperCase()),
+    hasHeroBanner: (event.boostedEvent?.tier || '').toUpperCase() === 'PRO',
+    hasTrendingSection: ['STANDARD', 'PRO'].includes((event.boostedEvent?.tier || '').toUpperCase()),
+    hasFeaturedOrganizerBadge: (event.boostedEvent?.tier || '').toUpperCase() === 'PRO',
   };
 }

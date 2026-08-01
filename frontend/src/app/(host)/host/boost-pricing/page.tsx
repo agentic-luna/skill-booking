@@ -14,6 +14,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
 import { getRazorpayPublicKey } from "@/features/payment/api/paymentApi";
+import PlacementPreviewModal from "@/components/host/PlacementPreviewModal";
 
 // ── Pricing Plan Configurations ─────────────────────────────────────────────
 const PLANS = [
@@ -137,6 +138,7 @@ export default function BoostPricingPage() {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [showPlacementPreview, setShowPlacementPreview] = useState(false);
 
   // Extract unique sorted days configuration dynamically from the database settings
   const dynamicDurations = boostPricing && Array.isArray(boostPricing) && boostPricing.length > 0
@@ -298,6 +300,20 @@ export default function BoostPricingPage() {
         >
           Increase your event visibility and reach more learners with our premium promotion plans.
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="pt-2 flex justify-center"
+        >
+          <button
+            onClick={() => setShowPlacementPreview(true)}
+            className="inline-flex items-center gap-2 bg-[#a0f212]/10 hover:bg-[#a0f212]/20 border border-[#a0f212]/30 text-[#a0f212] px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-md"
+          >
+            <Eye className="h-4 w-4 text-[#a0f212]" /> See Live Placement Previews
+          </button>
+        </motion.div>
       </div>
 
       {/* ── EVENT SELECTOR SECTION ───────────────────────────────────────── */}
@@ -619,6 +635,14 @@ export default function BoostPricingPage() {
           </Button>
         </div>
       </div>
+
+      {/* Placement Preview Modal */}
+      {showPlacementPreview && (
+        <PlacementPreviewModal
+          isOpen={showPlacementPreview}
+          onClose={() => setShowPlacementPreview(false)}
+        />
+      )}
 
     </div>
   );

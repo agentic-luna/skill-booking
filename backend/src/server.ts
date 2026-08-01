@@ -45,6 +45,9 @@ const startServer = async () => {
 
       BookingCleanupJob.startUnconfirmedBookingCleaner();
       logger.info("[BookingCleanupJob] Starting unconfirmed booking cleanup cron...");
+
+      BookingCleanupJob.startUnconfirmedBoostCleaner();
+      logger.info("[BookingCleanupJob] Starting unconfirmed boost cleanup cron...");
     });
   } catch (error) {
     logger.error('[Server] Initialization failed:', error);

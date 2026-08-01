@@ -10,6 +10,9 @@ import { GetBoostPricingQuery } from '../../application/use-cases/boosted-events
 import { ApiResponse } from '../common/api-response';
 import { prisma } from '../../config/prisma';
 
+import { GetBoostAnalyticsQuery } from '../../application/use-cases/boosted-events/get-boost-analytics';
+import { TrackBoostClickCommand } from '../../application/use-cases/boosted-events/track-boost-click';
+
 export class BoostedEventsController {
   static async getActiveBoostedEvents(req: Request, res: Response, next: NextFunction) {
     try {
@@ -48,7 +51,7 @@ export class BoostedEventsController {
   static async requestBoost(req: Request, res: Response, next: NextFunction) {
     try {
       const { eventId, durationDays, tier } = req.body;
-      const result = await mediator.send(new RequestBoostCommand(eventId, Number(durationDays), tier));
+      const result = await mediator.send(new RequestBoostCommand(eventId, durationDays ? Number(durationDays) : undefined, tier));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
@@ -79,6 +82,26 @@ export class BoostedEventsController {
   static async getBoostRequests(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await mediator.send(new GetBoostRequestsQuery());
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAnalytics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.params;
+      const result = await mediator.send(new GetBoostAnalyticsQuery(eventId));
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async trackClick(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.body;
+      const result = await mediator.send(new TrackBoostClickCommand(eventId));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);

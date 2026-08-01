@@ -1,5 +1,6 @@
 import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType, TriggerEvent, DeliveryChannel, NotificationStatus } from '@prisma/client';
 import { IBookingRepository } from '../../../domain/repositories/booking.repository';
+import { IBoostedEventRepository } from '../../../domain/repositories/boosted-event.repository';
 import { ILedgerRepository } from '../../../domain/repositories/ledger.repository';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
 import { prisma } from '../../../config/prisma';
@@ -21,7 +22,8 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
     private configRepo: IConfigRepository,
     private notificationRepo: INotificationRepository,
     private queueService: IQueueService,
-    private cacheService: ICacheService
+    private cacheService: ICacheService,
+    private boostedRepo?: IBoostedEventRepository
   ) {}
 
   async handle(command: HandlePaymentWebhookCommand): Promise<any> {
@@ -64,8 +66,46 @@ export class HandlePaymentWebhookCommandHandler implements IRequestHandler<Handl
       booking = await this.bookingRepo.findFirstByRef(bookingRef);
     }
 
+    // If not a booking payment, check if it belongs to a BoostedEvent request
+    if (!booking && razorpayOrderId && this.boostedRepo) {
+      const boost = await this.boostedRepo.findByRazorpayOrderId(razorpayOrderId);
+      if (boost) {
+        if (boost.status === 'ACTIVE' || boost.status === 'APPROVED' || boost.webhookProcessed) {
+          return {
+            status: 'already_processed',
+            type: 'boost',
+            boostId: boost.id,
+            gatewayTxnId: razorpayPaymentId || boost.razorpayPaymentId,
+          };
+        }
+
+        const now = new Date();
+        const startDate = new Date(boost.startDate);
+        const initialStatus = now < startDate ? 'APPROVED' : 'ACTIVE';
+        const isActive = now < startDate ? false : true;
+
+        const updatedBoost = await this.boostedRepo.markPaymentCaptured(boost.id, {
+          razorpayPaymentId: razorpayPaymentId || `pay_wh_${boost.id}`,
+          paymentMethod,
+          paymentCapturedAt,
+          paymentGateway: 'RAZORPAY',
+          status: initialStatus,
+          isActive,
+        });
+
+        await this.cacheService.delPattern('events:search:*');
+
+        return {
+          status: 'processed',
+          type: 'boost',
+          boostId: updatedBoost.id,
+          gatewayTxnId: razorpayPaymentId,
+        };
+      }
+    }
+
     if (!booking) {
-      throw new Error(`Booking not found for orderId: ${razorpayOrderId || 'N/A'} / ref: ${bookingRef || 'N/A'}`);
+      throw new Error(`Booking/Boost not found for orderId: ${razorpayOrderId || 'N/A'} / ref: ${bookingRef || 'N/A'}`);
     }
 
     // Idempotency check: avoid double processing if already confirmed or webhook processed

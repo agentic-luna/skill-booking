@@ -23,6 +23,7 @@ import AdvancedSearchBar from "@/components/hero-section/AdvancedSearchBar";
 import { mapEventToProgram } from "@/utils/mapEventToProgram";
 import ProgramVideoPlayer from "@/components/program-details/ProgramVideoPlayer";
 import ProgramHighlights from "@/components/program-details/ProgramHighlights";
+import { SponsoredBanner, FeaturedBadge, ProBoostBadge, UltraProBadge, FeaturedOrganizerBadge } from "@/components/common/BoostBadges";
 import InstructorProfile from "@/components/program-details/InstructorProfile";
 import BookingSidebar from "@/components/program-details/BookingSidebar";
 import MobileBookingBar from "@/components/program-details/MobileBookingBar";
@@ -283,15 +284,22 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
           <div className="lg:col-span-2 space-y-8">
 
             {/* Header info */}
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-4">
+              {program.isBoosted && (
+                <SponsoredBanner tier={program.boostTier} />
+              )}
+
+              <div className="flex flex-wrap gap-2 items-center">
                 <span className="inline-block text-[10px] tracking-widest font-extrabold text-white bg-[#0b0c01] border border-[#a0f212]/20 px-3 py-1.5 rounded-full uppercase shadow-sm">
                   {program.category}
                 </span>
                 {program.isBoosted && (
-                  <span className="inline-block text-[9px] tracking-widest font-black text-[#0b0c01] bg-[#a0f212] px-3.5 py-1.5 rounded-full uppercase shadow-[0_0_12px_rgba(160,242,18,0.3)] animate-pulse">
-                    ★ FEATURED SPOTLIGHT
-                  </span>
+                  program.boostTier === "PRO" ? <UltraProBadge /> :
+                  program.boostTier === "STANDARD" ? <ProBoostBadge /> :
+                  <FeaturedBadge />
+                )}
+                {program.hasFeaturedOrganizerBadge && (
+                  <FeaturedOrganizerBadge />
                 )}
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight leading-tight">

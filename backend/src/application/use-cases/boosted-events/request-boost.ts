@@ -3,11 +3,14 @@ import { IConfigRepository } from '../../../domain/repositories/config.repositor
 import { ICommunicationService } from '../../services/communication.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 
+import { ConflictError } from '../../common/errors';
+import { prisma } from '../../../config/prisma';
+
 export class RequestBoostCommand implements IRequest<any> {
   readonly __tag = 'RequestBoostCommand';
   constructor(
     public readonly eventId: string,
-    public readonly durationDays: number,
+    public readonly durationDays?: number,
     public readonly tier: 'BASIC' | 'STANDARD' | 'PRO' = 'BASIC'
   ) {}
 }
@@ -20,9 +23,38 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
   ) {}
 
   async handle(command: RequestBoostCommand): Promise<any> {
+    const { eventId, tier } = command;
+
+    // Check for existing active non-expired boost campaign
+    const now = new Date();
+    const existingActiveBoost = await prisma.boostedEvent.findFirst({
+      where: {
+        eventId,
+        isActive: true,
+        status: { in: ['ACTIVE', 'APPROVED'] },
+        endDate: { gte: now },
+      },
+    });
+
+    if (existingActiveBoost) {
+      throw new ConflictError(
+        `This event already has an active ${existingActiveBoost.tier} promotion campaign running until ${new Date(
+          existingActiveBoost.endDate
+        ).toLocaleDateString()}.`
+      );
+    }
+
+    // Default duration days per plan tier if not explicitly specified
+    let durationDays = command.durationDays;
+    if (!durationDays || durationDays <= 0) {
+      if (tier === 'PRO') durationDays = 30;
+      else if (tier === 'STANDARD') durationDays = 15;
+      else durationDays = 7;
+    }
+
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + command.durationDays);
+    endDate.setDate(endDate.getDate() + durationDays);
 
     // Fetch dynamic pricing
     const pricingConfig = await this.configRepo.findPlatformSetting('BOOST_PRICING');
@@ -82,6 +114,15 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
     // Create Razorpay Order
     const razorpayOrder = await this.commsService.createRazorpayOrder(amount, 'INR', boostRequest.id);
     
-    return { boostRequest, razorpayOrder };
+    // Save razorpayOrderId into boost request
+    let updatedBoost = boostRequest;
+    if (razorpayOrder && razorpayOrder.id) {
+      updatedBoost = await this.boostedRepo.updatePaymentDetails(boostRequest.id, {
+        razorpayOrderId: razorpayOrder.id,
+        paymentGateway: 'RAZORPAY',
+      });
+    }
+
+    return { boostRequest: updatedBoost, razorpayOrder };
   }
 }

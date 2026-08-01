@@ -24,32 +24,43 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
   ) {}
 
   async handle(command: VerifyBoostPaymentCommand): Promise<any> {
-    const dbBoost = await this.boostedRepo.findById(command.boostId);
+    const { boostId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = command;
+
+    let dbBoost = await this.boostedRepo.findById(boostId);
+    if (!dbBoost && razorpayOrderId) {
+      dbBoost = await this.boostedRepo.findByRazorpayOrderId(razorpayOrderId);
+    }
+
     if (!dbBoost) {
       throw new NotFoundError('Boost request not found');
+    }
+
+    if (dbBoost.status === 'ACTIVE' || dbBoost.status === 'APPROVED' || dbBoost.webhookProcessed) {
+      return { success: true, boost: dbBoost, message: 'Boost payment is already verified and active' };
     }
 
     const now = new Date();
     const startDate = new Date(dbBoost.startDate);
     const endDate = new Date(dbBoost.endDate);
 
-    let initialStatus: 'ACTIVE' | 'APPROVED' | 'EXPIRED' = 'ACTIVE';
+    let initialStatus: 'ACTIVE' | 'APPROVED' = 'ACTIVE';
     let isActive = true;
 
     if (now < startDate) {
       initialStatus = 'APPROVED';
       isActive = false;
-    } else if (now > endDate) {
-      initialStatus = 'EXPIRED';
-      isActive = false;
     }
 
-    if (command.razorpaySignature === 'MOCK_SUCCESS') {
-      // Bypass Razorpay config check and signature verification for testing
-      const boost = await this.boostedRepo.update(command.boostId, {
+    if (razorpaySignature === 'MOCK_SUCCESS') {
+      // Bypass signature check for sentinel mock calls
+      const boost = await this.boostedRepo.markPaymentCaptured(dbBoost.id, {
+        razorpayPaymentId: razorpayPaymentId || `pay_mock_${dbBoost.id}`,
+        paymentMethod: 'RAZORPAY',
+        paymentCapturedAt: new Date(),
+        paymentGateway: 'RAZORPAY',
         status: initialStatus,
-        isActive
-      } as any);
+        isActive,
+      });
       return { success: true, boost };
     }
 
@@ -66,18 +77,22 @@ export class VerifyBoostPaymentCommandHandler implements IRequestHandler<VerifyB
 
     // Verify signature
     const hmac = crypto.createHmac('sha256', keySecret);
-    hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
+    hmac.update(`${razorpayOrderId}|${razorpayPaymentId}`);
     const generatedSignature = hmac.digest('hex');
 
-    if (generatedSignature !== command.razorpaySignature) {
+    if (generatedSignature !== razorpaySignature) {
       throw new BadRequestError('Invalid payment signature');
     }
 
-    // Approve the boost
-    const boost = await this.boostedRepo.update(command.boostId, {
+    // Approve & activate the boost
+    const boost = await this.boostedRepo.markPaymentCaptured(dbBoost.id, {
+      razorpayPaymentId,
+      paymentMethod: 'RAZORPAY',
+      paymentCapturedAt: new Date(),
+      paymentGateway: 'RAZORPAY',
       status: initialStatus,
-      isActive
-    } as any);
+      isActive,
+    });
 
     return { success: true, boost };
   }

@@ -9,6 +9,9 @@ const router = Router();
 
 router.get('/', BoostedEventsController.getActiveBoostedEvents);
 router.get('/pricing', BoostedEventsController.getPricing);
+router.get('/plans', BoostedEventsController.getPricing);
+router.post('/click', BoostedEventsController.trackClick as any);
+router.get('/analytics/:eventId', authenticate as any, BoostedEventsController.getAnalytics as any);
 
 router.post(
   '/',

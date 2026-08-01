@@ -19,7 +19,7 @@ class BookingCleanupJob {
     static startUnconfirmedBookingCleaner() {
         node_cron_1.default.schedule('* * * * *', async () => {
             try {
-                const TEN_MINUTES_MS = 10 * 60 * 1000;
+                const TEN_MINUTES_MS = 15 * 60 * 1000;
                 const cutoffTime = new Date(Date.now() - TEN_MINUTES_MS);
                 // Find all INITIATED bookings created more than 10 minutes ago
                 const expiredBookings = await prisma_1.prisma.booking.findMany({
@@ -83,6 +83,52 @@ class BookingCleanupJob {
             }
             catch (error) {
                 di_container_1.logger.error('[BookingCleanupCron] Error running unconfirmed booking cleanup:', error);
+            }
+        });
+    }
+    /**
+     * Starts the background cron job to expire unconfirmed boost requests (status: PENDING)
+     * whose payment has not been verified after 15 minutes.
+     *
+     * Runs every minute: '* * * * *'
+     */
+    static startUnconfirmedBoostCleaner() {
+        node_cron_1.default.schedule('* * * * *', async () => {
+            try {
+                const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+                const cutoffTime = new Date(Date.now() - FIFTEEN_MINUTES_MS);
+                const expiredBoosts = await prisma_1.prisma.boostedEvent.updateMany({
+                    where: {
+                        status: 'PENDING',
+                        createdAt: {
+                            lte: cutoffTime,
+                        },
+                    },
+                    data: {
+                        status: 'EXPIRED',
+                        isActive: false,
+                    },
+                });
+                if (expiredBoosts.count > 0) {
+                    di_container_1.logger.info(`[BoostCleanupCron] Marked ${expiredBoosts.count} unconfirmed boost request(s) older than 15 minutes as EXPIRED.`);
+                }
+                // Auto-expire active boost campaigns whose endDate has passed
+                const endedBoosts = await prisma_1.prisma.boostedEvent.updateMany({
+                    where: {
+                        isActive: true,
+                        endDate: { lte: new Date() },
+                    },
+                    data: {
+                        isActive: false,
+                        status: 'EXPIRED',
+                    },
+                });
+                if (endedBoosts.count > 0) {
+                    di_container_1.logger.info(`[BoostCleanupCron] Automatically expired ${endedBoosts.count} boost campaign(s) past end date.`);
+                }
+            }
+            catch (error) {
+                di_container_1.logger.error('[BoostCleanupCron] Error running unconfirmed boost request cleanup:', error);
             }
         });
     }

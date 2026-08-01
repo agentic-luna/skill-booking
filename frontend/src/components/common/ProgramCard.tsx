@@ -34,8 +34,8 @@ export default function ProgramCard({ program }: ProgramCardProps) {
             {program.category || "General"}
           </div>
           {program.isBoosted && (
-            <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse">
-              <span>★</span> FEATURED
+            <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1">
+              <span>★</span> {program.boostTier === 'PRO' ? 'ULTRA PRO' : program.boostTier === 'STANDARD' ? 'PRO BOOST' : 'FEATURED'}
             </div>
           )}
         </div>
@@ -65,6 +65,11 @@ export default function ProgramCard({ program }: ProgramCardProps) {
               {program.instructorName ? program.instructorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "IN"}
             </div>
             <span className="text-xs font-semibold text-muted-foreground truncate">{program.instructorName}</span>
+            {program.hasFeaturedOrganizerBadge && (
+              <span className="bg-[#a0f212]/20 border border-[#a0f212]/40 text-emerald-800 dark:text-[#a0f212] text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase shrink-0">
+                PRO HOST
+              </span>
+            )}
           </div>
           {program.rating && program.rating >= 2 ? (
             <div className="flex items-center bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full shrink-0">

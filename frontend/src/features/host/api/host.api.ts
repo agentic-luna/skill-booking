@@ -144,3 +144,19 @@ export const getBoostPricing = async (): Promise<any[]> => {
   );
   return res.data;
 };
+
+export const getBoostAnalytics = async (eventId: string): Promise<any> => {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    `/boosted-events/analytics/${eventId}`,
+    { method: "GET" }
+  );
+  return res.data;
+};
+
+export const trackBoostClick = async (eventId: string): Promise<any> => {
+  const res = await hostRequest<{ success: boolean; data: any }>(
+    '/boosted-events/click',
+    { method: "POST", body: JSON.stringify({ eventId }) }
+  );
+  return res.data;
+};

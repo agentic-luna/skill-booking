@@ -73,7 +73,62 @@ export class PrismaBoostedEventRepository implements IBoostedEventRepository {
 
   async findById(id: string): Promise<BoostedEvent | null> {
     return prisma.boostedEvent.findUnique({
-      where: { id }
+      where: { id },
+      include: { event: true },
+    }) as any;
+  }
+
+  async findByRazorpayOrderId(razorpayOrderId: string): Promise<BoostedEvent | null> {
+    if (!razorpayOrderId) return null;
+    return prisma.boostedEvent.findUnique({
+      where: { razorpayOrderId },
+      include: { event: true },
+    }) as any;
+  }
+
+  async findByRazorpayPaymentId(razorpayPaymentId: string): Promise<BoostedEvent | null> {
+    if (!razorpayPaymentId) return null;
+    return prisma.boostedEvent.findFirst({
+      where: { razorpayPaymentId },
+      include: { event: true },
+    }) as any;
+  }
+
+  async updatePaymentDetails(id: string, details: {
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    paymentMethod?: string;
+    paymentCapturedAt?: Date;
+    paymentGateway?: string;
+    webhookProcessed?: boolean;
+  }): Promise<BoostedEvent> {
+    return prisma.boostedEvent.update({
+      where: { id },
+      data: details,
+      include: { event: true },
+    }) as any;
+  }
+
+  async markPaymentCaptured(id: string, details: {
+    razorpayPaymentId: string;
+    paymentMethod?: string;
+    paymentCapturedAt?: Date;
+    paymentGateway?: string;
+    status?: 'ACTIVE' | 'APPROVED';
+    isActive?: boolean;
+  }): Promise<BoostedEvent> {
+    return prisma.boostedEvent.update({
+      where: { id },
+      data: {
+        status: (details.status as any) || 'ACTIVE',
+        isActive: details.isActive !== undefined ? details.isActive : true,
+        razorpayPaymentId: details.razorpayPaymentId,
+        paymentMethod: details.paymentMethod || 'RAZORPAY',
+        paymentCapturedAt: details.paymentCapturedAt || new Date(),
+        paymentGateway: details.paymentGateway || 'RAZORPAY',
+        webhookProcessed: true,
+      },
+      include: { event: true },
     }) as any;
   }
 

@@ -31,9 +31,16 @@ class VerifyBoostPaymentCommandHandler {
         this.cryptoService = cryptoService;
     }
     async handle(command) {
-        const dbBoost = await this.boostedRepo.findById(command.boostId);
+        const { boostId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = command;
+        let dbBoost = await this.boostedRepo.findById(boostId);
+        if (!dbBoost && razorpayOrderId) {
+            dbBoost = await this.boostedRepo.findByRazorpayOrderId(razorpayOrderId);
+        }
         if (!dbBoost) {
             throw new errors_1.NotFoundError('Boost request not found');
+        }
+        if (dbBoost.status === 'ACTIVE' || dbBoost.status === 'APPROVED' || dbBoost.webhookProcessed) {
+            return { success: true, boost: dbBoost, message: 'Boost payment is already verified and active' };
         }
         const now = new Date();
         const startDate = new Date(dbBoost.startDate);
@@ -44,15 +51,15 @@ class VerifyBoostPaymentCommandHandler {
             initialStatus = 'APPROVED';
             isActive = false;
         }
-        else if (now > endDate) {
-            initialStatus = 'EXPIRED';
-            isActive = false;
-        }
-        if (command.razorpaySignature === 'MOCK_SUCCESS') {
-            // Bypass Razorpay config check and signature verification for testing
-            const boost = await this.boostedRepo.update(command.boostId, {
+        if (razorpaySignature === 'MOCK_SUCCESS') {
+            // Bypass signature check for sentinel mock calls
+            const boost = await this.boostedRepo.markPaymentCaptured(dbBoost.id, {
+                razorpayPaymentId: razorpayPaymentId || `pay_mock_${dbBoost.id}`,
+                paymentMethod: 'RAZORPAY',
+                paymentCapturedAt: new Date(),
+                paymentGateway: 'RAZORPAY',
                 status: initialStatus,
-                isActive
+                isActive,
             });
             return { success: true, boost };
         }
@@ -67,15 +74,19 @@ class VerifyBoostPaymentCommandHandler {
         }
         // Verify signature
         const hmac = crypto_1.default.createHmac('sha256', keySecret);
-        hmac.update(`${command.razorpayOrderId}|${command.razorpayPaymentId}`);
+        hmac.update(`${razorpayOrderId}|${razorpayPaymentId}`);
         const generatedSignature = hmac.digest('hex');
-        if (generatedSignature !== command.razorpaySignature) {
+        if (generatedSignature !== razorpaySignature) {
             throw new errors_1.BadRequestError('Invalid payment signature');
         }
-        // Approve the boost
-        const boost = await this.boostedRepo.update(command.boostId, {
+        // Approve & activate the boost
+        const boost = await this.boostedRepo.markPaymentCaptured(dbBoost.id, {
+            razorpayPaymentId,
+            paymentMethod: 'RAZORPAY',
+            paymentCapturedAt: new Date(),
+            paymentGateway: 'RAZORPAY',
             status: initialStatus,
-            isActive
+            isActive,
         });
         return { success: true, boost };
     }

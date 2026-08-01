@@ -65,7 +65,46 @@ class PrismaBoostedEventRepository {
     }
     async findById(id) {
         return prisma_1.prisma.boostedEvent.findUnique({
-            where: { id }
+            where: { id },
+            include: { event: true },
+        });
+    }
+    async findByRazorpayOrderId(razorpayOrderId) {
+        if (!razorpayOrderId)
+            return null;
+        return prisma_1.prisma.boostedEvent.findUnique({
+            where: { razorpayOrderId },
+            include: { event: true },
+        });
+    }
+    async findByRazorpayPaymentId(razorpayPaymentId) {
+        if (!razorpayPaymentId)
+            return null;
+        return prisma_1.prisma.boostedEvent.findFirst({
+            where: { razorpayPaymentId },
+            include: { event: true },
+        });
+    }
+    async updatePaymentDetails(id, details) {
+        return prisma_1.prisma.boostedEvent.update({
+            where: { id },
+            data: details,
+            include: { event: true },
+        });
+    }
+    async markPaymentCaptured(id, details) {
+        return prisma_1.prisma.boostedEvent.update({
+            where: { id },
+            data: {
+                status: details.status || 'ACTIVE',
+                isActive: details.isActive !== undefined ? details.isActive : true,
+                razorpayPaymentId: details.razorpayPaymentId,
+                paymentMethod: details.paymentMethod || 'RAZORPAY',
+                paymentCapturedAt: details.paymentCapturedAt || new Date(),
+                paymentGateway: details.paymentGateway || 'RAZORPAY',
+                webhookProcessed: true,
+            },
+            include: { event: true },
         });
     }
     async delete(eventId) {

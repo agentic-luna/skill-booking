@@ -80,6 +80,8 @@ const update_boost_status_1 = require("../application/use-cases/boosted-events/u
 const get_boost_requests_1 = require("../application/use-cases/boosted-events/get-boost-requests");
 const verify_boost_payment_1 = require("../application/use-cases/boosted-events/verify-boost-payment");
 const get_boost_pricing_1 = require("../application/use-cases/boosted-events/get-boost-pricing");
+const get_boost_analytics_1 = require("../application/use-cases/boosted-events/get-boost-analytics");
+const track_boost_click_1 = require("../application/use-cases/boosted-events/track-boost-click");
 const setup_twilio_1 = require("../application/use-cases/integrations/setup-twilio");
 const setup_sendgrid_1 = require("../application/use-cases/integrations/setup-sendgrid");
 const setup_meta_wa_1 = require("../application/use-cases/integrations/setup-meta-wa");
@@ -168,7 +170,7 @@ mediator.register('GetMyBookingsQuery', new get_my_bookings_1.GetMyBookingsQuery
 mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, cryptoService, notificationRepo, queueService, cacheService));
 mediator.register('GetCancellationQuoteQuery', new get_cancellation_quote_1.GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 // 8. Register Webhook handlers
-mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService));
+mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService, boostedRepo));
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new admin_login_1.AdminLoginCommandHandler(userRepo, cacheService));
 mediator.register('GetPendingKycHostsQuery', new review_kyc_1.GetPendingKycHostsQueryHandler(userRepo, cryptoService));
@@ -203,6 +205,8 @@ mediator.register('UpdateBoostStatusCommand', new update_boost_status_1.UpdateBo
 mediator.register('GetBoostRequestsQuery', new get_boost_requests_1.GetBoostRequestsQueryHandler(boostedRepo));
 mediator.register('VerifyBoostPaymentCommand', new verify_boost_payment_1.VerifyBoostPaymentCommandHandler(boostedRepo, configRepo, cryptoService));
 mediator.register('GetBoostPricingQuery', new get_boost_pricing_1.GetBoostPricingQueryHandler(configRepo));
+mediator.register('GetBoostAnalyticsQuery', new get_boost_analytics_1.GetBoostAnalyticsQueryHandler(boostedRepo));
+mediator.register('TrackBoostClickCommand', new track_boost_click_1.TrackBoostClickCommandHandler());
 // Integrations
 mediator.register('SetupTwilioCommand', new setup_twilio_1.SetupTwilioCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('SetupSendgridCommand', new setup_sendgrid_1.SetupSendgridCommandHandler(configRepo, cryptoService, cacheService));

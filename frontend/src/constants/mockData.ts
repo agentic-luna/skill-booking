@@ -19,6 +19,11 @@ export interface Program {
   status: "approved" | "pending" | "rejected";
   featured?: boolean;
   isBoosted?: boolean;
+  boostTier?: string;
+  hasSearchPriority?: boolean;
+  hasHeroBanner?: boolean;
+  hasTrendingSection?: boolean;
+  hasFeaturedOrganizerBadge?: boolean;
   videoUrls?: string[];
   mode?: "ONLINE" | "OFFLINE";
   hostId?: string;

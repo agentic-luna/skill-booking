@@ -39,6 +39,8 @@ const startServer = async () => {
             di_container_1.logger.info("[EventJobs] Starting event status updater...");
             booking_cleanup_job_1.BookingCleanupJob.startUnconfirmedBookingCleaner();
             di_container_1.logger.info("[BookingCleanupJob] Starting unconfirmed booking cleanup cron...");
+            booking_cleanup_job_1.BookingCleanupJob.startUnconfirmedBoostCleaner();
+            di_container_1.logger.info("[BookingCleanupJob] Starting unconfirmed boost cleanup cron...");
         });
     }
     catch (error) {

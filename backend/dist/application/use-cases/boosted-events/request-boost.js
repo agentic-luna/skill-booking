@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RequestBoostCommandHandler = exports.RequestBoostCommand = void 0;
+const errors_1 = require("../../common/errors");
+const prisma_1 = require("../../../config/prisma");
 class RequestBoostCommand {
     eventId;
     durationDays;
@@ -23,9 +25,33 @@ class RequestBoostCommandHandler {
         this.configRepo = configRepo;
     }
     async handle(command) {
+        const { eventId, tier } = command;
+        // Check for existing active non-expired boost campaign
+        const now = new Date();
+        const existingActiveBoost = await prisma_1.prisma.boostedEvent.findFirst({
+            where: {
+                eventId,
+                isActive: true,
+                status: { in: ['ACTIVE', 'APPROVED'] },
+                endDate: { gte: now },
+            },
+        });
+        if (existingActiveBoost) {
+            throw new errors_1.ConflictError(`This event already has an active ${existingActiveBoost.tier} promotion campaign running until ${new Date(existingActiveBoost.endDate).toLocaleDateString()}.`);
+        }
+        // Default duration days per plan tier if not explicitly specified
+        let durationDays = command.durationDays;
+        if (!durationDays || durationDays <= 0) {
+            if (tier === 'PRO')
+                durationDays = 30;
+            else if (tier === 'STANDARD')
+                durationDays = 15;
+            else
+                durationDays = 7;
+        }
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setDate(endDate.getDate() + command.durationDays);
+        endDate.setDate(endDate.getDate() + durationDays);
         // Fetch dynamic pricing
         const pricingConfig = await this.configRepo.findPlatformSetting('BOOST_PRICING');
         let amount = 500; // default fallback
@@ -76,7 +102,15 @@ class RequestBoostCommandHandler {
         });
         // Create Razorpay Order
         const razorpayOrder = await this.commsService.createRazorpayOrder(amount, 'INR', boostRequest.id);
-        return { boostRequest, razorpayOrder };
+        // Save razorpayOrderId into boost request
+        let updatedBoost = boostRequest;
+        if (razorpayOrder && razorpayOrder.id) {
+            updatedBoost = await this.boostedRepo.updatePaymentDetails(boostRequest.id, {
+                razorpayOrderId: razorpayOrder.id,
+                paymentGateway: 'RAZORPAY',
+            });
+        }
+        return { boostRequest: updatedBoost, razorpayOrder };
     }
 }
 exports.RequestBoostCommandHandler = RequestBoostCommandHandler;

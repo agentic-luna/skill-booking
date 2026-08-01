@@ -94,4 +94,58 @@ export class BookingCleanupJob {
       }
     });
   }
+
+  /**
+   * Starts the background cron job to expire unconfirmed boost requests (status: PENDING)
+   * whose payment has not been verified after 15 minutes.
+   *
+   * Runs every minute: '* * * * *'
+   */
+  static startUnconfirmedBoostCleaner() {
+    cron.schedule('* * * * *', async () => {
+      try {
+        const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+        const cutoffTime = new Date(Date.now() - FIFTEEN_MINUTES_MS);
+
+        const expiredBoosts = await prisma.boostedEvent.updateMany({
+          where: {
+            status: 'PENDING',
+            createdAt: {
+              lte: cutoffTime,
+            },
+          },
+          data: {
+            status: 'EXPIRED',
+            isActive: false,
+          },
+        });
+
+        if (expiredBoosts.count > 0) {
+          logger.info(
+            `[BoostCleanupCron] Marked ${expiredBoosts.count} unconfirmed boost request(s) older than 15 minutes as EXPIRED.`
+          );
+        }
+
+        // Auto-expire active boost campaigns whose endDate has passed
+        const endedBoosts = await prisma.boostedEvent.updateMany({
+          where: {
+            isActive: true,
+            endDate: { lte: new Date() },
+          },
+          data: {
+            isActive: false,
+            status: 'EXPIRED',
+          },
+        });
+
+        if (endedBoosts.count > 0) {
+          logger.info(
+            `[BoostCleanupCron] Automatically expired ${endedBoosts.count} boost campaign(s) past end date.`
+          );
+        }
+      } catch (error) {
+        logger.error('[BoostCleanupCron] Error running unconfirmed boost request cleanup:', error);
+      }
+    });
+  }
 }

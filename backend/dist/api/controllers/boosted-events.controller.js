@@ -10,6 +10,8 @@ const get_boost_requests_1 = require("../../application/use-cases/boosted-events
 const verify_boost_payment_1 = require("../../application/use-cases/boosted-events/verify-boost-payment");
 const get_boost_pricing_1 = require("../../application/use-cases/boosted-events/get-boost-pricing");
 const api_response_1 = require("../common/api-response");
+const get_boost_analytics_1 = require("../../application/use-cases/boosted-events/get-boost-analytics");
+const track_boost_click_1 = require("../../application/use-cases/boosted-events/track-boost-click");
 class BoostedEventsController {
     static async getActiveBoostedEvents(req, res, next) {
         try {
@@ -42,7 +44,7 @@ class BoostedEventsController {
     static async requestBoost(req, res, next) {
         try {
             const { eventId, durationDays, tier } = req.body;
-            const result = await di_container_1.mediator.send(new request_boost_1.RequestBoostCommand(eventId, Number(durationDays), tier));
+            const result = await di_container_1.mediator.send(new request_boost_1.RequestBoostCommand(eventId, durationDays ? Number(durationDays) : undefined, tier));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -73,6 +75,26 @@ class BoostedEventsController {
     static async getBoostRequests(req, res, next) {
         try {
             const result = await di_container_1.mediator.send(new get_boost_requests_1.GetBoostRequestsQuery());
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getAnalytics(req, res, next) {
+        try {
+            const { eventId } = req.params;
+            const result = await di_container_1.mediator.send(new get_boost_analytics_1.GetBoostAnalyticsQuery(eventId));
+            return api_response_1.ApiResponse.success(res, result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async trackClick(req, res, next) {
+        try {
+            const { eventId } = req.body;
+            const result = await di_container_1.mediator.send(new track_boost_click_1.TrackBoostClickCommand(eventId));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {

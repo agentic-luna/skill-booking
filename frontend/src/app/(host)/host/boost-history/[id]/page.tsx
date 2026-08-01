@@ -14,6 +14,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import * as hostApi from "@/features/host/api/host.api";
 
+import BoostUpgradeModal from "@/components/host/BoostUpgradeModal";
+import BoostRenewModal from "@/components/host/BoostRenewModal";
+
 export default function BoostAnalyticsPage() {
   const params = useParams();
   const router = useRouter();
@@ -21,6 +24,8 @@ export default function BoostAnalyticsPage() {
 
   const [boost, setBoost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showRenew, setShowRenew] = useState(false);
 
   useEffect(() => {
     const loadBoostDetails = async () => {
@@ -158,7 +163,7 @@ export default function BoostAnalyticsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-6 border-l border-white/10 pl-0 lg:pl-6">
+          <div className="flex items-center gap-6 border-l border-white/10 pl-0 lg:pl-6 flex-wrap">
             <div className="space-y-1">
               <span className="text-[10px] text-white/40 uppercase font-black tracking-wider">Campaign Cost</span>
               <p className="text-3xl font-black text-white">₹{adSpend}</p>
@@ -168,6 +173,23 @@ export default function BoostAnalyticsPage() {
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a0f212]/10 border border-[#a0f212]/20 text-[#a0f212] text-[10px] font-black uppercase tracking-wider">
                 <CheckCircle2 className="w-3 h-3" /> {boost.status}
               </div>
+            </div>
+            
+            <div className="flex items-center gap-2 pt-2 sm:pt-0">
+              {boost.isActive && boost.tier !== "PRO" && (
+                <button
+                  onClick={() => setShowUpgrade(true)}
+                  className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-black px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5"
+                >
+                  Upgrade Tier
+                </button>
+              )}
+              <button
+                onClick={() => setShowRenew(true)}
+                className="bg-[#a0f212] hover:bg-[#aee665] text-[#0d1e17] text-xs font-black px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5"
+              >
+                Extend Campaign
+              </button>
             </div>
           </div>
         </div>
@@ -359,6 +381,27 @@ export default function BoostAnalyticsPage() {
 
         </div>
       </div>
+
+      {/* Modals */}
+      {showUpgrade && (
+        <BoostUpgradeModal
+          boostId={boost.id}
+          currentTier={boost.tier}
+          isOpen={showUpgrade}
+          onClose={() => setShowUpgrade(false)}
+          onSuccess={() => router.refresh()}
+        />
+      )}
+
+      {showRenew && (
+        <BoostRenewModal
+          boostId={boost.id}
+          tier={boost.tier}
+          isOpen={showRenew}
+          onClose={() => setShowRenew(false)}
+          onSuccess={() => router.refresh()}
+        />
+      )}
 
     </div>
   );
