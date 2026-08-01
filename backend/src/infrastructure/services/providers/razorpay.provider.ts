@@ -65,34 +65,34 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
   }
 
-  async verifyWebhookSignature(payload: string | object, signature: string, secret?: string): Promise<boolean> {
-    try {
-      let activeSecret = secret;
-      if (!activeSecret) {
-        const { webhookSecret } = await this.getRazorpayClient();
+  async verifyWebhookSignature(
+    payload: string | object,
+    signature: string,
+    secret?: string
+  ): Promise<boolean> {
+    const { webhookSecret } = await this.getRazorpayClient();
 
-        console.log("Webhook Secret:", webhookSecret);
-        console.log("Length:", webhookSecret?.length);
-        activeSecret = webhookSecret;
-      }
+    const activeSecret = secret || webhookSecret!;
 
-      if (!activeSecret) {
-        this.logger.warn('[RazorpayProvider] Webhook secret not found for signature verification');
-        return false;
-      }
+    const body =
+      typeof payload === "string"
+        ? payload
+        : JSON.stringify(payload);
 
-      const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
-      const expectedSignature = crypto
-        .createHmac('sha256', activeSecret)
-        .update(body)
-        .digest('hex');
-      return expectedSignature === signature;
-    } catch (err) {
-      this.logger.error('[RazorpayProvider] Webhook signature validation error', err);
-      return false;
-    }
+    const expectedSignature = crypto
+      .createHmac("sha256", activeSecret)
+      .update(body)
+      .digest("hex");
+
+    console.log("==================================");
+    console.log("Secret:", activeSecret);
+    console.log("Received:", signature);
+    console.log("Expected:", expectedSignature);
+    console.log("Body Length:", body.length);
+    console.log("==================================");
+
+    return expectedSignature === signature;
   }
-
   async verifyPaymentSignature(orderId: string, paymentId: string, signature: string): Promise<boolean> {
     try {
       const { keySecret } = await this.getRazorpayClient();
