@@ -162,11 +162,14 @@ export interface SubmitReviewPayload {
 
 export interface InAppNotification {
   id: string;
-  recipientUserId: string;
+  userId?: string;
+  recipientUserId?: string;
   channel: "IN_APP" | "EMAIL" | "SMS" | "WHATSAPP";
   triggerEvent: string;
   subject?: string;
-  bodyContent: string;
+  bodyContent?: string;
+  content?: string;
   status: "SENT" | "FAILED" | "PENDING" | "QUEUED" | "READ";
-  createdAt: string;
+  sentAt?: string | null;
+  createdAt?: string | null;
 }

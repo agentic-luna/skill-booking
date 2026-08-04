@@ -140,19 +140,29 @@ export default function Navbar() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {notifications.length > 0 ? (
-                          notifications.slice(0, 5).map((notif) => (
-                            <DropdownMenuItem
-                              key={notif.id}
-                              className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-[#a0f212]/5 font-semibold" : ""}`}
-                              onClick={() => {
-                                if (notif.status !== "READ") readNotification(notif.id);
-                              }}
-                            >
-                              <span className="font-bold text-foreground text-[11px]">{notif.subject || "Alert Notice"}</span>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed">{notif.bodyContent}</p>
-                              <span className="text-[9px] text-muted-foreground/60 font-medium">{new Date(notif.createdAt).toLocaleDateString()}</span>
-                            </DropdownMenuItem>
-                          ))
+                          notifications.slice(0, 5).map((notif) => {
+                            const title = notif.subject || (notif.triggerEvent ? notif.triggerEvent.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()) : "Notification Alert");
+                            const body = notif.content || notif.bodyContent || "";
+                            const rawDate = notif.createdAt || notif.sentAt;
+                            const parsedDate = rawDate ? new Date(rawDate) : null;
+                            const formattedDate = parsedDate && !isNaN(parsedDate.getTime())
+                              ? parsedDate.toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                              : "Just now";
+
+                            return (
+                              <DropdownMenuItem
+                                key={notif.id}
+                                className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-[#a0f212]/10 font-semibold border-l-2 border-[#a0f212]" : ""}`}
+                                onClick={() => {
+                                  if (notif.status !== "READ") readNotification(notif.id);
+                                }}
+                              >
+                                <span className="font-bold text-foreground text-[11px]">{title}</span>
+                                {body && <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">{body}</p>}
+                                <span className="text-[9px] text-muted-foreground/60 font-medium">{formattedDate}</span>
+                              </DropdownMenuItem>
+                            );
+                          })
                         ) : (
                           <div className="p-4 text-center text-xs text-muted-foreground">No alerts in your feed.</div>
                         )}

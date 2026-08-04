@@ -401,6 +401,7 @@ model NotificationLog {
   status       NotificationStatus @default(PENDING)
   errorMessage String?            @db.Text
   sentAt       DateTime?
+  createdAt    DateTime           @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
