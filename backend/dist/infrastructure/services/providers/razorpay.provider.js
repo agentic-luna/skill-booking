@@ -42,6 +42,11 @@ class RazorpayPaymentGatewayProvider {
         return { client: null };
     }
     async createOrder(amount, currency, receipt) {
+        if (process.env.NODE_ENV === 'test') {
+            const mockOrderId = `order_${crypto_1.default.randomBytes(8).toString('hex')}`;
+            this.logger.info(`[RazorpayProvider] [TEST MOCK] Created mock order ${mockOrderId} for ${amount} ${currency}`);
+            return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
+        }
         const { client } = await this.getRazorpayClient();
         if (!client) {
             throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
@@ -102,6 +107,11 @@ class RazorpayPaymentGatewayProvider {
         }
     }
     async initiateRefund(paymentId, amount, notes) {
+        if (process.env.NODE_ENV === 'test') {
+            const mockRefundId = `rfnd_${crypto_1.default.randomBytes(8).toString('hex')}`;
+            this.logger.info(`[RazorpayProvider] [TEST MOCK] Initiated mock refund of ${amount} INR for payment ${paymentId}`);
+            return { success: true, refundId: mockRefundId, amount };
+        }
         const { client } = await this.getRazorpayClient();
         if (!client) {
             throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');
@@ -120,6 +130,11 @@ class RazorpayPaymentGatewayProvider {
         }
     }
     async transferPayout(destinationBankDetail, amount) {
+        if (process.env.NODE_ENV === 'test') {
+            const mockPayoutId = `pout_${crypto_1.default.randomBytes(8).toString('hex')}`;
+            this.logger.info(`[RazorpayProvider] [TEST MOCK] Initiated mock transfer ${mockPayoutId} of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
+            return { success: true, payoutId: mockPayoutId };
+        }
         const { client } = await this.getRazorpayClient();
         if (!client) {
             throw new errors_1.BadRequestError('Payment gateway is not configured. Admin has to configure Razorpay credentials.');

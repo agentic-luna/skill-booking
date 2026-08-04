@@ -3,7 +3,9 @@ import { IUserRepository } from '../../../../domain/repositories/user.repository
 import { ICacheService } from '../../../services/cache.service';
 import { IEmailProvider } from '../../../../infrastructure/services/providers/email.provider';
 import { IRequest, IRequestHandler } from '../../../common/mediator';
+import { IConfigRepository } from '../../../../domain/repositories/config.repository';
 import { BadRequestError, NotFoundError } from '../../../common/errors';
+import { TriggerEvent, DeliveryChannel } from '@prisma/client';
 
 export class ClientSendEmailVerificationCommand implements IRequest<any> {
   readonly __tag = 'ClientSendEmailVerificationCommand';
@@ -17,7 +19,8 @@ export class ClientSendEmailVerificationCommandHandler implements IRequestHandle
   constructor(
     private userRepo: IUserRepository,
     private cacheService: ICacheService,
-    private emailProvider: IEmailProvider
+    private emailProvider: IEmailProvider,
+    private configRepo: IConfigRepository
   ) { }
 
   async handle(command: ClientSendEmailVerificationCommand): Promise<{ message: string; magicLink?: string; token?: string }> {
@@ -51,9 +54,17 @@ export class ClientSendEmailVerificationCommandHandler implements IRequestHandle
     const clientAppUrl = process.env.CLIENT_APP_URL || 'http://localhost:3000';
     const magicLink = `${clientAppUrl}/verify-email?token=${token}`;
 
-    // Send magic link email via provider
+    // Send magic link email via provider using database templates
     try {
-      const emailBody = `
+      const templates = await this.configRepo.findTemplates({
+        triggerEvent: TriggerEvent.EMAIL_VERIFICATION,
+        isActive: true,
+      });
+
+      const emailTemplate = templates.find((t) => t.channel === DeliveryChannel.EMAIL);
+
+      let subject = 'Verify Your Email Address — BookMySkill';
+      let emailBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px;">
           <h2 style="color: #0b0c01; margin-bottom: 8px;">Verify Your Email Address</h2>
           <p style="color: #555; font-size: 14px;">Hi ${currentUser.firstName},</p>
@@ -65,10 +76,18 @@ export class ClientSendEmailVerificationCommandHandler implements IRequestHandle
           <p style="color: #aaa; font-size: 11px; margin-top: 24px;">This link will expire in 15 minutes.</p>
         </div>
       `;
+
+      if (emailTemplate) {
+        subject = emailTemplate.subject || subject;
+        emailBody = emailTemplate.bodyContent
+          .replace(/\{\{userName\}\}/g, currentUser.firstName)
+          .replace(/\{\{magicLink\}\}/g, magicLink);
+      }
+
       if (this.emailProvider && typeof this.emailProvider.sendEmail === 'function') {
         await this.emailProvider.sendEmail(
           cleanEmail,
-          'Verify Your Email Address — BookMySkill',
+          subject,
           emailBody
         );
       }

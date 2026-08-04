@@ -18,6 +18,7 @@ export interface IUserRepository {
   updateEmail(id: string, email: string, isEmailVerified: boolean): Promise<User>;
   findProfile(id: string): Promise<any>;
   findHostProfileByUserId(userId: string): Promise<HostProfile | null>;
+  findHostProfileById(id: string): Promise<HostProfile | null>;
   upsertHostProfile(
     userId: string,
     data: {

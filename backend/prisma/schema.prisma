@@ -63,6 +63,7 @@ enum TriggerEvent {
   REFUND_SUCCESS
   TICKET_DELIVERY
   STAFF_INVITATION
+  EMAIL_VERIFICATION
 }
 
 enum EventMode {

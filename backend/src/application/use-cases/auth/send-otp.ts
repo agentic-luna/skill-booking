@@ -4,6 +4,7 @@ import { ICacheService } from '../../services/cache.service';
 import { ICommunicationService } from '../../services/communication.service';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ILoggerService } from '../../services/logger.service';
+import { IConfigRepository } from '../../../domain/repositories/config.repository';
 import { BadRequestError, TooManyRequestsError } from '../../../api/common/errors';
 
 export class SendOtpCommand implements IRequest<any> {
@@ -19,7 +20,8 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
     private cacheService: ICacheService,
     private commsService: ICommunicationService,
     private userRepo: IUserRepository,
-    private logger: ILoggerService
+    private logger: ILoggerService,
+    private configRepo: IConfigRepository
   ) { }
 
   async handle(command: SendOtpCommand): Promise<any> {
@@ -67,18 +69,35 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
     await this.cacheService.set(cacheKey, otp, 600);
     await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
 
-    // Send via provider
+    // Send via provider using DB templates
     if (normalizedType === DeliveryChannel.EMAIL) {
-      await this.commsService.sendEmail(
-        normalizedTarget,
-        'Your Registration Verification OTP',
-        `Your OTP for registration verification is: ${otp}. It is valid for 10 minutes.`
-      );
+      const templates = await this.configRepo.findTemplates({
+        triggerEvent: 'EMAIL_OTP',
+        isActive: true,
+      });
+      const emailTemplate = templates.find((t) => t.channel === DeliveryChannel.EMAIL);
+      let subject = 'Your Verification Code';
+      let body = `Your OTP for registration verification is: ${otp}. It is valid for 10 minutes.`;
+
+      if (emailTemplate) {
+        subject = emailTemplate.subject || subject;
+        body = emailTemplate.bodyContent.replace(/\{\{otp\}\}/g, otp);
+      }
+
+      await this.commsService.sendEmail(normalizedTarget, subject, body);
     } else {
-      await this.commsService.sendSMS(
-        normalizedTarget,
-        `Your registration OTP is: ${otp}. Valid for 10 minutes.`
-      );
+      const templates = await this.configRepo.findTemplates({
+        triggerEvent: 'SMS_OTP',
+        isActive: true,
+      });
+      const smsTemplate = templates.find((t) => t.channel === DeliveryChannel.SMS);
+      let body = `Your registration OTP is: ${otp}. Valid for 10 minutes.`;
+
+      if (smsTemplate) {
+        body = smsTemplate.bodyContent.replace(/\{\{otp\}\}/g, otp);
+      }
+
+      await this.commsService.sendSMS(normalizedTarget, body);
     }
 
     this.logger.info(`[SendOtp] Sent OTP for ${normalizedType} to ${normalizedTarget}`);

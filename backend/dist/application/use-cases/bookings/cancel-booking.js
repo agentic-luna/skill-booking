@@ -25,13 +25,17 @@ class CancelBookingCommandHandler {
     ledgerRepo;
     paymentGateway;
     cacheService;
-    constructor(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGateway, cacheService) {
+    notificationRepo;
+    queueService;
+    constructor(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGateway, cacheService, notificationRepo, queueService) {
         this.bookingRepo = bookingRepo;
         this.eventRepo = eventRepo;
         this.configRepo = configRepo;
         this.ledgerRepo = ledgerRepo;
         this.paymentGateway = paymentGateway;
         this.cacheService = cacheService;
+        this.notificationRepo = notificationRepo;
+        this.queueService = queueService;
     }
     async handle(command) {
         const { bookingId, userId, role, reason } = command;
@@ -79,6 +83,47 @@ class CancelBookingCommandHandler {
                 status: refundAmount > 0 ? 'PENDING' : 'APPROVED',
             },
         });
+        // Trigger notification for booking cancellation
+        try {
+            const fullBooking = await this.bookingRepo.findFirstByRef(booking.bookingRef);
+            if (fullBooking && fullBooking.client) {
+                const client = fullBooking.client;
+                const templates = await this.configRepo.findTemplates({
+                    triggerEvent: 'BOOKING_CANCELLED',
+                    isActive: true,
+                });
+                for (const temp of templates) {
+                    let content = temp.bodyContent;
+                    const userName = `${client.firstName} ${client.lastName}`;
+                    const replacements = {
+                        '{{userName}}': userName,
+                        '{{eventTitle}}': event.title,
+                        '{{bookingRef}}': booking.bookingRef,
+                    };
+                    for (const [placeholder, value] of Object.entries(replacements)) {
+                        content = content.replace(new RegExp(placeholder, 'g'), value);
+                    }
+                    const recipient = temp.channel === 'EMAIL' ? client.email : client.phone;
+                    if (recipient) {
+                        const log = await this.notificationRepo.create({
+                            userId: client.id,
+                            channel: temp.channel,
+                            triggerEvent: 'BOOKING_CANCELLED',
+                            recipient,
+                            content,
+                            status: temp.channel === 'IN_APP' ? 'SENT' : 'PENDING',
+                            sentAt: temp.channel === 'IN_APP' ? new Date() : null,
+                        });
+                        if (temp.channel !== 'IN_APP') {
+                            await this.queueService.addNotificationJob(log.id);
+                        }
+                    }
+                }
+            }
+        }
+        catch (err) {
+            // Silent catch for notification dispatch failures
+        }
         // Clear search cache when seats count or booking status changes
         await this.cacheService.delPattern('events:search:*');
         return {

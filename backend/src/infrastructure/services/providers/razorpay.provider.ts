@@ -45,6 +45,12 @@ export class RazorpayPaymentGatewayProvider implements IPaymentGatewayProvider {
     currency: string,
     receipt: string
   ): Promise<{ id: string; amount: number; currency: string; receipt: string }> {
+    if (process.env.NODE_ENV === 'test') {
+      const mockOrderId = `order_${crypto.randomBytes(8).toString('hex')}`;
+      this.logger.info(`[RazorpayProvider] [TEST MOCK] Created mock order ${mockOrderId} for ${amount} ${currency}`);
+      return { id: mockOrderId, amount, currency: currency || 'INR', receipt };
+    }
+
     const { client } = await this.getRazorpayClient();
 
     if (!client) {
@@ -121,6 +127,12 @@ async verifyWebhookSignature(
     amount: number,
     notes?: any
   ): Promise<{ success: boolean; refundId: string; amount: number }> {
+    if (process.env.NODE_ENV === 'test') {
+      const mockRefundId = `rfnd_${crypto.randomBytes(8).toString('hex')}`;
+      this.logger.info(`[RazorpayProvider] [TEST MOCK] Initiated mock refund of ${amount} INR for payment ${paymentId}`);
+      return { success: true, refundId: mockRefundId, amount };
+    }
+
     const { client } = await this.getRazorpayClient();
 
     if (!client) {
@@ -149,6 +161,12 @@ async verifyWebhookSignature(
     },
     amount: number
   ): Promise<{ success: boolean; payoutId: string; error?: string }> {
+    if (process.env.NODE_ENV === 'test') {
+      const mockPayoutId = `pout_${crypto.randomBytes(8).toString('hex')}`;
+      this.logger.info(`[RazorpayProvider] [TEST MOCK] Initiated mock transfer ${mockPayoutId} of ${amount} INR to ${destinationBankDetail.accountHolderName}`);
+      return { success: true, payoutId: mockPayoutId };
+    }
+
     const { client } = await this.getRazorpayClient();
 
     if (!client) {

@@ -2,6 +2,9 @@ import { KycStatus } from '@prisma/client';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ICryptoService } from '../../services/crypto.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { IConfigRepository } from '../../../domain/repositories/config.repository';
+import { INotificationRepository } from '../../../domain/repositories/notification.repository';
+import { IQueueService } from '../../../application/services/queue.service';
 import { BadRequestError, NotFoundError } from '../../../application/common/errors';
 
 // ─── List Pending KYC Hosts ──────────────────────────────────────────────────
@@ -64,7 +67,10 @@ export class ReviewKycCommand implements IRequest<any> {
 export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand, any> {
   constructor(
     private userRepo: IUserRepository,
-    private cryptoService: ICryptoService
+    private cryptoService: ICryptoService,
+    private notificationRepo: INotificationRepository,
+    private configRepo: IConfigRepository,
+    private queueService: IQueueService
   ) {}
 
   async handle(command: ReviewKycCommand): Promise<any> {
@@ -87,6 +93,52 @@ export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand
 
     if (!updated) {
       throw new NotFoundError('Host profile not found');
+    }
+
+    // Trigger notification for KYC rejection
+    if (decision === 'REJECTED') {
+      try {
+        const hostUser = await this.userRepo.findById(updated.userId);
+        if (hostUser) {
+          const templates = await this.configRepo.findTemplates({
+            triggerEvent: 'KYC_REJECTED',
+            isActive: true,
+          });
+
+          for (const temp of templates) {
+            let content = temp.bodyContent;
+            const userName = `${hostUser.firstName} ${hostUser.lastName}`;
+            const replacements = {
+              '{{userName}}': userName,
+              '{{rejectionReason}}': rejectionReason || '',
+            };
+
+            for (const [placeholder, value] of Object.entries(replacements)) {
+              content = content.replace(new RegExp(placeholder, 'g'), value);
+            }
+
+            const recipient = temp.channel === 'EMAIL' ? hostUser.email : hostUser.phone;
+
+            if (recipient) {
+              const log = await this.notificationRepo.create({
+                userId: hostUser.id,
+                channel: temp.channel as any,
+                triggerEvent: 'KYC_REJECTED',
+                recipient,
+                content,
+                status: temp.channel === 'IN_APP' ? 'SENT' : 'PENDING',
+                sentAt: temp.channel === 'IN_APP' ? new Date() : null,
+              });
+
+              if (temp.channel !== 'IN_APP') {
+                await this.queueService.addNotificationJob(log.id);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        // Silent catch for notification dispatch failures
+      }
     }
 
     return {

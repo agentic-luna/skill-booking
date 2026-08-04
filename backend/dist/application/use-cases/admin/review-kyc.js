@@ -68,9 +68,15 @@ exports.ReviewKycCommand = ReviewKycCommand;
 class ReviewKycCommandHandler {
     userRepo;
     cryptoService;
-    constructor(userRepo, cryptoService) {
+    notificationRepo;
+    configRepo;
+    queueService;
+    constructor(userRepo, cryptoService, notificationRepo, configRepo, queueService) {
         this.userRepo = userRepo;
         this.cryptoService = cryptoService;
+        this.notificationRepo = notificationRepo;
+        this.configRepo = configRepo;
+        this.queueService = queueService;
     }
     async handle(command) {
         const { hostProfileId, decision, rejectionReason } = command;
@@ -87,6 +93,47 @@ class ReviewKycCommandHandler {
         const updated = await this.userRepo.updateKycStatus(hostProfileId, newStatus, rejectionReason);
         if (!updated) {
             throw new errors_1.NotFoundError('Host profile not found');
+        }
+        // Trigger notification for KYC rejection
+        if (decision === 'REJECTED') {
+            try {
+                const hostUser = await this.userRepo.findById(updated.userId);
+                if (hostUser) {
+                    const templates = await this.configRepo.findTemplates({
+                        triggerEvent: 'KYC_REJECTED',
+                        isActive: true,
+                    });
+                    for (const temp of templates) {
+                        let content = temp.bodyContent;
+                        const userName = `${hostUser.firstName} ${hostUser.lastName}`;
+                        const replacements = {
+                            '{{userName}}': userName,
+                            '{{rejectionReason}}': rejectionReason || '',
+                        };
+                        for (const [placeholder, value] of Object.entries(replacements)) {
+                            content = content.replace(new RegExp(placeholder, 'g'), value);
+                        }
+                        const recipient = temp.channel === 'EMAIL' ? hostUser.email : hostUser.phone;
+                        if (recipient) {
+                            const log = await this.notificationRepo.create({
+                                userId: hostUser.id,
+                                channel: temp.channel,
+                                triggerEvent: 'KYC_REJECTED',
+                                recipient,
+                                content,
+                                status: temp.channel === 'IN_APP' ? 'SENT' : 'PENDING',
+                                sentAt: temp.channel === 'IN_APP' ? new Date() : null,
+                            });
+                            if (temp.channel !== 'IN_APP') {
+                                await this.queueService.addNotificationJob(log.id);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (err) {
+                // Silent catch for notification dispatch failures
+            }
         }
         return {
             message: `KYC ${decision === 'APPROVED' ? 'approved' : 'rejected'} successfully`,

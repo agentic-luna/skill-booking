@@ -144,7 +144,7 @@ mediator.register('LoginCommand', new login_1.LoginCommandHandler(userRepo, cach
 mediator.register('RefreshTokenCommand', new refresh_1.RefreshTokenCommandHandler(userRepo, cacheService));
 mediator.register('LogoutCommand', new logout_1.LogoutCommandHandler(cacheService));
 mediator.register('GetProfileQuery', new get_profile_1.GetProfileQueryHandler(userRepo));
-mediator.register('SendOtpCommand', new send_otp_1.SendOtpCommandHandler(cacheService, commsService, userRepo, logger));
+mediator.register('SendOtpCommand', new send_otp_1.SendOtpCommandHandler(cacheService, commsService, userRepo, logger, configRepo));
 mediator.register('VerifyOtpCommand', new verify_otp_1.VerifyOtpCommandHandler(cacheService, logger));
 mediator.register('SendForgotPasswordOtpCommand', new send_forgot_password_otp_1.SendForgotPasswordOtpCommandHandler(userRepo, cacheService, commsService, logger));
 mediator.register('VerifyForgotPasswordOtpCommand', new verify_forgot_password_otp_1.VerifyForgotPasswordOtpCommandHandler(userRepo, cacheService, logger));
@@ -152,7 +152,7 @@ mediator.register('ResetPasswordCommand', new reset_password_1.ResetPasswordComm
 mediator.register('ClientSendOtpCommand', new send_otp_2.ClientSendOtpCommandHandler(cacheService, commsService, userRepo, logger));
 mediator.register('ClientVerifyOtpCommand', new verify_otp_2.ClientVerifyOtpCommandHandler(cacheService, logger));
 mediator.register('ClientSignupCommand', new signup_2.ClientSignupCommandHandler(userRepo, cacheService));
-mediator.register('ClientSendEmailVerificationCommand', new send_email_verification_1.ClientSendEmailVerificationCommandHandler(userRepo, cacheService, sendGridProvider));
+mediator.register('ClientSendEmailVerificationCommand', new send_email_verification_1.ClientSendEmailVerificationCommandHandler(userRepo, cacheService, sendGridProvider, configRepo));
 mediator.register('ClientVerifyEmailMagicLinkCommand', new verify_email_magic_link_1.ClientVerifyEmailMagicLinkCommandHandler(userRepo, cacheService));
 // 5. Register Host handlers
 mediator.register('SubmitKycCommand', new submit_kyc_1.SubmitKycCommandHandler(userRepo));
@@ -162,10 +162,10 @@ mediator.register('GetHostDashboardQuery', new get_dashboard_1.GetHostDashboardQ
 mediator.register('SearchEventsQuery', new search_events_1.SearchEventsQueryHandler(eventRepo, cacheService));
 mediator.register('GetEventDetailsQuery', new get_event_details_1.GetEventDetailsQueryHandler(eventRepo));
 mediator.register('CreateEventCommand', new create_event_1.CreateEventCommandHandler(eventRepo, userRepo, cacheService, configRepo));
-mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommandHandler(eventRepo, cacheService, configRepo));
+mediator.register('ApproveEventCommand', new approve_event_1.ApproveEventCommandHandler(eventRepo, cacheService, configRepo, userRepo, notificationRepo, queueService));
 // 7. Register Booking handlers
 mediator.register('CheckoutCommand', new checkout_1.CheckoutCommandHandler(eventRepo, bookingRepo, cacheService, commsService));
-mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService));
+mediator.register('CancelBookingCommand', new cancel_booking_1.CancelBookingCommandHandler(bookingRepo, eventRepo, configRepo, ledgerRepo, paymentGatewayProvider, cacheService, notificationRepo, queueService));
 mediator.register('GetMyBookingsQuery', new get_my_bookings_1.GetMyBookingsQueryHandler(bookingRepo));
 mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.ConfirmBookingPaymentCommandHandler(bookingRepo, ledgerRepo, configRepo, cryptoService, notificationRepo, queueService, cacheService));
 mediator.register('GetCancellationQuoteQuery', new get_cancellation_quote_1.GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
@@ -175,7 +175,7 @@ mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.Ha
 mediator.register('AdminLoginCommand', new admin_login_1.AdminLoginCommandHandler(userRepo, cacheService));
 mediator.register('GetPendingKycHostsQuery', new review_kyc_1.GetPendingKycHostsQueryHandler(userRepo, cryptoService));
 mediator.register('GetAllHostsQuery', new review_kyc_1.GetAllHostsQueryHandler(userRepo, cryptoService));
-mediator.register('ReviewKycCommand', new review_kyc_1.ReviewKycCommandHandler(userRepo, cryptoService));
+mediator.register('ReviewKycCommand', new review_kyc_1.ReviewKycCommandHandler(userRepo, cryptoService, notificationRepo, configRepo, queueService));
 mediator.register('GetConfigsQuery', new get_configs_1.GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new update_config_1.UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('GetTemplatesQuery', new get_templates_1.GetTemplatesQueryHandler(configRepo));

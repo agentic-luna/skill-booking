@@ -72,6 +72,15 @@ async function main() {
       variables: ['userName', 'eventTitle', 'bookingRef', 'seatCount', 'totalAmount'],
       isActive: true,
     },
+    // BOOKING_CONFIRMED (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'BOOKING_CONFIRMED',
+      subject: 'Booking Confirmed',
+      bodyContent: 'Your booking for "{{eventTitle}}" is confirmed! Reference: {{bookingRef}}.',
+      variables: ['eventTitle', 'bookingRef'],
+      isActive: true,
+    },
     // BOOKING_REMINDER (EMAIL)
     {
       channel: 'EMAIL',
@@ -88,6 +97,15 @@ async function main() {
       subject: null,
       bodyContent: 'Hi {{userName}}, this is a reminder that {{eventTitle}} is starting at {{startTime}}. See you soon!',
       variables: ['userName', 'eventTitle', 'startTime'],
+      isActive: true,
+    },
+    // BOOKING_REMINDER (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'BOOKING_REMINDER',
+      subject: 'Upcoming Event Reminder',
+      bodyContent: 'Reminder: The event "{{eventTitle}}" is starting at {{startTime}}.',
+      variables: ['eventTitle', 'startTime'],
       isActive: true,
     },
     // BOOKING_CANCELLED (EMAIL)
@@ -108,6 +126,15 @@ async function main() {
       variables: ['userName', 'eventTitle', 'bookingRef'],
       isActive: true,
     },
+    // BOOKING_CANCELLED (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'BOOKING_CANCELLED',
+      subject: 'Booking Cancelled',
+      bodyContent: 'Your booking for "{{eventTitle}}" (Ref: {{bookingRef}}) has been cancelled.',
+      variables: ['eventTitle', 'bookingRef'],
+      isActive: true,
+    },
     // PAYMENT_SUCCESS (EMAIL)
     {
       channel: 'EMAIL',
@@ -124,6 +151,15 @@ async function main() {
       subject: null,
       bodyContent: 'Hi {{userName}}, payment of {{totalAmount}} INR for booking {{bookingRef}} was successful. Thank you!',
       variables: ['userName', 'bookingRef', 'totalAmount'],
+      isActive: true,
+    },
+    // PAYMENT_SUCCESS (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'PAYMENT_SUCCESS',
+      subject: 'Payment Received',
+      bodyContent: 'Payment of {{totalAmount}} INR for booking {{bookingRef}} was successful.',
+      variables: ['totalAmount', 'bookingRef'],
       isActive: true,
     },
     // PAYMENT_FAILED (EMAIL)
@@ -144,6 +180,15 @@ async function main() {
       variables: ['userName', 'bookingRef', 'totalAmount'],
       isActive: true,
     },
+    // PAYMENT_FAILED (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'PAYMENT_FAILED',
+      subject: 'Payment Failed',
+      bodyContent: 'Payment failed for booking {{bookingRef}} (amount: {{totalAmount}} INR).',
+      variables: ['totalAmount', 'bookingRef'],
+      isActive: true,
+    },
     // REFUND_SUCCESS (EMAIL)
     {
       channel: 'EMAIL',
@@ -160,6 +205,15 @@ async function main() {
       subject: null,
       bodyContent: 'Hi {{userName}}, a refund of {{refundAmount}} INR has been processed for booking {{bookingRef}}. Thank you!',
       variables: ['userName', 'bookingRef', 'refundAmount'],
+      isActive: true,
+    },
+    // REFUND_SUCCESS (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'REFUND_SUCCESS',
+      subject: 'Refund Processed',
+      bodyContent: 'A refund of {{refundAmount}} INR has been successfully processed for booking {{bookingRef}}.',
+      variables: ['refundAmount', 'bookingRef'],
       isActive: true,
     },
     // TICKET_DELIVERY (EMAIL)
@@ -180,6 +234,15 @@ async function main() {
       variables: ['userName', 'eventTitle'],
       isActive: true,
     },
+    // TICKET_DELIVERY (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'TICKET_DELIVERY',
+      subject: 'Ticket Available',
+      bodyContent: 'Your ticket for "{{eventTitle}}" is ready for download.',
+      variables: ['eventTitle'],
+      isActive: true,
+    },
     // STAFF_INVITATION (EMAIL)
     {
       channel: 'EMAIL',
@@ -187,6 +250,51 @@ async function main() {
       subject: 'Invitation to Join Platform Staff',
       bodyContent: '<div style="font-family: sans-serif; padding: 20px;"><h2>Staff Invitation</h2><p>Hello,</p><p>You have been invited to join the platform as a staff member. Click the link below to accept the invitation:</p><p><a href="{{inviteLink}}">Accept Invitation</a></p></div>',
       variables: ['inviteLink'],
+      isActive: true,
+    },
+    // EMAIL_VERIFICATION (EMAIL - Client Magic Link)
+    {
+      channel: 'EMAIL',
+      triggerEvent: 'EMAIL_VERIFICATION',
+      subject: 'Verify Your Email Address — BookMySkill',
+      bodyContent: '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px;"><h2 style="color: #0b0c01; margin-bottom: 8px;">Verify Your Email Address</h2><p style="color: #555; font-size: 14px;">Hi {{userName}},</p><p style="color: #555; font-size: 14px;">Click the button below to verify your email address and link it to your BookMySkill account:</p><div style="margin: 24px 0;"><a href="{{magicLink}}" style="background-color: #a0f212; color: #0b0c01; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 8px; display: inline-block;">Verify Email Address</a></div><p style="color: #888; font-size: 12px; margin-top: 16px;">Or copy and paste this link in your browser:<br/><a href="{{magicLink}}">{{magicLink}}</a></p><p style="color: #aaa; font-size: 11px; margin-top: 24px;">This link will expire in 15 minutes.</p></div>',
+      variables: ['userName', 'magicLink'],
+      isActive: true,
+    },
+    // EVENT_APPROVED (EMAIL)
+    {
+      channel: 'EMAIL',
+      triggerEvent: 'EVENT_APPROVED',
+      subject: 'Your Event "{{eventTitle}}" has been Approved!',
+      bodyContent: '<div style="font-family: sans-serif; padding: 20px;"><h2>Event Approved!</h2><p>Hi {{userName}},</p><p>Your event <strong>{{eventTitle}}</strong> has been reviewed and approved by our admin team.</p><p>It is now live on the platform and open for bookings.</p></div>',
+      variables: ['userName', 'eventTitle'],
+      isActive: true,
+    },
+    // EVENT_APPROVED (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'EVENT_APPROVED',
+      subject: 'Event Approved',
+      bodyContent: 'Your event "{{eventTitle}}" has been approved and is now live.',
+      variables: ['eventTitle'],
+      isActive: true,
+    },
+    // KYC_REJECTED (EMAIL)
+    {
+      channel: 'EMAIL',
+      triggerEvent: 'KYC_REJECTED',
+      subject: 'Action Required: KYC Verification Update',
+      bodyContent: '<div style="font-family: sans-serif; padding: 20px;"><h2>KYC Verification Rejected</h2><p>Hi {{userName}},</p><p>Unfortunately, your KYC submission was rejected due to the following reason:</p><p style="color: #ea580c; font-weight: bold;">{{rejectionReason}}</p><p>Please log in and resubmit your details with the correct documents.</p></div>',
+      variables: ['userName', 'rejectionReason'],
+      isActive: true,
+    },
+    // KYC_REJECTED (IN_APP)
+    {
+      channel: 'IN_APP',
+      triggerEvent: 'KYC_REJECTED',
+      subject: 'KYC Verification Rejected',
+      bodyContent: 'Your KYC submission was rejected. Reason: {{rejectionReason}}',
+      variables: ['rejectionReason'],
       isActive: true,
     },
   ];

@@ -148,6 +148,17 @@ async function runTests() {
     const adminToken = adminLoginRes.data.accessToken;
     console.log('✔ Dedicated Superadmin portal login successful (AdminProfile verified)');
 
+    // Configure Razorpay integration so checkout can proceed
+    const razorpaySetupRes = await post('/integrations/razorpay', {
+      environment: 'TEST',
+      keyId: 'rzp_test_key_id_12345',
+      keySecret: 'test_key_secret_abc123',
+      webhookSecret: 'test_webhook_secret_789xyz',
+      isActive: true,
+    }, adminToken);
+    assert(razorpaySetupRes.success, 'Failed to configure Razorpay integration');
+    console.log('✔ Razorpay integration configured successfully for checkout testing');
+
     // --- Testing Forgot Password Workflow ---
     console.log('\n--- Testing Forgot Password OTP Workflow ---');
     const forgotSendRes = await post('/auth/forgot-password/send-otp', { identifier: 'client@luna.com' });
@@ -315,8 +326,7 @@ async function runTests() {
     // 7. Payment webhook and ledger tracking
     console.log('\n--- 6. Testing Webhook & Ledger Calculations ---');
     
-    // Trigger Razorpay webhook call (payment.captured)
-    const webhookRes = await post('/webhooks/razorpay', {
+    const webhookPayload = {
       event: 'payment.captured',
       payload: {
         payment: {
@@ -329,6 +339,18 @@ async function runTests() {
           },
         },
       },
+    };
+
+    const webhookBody = JSON.stringify(webhookPayload);
+    const crypto = require('crypto');
+    const signature = crypto
+      .createHmac('sha256', 'test_webhook_secret_789xyz')
+      .update(webhookBody)
+      .digest('hex');
+
+    // Trigger Razorpay webhook call (payment.captured) with valid signature header
+    const webhookRes = await post('/webhooks/razorpay', webhookPayload, undefined, {
+      'x-razorpay-signature': signature,
     });
     assert(webhookRes.success, 'Webhook handler returned error');
     console.log('✔ Razorpay payment captured callback handled');
@@ -343,9 +365,9 @@ async function runTests() {
       where: { bookingId },
     });
     assert(ledger && ledger.status === LedgerStatus.HELD, 'Ledger record missing or not HELD');
-    assert(Number(ledger!.amountCaptured) === 1000.00, 'Ledger captured amount mismatch');
-    assert(Number(ledger!.platformRevenue) === 150.00, 'Ledger platform commission (15%) mismatch (Actual: ' + ledger!.platformRevenue + ')');
-    assert(Number(ledger!.hostLiability) === 850.00, 'Ledger host liability mismatch (Actual: ' + ledger!.hostLiability + ')');
+    assert(Number(ledger!.amountCaptured) === 1150.00, 'Ledger captured amount mismatch');
+    assert(Number(ledger!.platformRevenue) === 172.50, 'Ledger platform commission (15%) mismatch (Actual: ' + ledger!.platformRevenue + ')');
+    assert(Number(ledger!.hostLiability) === 977.50, 'Ledger host liability mismatch (Actual: ' + ledger!.hostLiability + ')');
     console.log('✔ Transaction Ledger captured: Platform Rev: ' + ledger!.platformRevenue + ' INR, Host Liability: ' + ledger!.hostLiability + ' INR (Status: HELD)');
 
     // Verify BullMQ notification enqueued & processed
@@ -363,7 +385,7 @@ async function runTests() {
     console.log('\n--- 7. Testing Host Dashboard Stats ---');
     const dashRes = await get('/hosts/dashboard', hostToken);
     assert(dashRes.success, 'Host dashboard retrieval failed');
-    assert(dashRes.data.heldEscrow === 850, 'Host held escrow calculation mismatch: ' + dashRes.data.heldEscrow);
+    assert(dashRes.data.heldEscrow === 977.5, 'Host held escrow calculation mismatch: ' + dashRes.data.heldEscrow);
     assert(dashRes.data.activeTicketSales === 2, 'Host active tickets sold mismatch');
     console.log('✔ Host Dashboard Statistics: Held Escrow: ' + dashRes.data.heldEscrow + ' INR, Ticket Sales: ' + dashRes.data.activeTicketSales);
 
@@ -371,7 +393,7 @@ async function runTests() {
     console.log('\n--- 8. Testing Admin Finance Ledger & Payout Releases ---');
     const adminLedgerRes = await get('/admin/finance/ledger', adminToken);
     assert(adminLedgerRes.success, 'Admin ledger stats fetch failed');
-    assert(adminLedgerRes.data.totalEscrowLiabilities === 850, 'Escrow total mismatch');
+    assert(adminLedgerRes.data.totalEscrowLiabilities === 977.5, 'Escrow total mismatch');
     console.log('✔ Admin Platform Ledger: Held Escrow Liability: ' + adminLedgerRes.data.totalEscrowLiabilities + ' INR');
 
     // Execute payout to host
@@ -388,7 +410,7 @@ async function runTests() {
 
     // Verify host dashboard updated
     const dashRes2 = await get('/hosts/dashboard', hostToken);
-    assert(dashRes2.success && dashRes2.data.heldEscrow === 0 && dashRes2.data.totalEarnings === 850, 'Host dashboard balance mismatch');
+    assert(dashRes2.success && dashRes2.data.heldEscrow === 0 && dashRes2.data.totalEarnings === 977.5, 'Host dashboard balance mismatch');
     console.log('✔ Host Dashboard updated: Held Escrow: ' + dashRes2.data.heldEscrow + ' INR, Total Paid Earnings: ' + dashRes2.data.totalEarnings + ' INR');
 
     // 9b. Fetch Client My Bookings (Latest on top)
@@ -421,8 +443,18 @@ async function runTests() {
     const cancelRes = await post(`/bookings/${bookingId2}/cancel`, {}, clientToken);
     assert(cancelRes.success, 'Cancellation request failed');
     assert(cancelRes.data.refundPercentage === 100, 'Refund matrix calculation mismatch: ' + cancelRes.data.refundPercentage + '%');
-    assert(cancelRes.data.booking.status === BookingStatus.REFUNDED, 'Booking status was not updated to REFUNDED');
-    console.log('✔ Booking canceled successfully (Refund: ' + cancelRes.data.refundPercentage + '%, Status: ' + cancelRes.data.booking.status + ')');
+    assert(cancelRes.data.booking.status === BookingStatus.CANCELED, 'Booking status was not updated to CANCELED');
+    console.log('✔ Booking canceled successfully (Refund pending approval: ' + cancelRes.data.refundPercentage + '%, Status: ' + cancelRes.data.booking.status + ')');
+
+    // Approve the refund request via admin
+    const refundReq = await prisma.refundRequest.findFirst({
+      where: { bookingId: bookingId2 }
+    });
+    assert(refundReq, 'Refund request not found in database');
+
+    const approveRefundRes = await put(`/admin/finance/refund-requests/${refundReq!.id}/approve`, {}, adminToken);
+    assert(approveRefundRes.success, 'Admin refund approval failed');
+    console.log('✔ Admin approved refund request (Refunded: ' + refundReq!.refundAmount + ' INR)');
 
     // Verify seats returned
     const eventAfterCancel = await prisma.event.findUnique({ where: { id: eventId } });
@@ -434,7 +466,7 @@ async function runTests() {
       where: { bookingId: bookingId2, type: 'REFUND' },
     });
     assert(refundLedger, 'Refund ledger transaction missing');
-    assert(Number(refundLedger!.amountCaptured) === -500.00, 'Refund amount captured mismatch');
+    assert(Number(refundLedger!.amountCaptured) === -575.00, 'Refund amount captured mismatch');
     assert(refundLedger!.status === 'REFUNDED_TO_CLIENT', 'Refund ledger status mismatch');
     // 11. Event Reviews & Ratings
     console.log('\n--- 10. Testing Event Reviews & Ratings ---');
@@ -558,25 +590,26 @@ async function runTests() {
 }
 
 // REST Client Helper Methods
-async function post(path: string, body: any, token?: string) {
-  return request('POST', path, body, token);
+async function post(path: string, body: any, token?: string, headers?: Record<string, string>) {
+  return request('POST', path, body, token, headers);
 }
 
-async function put(path: string, body: any, token?: string) {
-  return request('PUT', path, body, token);
+async function put(path: string, body: any, token?: string, headers?: Record<string, string>) {
+  return request('PUT', path, body, token, headers);
 }
 
-async function get(path: string, token?: string) {
-  return request('GET', path, null, token);
+async function get(path: string, token?: string, headers?: Record<string, string>) {
+  return request('GET', path, null, token, headers);
 }
 
-function request(method: string, path: string, body: any, token?: string): Promise<any> {
+function request(method: string, path: string, body: any, token?: string, customHeaders?: Record<string, string>): Promise<any> {
   return new Promise((resolve, reject) => {
     const url = `${BASE_URL}${path}`;
     const parsedUrl = new URL(url);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      ...customHeaders,
     };
 
     if (token) {

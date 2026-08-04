@@ -20,10 +20,16 @@ class ApproveEventCommandHandler {
     eventRepo;
     cacheService;
     configRepo;
-    constructor(eventRepo, cacheService, configRepo) {
+    userRepo;
+    notificationRepo;
+    queueService;
+    constructor(eventRepo, cacheService, configRepo, userRepo, notificationRepo, queueService) {
         this.eventRepo = eventRepo;
         this.cacheService = cacheService;
         this.configRepo = configRepo;
+        this.userRepo = userRepo;
+        this.notificationRepo = notificationRepo;
+        this.queueService = queueService;
     }
     async handle(command) {
         const { eventId, commissionType, platformValue } = command;
@@ -51,6 +57,48 @@ class ApproveEventCommandHandler {
         }
         const commission = await this.eventRepo.upsertCommission(eventId, finalType, finalValue);
         const updatedEvent = await this.eventRepo.update(eventId, { status: client_1.EventStatus.APPROVED });
+        // Trigger notification for event approval
+        try {
+            const hostProfile = await this.userRepo.findHostProfileById(updatedEvent.hostId);
+            if (hostProfile) {
+                const hostUser = await this.userRepo.findById(hostProfile.userId);
+                if (hostUser) {
+                    const templates = await this.configRepo.findTemplates({
+                        triggerEvent: client_1.TriggerEvent.EVENT_APPROVED,
+                        isActive: true,
+                    });
+                    for (const temp of templates) {
+                        let content = temp.bodyContent;
+                        const userName = `${hostUser.firstName} ${hostUser.lastName}`;
+                        const replacements = {
+                            '{{userName}}': userName,
+                            '{{eventTitle}}': updatedEvent.title,
+                        };
+                        for (const [placeholder, value] of Object.entries(replacements)) {
+                            content = content.replace(new RegExp(placeholder, 'g'), value);
+                        }
+                        const recipient = temp.channel === client_1.DeliveryChannel.EMAIL ? hostUser.email : hostUser.phone;
+                        if (recipient) {
+                            const log = await this.notificationRepo.create({
+                                userId: hostUser.id,
+                                channel: temp.channel,
+                                triggerEvent: client_1.TriggerEvent.EVENT_APPROVED,
+                                recipient,
+                                content,
+                                status: temp.channel === client_1.DeliveryChannel.IN_APP ? 'SENT' : 'PENDING',
+                                sentAt: temp.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                            });
+                            if (temp.channel !== client_1.DeliveryChannel.IN_APP) {
+                                await this.queueService.addNotificationJob(log.id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (err) {
+            // Silent catch for notification dispatch failures
+        }
         // Clear event search cache
         await this.cacheService.delPattern('events:search:*');
         return { event: updatedEvent, commission };

@@ -192,13 +192,13 @@ export default function BoostPricingPage() {
     return fallback;
   };
 
-  // Filter events to only show approved events whose start date is less than current date
+  // Filter events to only show approved events whose start date is greater than or equal to current date
   const selectableEvents = myEvents.filter((evt) => {
     const isApproved = evt?.status?.toUpperCase() === "APPROVED";
     const dateStr = evt?.startTime || evt?.startDate;
     if (!dateStr || !isApproved) return false;
     const eventDate = new Date(dateStr);
-    return !isNaN(eventDate.getTime()) && eventDate < new Date();
+    return !isNaN(eventDate.getTime()) && eventDate >= new Date();
   });
 
   // Set default selected event from query param or first selectable event

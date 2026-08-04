@@ -68,6 +68,9 @@ class PrismaUserRepository {
     async findHostProfileByUserId(userId) {
         return prisma_1.prisma.hostProfile.findUnique({ where: { userId } });
     }
+    async findHostProfileById(id) {
+        return prisma_1.prisma.hostProfile.findUnique({ where: { id } });
+    }
     async upsertHostProfile(userId, data) {
         return prisma_1.prisma.hostProfile.upsert({
             where: { userId },

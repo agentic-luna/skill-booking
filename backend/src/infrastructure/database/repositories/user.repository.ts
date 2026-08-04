@@ -84,6 +84,10 @@ export class PrismaUserRepository implements IUserRepository {
     return prisma.hostProfile.findUnique({ where: { userId } });
   }
 
+  async findHostProfileById(id: string): Promise<HostProfile | null> {
+    return prisma.hostProfile.findUnique({ where: { id } });
+  }
+
   async upsertHostProfile(
     userId: string,
     data: {
