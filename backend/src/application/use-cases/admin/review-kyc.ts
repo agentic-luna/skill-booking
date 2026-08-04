@@ -1,4 +1,4 @@
-import { KycStatus } from '@prisma/client';
+import { KycStatus, DeliveryChannel, NotificationStatus, TriggerEvent } from '@prisma/client';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ICryptoService } from '../../services/crypto.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
@@ -6,6 +6,14 @@ import { IConfigRepository } from '../../../domain/repositories/config.repositor
 import { INotificationRepository } from '../../../domain/repositories/notification.repository';
 import { IQueueService } from '../../../application/services/queue.service';
 import { BadRequestError, NotFoundError } from '../../../application/common/errors';
+import {
+  generateKycApprovedEmailTemplate,
+  generateKycRejectedEmailTemplate,
+  generateKycApprovedWhatsAppTemplate,
+  generateKycRejectedWhatsAppTemplate,
+  generateKycApprovedInAppTemplate,
+  generateKycRejectedInAppTemplate,
+} from '../../../constants/templates';
 
 // ─── List Pending KYC Hosts ──────────────────────────────────────────────────
 
@@ -95,44 +103,69 @@ export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand
       throw new NotFoundError('Host profile not found');
     }
 
-    // Trigger notification for KYC rejection
-    if (decision === 'REJECTED') {
-      try {
-        const hostUser = await this.userRepo.findById(updated.userId);
-        if (hostUser) {
-          const userName = `${hostUser.firstName} ${hostUser.lastName}`;
-          const content = `Hi ${userName}, your KYC verification was rejected. Reason: ${rejectionReason || 'Documents provided were incomplete or invalid.'}`;
+    // Trigger notification for KYC verification decision (APPROVED / REJECTED)
+    try {
+      const hostUser = await this.userRepo.findById(updated.userId);
+      if (hostUser) {
+        const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+        const kycData = { hostName, status: decision, rejectionReason };
 
-          const channelsToNotify: { channel: 'IN_APP' | 'EMAIL' | 'SMS'; recipient: string }[] = [];
-          if (hostUser.email) {
-            channelsToNotify.push({ channel: 'IN_APP', recipient: hostUser.email });
-            channelsToNotify.push({ channel: 'EMAIL', recipient: hostUser.email });
-          } else {
-            channelsToNotify.push({ channel: 'IN_APP', recipient: hostUser.id });
-          }
-          if (hostUser.phone) {
-            channelsToNotify.push({ channel: 'SMS', recipient: hostUser.phone });
-          }
+        const emailContent = decision === 'APPROVED'
+          ? generateKycApprovedEmailTemplate(kycData)
+          : generateKycRejectedEmailTemplate(kycData);
 
-          for (const target of channelsToNotify) {
-            const log = await this.notificationRepo.create({
-              userId: hostUser.id,
-              channel: target.channel as any,
-              triggerEvent: 'KYC_REJECTED',
-              recipient: target.recipient,
-              content,
-              status: target.channel === 'IN_APP' ? 'SENT' : 'PENDING',
-              sentAt: target.channel === 'IN_APP' ? new Date() : null,
-            });
+        const whatsappContent = decision === 'APPROVED'
+          ? generateKycApprovedWhatsAppTemplate(kycData)
+          : generateKycRejectedWhatsAppTemplate(kycData);
 
-            if (target.channel !== 'IN_APP') {
-              await this.queueService.addNotificationJob(log.id);
-            }
+        const inAppContent = decision === 'APPROVED'
+          ? generateKycApprovedInAppTemplate(kycData)
+          : generateKycRejectedInAppTemplate(kycData);
+
+        const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+        notificationTargets.push({
+          channel: DeliveryChannel.IN_APP,
+          recipient: hostUser.email || hostUser.id,
+          content: inAppContent,
+        });
+
+        if (hostUser.email) {
+          notificationTargets.push({
+            channel: DeliveryChannel.EMAIL,
+            recipient: hostUser.email,
+            content: emailContent,
+          });
+        }
+
+        if (hostUser.phone) {
+          notificationTargets.push({
+            channel: DeliveryChannel.WHATSAPP,
+            recipient: hostUser.phone,
+            content: whatsappContent,
+          });
+        }
+
+        const triggerEvent = decision === 'APPROVED' ? 'KYC_APPROVED' as any : TriggerEvent.KYC_REJECTED;
+
+        for (const target of notificationTargets) {
+          const log = await this.notificationRepo.create({
+            userId: hostUser.id,
+            channel: target.channel,
+            triggerEvent,
+            recipient: target.recipient,
+            content: target.content,
+            status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+            sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+          });
+
+          if (target.channel !== DeliveryChannel.IN_APP) {
+            await this.queueService.addNotificationJob(log.id);
           }
         }
-      } catch (err) {
-        // Silent catch for notification dispatch failures
       }
+    } catch (err) {
+      // Silent catch for notification dispatch failures
     }
 
     return {

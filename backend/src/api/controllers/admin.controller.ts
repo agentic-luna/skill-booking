@@ -18,6 +18,15 @@ import {
   generateEditRequestApprovedEmailTemplate,
   generateEditRequestApprovedWhatsAppTemplate,
   generateEditRequestApprovedInAppTemplate,
+  generateEventDeclineEmailTemplate,
+  generateEventDeclineWhatsAppTemplate,
+  generateEventDeclineInAppTemplate,
+  generateRefundApprovedEmailTemplate,
+  generateRefundApprovedWhatsAppTemplate,
+  generateRefundApprovedInAppTemplate,
+  generateRefundDeclinedEmailTemplate,
+  generateRefundDeclinedWhatsAppTemplate,
+  generateRefundDeclinedInAppTemplate,
 } from '../../constants/templates';
 
 export class AdminController {
@@ -329,6 +338,69 @@ export class AdminController {
         }),
       ]);
 
+      // Dispatch notifications to client
+      try {
+        const clientUser = await prisma.user.findUnique({ where: { id: booking.clientId } });
+        if (clientUser) {
+          const clientName = `${clientUser.firstName} ${clientUser.lastName}`;
+          const refundData = {
+            clientName,
+            bookingId: booking.id,
+            eventTitle: event.title,
+            refundAmount,
+            status: 'APPROVED' as const,
+          };
+
+          const emailContent = generateRefundApprovedEmailTemplate(refundData);
+          const whatsappContent = generateRefundApprovedWhatsAppTemplate(refundData);
+          const inAppContent = generateRefundApprovedInAppTemplate(refundData);
+
+          const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+          notificationTargets.push({
+            channel: DeliveryChannel.IN_APP,
+            recipient: clientUser.email || clientUser.id,
+            content: inAppContent,
+          });
+
+          if (clientUser.email) {
+            notificationTargets.push({
+              channel: DeliveryChannel.EMAIL,
+              recipient: clientUser.email,
+              content: emailContent,
+            });
+          }
+
+          if (clientUser.phone) {
+            notificationTargets.push({
+              channel: DeliveryChannel.WHATSAPP,
+              recipient: clientUser.phone,
+              content: whatsappContent,
+            });
+          }
+
+          for (const target of notificationTargets) {
+            const log = await prisma.notificationLog.create({
+              data: {
+                userId: clientUser.id,
+                channel: target.channel,
+                triggerEvent: 'REFUND_SUCCESS' as any,
+                recipient: target.recipient,
+                content: target.content,
+                status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+                sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+              }
+            });
+
+            if (target.channel !== DeliveryChannel.IN_APP) {
+              await queueService.addNotificationJob(log.id);
+            }
+          }
+        }
+      } catch (err) {
+        // Silent catch for notification dispatch errors
+      }
+
       return ApiResponse.success(res, {
         message: 'Refund request approved successfully',
         refundRequest: updatedRequest,
@@ -342,10 +414,91 @@ export class AdminController {
   static async declineRefundRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
+      const { reason } = req.body;
+
+      const refundRequest = await prisma.refundRequest.findUnique({
+        where: { id },
+        include: {
+          booking: {
+            include: {
+              event: true,
+            }
+          }
+        }
+      });
+
       const updated = await prisma.refundRequest.update({
         where: { id },
         data: { status: 'DECLINED' },
       });
+
+      // Dispatch notifications to client
+      if (refundRequest?.booking) {
+        try {
+          const booking = refundRequest.booking;
+          const clientUser = await prisma.user.findUnique({ where: { id: booking.clientId } });
+
+          if (clientUser) {
+            const clientName = `${clientUser.firstName} ${clientUser.lastName}`;
+            const refundData = {
+              clientName,
+              bookingId: booking.id,
+              eventTitle: booking.event?.title || 'Training Workshop',
+              status: 'DECLINED' as const,
+              reason,
+            };
+
+            const emailContent = generateRefundDeclinedEmailTemplate(refundData);
+            const whatsappContent = generateRefundDeclinedWhatsAppTemplate(refundData);
+            const inAppContent = generateRefundDeclinedInAppTemplate(refundData);
+
+            const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+            notificationTargets.push({
+              channel: DeliveryChannel.IN_APP,
+              recipient: clientUser.email || clientUser.id,
+              content: inAppContent,
+            });
+
+            if (clientUser.email) {
+              notificationTargets.push({
+                channel: DeliveryChannel.EMAIL,
+                recipient: clientUser.email,
+                content: emailContent,
+              });
+            }
+
+            if (clientUser.phone) {
+              notificationTargets.push({
+                channel: DeliveryChannel.WHATSAPP,
+                recipient: clientUser.phone,
+                content: whatsappContent,
+              });
+            }
+
+            for (const target of notificationTargets) {
+              const log = await prisma.notificationLog.create({
+                data: {
+                  userId: clientUser.id,
+                  channel: target.channel,
+                  triggerEvent: 'REFUND_DECLINED' as any,
+                  recipient: target.recipient,
+                  content: target.content,
+                  status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+                  sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+                }
+              });
+
+              if (target.channel !== DeliveryChannel.IN_APP) {
+                await queueService.addNotificationJob(log.id);
+              }
+            }
+          }
+        } catch (err) {
+          // Silent catch for notification dispatch errors
+        }
+      }
+
       return ApiResponse.success(res, {
         message: 'Refund request declined successfully',
         refundRequest: updated,
@@ -421,10 +574,75 @@ export class AdminController {
   static async declineEvent(req: Request, res: Response, next: NextFunction) {
     try {
       const { eventId } = req.params;
+      const { reason } = req.body;
+
       const updatedEvent = await prisma.event.update({
         where: { id: eventId },
         data: { status: 'CANCELED' },
+        include: {
+          host: {
+            include: { user: true }
+          }
+        }
       });
+
+      // Dispatch notifications to host
+      if (updatedEvent.host?.user) {
+        try {
+          const hostUser = updatedEvent.host.user;
+          const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+          const declineData = { hostName, eventTitle: updatedEvent.title, reason };
+
+          const emailContent = generateEventDeclineEmailTemplate(declineData);
+          const whatsappContent = generateEventDeclineWhatsAppTemplate(declineData);
+          const inAppContent = generateEventDeclineInAppTemplate(declineData);
+
+          const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+          notificationTargets.push({
+            channel: DeliveryChannel.IN_APP,
+            recipient: hostUser.email || hostUser.id,
+            content: inAppContent,
+          });
+
+          if (hostUser.email) {
+            notificationTargets.push({
+              channel: DeliveryChannel.EMAIL,
+              recipient: hostUser.email,
+              content: emailContent,
+            });
+          }
+
+          if (hostUser.phone) {
+            notificationTargets.push({
+              channel: DeliveryChannel.WHATSAPP,
+              recipient: hostUser.phone,
+              content: whatsappContent,
+            });
+          }
+
+          for (const target of notificationTargets) {
+            const log = await prisma.notificationLog.create({
+              data: {
+                userId: hostUser.id,
+                channel: target.channel,
+                triggerEvent: 'EVENT_DECLINED' as any,
+                recipient: target.recipient,
+                content: target.content,
+                status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+                sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+              }
+            });
+
+            if (target.channel !== DeliveryChannel.IN_APP) {
+              await queueService.addNotificationJob(log.id);
+            }
+          }
+        } catch (err) {
+          // Silent catch for notification dispatch errors
+        }
+      }
+
       return ApiResponse.success(res, {
         message: 'Program listing declined successfully',
         event: updatedEvent,

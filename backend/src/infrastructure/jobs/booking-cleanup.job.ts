@@ -13,6 +13,10 @@ export class BookingCleanupJob {
    */
   static startUnconfirmedBookingCleaner() {
     cron.schedule('* * * * *', async () => {
+      // Distributed Lock: Only 1 container replica executes the cron tick
+      const hasLock = await cacheService.acquireLock('lock:cron:unconfirmed-bookings', 50);
+      if (!hasLock) return;
+
       try {
         const TEN_MINUTES_MS = 15 * 60 * 1000;
         const cutoffTime = new Date(Date.now() - TEN_MINUTES_MS);
@@ -103,6 +107,10 @@ export class BookingCleanupJob {
    */
   static startUnconfirmedBoostCleaner() {
     cron.schedule('* * * * *', async () => {
+      // Distributed Lock: Only 1 container replica executes the cron tick
+      const hasLock = await cacheService.acquireLock('lock:cron:unconfirmed-boosts', 50);
+      if (!hasLock) return;
+
       try {
         const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
         const cutoffTime = new Date(Date.now() - FIFTEEN_MINUTES_MS);

@@ -185,7 +185,7 @@ mediator.register('GetConfigsQuery', new GetConfigsQueryHandler(configRepo, cryp
 mediator.register('UpdateConfigCommand', new UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
 mediator.register('BroadcastNotificationCommand', new BroadcastNotificationCommandHandler(notificationRepo, userRepo, queueService));
 mediator.register('GetLedgerQuery', new GetLedgerQueryHandler(ledgerRepo));
-mediator.register('PayoutHostCommand', new PayoutHostCommandHandler(userRepo, ledgerRepo, cryptoService, commsService));
+mediator.register('PayoutHostCommand', new PayoutHostCommandHandler(userRepo, ledgerRepo, cryptoService, commsService, notificationRepo, queueService));
 
 // 10. Register Notification handlers
 mediator.register('GetUserNotificationsQuery', new GetUserNotificationsQueryHandler(notificationRepo));

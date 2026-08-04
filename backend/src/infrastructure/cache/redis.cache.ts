@@ -55,4 +55,22 @@ export class RedisCacheService implements ICacheService {
       logger.error(`[RedisCacheService] Error deleting pattern ${pattern}:`, e);
     }
   }
+
+  async acquireLock(key: string, ttlSeconds: number = 60): Promise<boolean> {
+    try {
+      const result = await redis.set(key, 'LOCKED', 'EX', ttlSeconds, 'NX');
+      return result === 'OK';
+    } catch (e) {
+      logger.error(`[RedisCacheService] Error acquiring lock ${key}:`, e);
+      return false;
+    }
+  }
+
+  async releaseLock(key: string): Promise<void> {
+    try {
+      await redis.del(key);
+    } catch (e) {
+      logger.error(`[RedisCacheService] Error releasing lock ${key}:`, e);
+    }
+  }
 }
