@@ -100,39 +100,33 @@ export class ReviewKycCommandHandler implements IRequestHandler<ReviewKycCommand
       try {
         const hostUser = await this.userRepo.findById(updated.userId);
         if (hostUser) {
-          const templates = await this.configRepo.findTemplates({
-            triggerEvent: 'KYC_REJECTED',
-            isActive: true,
-          });
+          const userName = `${hostUser.firstName} ${hostUser.lastName}`;
+          const content = `Hi ${userName}, your KYC verification was rejected. Reason: ${rejectionReason || 'Documents provided were incomplete or invalid.'}`;
 
-          for (const temp of templates) {
-            let content = temp.bodyContent;
-            const userName = `${hostUser.firstName} ${hostUser.lastName}`;
-            const replacements = {
-              '{{userName}}': userName,
-              '{{rejectionReason}}': rejectionReason || '',
-            };
+          const channelsToNotify: { channel: 'IN_APP' | 'EMAIL' | 'SMS'; recipient: string }[] = [];
+          if (hostUser.email) {
+            channelsToNotify.push({ channel: 'IN_APP', recipient: hostUser.email });
+            channelsToNotify.push({ channel: 'EMAIL', recipient: hostUser.email });
+          } else {
+            channelsToNotify.push({ channel: 'IN_APP', recipient: hostUser.id });
+          }
+          if (hostUser.phone) {
+            channelsToNotify.push({ channel: 'SMS', recipient: hostUser.phone });
+          }
 
-            for (const [placeholder, value] of Object.entries(replacements)) {
-              content = content.replace(new RegExp(placeholder, 'g'), value);
-            }
+          for (const target of channelsToNotify) {
+            const log = await this.notificationRepo.create({
+              userId: hostUser.id,
+              channel: target.channel as any,
+              triggerEvent: 'KYC_REJECTED',
+              recipient: target.recipient,
+              content,
+              status: target.channel === 'IN_APP' ? 'SENT' : 'PENDING',
+              sentAt: target.channel === 'IN_APP' ? new Date() : null,
+            });
 
-            const recipient = temp.channel === 'EMAIL' ? hostUser.email : hostUser.phone;
-
-            if (recipient) {
-              const log = await this.notificationRepo.create({
-                userId: hostUser.id,
-                channel: temp.channel as any,
-                triggerEvent: 'KYC_REJECTED',
-                recipient,
-                content,
-                status: temp.channel === 'IN_APP' ? 'SENT' : 'PENDING',
-                sentAt: temp.channel === 'IN_APP' ? new Date() : null,
-              });
-
-              if (temp.channel !== 'IN_APP') {
-                await this.queueService.addNotificationJob(log.id);
-              }
+            if (target.channel !== 'IN_APP') {
+              await this.queueService.addNotificationJob(log.id);
             }
           }
         }

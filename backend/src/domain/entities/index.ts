@@ -8,7 +8,6 @@ export * from './boosted-event.entity';
 export * from './booking.entity';
 export * from './transaction-ledger.entity';
 export * from './integration-config.entity';
-export * from './message-template.entity';
 export * from './platform-setting.entity';
 export * from './notification-log.entity';
 export * from './wishlist.entity';

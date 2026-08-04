@@ -28,10 +28,6 @@ router.use((req, res, next) => {
 router.get('/configs/integrations', requirePermission(SystemPermissions.ADMIN_CONFIGS_MANAGE) as any, AdminController.getIntegrationConfigs);
 router.put('/configs/integrations/:serviceName', requirePermission(SystemPermissions.ADMIN_CONFIGS_MANAGE) as any, AdminController.updateIntegrationConfig as any);
 
-// Message Templates
-router.get('/configs/templates', requirePermission(SystemPermissions.ADMIN_TEMPLATES_MANAGE) as any, AdminController.getMessageTemplates);
-router.put('/configs/templates/:templateId', requirePermission(SystemPermissions.ADMIN_TEMPLATES_MANAGE) as any, AdminController.updateMessageTemplate);
-
 // Global settings
 router.get('/configs/platform', requirePermission(SystemPermissions.ADMIN_CONFIGS_MANAGE) as any, AdminController.getPlatformSettings);
 router.post('/configs/platform', requirePermission(SystemPermissions.ADMIN_CONFIGS_MANAGE) as any, AdminController.updatePlatformSetting);

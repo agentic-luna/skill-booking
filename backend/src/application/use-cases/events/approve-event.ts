@@ -1,4 +1,4 @@
-import { CommissionType, EventStatus, TriggerEvent, DeliveryChannel } from '@prisma/client';
+import { CommissionType, EventStatus, TriggerEvent, DeliveryChannel, NotificationStatus } from '@prisma/client';
 import { IEventRepository } from '../../../domain/repositories/event.repository';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
 import { IUserRepository } from '../../../domain/repositories/user.repository';
@@ -8,6 +8,11 @@ import { ICacheService } from '../../services/cache.service';
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { NotFoundError } from '../../common/errors';
 import { parseCommissionRate } from '../../../utils/commission-parser';
+import {
+  generateApproveEventEmailTemplate,
+  generateApproveEventWhatsAppTemplate,
+  generateApproveEventInAppTemplate,
+} from '../../../constants/templates';
 
 export class ApproveEventCommand implements IRequest<any> {
   readonly __tag = 'ApproveEventCommand';
@@ -68,39 +73,70 @@ export class ApproveEventCommandHandler implements IRequestHandler<ApproveEventC
       if (hostProfile) {
         const hostUser = await this.userRepo.findById(hostProfile.userId);
         if (hostUser) {
-          const templates = await this.configRepo.findTemplates({
-            triggerEvent: TriggerEvent.EVENT_APPROVED,
-            isActive: true,
+          const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+          const formattedStartTime = new Date(updatedEvent.startTime).toLocaleString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
           });
 
-          for (const temp of templates) {
-            let content = temp.bodyContent;
-            const userName = `${hostUser.firstName} ${hostUser.lastName}`;
-            const replacements = {
-              '{{userName}}': userName,
-              '{{eventTitle}}': updatedEvent.title,
-            };
+          const approveData = {
+            hostName,
+            eventTitle: updatedEvent.title,
+            eventId: updatedEvent.id,
+            category: (updatedEvent as any).category || 'Workshop',
+            mode: updatedEvent.mode,
+            price: Number((updatedEvent as any).price || 0),
+            totalSeats: Number(updatedEvent.totalSeats),
+            commissionType: commission.commissionType,
+            commissionValue: Number(commission.platformValue),
+            formattedStartTime,
+          };
 
-            for (const [placeholder, value] of Object.entries(replacements)) {
-              content = content.replace(new RegExp(placeholder, 'g'), value);
-            }
+          const emailContent = generateApproveEventEmailTemplate(approveData);
+          const whatsappContent = generateApproveEventWhatsAppTemplate(approveData);
+          const inAppContent = generateApproveEventInAppTemplate(approveData);
 
-            const recipient = temp.channel === DeliveryChannel.EMAIL ? hostUser.email : hostUser.phone;
+          const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
 
-            if (recipient) {
-              const log = await this.notificationRepo.create({
-                userId: hostUser.id,
-                channel: temp.channel,
-                triggerEvent: TriggerEvent.EVENT_APPROVED,
-                recipient,
-                content,
-                status: temp.channel === DeliveryChannel.IN_APP ? 'SENT' : 'PENDING',
-                sentAt: temp.channel === DeliveryChannel.IN_APP ? new Date() : null,
-              });
+          notificationTargets.push({
+            channel: DeliveryChannel.IN_APP,
+            recipient: hostUser.email || hostUser.id,
+            content: inAppContent,
+          });
 
-              if (temp.channel !== DeliveryChannel.IN_APP) {
-                await this.queueService.addNotificationJob(log.id);
-              }
+          if (hostUser.email) {
+            notificationTargets.push({
+              channel: DeliveryChannel.EMAIL,
+              recipient: hostUser.email,
+              content: emailContent,
+            });
+          }
+
+          if (hostUser.phone) {
+            notificationTargets.push({
+              channel: DeliveryChannel.WHATSAPP,
+              recipient: hostUser.phone,
+              content: whatsappContent,
+            });
+          }
+
+          for (const target of notificationTargets) {
+            const log = await this.notificationRepo.create({
+              userId: hostUser.id,
+              channel: target.channel,
+              triggerEvent: TriggerEvent.EVENT_APPROVED,
+              recipient: target.recipient,
+              content: target.content,
+              status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+              sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+            });
+
+            if (target.channel !== DeliveryChannel.IN_APP) {
+              await this.queueService.addNotificationJob(log.id);
             }
           }
         }

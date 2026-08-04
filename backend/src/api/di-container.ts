@@ -66,8 +66,6 @@ import { HandlePaymentWebhookCommandHandler } from '../application/use-cases/web
 
 import { GetConfigsQueryHandler } from '../application/use-cases/admin/get-configs';
 import { UpdateConfigCommandHandler } from '../application/use-cases/admin/update-config';
-import { GetTemplatesQueryHandler } from '../application/use-cases/admin/get-templates';
-import { UpdateTemplateCommandHandler } from '../application/use-cases/admin/update-template';
 import { BroadcastNotificationCommandHandler } from '../application/use-cases/admin/broadcast-notification';
 import { GetLedgerQueryHandler } from '../application/use-cases/admin/get-ledger';
 import { PayoutHostCommandHandler } from '../application/use-cases/admin/payout-host';
@@ -185,8 +183,6 @@ mediator.register('GetAllHostsQuery', new GetAllHostsQueryHandler(userRepo, cryp
 mediator.register('ReviewKycCommand', new ReviewKycCommandHandler(userRepo, cryptoService, notificationRepo, configRepo, queueService));
 mediator.register('GetConfigsQuery', new GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
-mediator.register('GetTemplatesQuery', new GetTemplatesQueryHandler(configRepo));
-mediator.register('UpdateTemplateCommand', new UpdateTemplateCommandHandler(configRepo));
 mediator.register('BroadcastNotificationCommand', new BroadcastNotificationCommandHandler(notificationRepo, userRepo, queueService));
 mediator.register('GetLedgerQuery', new GetLedgerQueryHandler(ledgerRepo));
 mediator.register('PayoutHostCommand', new PayoutHostCommandHandler(userRepo, ledgerRepo, cryptoService, commsService));

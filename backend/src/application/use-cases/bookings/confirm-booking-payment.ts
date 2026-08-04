@@ -12,6 +12,13 @@ import { ICacheService } from '../../services/cache.service';
 import { ICryptoService } from '../../services/crypto.service';
 import crypto from 'crypto';
 
+import { TicketGenerationService } from '../../../infrastructure/services/ticket-generation.service';
+import {
+  generateTicketEmailTemplate,
+  generateTicketWhatsAppTemplate,
+  generateTicketInAppTemplate,
+} from '../../../constants/templates';
+
 export class ConfirmBookingPaymentCommand implements IRequest<any> {
   readonly __tag = 'ConfirmBookingPaymentCommand';
   constructor(
@@ -111,8 +118,8 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
     const totalAmount = Number(booking.totalAmount);
     let platformRevenue = 0;
     // Use snapshotted commission on booking if available, otherwise fall back to event commission
-    const commType = booking.commissionType !== undefined ? booking.commissionType : booking.event?.commission?.commissionType;
-    const commValue = booking.platformValue !== undefined ? booking.platformValue : booking.event?.commission?.platformValue;
+    const commType = booking.commissionType != null ? booking.commissionType : booking.event?.commission?.commissionType;
+    const commValue = booking.platformValue != null ? booking.platformValue : booking.event?.commission?.platformValue;
 
     if (commType && commValue !== null && commValue !== undefined) {
       if (commType === CommissionType.PERCENTAGE) {
@@ -165,39 +172,85 @@ export class ConfirmBookingPaymentCommandHandler implements IRequestHandler<Conf
         const client = fullBooking.client;
         const event = fullBooking.event;
 
-        const templates = await this.configRepo.findTemplates({
-          triggerEvent: TriggerEvent.BOOKING_CONFIRMED,
-          isActive: true,
+        const userName = `${client.firstName} ${client.lastName}`;
+        const hostUser = event?.host?.user;
+        const trainerName = event?.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : 'Platform Host');
+        const venueInfo = event.mode === 'ONLINE' ? 'Online Live Stream' : ((event.venueDetails as any)?.address || 'Physical Venue');
+        const formattedDate = new Date(event.startTime).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        const formattedTime = new Date(event.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const verifyUrl = `/api/v1/bookings/${booking.id}/verify`;
+        const ticketDownloadUrl = `/api/v1/bookings/${booking.id}/download-ticket?format=svg`;
+
+        // Generate Ticket Image SVG
+        let ticketSvgDataUrl: string | undefined = undefined;
+        try {
+          const ticketGenService = new TicketGenerationService();
+          const svgContent = await ticketGenService.generateTicketSvg(fullBooking, 'localhost:4000');
+          const base64Svg = Buffer.from(svgContent).toString('base64');
+          ticketSvgDataUrl = `data:image/svg+xml;base64,${base64Svg}`;
+        } catch (err) {
+          // If SVG generation encounters an issue, fallback silently
+        }
+
+        const templateData = {
+          userName,
+          bookingRef: booking.bookingRef,
+          bookingId: booking.id,
+          eventTitle: event.title,
+          formattedDate,
+          formattedTime,
+          seatCount: booking.seatCount,
+          totalAmount: Number(booking.totalAmount),
+          trainerName,
+          venueInfo,
+          verifyUrl,
+          ticketDownloadUrl,
+          ticketSvgDataUrl,
+        };
+
+        const emailContent = generateTicketEmailTemplate(templateData);
+        const whatsappContent = generateTicketWhatsAppTemplate(templateData);
+        const inAppContent = generateTicketInAppTemplate(templateData);
+
+        const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+        // In-app notification
+        notificationTargets.push({
+          channel: DeliveryChannel.IN_APP,
+          recipient: client.email || client.id,
+          content: inAppContent,
         });
 
-        for (const temp of templates) {
-          let content = temp.bodyContent;
-          const userName = `${client.firstName} ${client.lastName}`;
-          const replacements = {
-            '{{userName}}': userName,
-            '{{eventTitle}}': event.title,
-            '{{bookingRef}}': booking.bookingRef,
-            '{{seatCount}}': booking.seatCount.toString(),
-            '{{totalAmount}}': booking.totalAmount.toString(),
-          };
+        // Email ticket
+        if (client.email) {
+          notificationTargets.push({
+            channel: DeliveryChannel.EMAIL,
+            recipient: client.email,
+            content: emailContent,
+          });
+        }
 
-          for (const [placeholder, value] of Object.entries(replacements)) {
-            content = content.replace(new RegExp(placeholder, 'g'), value);
-          }
+        // WhatsApp ticket
+        if (client.phone) {
+          notificationTargets.push({
+            channel: DeliveryChannel.WHATSAPP,
+            recipient: client.phone,
+            content: whatsappContent,
+          });
+        }
 
-          const recipient = temp.channel === DeliveryChannel.EMAIL ? client.email : client.phone;
-
+        for (const target of notificationTargets) {
           const log = await this.notificationRepo.create({
             userId: client.id,
-            channel: temp.channel,
-            triggerEvent: TriggerEvent.BOOKING_CONFIRMED,
-            recipient,
-            content,
-            status: temp.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
-            sentAt: temp.channel === DeliveryChannel.IN_APP ? new Date() : null,
+            channel: target.channel,
+            triggerEvent: TriggerEvent.TICKET_DELIVERY,
+            recipient: target.recipient,
+            content: target.content,
+            status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+            sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
           });
 
-          if (temp.channel !== DeliveryChannel.IN_APP) {
+          if (target.channel !== DeliveryChannel.IN_APP) {
             await this.queueService.addNotificationJob(log.id);
           }
         }

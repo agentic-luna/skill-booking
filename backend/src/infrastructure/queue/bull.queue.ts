@@ -1,6 +1,6 @@
 import { Queue, Worker, Job } from 'bullmq';
 import { URL } from 'url';
-import { DeliveryChannel, NotificationStatus } from '@prisma/client';
+import { DeliveryChannel, NotificationStatus, TriggerEvent } from '@prisma/client';
 import { IQueueService } from '../../application/services/queue.service';
 import { INotificationRepository } from '../../domain/repositories/notification.repository';
 import { ICommunicationService } from '../../application/services/communication.service';
@@ -44,7 +44,18 @@ export const startNotificationWorker = (
 
       try {
         let success = false;
-        const subject = log.triggerEvent || 'Notification';
+        let subject = log.triggerEvent || 'Notification';
+        if (log.triggerEvent === TriggerEvent.TICKET_DELIVERY || log.triggerEvent === 'TICKET_DELIVERY') {
+          subject = '🎫 Your Ticket & Booking Confirmation — BookMyTraining';
+        } else if (log.triggerEvent === TriggerEvent.BOOKING_CONFIRMED || log.triggerEvent === 'BOOKING_CONFIRMED') {
+          subject = '🎉 Booking Confirmed — BookMyTraining';
+        } else if (log.triggerEvent === TriggerEvent.BOOKING_CANCELLED || log.triggerEvent === 'BOOKING_CANCELLED') {
+          subject = '❌ Booking Cancelled — BookMyTraining';
+        } else if (log.triggerEvent === TriggerEvent.EVENT_APPROVED || log.triggerEvent === 'EVENT_APPROVED') {
+          subject = '🎉 Your Event Has Been Approved & Is Now Live! — BookMyTraining';
+        } else if (log.triggerEvent === 'EDIT_REQUEST_APPROVED') {
+          subject = '🎉 Edit Request Approved — BookMyTraining';
+        }
 
         switch (log.channel) {
           case DeliveryChannel.EMAIL:

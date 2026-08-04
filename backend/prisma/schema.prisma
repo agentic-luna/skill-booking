@@ -237,20 +237,6 @@ model IntegrationConfig {
   @@map("integration_configs")
 }
 
-model MessageTemplate {
-  id           String          @id @default(uuid()) @db.Uuid
-  channel      DeliveryChannel
-  triggerEvent TriggerEvent
-  subject      String?
-  bodyContent  String          @db.Text
-  variables    Json
-  isActive     Boolean         @default(true)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-
-  @@map("message_templates")
-}
-
 model PlatformSetting {
   key       String   @id
   value     Json

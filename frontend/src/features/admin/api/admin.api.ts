@@ -2,7 +2,6 @@ import { request } from "@/features/auth/api/client";
 import type {
   IntegrationConfig, UpdateIntegrationPayload,
   TwilioSetupPayload, SendgridSetupPayload, MetaWaSetupPayload, RazorpaySetupPayload,
-  MessageTemplate, UpdateTemplatePayload,
   PlatformSetting, UpsertPlatformPayload,
   NotificationLogsResponse,
   BroadcastPayload, BroadcastResult,
@@ -35,14 +34,6 @@ export const getIntegrationConfigs = () =>
 
 export const updateIntegrationConfig = (serviceName: string, payload: UpdateIntegrationPayload) =>
   request<ApiData<IntegrationConfig>>(`/admin/configs/integrations/${serviceName}`, { method: "PUT", body: JSON.stringify(payload) }).then(r => r.data);
-
-// ── Admin Config — Templates ─────────────────────────────────────────────
-
-export const getTemplates = () =>
-  request<ApiData<MessageTemplate[]>>("/admin/configs/templates").then(r => r.data);
-
-export const updateTemplate = (templateId: string, payload: UpdateTemplatePayload) =>
-  request<ApiData<MessageTemplate>>(`/admin/configs/templates/${templateId}`, { method: "PUT", body: JSON.stringify(payload) }).then(r => r.data);
 
 // ── Admin Config — Platform Settings ─────────────────────────────────────
 

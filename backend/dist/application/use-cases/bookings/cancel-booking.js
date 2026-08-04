@@ -88,35 +88,31 @@ class CancelBookingCommandHandler {
             const fullBooking = await this.bookingRepo.findFirstByRef(booking.bookingRef);
             if (fullBooking && fullBooking.client) {
                 const client = fullBooking.client;
-                const templates = await this.configRepo.findTemplates({
-                    triggerEvent: 'BOOKING_CANCELLED',
-                    isActive: true,
-                });
-                for (const temp of templates) {
-                    let content = temp.bodyContent;
-                    const userName = `${client.firstName} ${client.lastName}`;
-                    const replacements = {
-                        '{{userName}}': userName,
-                        '{{eventTitle}}': event.title,
-                        '{{bookingRef}}': booking.bookingRef,
-                    };
-                    for (const [placeholder, value] of Object.entries(replacements)) {
-                        content = content.replace(new RegExp(placeholder, 'g'), value);
-                    }
-                    const recipient = temp.channel === 'EMAIL' ? client.email : client.phone;
-                    if (recipient) {
-                        const log = await this.notificationRepo.create({
-                            userId: client.id,
-                            channel: temp.channel,
-                            triggerEvent: 'BOOKING_CANCELLED',
-                            recipient,
-                            content,
-                            status: temp.channel === 'IN_APP' ? 'SENT' : 'PENDING',
-                            sentAt: temp.channel === 'IN_APP' ? new Date() : null,
-                        });
-                        if (temp.channel !== 'IN_APP') {
-                            await this.queueService.addNotificationJob(log.id);
-                        }
+                const userName = `${client.firstName} ${client.lastName}`;
+                const content = `Hi ${userName}, your booking (${booking.bookingRef}) for "${event.title}" has been cancelled.`;
+                const channelsToNotify = [];
+                if (client.email) {
+                    channelsToNotify.push({ channel: 'IN_APP', recipient: client.email });
+                    channelsToNotify.push({ channel: 'EMAIL', recipient: client.email });
+                }
+                else {
+                    channelsToNotify.push({ channel: 'IN_APP', recipient: client.id });
+                }
+                if (client.phone) {
+                    channelsToNotify.push({ channel: 'SMS', recipient: client.phone });
+                }
+                for (const target of channelsToNotify) {
+                    const log = await this.notificationRepo.create({
+                        userId: client.id,
+                        channel: target.channel,
+                        triggerEvent: 'BOOKING_CANCELLED',
+                        recipient: target.recipient,
+                        content,
+                        status: target.channel === 'IN_APP' ? 'SENT' : 'PENDING',
+                        sentAt: target.channel === 'IN_APP' ? new Date() : null,
+                    });
+                    if (target.channel !== 'IN_APP') {
+                        await this.queueService.addNotificationJob(log.id);
                     }
                 }
             }

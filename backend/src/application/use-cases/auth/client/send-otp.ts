@@ -4,6 +4,7 @@ import { ICommunicationService } from '../../../services/communication.service';
 import { IUserRepository } from '../../../../domain/repositories/user.repository';
 import { ILoggerService } from '../../../services/logger.service';
 import { BadRequestError, TooManyRequestsError } from '../../../../api/common/errors';
+import { generateClientWhatsAppOtpTemplate } from '../../../../constants/templates';
 
 export class ClientSendOtpCommand implements IRequest<any> {
   readonly __tag = 'ClientSendOtpCommand';
@@ -56,13 +57,16 @@ export class ClientSendOtpCommandHandler implements IRequestHandler<ClientSendOt
     await this.cacheService.set(fallbackCacheKey, otp, 600);
     await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
 
-    // Send via communication service (SMS/WhatsApp)
-    await this.commsService.sendSMS(
-      normalizedPhone,
-      `Your Client registration OTP is: ${otp}. Valid for 10 minutes.`
-    );
+    // Send via WhatsApp using template
+    const whatsappBody = generateClientWhatsAppOtpTemplate({ otp, expiresInMinutes: 10 });
+    try {
+      await this.commsService.sendWhatsApp(normalizedPhone, whatsappBody);
+    } catch (err) {
+      // Fallback to SMS if WhatsApp dispatch encounters an error
+      await this.commsService.sendSMS(normalizedPhone, whatsappBody);
+    }
 
-    this.logger.info(`[ClientSendOtp] Sent registration OTP to ${normalizedPhone}`);
+    this.logger.info(`[ClientSendOtp] Sent registration WhatsApp OTP to ${normalizedPhone}`);
 
     return {
       success: true,

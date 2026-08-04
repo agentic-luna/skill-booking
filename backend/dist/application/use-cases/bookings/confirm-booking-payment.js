@@ -161,34 +161,30 @@ class ConfirmBookingPaymentCommandHandler {
             if (fullBooking) {
                 const client = fullBooking.client;
                 const event = fullBooking.event;
-                const templates = await this.configRepo.findTemplates({
-                    triggerEvent: client_1.TriggerEvent.BOOKING_CONFIRMED,
-                    isActive: true,
-                });
-                for (const temp of templates) {
-                    let content = temp.bodyContent;
-                    const userName = `${client.firstName} ${client.lastName}`;
-                    const replacements = {
-                        '{{userName}}': userName,
-                        '{{eventTitle}}': event.title,
-                        '{{bookingRef}}': booking.bookingRef,
-                        '{{seatCount}}': booking.seatCount.toString(),
-                        '{{totalAmount}}': booking.totalAmount.toString(),
-                    };
-                    for (const [placeholder, value] of Object.entries(replacements)) {
-                        content = content.replace(new RegExp(placeholder, 'g'), value);
-                    }
-                    const recipient = temp.channel === client_1.DeliveryChannel.EMAIL ? client.email : client.phone;
+                const userName = `${client.firstName} ${client.lastName}`;
+                const content = `Hi ${userName}, your booking (${booking.bookingRef}) for "${event.title}" (${booking.seatCount} seats, Total: ₹${booking.totalAmount}) is confirmed!`;
+                const channelsToNotify = [];
+                if (client.email) {
+                    channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: client.email });
+                    channelsToNotify.push({ channel: client_1.DeliveryChannel.EMAIL, recipient: client.email });
+                }
+                else {
+                    channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: client.id });
+                }
+                if (client.phone) {
+                    channelsToNotify.push({ channel: client_1.DeliveryChannel.SMS, recipient: client.phone });
+                }
+                for (const target of channelsToNotify) {
                     const log = await this.notificationRepo.create({
                         userId: client.id,
-                        channel: temp.channel,
+                        channel: target.channel,
                         triggerEvent: client_1.TriggerEvent.BOOKING_CONFIRMED,
-                        recipient,
+                        recipient: target.recipient,
                         content,
-                        status: temp.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
-                        sentAt: temp.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                        status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
+                        sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
                     });
-                    if (temp.channel !== client_1.DeliveryChannel.IN_APP) {
+                    if (target.channel !== client_1.DeliveryChannel.IN_APP) {
                         await this.queueService.addNotificationJob(log.id);
                     }
                 }

@@ -4,6 +4,7 @@ import { ICacheService } from '../../services/cache.service';
 import { ICommunicationService } from '../../services/communication.service';
 import { ILoggerService } from '../../services/logger.service';
 import { BadRequestError, NotFoundError, TooManyRequestsError } from '../../common/errors';
+import { generateForgotPasswordEmailTemplate, generateForgotPasswordSmsTemplate } from '../../../constants/templates';
 
 export class SendForgotPasswordOtpCommand implements IRequest<any> {
   readonly __tag = 'SendForgotPasswordOtpCommand';
@@ -55,13 +56,18 @@ export class SendForgotPasswordOtpCommandHandler implements IRequestHandler<Send
     await this.cacheService.set(cacheKey, otp, 600);
     await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
 
-    // Send OTP to user's registered email or phone
+    // Send OTP to user's registered email or phone using templates
     const targetEmail = user.email;
     if (targetEmail) {
+      const emailBody = generateForgotPasswordEmailTemplate({
+        userName: user.firstName,
+        otp,
+        expiresInMinutes: 10,
+      });
       await this.commsService.sendEmail(
         targetEmail,
-        'Password Reset OTP Verification',
-        `Hello ${user.firstName},\n\nYour OTP for password reset is: ${otp}. It is valid for 10 minutes. If you did not request a password reset, please ignore this email.`
+        'Password Reset OTP Verification — BookMyTraining',
+        emailBody
       );
       this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to ${targetEmail}`);
 
@@ -77,9 +83,14 @@ export class SendForgotPasswordOtpCommandHandler implements IRequestHandler<Send
         ...(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? { devOtp: otp } : {}),
       };
     } else {
+      const smsBody = generateForgotPasswordSmsTemplate({
+        userName: user.firstName,
+        otp,
+        expiresInMinutes: 10,
+      });
       await this.commsService.sendSMS(
         user.phone,
-        `Hello ${user.firstName}, your OTP for password reset is: ${otp}. Valid for 10 minutes.`
+        smsBody
       );
       this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to mobile ${user.phone}`);
 

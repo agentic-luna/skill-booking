@@ -52,26 +52,6 @@ export interface UpdateIntegrationPayload {
   isActive?: boolean;
 }
 
-// ── Message Templates ───────────────────────────────────────────────────
-
-export interface MessageTemplate {
-  id: string;
-  channel: "EMAIL" | "SMS" | "WHATSAPP";
-  triggerEvent: string;
-  subject?: string;
-  bodyContent: string;
-  variables: string[];
-  isActive: boolean;
-  updatedAt: string;
-}
-
-export interface UpdateTemplatePayload {
-  bodyContent?: string;
-  variables?: string[];
-  isActive?: boolean;
-  subject?: string;
-}
-
 // ── Platform Settings ────────────────────────────────────────────────────
 
 export interface PlatformSetting {

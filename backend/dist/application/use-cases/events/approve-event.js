@@ -63,34 +63,31 @@ class ApproveEventCommandHandler {
             if (hostProfile) {
                 const hostUser = await this.userRepo.findById(hostProfile.userId);
                 if (hostUser) {
-                    const templates = await this.configRepo.findTemplates({
-                        triggerEvent: client_1.TriggerEvent.EVENT_APPROVED,
-                        isActive: true,
-                    });
-                    for (const temp of templates) {
-                        let content = temp.bodyContent;
-                        const userName = `${hostUser.firstName} ${hostUser.lastName}`;
-                        const replacements = {
-                            '{{userName}}': userName,
-                            '{{eventTitle}}': updatedEvent.title,
-                        };
-                        for (const [placeholder, value] of Object.entries(replacements)) {
-                            content = content.replace(new RegExp(placeholder, 'g'), value);
-                        }
-                        const recipient = temp.channel === client_1.DeliveryChannel.EMAIL ? hostUser.email : hostUser.phone;
-                        if (recipient) {
-                            const log = await this.notificationRepo.create({
-                                userId: hostUser.id,
-                                channel: temp.channel,
-                                triggerEvent: client_1.TriggerEvent.EVENT_APPROVED,
-                                recipient,
-                                content,
-                                status: temp.channel === client_1.DeliveryChannel.IN_APP ? 'SENT' : 'PENDING',
-                                sentAt: temp.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
-                            });
-                            if (temp.channel !== client_1.DeliveryChannel.IN_APP) {
-                                await this.queueService.addNotificationJob(log.id);
-                            }
+                    const userName = `${hostUser.firstName} ${hostUser.lastName}`;
+                    const content = `Hi ${userName}, your event "${updatedEvent.title}" has been approved and is now live for bookings!`;
+                    const channelsToNotify = [];
+                    if (hostUser.email) {
+                        channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: hostUser.email });
+                        channelsToNotify.push({ channel: client_1.DeliveryChannel.EMAIL, recipient: hostUser.email });
+                    }
+                    else {
+                        channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: hostUser.id });
+                    }
+                    if (hostUser.phone) {
+                        channelsToNotify.push({ channel: client_1.DeliveryChannel.SMS, recipient: hostUser.phone });
+                    }
+                    for (const target of channelsToNotify) {
+                        const log = await this.notificationRepo.create({
+                            userId: hostUser.id,
+                            channel: target.channel,
+                            triggerEvent: client_1.TriggerEvent.EVENT_APPROVED,
+                            recipient: target.recipient,
+                            content,
+                            status: target.channel === client_1.DeliveryChannel.IN_APP ? 'SENT' : 'PENDING',
+                            sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                        });
+                        if (target.channel !== client_1.DeliveryChannel.IN_APP) {
+                            await this.queueService.addNotificationJob(log.id);
                         }
                     }
                 }

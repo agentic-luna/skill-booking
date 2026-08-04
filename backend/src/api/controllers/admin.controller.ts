@@ -1,11 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/prisma';
-import { mediator, configRepo, cacheService, notificationRepo, eventRepo, logger, commsService, paymentGatewayProvider, ledgerRepo } from '../di-container';
-import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType } from '@prisma/client';
+import { mediator, configRepo, cacheService, notificationRepo, eventRepo, logger, commsService, paymentGatewayProvider, ledgerRepo, queueService } from '../di-container';
+import { BookingStatus, LedgerTxnType, LedgerStatus, CommissionType, DeliveryChannel, NotificationStatus } from '@prisma/client';
 import { GetConfigsQuery } from '../../application/use-cases/admin/get-configs';
 import { UpdateConfigCommand } from '../../application/use-cases/admin/update-config';
-import { GetTemplatesQuery } from '../../application/use-cases/admin/get-templates';
-import { UpdateTemplateCommand } from '../../application/use-cases/admin/update-template';
 import { BroadcastNotificationCommand } from '../../application/use-cases/admin/broadcast-notification';
 import { GetLedgerQuery } from '../../application/use-cases/admin/get-ledger';
 import { PayoutHostCommand } from '../../application/use-cases/admin/payout-host';
@@ -16,6 +14,11 @@ import { AuthenticatedRequest } from '../middleware/auth';
 import { getIO } from '../../config/socket';
 import { ApiResponse } from '../common/api-response';
 import { BadRequestError } from '../common/errors';
+import {
+  generateEditRequestApprovedEmailTemplate,
+  generateEditRequestApprovedWhatsAppTemplate,
+  generateEditRequestApprovedInAppTemplate,
+} from '../../constants/templates';
 
 export class AdminController {
   static async adminLogin(req: Request, res: Response, next: NextFunction) {
@@ -48,31 +51,6 @@ export class AdminController {
         isActive,
         req.user!.id
       ));
-      return ApiResponse.success(res, updated);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async getMessageTemplates(req: Request, res: Response, next: NextFunction) {
-    try {
-      const templates = await mediator.send(new GetTemplatesQuery());
-      return ApiResponse.success(res, templates);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  static async updateMessageTemplate(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { templateId } = req.params;
-      const { bodyContent, variables, isActive, subject } = req.body;
-      const updated = await mediator.send(new UpdateTemplateCommand(templateId, {
-        bodyContent,
-        variables,
-        isActive,
-        subject,
-      }));
       return ApiResponse.success(res, updated);
     } catch (error) {
       next(error);
@@ -475,8 +453,18 @@ export class AdminController {
   static async approveEditRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const editRequest = await prisma.editRequest.findUnique({ where: { id } });
-      
+      const editRequest = await prisma.editRequest.findUnique({
+        where: { id },
+        include: {
+          event: true,
+          host: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
       if (!editRequest || editRequest.status !== 'PENDING') {
         throw new BadRequestError('Invalid or already processed edit request.');
       }
@@ -485,16 +473,76 @@ export class AdminController {
         // 1. Mark request as APPROVED
         await tx.editRequest.update({
           where: { id },
-          data: { status: 'APPROVED' }
+          data: { status: 'APPROVED' },
         });
 
         // 2. Change Event status to EDIT_MODE so host can edit it
-        // (it will return to PENDING status once the host saves their changes)
         await tx.event.update({
           where: { id: editRequest.eventId },
-          data: { status: 'EDIT_MODE' }
+          data: { status: 'EDIT_MODE' },
         });
       });
+
+      // 3. Dispatch Email & WhatsApp notification to host
+      try {
+        const hostUser = editRequest.host?.user;
+        const event = editRequest.event;
+
+        if (hostUser && event) {
+          const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+          const approveData = {
+            hostName,
+            eventTitle: event.title,
+            eventId: event.id,
+          };
+
+          const emailContent = generateEditRequestApprovedEmailTemplate(approveData);
+          const whatsappContent = generateEditRequestApprovedWhatsAppTemplate(approveData);
+          const inAppContent = generateEditRequestApprovedInAppTemplate(approveData);
+
+          const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+          notificationTargets.push({
+            channel: DeliveryChannel.IN_APP,
+            recipient: hostUser.email || hostUser.id,
+            content: inAppContent,
+          });
+
+          if (hostUser.email) {
+            notificationTargets.push({
+              channel: DeliveryChannel.EMAIL,
+              recipient: hostUser.email,
+              content: emailContent,
+            });
+          }
+
+          if (hostUser.phone) {
+            notificationTargets.push({
+              channel: DeliveryChannel.WHATSAPP,
+              recipient: hostUser.phone,
+              content: whatsappContent,
+            });
+          }
+
+          for (const target of notificationTargets) {
+            const log = await notificationRepo.create({
+              userId: hostUser.id,
+              channel: target.channel,
+              triggerEvent: 'EDIT_REQUEST_APPROVED' as any,
+              recipient: target.recipient,
+              content: target.content,
+              status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+              sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+            });
+
+            if (target.channel !== DeliveryChannel.IN_APP) {
+              await queueService.addNotificationJob(log.id);
+            }
+          }
+        }
+      } catch (err) {
+        logger.error('[AdminController] Failed to dispatch edit request approval notification:', err);
+      }
 
       return ApiResponse.success(res, { message: 'Edit request approved. Event is now unlocked.' });
     } catch (error) {

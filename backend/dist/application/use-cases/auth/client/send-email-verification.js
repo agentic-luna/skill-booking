@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientSendEmailVerificationCommandHandler = exports.ClientSendEmailVerificationCommand = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const errors_1 = require("../../../common/errors");
-const client_1 = require("@prisma/client");
 class ClientSendEmailVerificationCommand {
     userId;
     email;
@@ -51,15 +50,10 @@ class ClientSendEmailVerificationCommandHandler {
         await this.cacheService.set(redisKey, payload, 900);
         const clientAppUrl = process.env.CLIENT_APP_URL || 'http://localhost:3000';
         const magicLink = `${clientAppUrl}/verify-email?token=${token}`;
-        // Send magic link email via provider using database templates
+        // Send magic link email via provider
         try {
-            const templates = await this.configRepo.findTemplates({
-                triggerEvent: client_1.TriggerEvent.EMAIL_VERIFICATION,
-                isActive: true,
-            });
-            const emailTemplate = templates.find((t) => t.channel === client_1.DeliveryChannel.EMAIL);
-            let subject = 'Verify Your Email Address — BookMySkill';
-            let emailBody = `
+            const subject = 'Verify Your Email Address — BookMySkill';
+            const emailBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px;">
           <h2 style="color: #0b0c01; margin-bottom: 8px;">Verify Your Email Address</h2>
           <p style="color: #555; font-size: 14px;">Hi ${currentUser.firstName},</p>
@@ -71,12 +65,6 @@ class ClientSendEmailVerificationCommandHandler {
           <p style="color: #aaa; font-size: 11px; margin-top: 24px;">This link will expire in 15 minutes.</p>
         </div>
       `;
-            if (emailTemplate) {
-                subject = emailTemplate.subject || subject;
-                emailBody = emailTemplate.bodyContent
-                    .replace(/\{\{userName\}\}/g, currentUser.firstName)
-                    .replace(/\{\{magicLink\}\}/g, magicLink);
-            }
             if (this.emailProvider && typeof this.emailProvider.sendEmail === 'function') {
                 await this.emailProvider.sendEmail(cleanEmail, subject, emailBody);
             }

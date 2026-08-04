@@ -1,4 +1,4 @@
-import { UserRole, BookingStatus, LedgerTxnType, LedgerStatus, CommissionType } from '@prisma/client';
+import { UserRole, BookingStatus, TriggerEvent, DeliveryChannel, NotificationStatus } from '@prisma/client';
 import { IBookingRepository } from '../../../domain/repositories/booking.repository';
 import { IEventRepository } from '../../../domain/repositories/event.repository';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
@@ -10,6 +10,11 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../../common/err
 import { IRequest, IRequestHandler } from '../../common/mediator';
 import { ICacheService } from '../../services/cache.service';
 import { prisma } from '../../../config/prisma';
+import {
+  generateCancelBookingEmailTemplate,
+  generateCancelBookingWhatsAppTemplate,
+  generateCancelBookingInAppTemplate,
+} from '../../../constants/templates';
 
 export class CancelBookingCommand implements IRequest<any> {
   readonly __tag = 'CancelBookingCommand';
@@ -97,40 +102,61 @@ export class CancelBookingCommandHandler implements IRequestHandler<CancelBookin
       const fullBooking = await this.bookingRepo.findFirstByRef(booking.bookingRef);
       if (fullBooking && fullBooking.client) {
         const client = fullBooking.client;
-        const templates = await this.configRepo.findTemplates({
-          triggerEvent: 'BOOKING_CANCELLED',
-          isActive: true,
+        const userName = `${client.firstName} ${client.lastName}`;
+
+        const cancelData = {
+          userName,
+          bookingRef: booking.bookingRef,
+          bookingId: booking.id,
+          eventTitle: event.title,
+          seatCount: booking.seatCount,
+          totalAmount,
+          refundAmount,
+          refundPercentage,
+          cancellationReason: reason,
+        };
+
+        const emailContent = generateCancelBookingEmailTemplate(cancelData);
+        const whatsappContent = generateCancelBookingWhatsAppTemplate(cancelData);
+        const inAppContent = generateCancelBookingInAppTemplate(cancelData);
+
+        const notificationTargets: { channel: DeliveryChannel; recipient: string; content: string }[] = [];
+
+        notificationTargets.push({
+          channel: DeliveryChannel.IN_APP,
+          recipient: client.email || client.id,
+          content: inAppContent,
         });
 
-        for (const temp of templates) {
-          let content = temp.bodyContent;
-          const userName = `${client.firstName} ${client.lastName}`;
-          const replacements = {
-            '{{userName}}': userName,
-            '{{eventTitle}}': event.title,
-            '{{bookingRef}}': booking.bookingRef,
-          };
+        if (client.email) {
+          notificationTargets.push({
+            channel: DeliveryChannel.EMAIL,
+            recipient: client.email,
+            content: emailContent,
+          });
+        }
 
-          for (const [placeholder, value] of Object.entries(replacements)) {
-            content = content.replace(new RegExp(placeholder, 'g'), value);
-          }
+        if (client.phone) {
+          notificationTargets.push({
+            channel: DeliveryChannel.WHATSAPP,
+            recipient: client.phone,
+            content: whatsappContent,
+          });
+        }
 
-          const recipient = temp.channel === 'EMAIL' ? client.email : client.phone;
+        for (const target of notificationTargets) {
+          const log = await this.notificationRepo.create({
+            userId: client.id,
+            channel: target.channel,
+            triggerEvent: TriggerEvent.BOOKING_CANCELLED,
+            recipient: target.recipient,
+            content: target.content,
+            status: target.channel === DeliveryChannel.IN_APP ? NotificationStatus.SENT : NotificationStatus.PENDING,
+            sentAt: target.channel === DeliveryChannel.IN_APP ? new Date() : null,
+          });
 
-          if (recipient) {
-            const log = await this.notificationRepo.create({
-              userId: client.id,
-              channel: temp.channel as any,
-              triggerEvent: 'BOOKING_CANCELLED',
-              recipient,
-              content,
-              status: temp.channel === 'IN_APP' ? 'SENT' : 'PENDING',
-              sentAt: temp.channel === 'IN_APP' ? new Date() : null,
-            });
-
-            if (temp.channel !== 'IN_APP') {
-              await this.queueService.addNotificationJob(log.id);
-            }
+          if (target.channel !== DeliveryChannel.IN_APP) {
+            await this.queueService.addNotificationJob(log.id);
           }
         }
       }

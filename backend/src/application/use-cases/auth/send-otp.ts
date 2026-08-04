@@ -6,6 +6,7 @@ import { IUserRepository } from '../../../domain/repositories/user.repository';
 import { ILoggerService } from '../../services/logger.service';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
 import { BadRequestError, TooManyRequestsError } from '../../../api/common/errors';
+import { generateHostEmailOtpTemplate, generateHostSmsOtpTemplate } from '../../../constants/templates';
 
 export class SendOtpCommand implements IRequest<any> {
   readonly __tag = 'SendOtpCommand';
@@ -69,34 +70,13 @@ export class SendOtpCommandHandler implements IRequestHandler<SendOtpCommand, an
     await this.cacheService.set(cacheKey, otp, 600);
     await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
 
-    // Send via provider using DB templates
+    // Send via provider using templates
     if (normalizedType === DeliveryChannel.EMAIL) {
-      const templates = await this.configRepo.findTemplates({
-        triggerEvent: 'EMAIL_OTP',
-        isActive: true,
-      });
-      const emailTemplate = templates.find((t) => t.channel === DeliveryChannel.EMAIL);
-      let subject = 'Your Verification Code';
-      let body = `Your OTP for registration verification is: ${otp}. It is valid for 10 minutes.`;
-
-      if (emailTemplate) {
-        subject = emailTemplate.subject || subject;
-        body = emailTemplate.bodyContent.replace(/\{\{otp\}\}/g, otp);
-      }
-
+      const subject = 'Your Host Verification Code — BookMyTraining';
+      const body = generateHostEmailOtpTemplate({ otp, expiresInMinutes: 10 });
       await this.commsService.sendEmail(normalizedTarget, subject, body);
     } else {
-      const templates = await this.configRepo.findTemplates({
-        triggerEvent: 'SMS_OTP',
-        isActive: true,
-      });
-      const smsTemplate = templates.find((t) => t.channel === DeliveryChannel.SMS);
-      let body = `Your registration OTP is: ${otp}. Valid for 10 minutes.`;
-
-      if (smsTemplate) {
-        body = smsTemplate.bodyContent.replace(/\{\{otp\}\}/g, otp);
-      }
-
+      const body = generateHostSmsOtpTemplate({ otp, expiresInMinutes: 10 });
       await this.commsService.sendSMS(normalizedTarget, body);
     }
 

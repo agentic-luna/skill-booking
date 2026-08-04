@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@sendgrid/mail": "^8.1.6",
     "@types/winston": "^2.4.4",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.79.2",
@@ -31,6 +32,7 @@
     "razorpay": "^2.9.6",
     "socket.io": "^4.7.2",
     "swagger-ui-express": "^5.0.1",
+    "twilio": "^6.0.2",
     "winston": "^3.19.0",
     "yn": "^5.1.0"
   },

@@ -7,7 +7,6 @@ import { useAdminStore } from "@/features/admin/store/adminStore";
 import { AlertCircle } from "lucide-react";
 
 import PlatformTab from "./_components/PlatformTab";
-import TemplatesTab from "./_components/TemplatesTab";
 import IntegrationsTab from "./_components/IntegrationsTab";
 
 export default function AdminSettingsPage() {
@@ -28,7 +27,7 @@ export default function AdminSettingsPage() {
           </span>
         </h1>
         <p className="text-muted-foreground font-medium pl-2">
-          Configure commission rules, branding, templates, and API connections.
+          Configure commission rules, branding, and API connections.
         </p>
       </div>
 
@@ -49,12 +48,6 @@ export default function AdminSettingsPage() {
             Platform
           </TabsTrigger>
           <TabsTrigger
-            value="templates"
-            className="px-6 py-2.5 rounded-full text-sm font-bold transition-all data-[state=active]:bg-[#0b0c01] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground"
-          >
-            Templates
-          </TabsTrigger>
-          <TabsTrigger
             value="integrations"
             className="px-6 py-2.5 rounded-full text-sm font-bold transition-all data-[state=active]:bg-[#0b0c01] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground"
           >
@@ -63,7 +56,6 @@ export default function AdminSettingsPage() {
         </TabsList>
 
         <TabsContent value="platform"><PlatformTab /></TabsContent>
-        <TabsContent value="templates"><TemplatesTab /></TabsContent>
         <TabsContent value="integrations"><IntegrationsTab /></TabsContent>
       </Tabs>
 

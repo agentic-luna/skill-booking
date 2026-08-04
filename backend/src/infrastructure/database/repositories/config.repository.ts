@@ -1,5 +1,5 @@
 import { IntegrationService, IntegrationEnvironment } from '@prisma/client';
-import { IntegrationConfig, MessageTemplate, PlatformSetting } from '../../../domain/entities';
+import { IntegrationConfig, PlatformSetting } from '../../../domain/entities';
 import { IConfigRepository } from '../../../domain/repositories/config.repository';
 import { prisma } from '../../../config/prisma';
 
@@ -30,38 +30,6 @@ export class PrismaConfigRepository implements IConfigRepository {
         serviceName,
         ...data,
       },
-    });
-  }
-
-  async findTemplates(filters?: { triggerEvent?: string; isActive?: boolean }): Promise<MessageTemplate[]> {
-    const whereClause: any = {};
-    if (filters) {
-      if (filters.triggerEvent) {
-        whereClause.triggerEvent = filters.triggerEvent as any;
-      }
-      if (filters.isActive !== undefined) {
-        whereClause.isActive = filters.isActive;
-      }
-    }
-    return prisma.messageTemplate.findMany({ where: whereClause });
-  }
-
-  async findTemplateById(id: string): Promise<MessageTemplate | null> {
-    return prisma.messageTemplate.findUnique({ where: { id } });
-  }
-
-  async updateTemplate(
-    id: string,
-    data: {
-      bodyContent?: string;
-      subject?: string | null;
-      isActive?: boolean;
-      variables?: any;
-    }
-  ): Promise<MessageTemplate> {
-    return prisma.messageTemplate.update({
-      where: { id },
-      data,
     });
   }
 

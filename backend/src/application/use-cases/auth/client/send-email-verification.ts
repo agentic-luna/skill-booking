@@ -6,6 +6,7 @@ import { IRequest, IRequestHandler } from '../../../common/mediator';
 import { IConfigRepository } from '../../../../domain/repositories/config.repository';
 import { BadRequestError, NotFoundError } from '../../../common/errors';
 import { TriggerEvent, DeliveryChannel } from '@prisma/client';
+import { generateClientMagicLinkTemplate } from '../../../../constants/templates';
 
 export class ClientSendEmailVerificationCommand implements IRequest<any> {
   readonly __tag = 'ClientSendEmailVerificationCommand';
@@ -54,35 +55,14 @@ export class ClientSendEmailVerificationCommandHandler implements IRequestHandle
     const clientAppUrl = process.env.CLIENT_APP_URL || 'http://localhost:3000';
     const magicLink = `${clientAppUrl}/verify-email?token=${token}`;
 
-    // Send magic link email via provider using database templates
+    // Send magic link email via provider using template
     try {
-      const templates = await this.configRepo.findTemplates({
-        triggerEvent: TriggerEvent.EMAIL_VERIFICATION,
-        isActive: true,
+      const subject = 'Verify Your Email Address — BookMyTraining';
+      const emailBody = generateClientMagicLinkTemplate({
+        userName: currentUser.firstName,
+        magicLink,
+        expiresInMinutes: 15,
       });
-
-      const emailTemplate = templates.find((t) => t.channel === DeliveryChannel.EMAIL);
-
-      let subject = 'Verify Your Email Address — BookMySkill';
-      let emailBody = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px;">
-          <h2 style="color: #0b0c01; margin-bottom: 8px;">Verify Your Email Address</h2>
-          <p style="color: #555; font-size: 14px;">Hi ${currentUser.firstName},</p>
-          <p style="color: #555; font-size: 14px;">Click the button below to verify your email address and link it to your BookMySkill account:</p>
-          <div style="margin: 24px 0;">
-            <a href="${magicLink}" style="background-color: #a0f212; color: #0b0c01; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 8px; display: inline-block;">Verify Email Address</a>
-          </div>
-          <p style="color: #888; font-size: 12px; margin-top: 16px;">Or copy and paste this link in your browser:<br/><a href="${magicLink}">${magicLink}</a></p>
-          <p style="color: #aaa; font-size: 11px; margin-top: 24px;">This link will expire in 15 minutes.</p>
-        </div>
-      `;
-
-      if (emailTemplate) {
-        subject = emailTemplate.subject || subject;
-        emailBody = emailTemplate.bodyContent
-          .replace(/\{\{userName\}\}/g, currentUser.firstName)
-          .replace(/\{\{magicLink\}\}/g, magicLink);
-      }
 
       if (this.emailProvider && typeof this.emailProvider.sendEmail === 'function') {
         await this.emailProvider.sendEmail(

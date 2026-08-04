@@ -3,7 +3,6 @@ import * as api from "@/features/admin/api/admin.api";
 import type {
   IntegrationConfig, UpdateIntegrationPayload,
   TwilioSetupPayload, SendgridSetupPayload, MetaWaSetupPayload, RazorpaySetupPayload,
-  MessageTemplate, UpdateTemplatePayload,
   PlatformSetting, UpsertPlatformPayload,
   NotificationLog, BroadcastPayload, BroadcastResult,
   PendingEvent, ApproveEventPayload, ApproveEventResult,
@@ -24,11 +23,6 @@ interface AdminState {
   setupSendgrid: (p: SendgridSetupPayload) => Promise<IntegrationConfig>;
   setupMetaWa: (p: MetaWaSetupPayload) => Promise<IntegrationConfig>;
   setupRazorpay: (p: RazorpaySetupPayload) => Promise<IntegrationConfig>;
-
-  // Templates
-  templates: MessageTemplate[];
-  fetchTemplates: () => Promise<void>;
-  updateTemplate: (id: string, payload: UpdateTemplatePayload) => Promise<MessageTemplate>;
 
   // Platform settings
   platformSettings: PlatformSetting[];
@@ -134,21 +128,6 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     const config = await api.setupRazorpay(p);
     await get().fetchIntegrations();
     return config;
-  }),
-
-  // ── Templates ──────────────────────────────────────────────────────────
-
-  templates: [],
-
-  fetchTemplates: () => withLoading(set, async () => {
-    const templates = await api.getTemplates();
-    set({ templates });
-  }),
-
-  updateTemplate: (id, payload) => withLoading(set, async () => {
-    const updated = await api.updateTemplate(id, payload);
-    set({ templates: get().templates.map((t) => t.id === id ? updated : t) });
-    return updated;
   }),
 
   // ── Platform Settings ──────────────────────────────────────────────────
