@@ -21,15 +21,20 @@ export const authenticate = async (
   next: NextFunction
 ) => {
   try {
+    let token: string | undefined;
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: { message: 'Authentication required. Bearer token missing.' },
-      });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.query.token && typeof req.query.token === 'string') {
+      token = req.query.token;
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: { message: 'Authentication required. Token missing.' },
+      });
+    }
     const decoded = jwt.verify(token, env.JWT_SECRET) as {
       id: string;
       email: string;
