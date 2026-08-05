@@ -1,22 +1,26 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Mail, CheckCircle2, MessageSquare,
+  ArrowLeft, Mail, Phone, CheckCircle2, Search, Eye, FileText,
   TicketCheck, Calendar, Clock, User, ShieldCheck, Loader2, AlertTriangle
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useHostStore } from "@/features/host/store/hostStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
+import { PaginationControl } from "@/components/ui/pagination-control";
+import ParticipantDetailsModal from "../_components/ParticipantDetailsModal";
 
 interface StudentRosterItem {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   avatarUrl: string;
   spots: number;
   paid: number;
@@ -33,6 +37,12 @@ interface StudentRosterItem {
 export default function ParticipantDetailPage() {
   const params = useParams();
   const programId = params.id as string;
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const showAlert = useAlertStore((s) => s.showAlert);
   const { myEvents, eventBookings, fetchMyEvents, fetchEventBookings, isLoading } = useHostStore();
@@ -86,6 +96,7 @@ export default function ParticipantDetailPage() {
       id: b.id,
       name: `${b.client.firstName} ${b.client.lastName}`,
       email: b.client.email,
+      phone: b.client.phone || undefined,
       avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100",
       spots: b.seatCount,
       paid: Number(b.totalAmount),
@@ -105,7 +116,18 @@ export default function ParticipantDetailPage() {
     (s) => s.status === "confirmed" || s.status === "completed"
   );
 
+  const filteredActiveStudents = activeStudents.filter((s) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
+  });
+
   const enrolledSeats = activeStudents.reduce((sum, s) => sum + s.spots, 0);
+
+  // Pagination for active students table
+  const totalStudents = filteredActiveStudents.length;
+  const totalPages = Math.ceil(totalStudents / limit) || 1;
+  const paginatedActiveStudents = filteredActiveStudents.slice((page - 1) * limit, page * limit);
 
   const handleVerifyTicket = (bookingId: string) => {
     showAlert("Ticket Verified", `Check-in ticket successfully verified for check-in: CONFIRM_${bookingId}`, "success");
@@ -181,82 +203,161 @@ export default function ParticipantDetailPage() {
         </div>
       </Card>
 
-      {/* Participants Area */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2 text-sm font-bold text-muted-foreground uppercase tracking-wide">
-          <ShieldCheck className="h-5 w-5 text-emerald-500" />
-          <span>Payment Verified Participants ({activeStudents.length})</span>
-        </div>
-
-        {activeStudents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {activeStudents.map((student) => (
-              <Card
-                key={student.id}
-                className="border-border/40 bg-card overflow-hidden rounded-xl shadow-xs hover:border-primary/20 transition-all duration-300 flex items-center justify-between p-5"
-              >
-                <div className="flex items-center space-x-4 min-w-0">
-                  <img
-                    src={student.avatarUrl}
-                    alt={student.name}
-                    className="h-12 w-12 rounded-full object-cover border border-border/20 shadow-xs"
-                  />
-                  <div className="min-w-0 space-y-1">
-                    <h4 className="font-bold text-sm text-foreground truncate">{student.name}</h4>
-                    <span className="text-xs text-muted-foreground block truncate flex items-center gap-1.5">
-                      <Mail className="h-3.5 w-3.5" /> {student.email}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground block">
-                      Enrolled: {student.date} • {student.spots} ticket{student.spots > 1 ? "s" : ""}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end space-y-3 shrink-0">
-                  <div>
-                    <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-lg uppercase inline-flex items-center gap-1 border border-emerald-500/15 shadow-2xs">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Paid ({student.paid} INR)
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg"
-                      title="Contact Student"
-                      onClick={() => handleMessageStudent(student.name)}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg border-primary/20 text-primary hover:bg-primary/5"
-                      title="Verify Ticket Check-in"
-                      onClick={() => handleVerifyTicket(student.id)}
-                    >
-                      <TicketCheck className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
+      {/* Participants Table View Container */}
+      <Card className="border-border/40 bg-card rounded-2xl shadow-xs overflow-hidden">
+        <CardHeader className="pb-3 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" /> Payment Verified Participants ({activeStudents.length})
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Roster of enrolled students with confirmed ticket payments for this workshop.
+            </CardDescription>
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-border/40 text-center space-y-3">
-            <div className="bg-muted/50 p-4 rounded-full">
-              <User className="h-8 w-8 text-muted-foreground opacity-40" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-foreground">No Registered Participants</h3>
-              <p className="text-xs text-muted-foreground max-w-sm">
-                No active learner registrations have successfully checked out yet.
-              </p>
-            </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search participant name, email..."
+              className="pl-9 h-9 rounded-xl text-xs bg-muted/20"
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+            />
           </div>
-        )}
-      </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-black/5 dark:border-white/5 bg-muted/20 font-semibold text-muted-foreground">
+                  <th className="py-3 px-4">Participant Student</th>
+                  <th className="py-3 px-4">Enrollment Date & Spots</th>
+                  <th className="py-3 px-4">Payment & Ticket</th>
+                  <th className="py-3 px-4 text-center">Status</th>
+                  <th className="py-3 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                      Retrieving participant roster...
+                    </td>
+                  </tr>
+                ) : paginatedActiveStudents.length > 0 ? (
+                  paginatedActiveStudents.map((student) => (
+                    <tr key={student.id} className="border-b border-black/5 dark:border-white/5 hover:bg-muted/10 last:border-none">
+                      
+                      {/* Participant Student */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={student.avatarUrl}
+                            alt={student.name}
+                            className="h-9 w-9 rounded-full object-cover border border-border/20 shadow-2xs shrink-0"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground">{student.name}</span>
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              <Mail className="h-3 w-3 text-muted-foreground" /> {student.email}
+                            </span>
+                            {student.phone && (
+                              <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-mono">
+                                <Phone className="h-3 w-3 text-muted-foreground" /> {student.phone}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Enrollment Date & Spots */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" /> {student.date}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            {student.spots} ticket{student.spots > 1 ? "s" : ""} booked
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Payment & Ticket */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col">
+                          <span className="font-black text-emerald-600 dark:text-[#a0f212] text-xs font-mono">
+                            ₹{student.paid} INR
+                          </span>
+                          <span className="text-[9px] text-muted-foreground uppercase font-bold">
+                            Ticket #{student.id.slice(0, 8)}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                          <CheckCircle2 className="h-3 w-3" /> PAID CONFIRMED
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2.5 text-xs font-semibold rounded-xl"
+                            title="View Full Participant Details"
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setIsDetailsOpen(true);
+                            }}
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1 text-primary" /> Show Details
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2.5 text-xs font-semibold rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+                            title="Verify Check-in Ticket"
+                            onClick={() => handleVerifyTicket(student.id)}
+                          >
+                            <TicketCheck className="h-3.5 w-3.5 mr-1" /> Verify Check-in
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12 text-muted-foreground text-xs">
+                      <User className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
+                      <p className="font-bold text-sm">No active participants match query.</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Try searching with a different student name or email.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Control */}
+          {totalStudents > 0 && (
+            <PaginationControl
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalStudents}
+              limit={limit}
+              onPageChange={(p) => setPage(p)}
+              onLimitChange={(l) => { setLimit(l); setPage(1); }}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Cancelled / Refunded Registrations */}
       {(() => {
@@ -264,7 +365,7 @@ export default function ParticipantDetailPage() {
           (s) => s.status === "canceled" || s.status === "refunded"
         );
         return (
-          <div className="space-y-4 pt-6 border-t border-border/30">
+          <div className="space-y-4 pt-4">
             <div className="flex items-center space-x-2 text-sm font-bold text-muted-foreground uppercase tracking-wide">
               <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
               <span>Cancelled & Refunded Registrations ({cancelledStudents.length})</span>
@@ -341,13 +442,26 @@ export default function ParticipantDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 bg-card rounded-2xl border border-border/40 text-center space-y-2">
+              <div className="flex flex-col items-center justify-center py-8 bg-card rounded-2xl border border-border/40 text-center space-y-1">
                 <span className="text-xs text-muted-foreground italic">No cancelled bookings for this workshop.</span>
               </div>
             )}
           </div>
         );
       })()}
+
+      {/* PARTICIPANT FULL DETAILS MODAL */}
+      <ParticipantDetailsModal
+        isOpen={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+        selectedStudent={selectedStudent}
+        program={program}
+        onVerifyTicket={handleVerifyTicket}
+        onClose={() => {
+          setIsDetailsOpen(false);
+          setSelectedStudent(null);
+        }}
+      />
     </div>
   );
 }

@@ -17,6 +17,36 @@ class RazorpayPaymentGatewayProvider {
         this.cryptoService = cryptoService;
         this.logger = logger;
     }
+    extractErrorMessage(err) {
+        if (!err)
+            return 'Unknown payment gateway error';
+        // Handle Razorpay SDK response error objects: { statusCode, error: { code, description } }
+        if (err.error) {
+            if (typeof err.error === 'string') {
+                return err.error;
+            }
+            if (typeof err.error === 'object') {
+                if (err.error.description)
+                    return err.error.description;
+                if (err.error.code)
+                    return err.error.code;
+            }
+        }
+        const rawMsg = err.message || (typeof err === 'string' ? err : '');
+        // Handle Razorpay SDK bug when err.response is undefined (network failure / connection error)
+        if (rawMsg.includes("reading 'status'") ||
+            rawMsg.includes("Cannot read properties of undefined")) {
+            return 'Unable to connect to Razorpay API. Please check your network connection and verify that valid Razorpay API keys (Key ID & Key Secret) are configured.';
+        }
+        if (rawMsg)
+            return rawMsg;
+        try {
+            return JSON.stringify(err);
+        }
+        catch {
+            return 'Payment gateway error';
+        }
+    }
     async getRazorpayClient() {
         const config = await this.configRepo.findIntegration(client_1.IntegrationService.RAZORPAY);
         if (!config || !config.isActive) {
@@ -62,12 +92,17 @@ class RazorpayPaymentGatewayProvider {
         }
         catch (err) {
             this.logger.error('[RazorpayProvider] Failed to create Razorpay Order via SDK', err);
-            throw new errors_1.BadRequestError(`Razorpay order creation failed: ${err.message || 'Payment gateway error'}`);
+            const errorMessage = this.extractErrorMessage(err);
+            throw new errors_1.BadRequestError(`Razorpay order creation failed: ${errorMessage}`);
         }
     }
     async verifyWebhookSignature(payload, signature, secret) {
         const { webhookSecret } = await this.getRazorpayClient();
         const activeSecret = secret || webhookSecret;
+        if (!activeSecret) {
+            this.logger.warn('[RazorpayProvider] webhookSecret not found — cannot verify webhook signature');
+            return false;
+        }
         let body;
         if (Buffer.isBuffer(payload)) {
             body = payload.toString("utf8");
@@ -126,7 +161,8 @@ class RazorpayPaymentGatewayProvider {
         }
         catch (err) {
             this.logger.error(`[RazorpayProvider] Live refund failed for payment ${paymentId}`, err);
-            throw new errors_1.BadRequestError(`Razorpay refund failed: ${err.message || 'Payment gateway error'}`);
+            const errorMessage = this.extractErrorMessage(err);
+            throw new errors_1.BadRequestError(`Razorpay refund failed: ${errorMessage}`);
         }
     }
     async transferPayout(destinationBankDetail, amount) {
@@ -153,7 +189,8 @@ class RazorpayPaymentGatewayProvider {
         }
         catch (err) {
             this.logger.error('[RazorpayProvider] Live transfer failed', err);
-            return { success: false, payoutId: '', error: err.message };
+            const errorMessage = this.extractErrorMessage(err);
+            return { success: false, payoutId: '', error: errorMessage };
         }
     }
 }
