@@ -4,6 +4,7 @@ exports.CancelBookingCommandHandler = exports.CancelBookingCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
 const prisma_1 = require("../../../config/prisma");
+const templates_1 = require("../../../constants/templates");
 class CancelBookingCommand {
     bookingId;
     userId;
@@ -89,29 +90,51 @@ class CancelBookingCommandHandler {
             if (fullBooking && fullBooking.client) {
                 const client = fullBooking.client;
                 const userName = `${client.firstName} ${client.lastName}`;
-                const content = `Hi ${userName}, your booking (${booking.bookingRef}) for "${event.title}" has been cancelled.`;
-                const channelsToNotify = [];
+                const cancelData = {
+                    userName,
+                    bookingRef: booking.bookingRef,
+                    bookingId: booking.id,
+                    eventTitle: event.title,
+                    seatCount: booking.seatCount,
+                    totalAmount,
+                    refundAmount,
+                    refundPercentage,
+                    cancellationReason: reason,
+                };
+                const emailContent = (0, templates_1.generateCancelBookingEmailTemplate)(cancelData);
+                const whatsappContent = (0, templates_1.generateCancelBookingWhatsAppTemplate)(cancelData);
+                const inAppContent = (0, templates_1.generateCancelBookingInAppTemplate)(cancelData);
+                const notificationTargets = [];
+                notificationTargets.push({
+                    channel: client_1.DeliveryChannel.IN_APP,
+                    recipient: client.email || client.id,
+                    content: inAppContent,
+                });
                 if (client.email) {
-                    channelsToNotify.push({ channel: 'IN_APP', recipient: client.email });
-                    channelsToNotify.push({ channel: 'EMAIL', recipient: client.email });
-                }
-                else {
-                    channelsToNotify.push({ channel: 'IN_APP', recipient: client.id });
+                    notificationTargets.push({
+                        channel: client_1.DeliveryChannel.EMAIL,
+                        recipient: client.email,
+                        content: emailContent,
+                    });
                 }
                 if (client.phone) {
-                    channelsToNotify.push({ channel: 'SMS', recipient: client.phone });
+                    notificationTargets.push({
+                        channel: client_1.DeliveryChannel.WHATSAPP,
+                        recipient: client.phone,
+                        content: whatsappContent,
+                    });
                 }
-                for (const target of channelsToNotify) {
+                for (const target of notificationTargets) {
                     const log = await this.notificationRepo.create({
                         userId: client.id,
                         channel: target.channel,
-                        triggerEvent: 'BOOKING_CANCELLED',
+                        triggerEvent: client_1.TriggerEvent.BOOKING_CANCELLED,
                         recipient: target.recipient,
-                        content,
-                        status: target.channel === 'IN_APP' ? 'SENT' : 'PENDING',
-                        sentAt: target.channel === 'IN_APP' ? new Date() : null,
+                        content: target.content,
+                        status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
+                        sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
                     });
-                    if (target.channel !== 'IN_APP') {
+                    if (target.channel !== client_1.DeliveryChannel.IN_APP) {
                         await this.queueService.addNotificationJob(log.id);
                     }
                 }

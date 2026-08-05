@@ -3,6 +3,9 @@ import { RefreshCw, Mail, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+import { PaginationControl } from "@/components/ui/pagination-control";
+import { PaginationMeta } from "@/features/admin/api/types";
+
 interface KycTableProps {
   activeTab: "pending" | "all";
   pendingCount: number;
@@ -10,6 +13,9 @@ interface KycTableProps {
   loading: boolean;
   filteredHosts: any[];
   onSelectHost: (host: any) => void;
+  pagination?: PaginationMeta | null;
+  onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
 }
 
 export default function KycTable({
@@ -18,7 +24,10 @@ export default function KycTable({
   allCount,
   loading,
   filteredHosts,
-  onSelectHost
+  onSelectHost,
+  pagination,
+  onPageChange,
+  onLimitChange,
 }: KycTableProps) {
   return (
     <Card className="border-border/40 bg-card rounded-2xl overflow-hidden shadow-xs">
@@ -111,6 +120,16 @@ export default function KycTable({
             </tbody>
           </table>
         </div>
+        {pagination && onPageChange && (
+          <PaginationControl
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            limit={pagination.limit}
+            onPageChange={onPageChange}
+            onLimitChange={onLimitChange}
+          />
+        )}
       </CardContent>
     </Card>
   );

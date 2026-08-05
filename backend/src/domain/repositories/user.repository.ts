@@ -60,6 +60,7 @@ export interface IUserRepository {
     deletedAt?: Date | null;
   }): Promise<User[]>;
   findPendingKycHosts(): Promise<any[]>;
-  findAllHosts(filters?: { kycStatus?: KycStatus }): Promise<any[]>;
+  countHosts(filters?: { kycStatus?: KycStatus }): Promise<number>;
+  findAllHosts(filters?: { kycStatus?: KycStatus }, skip?: number, take?: number): Promise<any[]>;
   updateKycStatus(hostProfileId: string, status: KycStatus, rejectionReason?: string): Promise<HostProfile>;
 }

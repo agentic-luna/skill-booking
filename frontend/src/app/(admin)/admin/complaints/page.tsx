@@ -42,9 +42,13 @@ interface Complaint {
   } | null;
 }
 
+import { PaginationControl } from "@/components/ui/pagination-control";
+import { PaginationMeta } from "@/features/admin/api/types";
+
 export default function AdminComplaintsPage() {
   const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Filters state
@@ -52,17 +56,23 @@ export default function AdminComplaintsPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
-
-  const fetchComplaints = async () => {
+  const fetchComplaints = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/complaints/admin`);
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (selectedStatus !== "ALL") params.set("status", selectedStatus);
+      if (selectedCategory !== "ALL") params.set("category", selectedCategory);
+
+      const res = await fetch(`${API_BASE_URL}/complaints/admin?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
-        setComplaints(data.data);
+        if (data.pagination) {
+          setComplaints(data.data);
+          setPagination(data.pagination);
+        } else {
+          setComplaints(Array.isArray(data.data) ? data.data : []);
+          setPagination(null);
+        }
       }
     } catch (err) {
       console.error("Error fetching complaints", err);
@@ -70,6 +80,10 @@ export default function AdminComplaintsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchComplaints(1, pagination?.limit || 10);
+  }, [selectedStatus, selectedCategory]);
 
   const updateStatus = async (e: React.SyntheticEvent, id: string, newStatus: string) => {
     e.stopPropagation();
@@ -317,6 +331,16 @@ export default function AdminComplaintsPage() {
               </tbody>
             </table>
           </div>
+        )}
+        {pagination && (
+          <PaginationControl
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.total}
+            limit={pagination.limit}
+            onPageChange={(page) => fetchComplaints(page, pagination.limit)}
+            onLimitChange={(limit) => fetchComplaints(1, limit)}
+          />
         )}
       </div>
 

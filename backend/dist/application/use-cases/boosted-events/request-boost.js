@@ -37,8 +37,8 @@ class RequestBoostCommandHandler {
         if (event.status !== 'APPROVED') {
             throw new errors_1.BadRequestError('Only approved events can be boosted.');
         }
-        if (event.startTime >= now) {
-            throw new errors_1.BadRequestError('Only events with a start date less than current date can be boosted.');
+        if (event.startTime < now) {
+            throw new errors_1.BadRequestError('Past events cannot be boosted. Only upcoming events can be boosted.');
         }
         // Check for existing active non-expired boost campaign
         const existingActiveBoost = await prisma_1.prisma.boostedEvent.findFirst({

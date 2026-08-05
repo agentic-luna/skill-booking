@@ -23,9 +23,6 @@ router.use((req, res, next) => {
 // Integration configs
 router.get('/configs/integrations', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.getIntegrationConfigs);
 router.put('/configs/integrations/:serviceName', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.updateIntegrationConfig);
-// Message Templates
-router.get('/configs/templates', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_TEMPLATES_MANAGE), admin_controller_1.AdminController.getMessageTemplates);
-router.put('/configs/templates/:templateId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_TEMPLATES_MANAGE), admin_controller_1.AdminController.updateMessageTemplate);
 // Global settings
 router.get('/configs/platform', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.getPlatformSettings);
 router.post('/configs/platform', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_CONFIGS_MANAGE), admin_controller_1.AdminController.updatePlatformSetting);

@@ -6,12 +6,13 @@ const boost_event_1 = require("../../application/use-cases/boosted-events/boost-
 const get_boosted_events_1 = require("../../application/use-cases/boosted-events/get-boosted-events");
 const request_boost_1 = require("../../application/use-cases/boosted-events/request-boost");
 const update_boost_status_1 = require("../../application/use-cases/boosted-events/update-boost-status");
-const get_boost_requests_1 = require("../../application/use-cases/boosted-events/get-boost-requests");
 const verify_boost_payment_1 = require("../../application/use-cases/boosted-events/verify-boost-payment");
 const get_boost_pricing_1 = require("../../application/use-cases/boosted-events/get-boost-pricing");
 const api_response_1 = require("../common/api-response");
+const prisma_1 = require("../../config/prisma");
 const get_boost_analytics_1 = require("../../application/use-cases/boosted-events/get-boost-analytics");
 const track_boost_click_1 = require("../../application/use-cases/boosted-events/track-boost-click");
+const pagination_1 = require("../common/pagination");
 class BoostedEventsController {
     static async getActiveBoostedEvents(req, res, next) {
         try {
@@ -74,8 +75,26 @@ class BoostedEventsController {
     }
     static async getBoostRequests(req, res, next) {
         try {
-            const result = await di_container_1.mediator.send(new get_boost_requests_1.GetBoostRequestsQuery());
-            return api_response_1.ApiResponse.success(res, result);
+            const { page, limit, skip } = (0, pagination_1.parsePaginationParams)(req.query, 10);
+            const [items, total] = await Promise.all([
+                prisma_1.prisma.boostedEvent.findMany({
+                    skip,
+                    take: limit,
+                    include: {
+                        event: {
+                            include: {
+                                host: {
+                                    include: { user: true }
+                                }
+                            }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                }),
+                prisma_1.prisma.boostedEvent.count(),
+            ]);
+            const paginated = (0, pagination_1.buildPaginatedResponse)(items, total, page, limit);
+            return api_response_1.ApiResponse.success(res, paginated);
         }
         catch (error) {
             next(error);

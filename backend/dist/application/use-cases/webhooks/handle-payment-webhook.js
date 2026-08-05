@@ -4,6 +4,8 @@ exports.HandlePaymentWebhookCommandHandler = exports.HandlePaymentWebhookCommand
 const client_1 = require("@prisma/client");
 const prisma_1 = require("../../../config/prisma");
 const commission_parser_1 = require("../../../utils/commission-parser");
+const ticket_generation_service_1 = require("../../../infrastructure/services/ticket-generation.service");
+const templates_1 = require("../../../constants/templates");
 class HandlePaymentWebhookCommand {
     payload;
     __tag = 'HandlePaymentWebhookCommand';
@@ -128,8 +130,8 @@ class HandlePaymentWebhookCommandHandler {
         const totalAmount = Number(booking.totalAmount);
         let platformRevenue = 0;
         // Use snapshotted commission on booking if available, otherwise fall back to event commission
-        const commType = booking.commissionType !== undefined ? booking.commissionType : booking.event?.commission?.commissionType;
-        const commValue = booking.platformValue !== undefined ? booking.platformValue : booking.event?.commission?.platformValue;
+        const commType = booking.commissionType != null ? booking.commissionType : booking.event?.commission?.commissionType;
+        const commValue = booking.platformValue != null ? booking.platformValue : booking.event?.commission?.platformValue;
         if (commType && commValue !== null && commValue !== undefined) {
             if (commType === client_1.CommissionType.PERCENTAGE) {
                 platformRevenue = totalAmount * (Number(commValue) / 100);
@@ -176,25 +178,72 @@ class HandlePaymentWebhookCommandHandler {
         const event = booking.event;
         if (client && event) {
             const userName = `${client.firstName} ${client.lastName}`;
-            const content = `Hi ${userName}, your booking (${booking.bookingRef}) for "${event.title}" (${booking.seatCount} seats, Total: ₹${booking.totalAmount}) is confirmed!`;
-            const channelsToNotify = [];
+            const hostUser = event?.host?.user;
+            const trainerName = event?.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : 'Platform Host');
+            const venueInfo = event.mode === 'ONLINE' ? 'Online Live Stream' : (event.venueDetails?.address || 'Physical Venue');
+            const formattedDate = new Date(event.startTime).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+            const formattedTime = new Date(event.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const verifyUrl = `/api/v1/bookings/${booking.id}/verify`;
+            const ticketDownloadUrl = `/api/v1/bookings/${booking.id}/download-ticket?format=svg`;
+            // Generate Ticket Image SVG
+            let ticketSvgDataUrl = undefined;
+            try {
+                const ticketGenService = new ticket_generation_service_1.TicketGenerationService();
+                const svgContent = await ticketGenService.generateTicketSvg(booking, 'localhost:4000');
+                const base64Svg = Buffer.from(svgContent).toString('base64');
+                ticketSvgDataUrl = `data:image/svg+xml;base64,${base64Svg}`;
+            }
+            catch (err) {
+                // If SVG generation encounters an issue, fallback silently
+            }
+            const templateData = {
+                userName,
+                bookingRef: booking.bookingRef,
+                bookingId: booking.id,
+                eventTitle: event.title,
+                formattedDate,
+                formattedTime,
+                seatCount: booking.seatCount,
+                totalAmount: Number(booking.totalAmount),
+                trainerName,
+                venueInfo,
+                verifyUrl,
+                ticketDownloadUrl,
+                ticketSvgDataUrl,
+            };
+            const emailContent = (0, templates_1.generateTicketEmailTemplate)(templateData);
+            const whatsappContent = (0, templates_1.generateTicketWhatsAppTemplate)(templateData);
+            const inAppContent = (0, templates_1.generateTicketInAppTemplate)(templateData);
+            const notificationTargets = [];
+            // In-app notification
+            notificationTargets.push({
+                channel: client_1.DeliveryChannel.IN_APP,
+                recipient: client.email || client.id,
+                content: inAppContent,
+            });
+            // Email ticket
             if (client.email) {
-                channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: client.email });
-                channelsToNotify.push({ channel: client_1.DeliveryChannel.EMAIL, recipient: client.email });
+                notificationTargets.push({
+                    channel: client_1.DeliveryChannel.EMAIL,
+                    recipient: client.email,
+                    content: emailContent,
+                });
             }
-            else {
-                channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: client.id });
-            }
+            // WhatsApp ticket
             if (client.phone) {
-                channelsToNotify.push({ channel: client_1.DeliveryChannel.SMS, recipient: client.phone });
+                notificationTargets.push({
+                    channel: client_1.DeliveryChannel.WHATSAPP,
+                    recipient: client.phone,
+                    content: whatsappContent,
+                });
             }
-            for (const target of channelsToNotify) {
+            for (const target of notificationTargets) {
                 const log = await this.notificationRepo.create({
                     userId: client.id,
                     channel: target.channel,
-                    triggerEvent: client_1.TriggerEvent.BOOKING_CONFIRMED,
+                    triggerEvent: client_1.TriggerEvent.TICKET_DELIVERY,
                     recipient: target.recipient,
-                    content,
+                    content: target.content,
                     status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
                     sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
                 });

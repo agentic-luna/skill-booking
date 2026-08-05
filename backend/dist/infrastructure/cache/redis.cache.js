@@ -58,5 +58,23 @@ class RedisCacheService {
             di_container_1.logger.error(`[RedisCacheService] Error deleting pattern ${pattern}:`, e);
         }
     }
+    async acquireLock(key, ttlSeconds = 60) {
+        try {
+            const result = await exports.redis.set(key, 'LOCKED', 'EX', ttlSeconds, 'NX');
+            return result === 'OK';
+        }
+        catch (e) {
+            di_container_1.logger.error(`[RedisCacheService] Error acquiring lock ${key}:`, e);
+            return false;
+        }
+    }
+    async releaseLock(key) {
+        try {
+            await exports.redis.del(key);
+        }
+        catch (e) {
+            di_container_1.logger.error(`[RedisCacheService] Error releasing lock ${key}:`, e);
+        }
+    }
 }
 exports.RedisCacheService = RedisCacheService;

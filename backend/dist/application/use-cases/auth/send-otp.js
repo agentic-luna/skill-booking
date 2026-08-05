@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SendOtpCommandHandler = exports.SendOtpCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../../api/common/errors");
+const templates_1 = require("../../../constants/templates");
 class SendOtpCommand {
     target;
     type;
@@ -64,14 +65,14 @@ class SendOtpCommandHandler {
         const cacheKey = `otp:${typeKey}:${normalizedTarget}`;
         await this.cacheService.set(cacheKey, otp, 600);
         await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
-        // Send via provider using hardcoded messages
+        // Send via provider using templates
         if (normalizedType === client_1.DeliveryChannel.EMAIL) {
-            const subject = 'Your Verification Code';
-            const body = `Your OTP for registration verification is: ${otp}. It is valid for 10 minutes.`;
+            const subject = 'Your Host Verification Code — BookMyTraining';
+            const body = (0, templates_1.generateHostEmailOtpTemplate)({ otp, expiresInMinutes: 10 });
             await this.commsService.sendEmail(normalizedTarget, subject, body);
         }
         else {
-            const body = `Your registration OTP is: ${otp}. Valid for 10 minutes.`;
+            const body = (0, templates_1.generateHostSmsOtpTemplate)({ otp, expiresInMinutes: 10 });
             await this.commsService.sendSMS(normalizedTarget, body);
         }
         this.logger.info(`[SendOtp] Sent OTP for ${normalizedType} to ${normalizedTarget}`);

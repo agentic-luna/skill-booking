@@ -15,7 +15,11 @@ import {
 
 export class PayoutHostCommand implements IRequest<any> {
   readonly __tag = 'PayoutHostCommand';
-  constructor(public readonly hostId: string) {}
+  constructor(
+    public readonly hostId: string,
+    public readonly mode: 'AUTOMATIC' | 'MANUAL' = 'AUTOMATIC',
+    public readonly manualRef?: string
+  ) {}
 }
 
 export class PayoutHostCommandHandler implements IRequestHandler<PayoutHostCommand, any> {
@@ -29,7 +33,7 @@ export class PayoutHostCommandHandler implements IRequestHandler<PayoutHostComma
   ) {}
 
   async handle(command: PayoutHostCommand): Promise<any> {
-    const { hostId } = command;
+    const { hostId, mode, manualRef } = command;
 
     const hostProfile = await this.userRepo.findHostProfileByUserId(hostId);
     if (!hostProfile) {
@@ -46,23 +50,50 @@ export class PayoutHostCommandHandler implements IRequestHandler<PayoutHostComma
       return { success: false, message: 'No pending escrow payouts found for this Host' };
     }
 
-    const decryptedHolderName = this.cryptoService.decrypt(bankDetail.accountHolderName);
-    const decryptedAccountNumber = this.cryptoService.decrypt(bankDetail.accountNumber);
-    const decryptedIfscCode = this.cryptoService.decrypt(bankDetail.ifscCode);
-
     const totalPayout = ledgers.reduce((acc, l) => acc + Number(l.hostLiability), 0);
 
-    const payoutResult = await this.commsService.transferPayout(
-      {
-        accountHolderName: decryptedHolderName,
-        accountNumber: decryptedAccountNumber,
-        ifscCode: decryptedIfscCode,
-        bankName: bankDetail.bankName,
-      },
-      totalPayout
-    );
+    let payoutId: string = '';
+    let isSuccess = false;
 
-    if (payoutResult.success) {
+    if (mode === 'MANUAL' || manualRef) {
+      payoutId = manualRef?.trim() || `MANUAL-${Date.now().toString(36).toUpperCase()}`;
+      isSuccess = true;
+    } else {
+      const decryptedHolderName = this.cryptoService.decrypt(bankDetail.accountHolderName);
+      const decryptedAccountNumber = this.cryptoService.decrypt(bankDetail.accountNumber);
+      const decryptedIfscCode = this.cryptoService.decrypt(bankDetail.ifscCode);
+
+      try {
+        const payoutResult = await this.commsService.transferPayout(
+          {
+            accountHolderName: decryptedHolderName,
+            accountNumber: decryptedAccountNumber,
+            ifscCode: decryptedIfscCode,
+            bankName: bankDetail.bankName,
+          },
+          totalPayout
+        );
+
+        if (payoutResult && payoutResult.success) {
+          isSuccess = true;
+          payoutId = payoutResult.payoutId || `RZP-${Date.now().toString(36).toUpperCase()}`;
+        } else {
+          return {
+            success: false,
+            message: payoutResult?.error || 'Razorpay Payout API call failed. You can process a Manual Payout instead.',
+            allowManualFallback: true,
+          };
+        }
+      } catch (err: any) {
+        return {
+          success: false,
+          message: err.message || 'Razorpay Payout API error occurred. You can process a Manual Payout instead.',
+          allowManualFallback: true,
+        };
+      }
+    }
+
+    if (isSuccess) {
       const ledgerIds = ledgers.map((l) => l.id);
       await this.ledgerRepo.updateMany(ledgerIds, { status: 'RELEASED_TO_HOST' });
 
@@ -74,7 +105,7 @@ export class PayoutHostCommandHandler implements IRequestHandler<PayoutHostComma
           const payoutData = {
             hostName,
             amount: totalPayout,
-            payoutId: payoutResult.payoutId,
+            payoutId,
             transactionsPaid: ledgerIds.length,
             bankName: bankDetail.bankName,
           };
@@ -130,13 +161,12 @@ export class PayoutHostCommandHandler implements IRequestHandler<PayoutHostComma
       return {
         success: true,
         amount: totalPayout,
-        payoutId: payoutResult.payoutId,
+        payoutId,
         transactionsPaid: ledgerIds.length,
+        mode: mode === 'MANUAL' || manualRef ? 'MANUAL' : 'AUTOMATIC',
       };
-    } else {
-      const err = new Error('Razorpay Payout API call failed') as any;
-      err.statusCode = 502;
-      throw err;
     }
+
+    return { success: false, message: 'Payout execution incomplete' };
   }
 }

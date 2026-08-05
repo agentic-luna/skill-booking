@@ -4,6 +4,7 @@ exports.ApproveEventCommandHandler = exports.ApproveEventCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
 const commission_parser_1 = require("../../../utils/commission-parser");
+const templates_1 = require("../../../constants/templates");
 class ApproveEventCommand {
     eventId;
     commissionType;
@@ -63,27 +64,58 @@ class ApproveEventCommandHandler {
             if (hostProfile) {
                 const hostUser = await this.userRepo.findById(hostProfile.userId);
                 if (hostUser) {
-                    const userName = `${hostUser.firstName} ${hostUser.lastName}`;
-                    const content = `Hi ${userName}, your event "${updatedEvent.title}" has been approved and is now live for bookings!`;
-                    const channelsToNotify = [];
+                    const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+                    const formattedStartTime = new Date(updatedEvent.startTime).toLocaleString('en-US', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    });
+                    const approveData = {
+                        hostName,
+                        eventTitle: updatedEvent.title,
+                        eventId: updatedEvent.id,
+                        category: updatedEvent.category || 'Workshop',
+                        mode: updatedEvent.mode,
+                        price: Number(updatedEvent.price || 0),
+                        totalSeats: Number(updatedEvent.totalSeats),
+                        commissionType: commission.commissionType,
+                        commissionValue: Number(commission.platformValue),
+                        formattedStartTime,
+                    };
+                    const emailContent = (0, templates_1.generateApproveEventEmailTemplate)(approveData);
+                    const whatsappContent = (0, templates_1.generateApproveEventWhatsAppTemplate)(approveData);
+                    const inAppContent = (0, templates_1.generateApproveEventInAppTemplate)(approveData);
+                    const notificationTargets = [];
+                    notificationTargets.push({
+                        channel: client_1.DeliveryChannel.IN_APP,
+                        recipient: hostUser.email || hostUser.id,
+                        content: inAppContent,
+                    });
                     if (hostUser.email) {
-                        channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: hostUser.email });
-                        channelsToNotify.push({ channel: client_1.DeliveryChannel.EMAIL, recipient: hostUser.email });
-                    }
-                    else {
-                        channelsToNotify.push({ channel: client_1.DeliveryChannel.IN_APP, recipient: hostUser.id });
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.EMAIL,
+                            recipient: hostUser.email,
+                            content: emailContent,
+                        });
                     }
                     if (hostUser.phone) {
-                        channelsToNotify.push({ channel: client_1.DeliveryChannel.SMS, recipient: hostUser.phone });
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.WHATSAPP,
+                            recipient: hostUser.phone,
+                            content: whatsappContent,
+                        });
                     }
-                    for (const target of channelsToNotify) {
+                    for (const target of notificationTargets) {
                         const log = await this.notificationRepo.create({
                             userId: hostUser.id,
                             channel: target.channel,
                             triggerEvent: client_1.TriggerEvent.EVENT_APPROVED,
                             recipient: target.recipient,
-                            content,
-                            status: target.channel === client_1.DeliveryChannel.IN_APP ? 'SENT' : 'PENDING',
+                            content: target.content,
+                            status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
                             sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
                         });
                         if (target.channel !== client_1.DeliveryChannel.IN_APP) {

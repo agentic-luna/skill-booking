@@ -1,4 +1,18 @@
-// ── Admin Config & Controls — API Types ──────────────────────────────────
+// ── Generic Pagination Types ──────────────────────────────────────────────
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}
 
 // ── Integration Configs ─────────────────────────────────────────────────
 
@@ -178,6 +192,8 @@ export interface PayoutResult {
   payoutId?: string;
   transactionsPaid?: number;
   message?: string;
+  mode?: "AUTOMATIC" | "MANUAL";
+  allowManualFallback?: boolean;
 }
 
 // ── KYC / Host Management ────────────────────────────────────────────────
@@ -188,6 +204,7 @@ export type AccountType = "INDIVIDUAL" | "COMPANY";
 export interface HostBankDetail {
   id: string;
   accountHolderName: string;
+  accountNumber?: string;
   bankName: string;
   ifscCode: string;
   upiId?: string;

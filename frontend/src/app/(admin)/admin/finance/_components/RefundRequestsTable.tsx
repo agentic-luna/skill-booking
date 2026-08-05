@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAdminStore } from "@/features/admin/store/adminStore";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
+import { PaginationControl } from "@/components/ui/pagination-control";
 
 interface RefundRequestsTableProps {
   onApproveRefund: (clientName: string, amount: string) => void;
@@ -15,10 +16,10 @@ interface RefundRequestsTableProps {
 export default function RefundRequestsTable({ onApproveRefund }: RefundRequestsTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const showAlert = useAlertStore((s) => s.showAlert);
-  const { refundRequests, fetchRefundRequests, approveRefund, declineRefund, loading: isLoading } = useAdminStore();
+  const { refundRequests, refundsPagination, fetchRefundRequests, approveRefund, declineRefund, loading: isLoading } = useAdminStore();
 
   useEffect(() => {
-    fetchRefundRequests();
+    fetchRefundRequests(1, 10);
   }, [fetchRefundRequests]);
 
   const handleAction = async (id: string, action: "approve" | "decline", clientName: string, amount: string) => {
@@ -148,6 +149,16 @@ export default function RefundRequestsTable({ onApproveRefund }: RefundRequestsT
             </tbody>
           </table>
         </div>
+        {refundsPagination && (
+          <PaginationControl
+            currentPage={refundsPagination.page}
+            totalPages={refundsPagination.totalPages}
+            totalItems={refundsPagination.total}
+            limit={refundsPagination.limit}
+            onPageChange={(page) => fetchRefundRequests(page, refundsPagination.limit)}
+            onLimitChange={(limit) => fetchRefundRequests(1, limit)}
+          />
+        )}
       </CardContent>
     </Card>
   );

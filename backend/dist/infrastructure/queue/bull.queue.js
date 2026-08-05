@@ -34,7 +34,22 @@ const startNotificationWorker = (notificationRepo, commsService) => {
         }
         try {
             let success = false;
-            const subject = log.triggerEvent || 'Notification';
+            let subject = log.triggerEvent || 'Notification';
+            if (log.triggerEvent === client_1.TriggerEvent.TICKET_DELIVERY || log.triggerEvent === 'TICKET_DELIVERY') {
+                subject = '🎫 Your Ticket & Booking Confirmation — BookMyTraining';
+            }
+            else if (log.triggerEvent === client_1.TriggerEvent.BOOKING_CONFIRMED || log.triggerEvent === 'BOOKING_CONFIRMED') {
+                subject = '🎉 Booking Confirmed — BookMyTraining';
+            }
+            else if (log.triggerEvent === client_1.TriggerEvent.BOOKING_CANCELLED || log.triggerEvent === 'BOOKING_CANCELLED') {
+                subject = '❌ Booking Cancelled — BookMyTraining';
+            }
+            else if (log.triggerEvent === client_1.TriggerEvent.EVENT_APPROVED || log.triggerEvent === 'EVENT_APPROVED') {
+                subject = '🎉 Your Event Has Been Approved & Is Now Live! — BookMyTraining';
+            }
+            else if (log.triggerEvent === 'EDIT_REQUEST_APPROVED') {
+                subject = '🎉 Edit Request Approved — BookMyTraining';
+            }
             switch (log.channel) {
                 case client_1.DeliveryChannel.EMAIL:
                     success = await commsService.sendEmail(log.recipient, subject, log.content);

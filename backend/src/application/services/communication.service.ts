@@ -15,5 +15,5 @@ export interface ICommunicationService {
       bankName: string;
     },
     amount: number
-  ): Promise<{ success: boolean; payoutId: string }>;
+  ): Promise<{ success: boolean; payoutId: string; error?: string }>;
 }

@@ -260,18 +260,38 @@ const createComplaint = async (req, res) => {
     }
 };
 exports.createComplaint = createComplaint;
+const pagination_1 = require("../common/pagination");
 /**
  * GET /api/v1/complaints/admin
- * Fetch all complaints for Admin view
+ * Fetch all complaints for Admin view with pagination & filters
  */
 const getAllComplaints = async (req, res) => {
     try {
-        const complaints = await prisma.complaint.findMany({
-            orderBy: { createdAt: 'desc' },
-            include: complaintIncludeConfig
-        });
+        const { page, limit, skip } = (0, pagination_1.parsePaginationParams)(req.query, 10);
+        const status = req.query.status;
+        const category = req.query.category;
+        const where = {};
+        if (status && status !== 'ALL')
+            where.status = status;
+        if (category && category !== 'ALL')
+            where.category = category;
+        const [complaints, total] = await Promise.all([
+            prisma.complaint.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                include: complaintIncludeConfig
+            }),
+            prisma.complaint.count({ where }),
+        ]);
         const enrichedList = await Promise.all(complaints.map(enrichComplaint));
-        res.status(200).json({ success: true, data: enrichedList });
+        const paginated = (0, pagination_1.buildPaginatedResponse)(enrichedList, total, page, limit);
+        res.status(200).json({
+            success: true,
+            data: paginated.data,
+            pagination: paginated.pagination,
+        });
     }
     catch (error) {
         console.error('Error fetching complaints:', error);

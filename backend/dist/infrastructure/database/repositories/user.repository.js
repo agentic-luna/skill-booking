@@ -164,8 +164,21 @@ class PrismaUserRepository {
         });
         return users;
     }
-    async findAllHosts(filters) {
+    async countHosts(filters) {
+        return prisma_1.prisma.user.count({
+            where: {
+                role: 'HOST',
+                deletedAt: null,
+                ...(filters?.kycStatus
+                    ? { hostProfile: { kycStatus: filters.kycStatus } }
+                    : {}),
+            },
+        });
+    }
+    async findAllHosts(filters, skip, take) {
         const users = await prisma_1.prisma.user.findMany({
+            ...(skip !== undefined ? { skip } : {}),
+            ...(take !== undefined ? { take } : {}),
             where: {
                 role: 'HOST',
                 deletedAt: null,
@@ -195,6 +208,7 @@ class PrismaUserRepository {
                             select: {
                                 id: true,
                                 accountHolderName: true,
+                                accountNumber: true,
                                 bankName: true,
                                 ifscCode: true,
                                 upiId: true,

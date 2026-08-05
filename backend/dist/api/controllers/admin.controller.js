@@ -6,8 +6,6 @@ const di_container_1 = require("../di-container");
 const client_1 = require("@prisma/client");
 const get_configs_1 = require("../../application/use-cases/admin/get-configs");
 const update_config_1 = require("../../application/use-cases/admin/update-config");
-const get_templates_1 = require("../../application/use-cases/admin/get-templates");
-const update_template_1 = require("../../application/use-cases/admin/update-template");
 const broadcast_notification_1 = require("../../application/use-cases/admin/broadcast-notification");
 const get_ledger_1 = require("../../application/use-cases/admin/get-ledger");
 const payout_host_1 = require("../../application/use-cases/admin/payout-host");
@@ -17,6 +15,8 @@ const review_kyc_1 = require("../../application/use-cases/admin/review-kyc");
 const socket_1 = require("../../config/socket");
 const api_response_1 = require("../common/api-response");
 const errors_1 = require("../common/errors");
+const pagination_1 = require("../common/pagination");
+const templates_1 = require("../../constants/templates");
 class AdminController {
     static async adminLogin(req, res, next) {
         try {
@@ -49,31 +49,6 @@ class AdminController {
             next(error);
         }
     }
-    static async getMessageTemplates(req, res, next) {
-        try {
-            const templates = await di_container_1.mediator.send(new get_templates_1.GetTemplatesQuery());
-            return api_response_1.ApiResponse.success(res, templates);
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-    static async updateMessageTemplate(req, res, next) {
-        try {
-            const { templateId } = req.params;
-            const { bodyContent, variables, isActive, subject } = req.body;
-            const updated = await di_container_1.mediator.send(new update_template_1.UpdateTemplateCommand(templateId, {
-                bodyContent,
-                variables,
-                isActive,
-                subject,
-            }));
-            return api_response_1.ApiResponse.success(res, updated);
-        }
-        catch (error) {
-            next(error);
-        }
-    }
     static async getPlatformSettings(req, res, next) {
         try {
             const settings = await di_container_1.configRepo.findAllPlatformSettings();
@@ -99,21 +74,21 @@ class AdminController {
     }
     static async getNotificationLogs(req, res, next) {
         try {
-            const page = parseInt(req.query.page || '1', 10);
-            const limit = parseInt(req.query.limit || '20', 10);
+            const { page, limit, skip } = (0, pagination_1.parsePaginationParams)(req.query, 20);
             const status = req.query.status;
-            const skip = (page - 1) * limit;
             const filters = status ? { status } : {};
             const [logs, total] = await Promise.all([
                 di_container_1.notificationRepo.findMany(filters, skip, limit),
                 di_container_1.notificationRepo.count(filters),
             ]);
+            const paginated = (0, pagination_1.buildPaginatedResponse)(logs, total, page, limit);
             return api_response_1.ApiResponse.success(res, {
-                logs,
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
+                logs: paginated.data,
+                total: paginated.pagination.total,
+                page: paginated.pagination.page,
+                limit: paginated.pagination.limit,
+                totalPages: paginated.pagination.totalPages,
+                pagination: paginated.pagination,
             });
         }
         catch (error) {
@@ -172,7 +147,8 @@ class AdminController {
     static async payoutHost(req, res, next) {
         try {
             const { hostId } = req.params;
-            const result = await di_container_1.mediator.send(new payout_host_1.PayoutHostCommand(hostId));
+            const { mode, manualRef } = req.body || {};
+            const result = await di_container_1.mediator.send(new payout_host_1.PayoutHostCommand(hostId, mode, manualRef));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -191,7 +167,8 @@ class AdminController {
     static async getAllHosts(req, res, next) {
         try {
             const { kycStatus } = req.query;
-            const result = await di_container_1.mediator.send(new review_kyc_1.GetAllHostsQuery(kycStatus));
+            const { page, limit } = (0, pagination_1.parsePaginationParams)(req.query, 10);
+            const result = await di_container_1.mediator.send(new review_kyc_1.GetAllHostsQuery(kycStatus, page, limit));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -211,17 +188,23 @@ class AdminController {
     }
     static async getRefundRequests(req, res, next) {
         try {
-            const refundRequests = await prisma_1.prisma.refundRequest.findMany({
-                include: {
-                    booking: {
-                        include: {
-                            client: true,
-                            event: true,
+            const { page, limit, skip } = (0, pagination_1.parsePaginationParams)(req.query, 10);
+            const [refundRequests, total] = await Promise.all([
+                prisma_1.prisma.refundRequest.findMany({
+                    skip,
+                    take: limit,
+                    include: {
+                        booking: {
+                            include: {
+                                client: true,
+                                event: true,
+                            },
                         },
                     },
-                },
-                orderBy: { createdAt: 'desc' },
-            });
+                    orderBy: { createdAt: 'desc' },
+                }),
+                prisma_1.prisma.refundRequest.count(),
+            ]);
             const mapped = refundRequests.map((r) => ({
                 id: r.id,
                 clientName: `${r.booking.client.firstName} ${r.booking.client.lastName}`,
@@ -233,7 +216,8 @@ class AdminController {
                 status: r.status,
                 dateRequested: r.createdAt.toISOString().split('T')[0],
             }));
-            return api_response_1.ApiResponse.success(res, mapped);
+            const paginated = (0, pagination_1.buildPaginatedResponse)(mapped, total, page, limit);
+            return api_response_1.ApiResponse.success(res, paginated);
         }
         catch (error) {
             next(error);
@@ -306,6 +290,62 @@ class AdminController {
                     data: { status: client_1.BookingStatus.REFUNDED },
                 }),
             ]);
+            // Dispatch notifications to client
+            try {
+                const clientUser = await prisma_1.prisma.user.findUnique({ where: { id: booking.clientId } });
+                if (clientUser) {
+                    const clientName = `${clientUser.firstName} ${clientUser.lastName}`;
+                    const refundData = {
+                        clientName,
+                        bookingId: booking.id,
+                        eventTitle: event.title,
+                        refundAmount,
+                        status: 'APPROVED',
+                    };
+                    const emailContent = (0, templates_1.generateRefundApprovedEmailTemplate)(refundData);
+                    const whatsappContent = (0, templates_1.generateRefundApprovedWhatsAppTemplate)(refundData);
+                    const inAppContent = (0, templates_1.generateRefundApprovedInAppTemplate)(refundData);
+                    const notificationTargets = [];
+                    notificationTargets.push({
+                        channel: client_1.DeliveryChannel.IN_APP,
+                        recipient: clientUser.email || clientUser.id,
+                        content: inAppContent,
+                    });
+                    if (clientUser.email) {
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.EMAIL,
+                            recipient: clientUser.email,
+                            content: emailContent,
+                        });
+                    }
+                    if (clientUser.phone) {
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.WHATSAPP,
+                            recipient: clientUser.phone,
+                            content: whatsappContent,
+                        });
+                    }
+                    for (const target of notificationTargets) {
+                        const log = await prisma_1.prisma.notificationLog.create({
+                            data: {
+                                userId: clientUser.id,
+                                channel: target.channel,
+                                triggerEvent: 'REFUND_SUCCESS',
+                                recipient: target.recipient,
+                                content: target.content,
+                                status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
+                                sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                            }
+                        });
+                        if (target.channel !== client_1.DeliveryChannel.IN_APP) {
+                            await di_container_1.queueService.addNotificationJob(log.id);
+                        }
+                    }
+                }
+            }
+            catch (err) {
+                // Silent catch for notification dispatch errors
+            }
             return api_response_1.ApiResponse.success(res, {
                 message: 'Refund request approved successfully',
                 refundRequest: updatedRequest,
@@ -319,10 +359,80 @@ class AdminController {
     static async declineRefundRequest(req, res, next) {
         try {
             const { id } = req.params;
+            const { reason } = req.body;
+            const refundRequest = await prisma_1.prisma.refundRequest.findUnique({
+                where: { id },
+                include: {
+                    booking: {
+                        include: {
+                            event: true,
+                        }
+                    }
+                }
+            });
             const updated = await prisma_1.prisma.refundRequest.update({
                 where: { id },
                 data: { status: 'DECLINED' },
             });
+            // Dispatch notifications to client
+            if (refundRequest?.booking) {
+                try {
+                    const booking = refundRequest.booking;
+                    const clientUser = await prisma_1.prisma.user.findUnique({ where: { id: booking.clientId } });
+                    if (clientUser) {
+                        const clientName = `${clientUser.firstName} ${clientUser.lastName}`;
+                        const refundData = {
+                            clientName,
+                            bookingId: booking.id,
+                            eventTitle: booking.event?.title || 'Training Workshop',
+                            status: 'DECLINED',
+                            reason,
+                        };
+                        const emailContent = (0, templates_1.generateRefundDeclinedEmailTemplate)(refundData);
+                        const whatsappContent = (0, templates_1.generateRefundDeclinedWhatsAppTemplate)(refundData);
+                        const inAppContent = (0, templates_1.generateRefundDeclinedInAppTemplate)(refundData);
+                        const notificationTargets = [];
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.IN_APP,
+                            recipient: clientUser.email || clientUser.id,
+                            content: inAppContent,
+                        });
+                        if (clientUser.email) {
+                            notificationTargets.push({
+                                channel: client_1.DeliveryChannel.EMAIL,
+                                recipient: clientUser.email,
+                                content: emailContent,
+                            });
+                        }
+                        if (clientUser.phone) {
+                            notificationTargets.push({
+                                channel: client_1.DeliveryChannel.WHATSAPP,
+                                recipient: clientUser.phone,
+                                content: whatsappContent,
+                            });
+                        }
+                        for (const target of notificationTargets) {
+                            const log = await prisma_1.prisma.notificationLog.create({
+                                data: {
+                                    userId: clientUser.id,
+                                    channel: target.channel,
+                                    triggerEvent: 'REFUND_DECLINED',
+                                    recipient: target.recipient,
+                                    content: target.content,
+                                    status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
+                                    sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                                }
+                            });
+                            if (target.channel !== client_1.DeliveryChannel.IN_APP) {
+                                await di_container_1.queueService.addNotificationJob(log.id);
+                            }
+                        }
+                    }
+                }
+                catch (err) {
+                    // Silent catch for notification dispatch errors
+                }
+            }
             return api_response_1.ApiResponse.success(res, {
                 message: 'Refund request declined successfully',
                 refundRequest: updated,
@@ -395,10 +505,66 @@ class AdminController {
     static async declineEvent(req, res, next) {
         try {
             const { eventId } = req.params;
+            const { reason } = req.body;
             const updatedEvent = await prisma_1.prisma.event.update({
                 where: { id: eventId },
                 data: { status: 'CANCELED' },
+                include: {
+                    host: {
+                        include: { user: true }
+                    }
+                }
             });
+            // Dispatch notifications to host
+            if (updatedEvent.host?.user) {
+                try {
+                    const hostUser = updatedEvent.host.user;
+                    const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+                    const declineData = { hostName, eventTitle: updatedEvent.title, reason };
+                    const emailContent = (0, templates_1.generateEventDeclineEmailTemplate)(declineData);
+                    const whatsappContent = (0, templates_1.generateEventDeclineWhatsAppTemplate)(declineData);
+                    const inAppContent = (0, templates_1.generateEventDeclineInAppTemplate)(declineData);
+                    const notificationTargets = [];
+                    notificationTargets.push({
+                        channel: client_1.DeliveryChannel.IN_APP,
+                        recipient: hostUser.email || hostUser.id,
+                        content: inAppContent,
+                    });
+                    if (hostUser.email) {
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.EMAIL,
+                            recipient: hostUser.email,
+                            content: emailContent,
+                        });
+                    }
+                    if (hostUser.phone) {
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.WHATSAPP,
+                            recipient: hostUser.phone,
+                            content: whatsappContent,
+                        });
+                    }
+                    for (const target of notificationTargets) {
+                        const log = await prisma_1.prisma.notificationLog.create({
+                            data: {
+                                userId: hostUser.id,
+                                channel: target.channel,
+                                triggerEvent: 'EVENT_DECLINED',
+                                recipient: target.recipient,
+                                content: target.content,
+                                status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
+                                sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                            }
+                        });
+                        if (target.channel !== client_1.DeliveryChannel.IN_APP) {
+                            await di_container_1.queueService.addNotificationJob(log.id);
+                        }
+                    }
+                }
+                catch (err) {
+                    // Silent catch for notification dispatch errors
+                }
+            }
             return api_response_1.ApiResponse.success(res, {
                 message: 'Program listing declined successfully',
                 event: updatedEvent,
@@ -427,7 +593,17 @@ class AdminController {
     static async approveEditRequest(req, res, next) {
         try {
             const { id } = req.params;
-            const editRequest = await prisma_1.prisma.editRequest.findUnique({ where: { id } });
+            const editRequest = await prisma_1.prisma.editRequest.findUnique({
+                where: { id },
+                include: {
+                    event: true,
+                    host: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                },
+            });
             if (!editRequest || editRequest.status !== 'PENDING') {
                 throw new errors_1.BadRequestError('Invalid or already processed edit request.');
             }
@@ -435,15 +611,67 @@ class AdminController {
                 // 1. Mark request as APPROVED
                 await tx.editRequest.update({
                     where: { id },
-                    data: { status: 'APPROVED' }
+                    data: { status: 'APPROVED' },
                 });
                 // 2. Change Event status to EDIT_MODE so host can edit it
-                // (it will return to PENDING status once the host saves their changes)
                 await tx.event.update({
                     where: { id: editRequest.eventId },
-                    data: { status: 'EDIT_MODE' }
+                    data: { status: 'EDIT_MODE' },
                 });
             });
+            // 3. Dispatch Email & WhatsApp notification to host
+            try {
+                const hostUser = editRequest.host?.user;
+                const event = editRequest.event;
+                if (hostUser && event) {
+                    const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+                    const approveData = {
+                        hostName,
+                        eventTitle: event.title,
+                        eventId: event.id,
+                    };
+                    const emailContent = (0, templates_1.generateEditRequestApprovedEmailTemplate)(approveData);
+                    const whatsappContent = (0, templates_1.generateEditRequestApprovedWhatsAppTemplate)(approveData);
+                    const inAppContent = (0, templates_1.generateEditRequestApprovedInAppTemplate)(approveData);
+                    const notificationTargets = [];
+                    notificationTargets.push({
+                        channel: client_1.DeliveryChannel.IN_APP,
+                        recipient: hostUser.email || hostUser.id,
+                        content: inAppContent,
+                    });
+                    if (hostUser.email) {
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.EMAIL,
+                            recipient: hostUser.email,
+                            content: emailContent,
+                        });
+                    }
+                    if (hostUser.phone) {
+                        notificationTargets.push({
+                            channel: client_1.DeliveryChannel.WHATSAPP,
+                            recipient: hostUser.phone,
+                            content: whatsappContent,
+                        });
+                    }
+                    for (const target of notificationTargets) {
+                        const log = await di_container_1.notificationRepo.create({
+                            userId: hostUser.id,
+                            channel: target.channel,
+                            triggerEvent: 'EDIT_REQUEST_APPROVED',
+                            recipient: target.recipient,
+                            content: target.content,
+                            status: target.channel === client_1.DeliveryChannel.IN_APP ? client_1.NotificationStatus.SENT : client_1.NotificationStatus.PENDING,
+                            sentAt: target.channel === client_1.DeliveryChannel.IN_APP ? new Date() : null,
+                        });
+                        if (target.channel !== client_1.DeliveryChannel.IN_APP) {
+                            await di_container_1.queueService.addNotificationJob(log.id);
+                        }
+                    }
+                }
+            }
+            catch (err) {
+                di_container_1.logger.error('[AdminController] Failed to dispatch edit request approval notification:', err);
+            }
             return api_response_1.ApiResponse.success(res, { message: 'Edit request approved. Event is now unlocked.' });
         }
         catch (error) {

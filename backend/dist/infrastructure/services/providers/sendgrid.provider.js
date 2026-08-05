@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SendGridEmailProvider = void 0;
 const client_1 = require("@prisma/client");
+const mail_1 = __importDefault(require("@sendgrid/mail"));
 class SendGridEmailProvider {
     configRepo;
     cryptoService;
@@ -18,54 +22,31 @@ class SendGridEmailProvider {
                 const creds = this.cryptoService.decryptCredentials(config.credentials);
                 const { apiKey, fromEmail, fromName } = creds || {};
                 if (apiKey && fromEmail) {
-                    const payload = {
-                        personalizations: [
-                            {
-                                to: [{ email: to }],
-                            },
-                        ],
+                    mail_1.default.setApiKey(apiKey);
+                    const response = await mail_1.default.send({
+                        to,
                         from: {
                             email: fromEmail,
-                            name: fromName || 'Skill Booking Platform',
+                            name: fromName || 'BookMyTraining Platform',
                         },
-                        subject: subject,
-                        content: [
-                            {
-                                type: 'text/html',
-                                value: body,
-                            },
-                        ],
+                        subject,
+                        html: body,
+                    });
+                    const messageId = response[0]?.headers?.['x-message-id'] || `sg_${Math.random().toString(36).substring(2, 10)}`;
+                    this.logger.info(`[SendGridEmailProvider] Real email sent to ${to} | Subject: ${subject} | MessageID: ${messageId}`);
+                    return {
+                        success: true,
+                        messageId,
                     };
-                    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${apiKey}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload),
-                    });
-                    if (response.status === 202 || response.ok) {
-                        const messageId = response.headers.get('x-message-id') || `sg_${Math.random().toString(36).substring(2, 10)}`;
-                        this.logger.info(`[SendGridEmailProvider] Real email sent to ${to} | Subject: ${subject} | MessageID: ${messageId}`);
-                        return {
-                            success: true,
-                            messageId,
-                        };
-                    }
-                    const errorText = await response.text();
-                    this.logger.error('[SendGridEmailProvider] SendGrid API request failed', {
-                        status: response.status,
-                        error: errorText,
-                    });
-                    return { success: false };
                 }
             }
             catch (e) {
-                this.logger.error('[SendGridEmailProvider] Error sending SendGrid email', { error: e });
+                this.logger.error('[SendGridEmailProvider] Error sending SendGrid email via official SDK', { error: e.response?.body || e.message || e });
+                return { success: false };
             }
         }
         // Fallback to mock mode if config is inactive, missing or credentials incomplete
-        this.logger.warn(`[Mock SendGrid] Active credentials not found. Mock EMAIL sent to: ${to} | Subject: ${subject} | Body: ${body}`);
+        this.logger.warn(`[Mock SendGrid] Active credentials not found. Mock EMAIL sent to: ${to} | Subject: ${subject}`);
         return {
             success: true,
             messageId: `mock_sg_${Math.random().toString(36).substring(2, 10)}`,

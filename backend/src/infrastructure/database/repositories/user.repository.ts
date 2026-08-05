@@ -222,8 +222,22 @@ export class PrismaUserRepository implements IUserRepository {
     return users;
   }
 
-  async findAllHosts(filters?: { kycStatus?: KycStatus }): Promise<any[]> {
+  async countHosts(filters?: { kycStatus?: KycStatus }): Promise<number> {
+    return prisma.user.count({
+      where: {
+        role: 'HOST',
+        deletedAt: null,
+        ...(filters?.kycStatus
+          ? { hostProfile: { kycStatus: filters.kycStatus } }
+          : {}),
+      },
+    });
+  }
+
+  async findAllHosts(filters?: { kycStatus?: KycStatus }, skip?: number, take?: number): Promise<any[]> {
     const users = await prisma.user.findMany({
+      ...(skip !== undefined ? { skip } : {}),
+      ...(take !== undefined ? { take } : {}),
       where: {
         role: 'HOST',
         deletedAt: null,
@@ -253,6 +267,7 @@ export class PrismaUserRepository implements IUserRepository {
               select: {
                 id: true,
                 accountHolderName: true,
+                accountNumber: true,
                 bankName: true,
                 ifscCode: true,
                 upiId: true,

@@ -277,19 +277,41 @@ export const createComplaint = async (req: Request, res: Response) => {
   }
 };
 
+import { parsePaginationParams, buildPaginatedResponse } from '../common/pagination';
+
 /**
  * GET /api/v1/complaints/admin
- * Fetch all complaints for Admin view
+ * Fetch all complaints for Admin view with pagination & filters
  */
 export const getAllComplaints = async (req: Request, res: Response) => {
   try {
-    const complaints = await prisma.complaint.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: complaintIncludeConfig
-    });
+    const { page, limit, skip } = parsePaginationParams(req.query, 10);
+    const status = req.query.status as string;
+    const category = req.query.category as string;
+
+    const where: any = {};
+    if (status && status !== 'ALL') where.status = status;
+    if (category && category !== 'ALL') where.category = category;
+
+    const [complaints, total] = await Promise.all([
+      prisma.complaint.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: complaintIncludeConfig
+      }),
+      prisma.complaint.count({ where }),
+    ]);
 
     const enrichedList = await Promise.all(complaints.map(enrichComplaint));
-    res.status(200).json({ success: true, data: enrichedList });
+    const paginated = buildPaginatedResponse(enrichedList, total, page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: paginated.data,
+      pagination: paginated.pagination,
+    });
   } catch (error) {
     console.error('Error fetching complaints:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch complaints' });

@@ -41,7 +41,11 @@ export class GetPendingKycHostsQueryHandler implements IRequestHandler<GetPendin
 
 export class GetAllHostsQuery implements IRequest<any> {
   readonly __tag = 'GetAllHostsQuery';
-  constructor(public readonly kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED') {}
+  constructor(
+    public readonly kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED',
+    public readonly page?: number,
+    public readonly limit?: number
+  ) {}
 }
 
 export class GetAllHostsQueryHandler implements IRequestHandler<GetAllHostsQuery, any> {
@@ -52,11 +56,33 @@ export class GetAllHostsQueryHandler implements IRequestHandler<GetAllHostsQuery
 
   async handle(query: GetAllHostsQuery): Promise<any> {
     const filters = query.kycStatus ? { kycStatus: query.kycStatus as any } : undefined;
-    const hosts = await this.userRepo.findAllHosts(filters);
+    const page = query.page && query.page > 0 ? query.page : undefined;
+    const limit = query.limit && query.limit > 0 ? query.limit : undefined;
+    const skip = page && limit ? (page - 1) * limit : undefined;
+
+    const [hosts, total] = await Promise.all([
+      this.userRepo.findAllHosts(filters, skip, limit),
+      this.userRepo.countHosts(filters),
+    ]);
+
     const decryptedHosts = hosts.map((h) => this.cryptoService.decryptHost(h));
+    const totalPages = limit ? Math.ceil(total / limit) || 1 : 1;
+
     return {
-      count: decryptedHosts.length,
+      count: total,
+      total,
+      page: page || 1,
+      limit: limit || total,
+      totalPages,
       hosts: decryptedHosts,
+      pagination: {
+        total,
+        page: page || 1,
+        limit: limit || total,
+        totalPages,
+        hasNextPage: page ? page < totalPages : false,
+        hasPrevPage: page ? page > 1 : false,
+      },
     };
   }
 }

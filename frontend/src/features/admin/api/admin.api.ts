@@ -69,14 +69,23 @@ export const approveEvent = (eventId: string, payload: ApproveEventPayload) =>
 export const getFinanceLedger = () =>
   request<ApiData<FinanceLedger>>("/admin/finance/ledger").then(r => r.data);
 
-export const payoutHost = (hostId: string) =>
-  request<ApiData<PayoutResult>>(`/admin/finance/payouts/${hostId}`, { method: "PUT" }).then(r => r.data);
+export const payoutHost = (
+  hostId: string,
+  mode: "AUTOMATIC" | "MANUAL" = "AUTOMATIC",
+  manualRef?: string
+) =>
+  request<ApiData<PayoutResult>>(`/admin/finance/payouts/${hostId}`, {
+    method: "PUT",
+    body: JSON.stringify({ mode, manualRef }),
+  }).then((r) => r.data);
 
 // ── Admin KYC Review ─────────────────────────────────────────────────────
 
-export const getAllHosts = (kycStatus?: string) => {
+export const getAllHosts = (kycStatus?: string, page?: number, limit?: number) => {
   const params = new URLSearchParams();
   if (kycStatus) params.set("kycStatus", kycStatus);
+  if (page) params.set("page", String(page));
+  if (limit) params.set("limit", String(limit));
   const query = params.toString() ? `?${params.toString()}` : "";
   return request<ApiData<HostsResponse>>(`/admin/hosts${query}`).then(r => r.data);
 };
@@ -96,8 +105,13 @@ export const notifyHost = (hostId: string, payload: { subject: string; bodyConte
 export const declineEvent = (eventId: string) =>
   request<ApiData<any>>(`/admin/events/${eventId}/decline`, { method: "PUT" }).then(r => r.data);
 
-export const getRefundRequests = () =>
-  request<ApiData<any[]>>("/admin/finance/refund-requests").then(r => r.data);
+export const getRefundRequests = (page?: number, limit?: number) => {
+  const params = new URLSearchParams();
+  if (page) params.set("page", String(page));
+  if (limit) params.set("limit", String(limit));
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request<ApiData<any>>(`/admin/finance/refund-requests${query}`).then(r => r.data);
+};
 
 export const getEditRequests = () =>
   request<ApiData<any[]>>("/admin/edit-requests").then(r => r.data);
@@ -114,8 +128,13 @@ export const approveRefundRequest = (refundId: string) =>
 export const declineRefundRequest = (refundId: string) =>
   request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/decline`, { method: "PUT" }).then(r => r.data);
 
-export const getBoostRequests = () =>
-  request<ApiData<any>>("/boosted-events/requests").then(r => r.data);
+export const getBoostRequests = (page?: number, limit?: number) => {
+  const params = new URLSearchParams();
+  if (page) params.set("page", String(page));
+  if (limit) params.set("limit", String(limit));
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request<ApiData<any>>(`/boosted-events/requests${query}`).then(r => r.data);
+};
 
 export const updateBoostStatus = (id: string, status: 'APPROVED' | 'REJECTED') =>
   request<ApiData<any>>(`/boosted-events/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }).then(r => r.data);

@@ -15,6 +15,7 @@ export default function HostVerificationPage() {
   const showAlert = useAlertStore((s) => s.showAlert);
   const {
     hosts,
+    hostsPagination,
     pendingKycHosts,
     loading,
     error,
@@ -159,6 +160,9 @@ export default function HostVerificationPage() {
         loading={loading}
         filteredHosts={filteredHosts}
         onSelectHost={setSelectedHost}
+        pagination={activeTab === "all" ? hostsPagination : null}
+        onPageChange={(page) => fetchHosts(undefined, page, hostsPagination?.limit || 10)}
+        onLimitChange={(limit) => fetchHosts(undefined, 1, limit)}
       />
 
       {/* KYC REVIEW MODAL */}

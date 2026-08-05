@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SendForgotPasswordOtpCommandHandler = exports.SendForgotPasswordOtpCommand = void 0;
 const errors_1 = require("../../common/errors");
+const templates_1 = require("../../../constants/templates");
 class SendForgotPasswordOtpCommand {
     identifier;
     __tag = 'SendForgotPasswordOtpCommand';
@@ -49,10 +50,15 @@ class SendForgotPasswordOtpCommandHandler {
         const cacheKey = `forgot_pwd_otp:${user.id}`;
         await this.cacheService.set(cacheKey, otp, 600);
         await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
-        // Send OTP to user's registered email or phone
+        // Send OTP to user's registered email or phone using templates
         const targetEmail = user.email;
         if (targetEmail) {
-            await this.commsService.sendEmail(targetEmail, 'Password Reset OTP Verification', `Hello ${user.firstName},\n\nYour OTP for password reset is: ${otp}. It is valid for 10 minutes. If you did not request a password reset, please ignore this email.`);
+            const emailBody = (0, templates_1.generateForgotPasswordEmailTemplate)({
+                userName: user.firstName,
+                otp,
+                expiresInMinutes: 10,
+            });
+            await this.commsService.sendEmail(targetEmail, 'Password Reset OTP Verification — BookMyTraining', emailBody);
             this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to ${targetEmail}`);
             const parts = targetEmail.split('@');
             const maskedEmail = parts[0].length > 2
@@ -66,7 +72,12 @@ class SendForgotPasswordOtpCommandHandler {
             };
         }
         else {
-            await this.commsService.sendSMS(user.phone, `Hello ${user.firstName}, your OTP for password reset is: ${otp}. Valid for 10 minutes.`);
+            const smsBody = (0, templates_1.generateForgotPasswordSmsTemplate)({
+                userName: user.firstName,
+                otp,
+                expiresInMinutes: 10,
+            });
+            await this.commsService.sendSMS(user.phone, smsBody);
             this.logger.info(`[SendForgotPasswordOtp] Sent password reset OTP to mobile ${user.phone}`);
             const maskedPhone = user.phone.length > 4
                 ? `${user.phone.slice(0, 3)}***${user.phone.slice(-2)}`

@@ -7,7 +7,7 @@ import type {
   NotificationLog, BroadcastPayload, BroadcastResult,
   PendingEvent, ApproveEventPayload, ApproveEventResult,
   FinanceLedger, PayoutResult,
-  HostWithProfile, KycReviewPayload, KycReviewResult
+  HostWithProfile, KycReviewPayload, KycReviewResult, PaginationMeta
 } from "@/features/admin/api/types";
 
 interface AdminState {
@@ -55,16 +55,21 @@ interface AdminState {
   // Finance & Ledger
   financeLedger: FinanceLedger | null;
   refundRequests: any[];
+  refundsPagination: PaginationMeta | null;
+  boostRequests: any[];
+  boostsPagination: PaginationMeta | null;
+  hostsPagination: PaginationMeta | null;
   fetchFinanceLedger: () => Promise<void>;
-  payoutHost: (hostId: string) => Promise<PayoutResult>;
-  fetchRefundRequests: () => Promise<void>;
+  payoutHost: (hostId: string, mode?: "AUTOMATIC" | "MANUAL", manualRef?: string) => Promise<PayoutResult>;
+  fetchRefundRequests: (page?: number, limit?: number) => Promise<void>;
+  fetchBoostRequests: (page?: number, limit?: number) => Promise<void>;
   approveRefund: (id: string) => Promise<any>;
   declineRefund: (id: string) => Promise<any>;
 
   // KYC & Host Review
   hosts: HostWithProfile[];
   pendingKycHosts: HostWithProfile[];
-  fetchHosts: (kycStatus?: string) => Promise<void>;
+  fetchHosts: (kycStatus?: string, page?: number, limit?: number) => Promise<void>;
   fetchPendingKycHosts: () => Promise<void>;
   reviewKyc: (hostProfileId: string, payload: KycReviewPayload) => Promise<KycReviewResult>;
   deleteHost: (hostId: string) => Promise<any>;
@@ -211,18 +216,37 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     set({ financeLedger: ledger });
   }),
 
-  payoutHost: (hostId) => withLoading(set, async () => {
-    const result = await api.payoutHost(hostId);
+  payoutHost: (hostId, mode, manualRef) => withLoading(set, async () => {
+    const result = await api.payoutHost(hostId, mode, manualRef);
     // Refresh ledger after payout release
     await get().fetchFinanceLedger();
     return result;
   }),
 
   refundRequests: [],
+  refundsPagination: null,
 
-  fetchRefundRequests: () => withLoading(set, async () => {
-    const refundRequests = await api.getRefundRequests();
-    set({ refundRequests });
+  fetchRefundRequests: (page = 1, limit = 10) => withLoading(set, async () => {
+    const res: any = await api.getRefundRequests(page, limit);
+    if (res && res.pagination) {
+      set({ refundRequests: res.data || [], refundsPagination: res.pagination });
+    } else {
+      const items = Array.isArray(res) ? res : res?.data || [];
+      set({ refundRequests: items, refundsPagination: null });
+    }
+  }),
+
+  boostRequests: [],
+  boostsPagination: null,
+
+  fetchBoostRequests: (page = 1, limit = 10) => withLoading(set, async () => {
+    const res: any = await api.getBoostRequests(page, limit);
+    if (res && res.pagination) {
+      set({ boostRequests: res.data || [], boostsPagination: res.pagination });
+    } else {
+      const items = Array.isArray(res) ? res : res?.data || [];
+      set({ boostRequests: items, boostsPagination: null });
+    }
   }),
 
   approveRefund: (id) => withLoading(set, async () => {
@@ -240,11 +264,15 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   // ── KYC & Host Review ──────────────────────────────────────────────────
 
   hosts: [],
+  hostsPagination: null,
   pendingKycHosts: [],
 
-  fetchHosts: (kycStatus) => withLoading(set, async () => {
-    const response = await api.getAllHosts(kycStatus);
-    set({ hosts: response.hosts });
+  fetchHosts: (kycStatus, page = 1, limit = 10) => withLoading(set, async () => {
+    const response: any = await api.getAllHosts(kycStatus, page, limit);
+    set({
+      hosts: response.hosts || response.data || [],
+      hostsPagination: response.pagination || null,
+    });
   }),
 
   fetchPendingKycHosts: () => withLoading(set, async () => {

@@ -11,14 +11,20 @@ const prisma_1 = require("../../config/prisma");
 const system_roles_1 = require("../../security/system.roles");
 const authenticate = async (req, res, next) => {
     try {
+        let token;
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
+        else if (req.query.token && typeof req.query.token === 'string') {
+            token = req.query.token;
+        }
+        if (!token) {
             return res.status(401).json({
                 success: false,
-                error: { message: 'Authentication required. Bearer token missing.' },
+                error: { message: 'Authentication required. Token missing.' },
             });
         }
-        const token = authHeader.split(' ')[1];
         const decoded = jsonwebtoken_1.default.verify(token, environment_1.env.JWT_SECRET);
         const user = await prisma_1.prisma.user.findUnique({
             where: { id: decoded.id },

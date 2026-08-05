@@ -12,6 +12,7 @@ import { prisma } from '../../config/prisma';
 
 import { GetBoostAnalyticsQuery } from '../../application/use-cases/boosted-events/get-boost-analytics';
 import { TrackBoostClickCommand } from '../../application/use-cases/boosted-events/track-boost-click';
+import { parsePaginationParams, buildPaginatedResponse } from '../common/pagination';
 
 export class BoostedEventsController {
   static async getActiveBoostedEvents(req: Request, res: Response, next: NextFunction) {
@@ -81,8 +82,27 @@ export class BoostedEventsController {
 
   static async getBoostRequests(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await mediator.send(new GetBoostRequestsQuery());
-      return ApiResponse.success(res, result);
+      const { page, limit, skip } = parsePaginationParams(req.query, 10);
+      const [items, total] = await Promise.all([
+        prisma.boostedEvent.findMany({
+          skip,
+          take: limit,
+          include: {
+            event: {
+              include: {
+                host: {
+                  include: { user: true }
+                }
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.boostedEvent.count(),
+      ]);
+
+      const paginated = buildPaginatedResponse(items, total, page, limit);
+      return ApiResponse.success(res, paginated);
     } catch (error) {
       next(error);
     }

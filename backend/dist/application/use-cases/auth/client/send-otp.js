@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientSendOtpCommandHandler = exports.ClientSendOtpCommand = void 0;
 const errors_1 = require("../../../../api/common/errors");
+const templates_1 = require("../../../../constants/templates");
 class ClientSendOtpCommand {
     phone;
     __tag = 'ClientSendOtpCommand';
@@ -49,9 +50,16 @@ class ClientSendOtpCommandHandler {
         await this.cacheService.set(cacheKey, otp, 600);
         await this.cacheService.set(fallbackCacheKey, otp, 600);
         await this.cacheService.set(rateLimitKey, currentCount + 1, 3600);
-        // Send via communication service (SMS/WhatsApp)
-        await this.commsService.sendSMS(normalizedPhone, `Your Client registration OTP is: ${otp}. Valid for 10 minutes.`);
-        this.logger.info(`[ClientSendOtp] Sent registration OTP to ${normalizedPhone}`);
+        // Send via WhatsApp using template
+        const whatsappBody = (0, templates_1.generateClientWhatsAppOtpTemplate)({ otp, expiresInMinutes: 10 });
+        try {
+            await this.commsService.sendWhatsApp(normalizedPhone, whatsappBody);
+        }
+        catch (err) {
+            // Fallback to SMS if WhatsApp dispatch encounters an error
+            await this.commsService.sendSMS(normalizedPhone, whatsappBody);
+        }
+        this.logger.info(`[ClientSendOtp] Sent registration WhatsApp OTP to ${normalizedPhone}`);
         return {
             success: true,
             message: 'OTP sent successfully to WhatsApp / mobile number',

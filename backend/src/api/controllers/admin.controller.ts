@@ -14,6 +14,7 @@ import { AuthenticatedRequest } from '../middleware/auth';
 import { getIO } from '../../config/socket';
 import { ApiResponse } from '../common/api-response';
 import { BadRequestError } from '../common/errors';
+import { parsePaginationParams, buildPaginatedResponse } from '../common/pagination';
 import {
   generateEditRequestApprovedEmailTemplate,
   generateEditRequestApprovedWhatsAppTemplate,
@@ -93,11 +94,8 @@ export class AdminController {
 
   static async getNotificationLogs(req: Request, res: Response, next: NextFunction) {
     try {
-      const page = parseInt((req.query.page as string) || '1', 10);
-      const limit = parseInt((req.query.limit as string) || '20', 10);
+      const { page, limit, skip } = parsePaginationParams(req.query, 20);
       const status = req.query.status as any;
-
-      const skip = (page - 1) * limit;
       const filters = status ? { status } : {};
 
       const [logs, total] = await Promise.all([
@@ -105,12 +103,15 @@ export class AdminController {
         notificationRepo.count(filters),
       ]);
 
+      const paginated = buildPaginatedResponse(logs, total, page, limit);
+
       return ApiResponse.success(res, {
-        logs,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        logs: paginated.data,
+        total: paginated.pagination.total,
+        page: paginated.pagination.page,
+        limit: paginated.pagination.limit,
+        totalPages: paginated.pagination.totalPages,
+        pagination: paginated.pagination,
       });
     } catch (error) {
       next(error);
@@ -181,7 +182,8 @@ export class AdminController {
   static async payoutHost(req: Request, res: Response, next: NextFunction) {
     try {
       const { hostId } = req.params;
-      const result = await mediator.send(new PayoutHostCommand(hostId));
+      const { mode, manualRef } = req.body || {};
+      const result = await mediator.send(new PayoutHostCommand(hostId, mode, manualRef));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
@@ -200,7 +202,8 @@ export class AdminController {
   static async getAllHosts(req: Request, res: Response, next: NextFunction) {
     try {
       const { kycStatus } = req.query as { kycStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' };
-      const result = await mediator.send(new GetAllHostsQuery(kycStatus));
+      const { page, limit } = parsePaginationParams(req.query, 10);
+      const result = await mediator.send(new GetAllHostsQuery(kycStatus, page, limit));
       return ApiResponse.success(res, result);
     } catch (error) {
       next(error);
@@ -224,17 +227,24 @@ export class AdminController {
 
   static async getRefundRequests(req: Request, res: Response, next: NextFunction) {
     try {
-      const refundRequests = await prisma.refundRequest.findMany({
-        include: {
-          booking: {
-            include: {
-              client: true,
-              event: true,
+      const { page, limit, skip } = parsePaginationParams(req.query, 10);
+
+      const [refundRequests, total] = await Promise.all([
+        prisma.refundRequest.findMany({
+          skip,
+          take: limit,
+          include: {
+            booking: {
+              include: {
+                client: true,
+                event: true,
+              },
             },
           },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.refundRequest.count(),
+      ]);
 
       const mapped = refundRequests.map((r) => ({
         id: r.id,
@@ -248,7 +258,9 @@ export class AdminController {
         dateRequested: r.createdAt.toISOString().split('T')[0],
       }));
 
-      return ApiResponse.success(res, mapped);
+      const paginated = buildPaginatedResponse(mapped, total, page, limit);
+
+      return ApiResponse.success(res, paginated);
     } catch (error) {
       next(error);
     }

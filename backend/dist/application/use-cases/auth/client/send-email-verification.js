@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientSendEmailVerificationCommandHandler = exports.ClientSendEmailVerificationCommand = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const errors_1 = require("../../../common/errors");
+const templates_1 = require("../../../../constants/templates");
 class ClientSendEmailVerificationCommand {
     userId;
     email;
@@ -50,21 +51,14 @@ class ClientSendEmailVerificationCommandHandler {
         await this.cacheService.set(redisKey, payload, 900);
         const clientAppUrl = process.env.CLIENT_APP_URL || 'http://localhost:3000';
         const magicLink = `${clientAppUrl}/verify-email?token=${token}`;
-        // Send magic link email via provider
+        // Send magic link email via provider using template
         try {
-            const subject = 'Verify Your Email Address — BookMySkill';
-            const emailBody = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px;">
-          <h2 style="color: #0b0c01; margin-bottom: 8px;">Verify Your Email Address</h2>
-          <p style="color: #555; font-size: 14px;">Hi ${currentUser.firstName},</p>
-          <p style="color: #555; font-size: 14px;">Click the button below to verify your email address and link it to your BookMySkill account:</p>
-          <div style="margin: 24px 0;">
-            <a href="${magicLink}" style="background-color: #a0f212; color: #0b0c01; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 8px; display: inline-block;">Verify Email Address</a>
-          </div>
-          <p style="color: #888; font-size: 12px; margin-top: 16px;">Or copy and paste this link in your browser:<br/><a href="${magicLink}">${magicLink}</a></p>
-          <p style="color: #aaa; font-size: 11px; margin-top: 24px;">This link will expire in 15 minutes.</p>
-        </div>
-      `;
+            const subject = 'Verify Your Email Address — BookMyTraining';
+            const emailBody = (0, templates_1.generateClientMagicLinkTemplate)({
+                userName: currentUser.firstName,
+                magicLink,
+                expiresInMinutes: 15,
+            });
             if (this.emailProvider && typeof this.emailProvider.sendEmail === 'function') {
                 await this.emailProvider.sendEmail(cleanEmail, subject, emailBody);
             }

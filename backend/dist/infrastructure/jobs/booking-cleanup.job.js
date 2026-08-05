@@ -18,6 +18,10 @@ class BookingCleanupJob {
      */
     static startUnconfirmedBookingCleaner() {
         node_cron_1.default.schedule('* * * * *', async () => {
+            // Distributed Lock: Only 1 container replica executes the cron tick
+            const hasLock = await di_container_1.cacheService.acquireLock('lock:cron:unconfirmed-bookings', 50);
+            if (!hasLock)
+                return;
             try {
                 const TEN_MINUTES_MS = 15 * 60 * 1000;
                 const cutoffTime = new Date(Date.now() - TEN_MINUTES_MS);
@@ -94,6 +98,10 @@ class BookingCleanupJob {
      */
     static startUnconfirmedBoostCleaner() {
         node_cron_1.default.schedule('* * * * *', async () => {
+            // Distributed Lock: Only 1 container replica executes the cron tick
+            const hasLock = await di_container_1.cacheService.acquireLock('lock:cron:unconfirmed-boosts', 50);
+            if (!hasLock)
+                return;
             try {
                 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
                 const cutoffTime = new Date(Date.now() - FIFTEEN_MINUTES_MS);

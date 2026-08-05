@@ -58,8 +58,6 @@ const get_cancellation_quote_1 = require("../application/use-cases/bookings/get-
 const handle_payment_webhook_1 = require("../application/use-cases/webhooks/handle-payment-webhook");
 const get_configs_1 = require("../application/use-cases/admin/get-configs");
 const update_config_1 = require("../application/use-cases/admin/update-config");
-const get_templates_1 = require("../application/use-cases/admin/get-templates");
-const update_template_1 = require("../application/use-cases/admin/update-template");
 const broadcast_notification_1 = require("../application/use-cases/admin/broadcast-notification");
 const get_ledger_1 = require("../application/use-cases/admin/get-ledger");
 const payout_host_1 = require("../application/use-cases/admin/payout-host");
@@ -178,11 +176,9 @@ mediator.register('GetAllHostsQuery', new review_kyc_1.GetAllHostsQueryHandler(u
 mediator.register('ReviewKycCommand', new review_kyc_1.ReviewKycCommandHandler(userRepo, cryptoService, notificationRepo, configRepo, queueService));
 mediator.register('GetConfigsQuery', new get_configs_1.GetConfigsQueryHandler(configRepo, cryptoService));
 mediator.register('UpdateConfigCommand', new update_config_1.UpdateConfigCommandHandler(configRepo, cryptoService, cacheService));
-mediator.register('GetTemplatesQuery', new get_templates_1.GetTemplatesQueryHandler(configRepo));
-mediator.register('UpdateTemplateCommand', new update_template_1.UpdateTemplateCommandHandler(configRepo));
 mediator.register('BroadcastNotificationCommand', new broadcast_notification_1.BroadcastNotificationCommandHandler(notificationRepo, userRepo, queueService));
 mediator.register('GetLedgerQuery', new get_ledger_1.GetLedgerQueryHandler(ledgerRepo));
-mediator.register('PayoutHostCommand', new payout_host_1.PayoutHostCommandHandler(userRepo, ledgerRepo, cryptoService, commsService));
+mediator.register('PayoutHostCommand', new payout_host_1.PayoutHostCommandHandler(userRepo, ledgerRepo, cryptoService, commsService, notificationRepo, queueService));
 // 10. Register Notification handlers
 mediator.register('GetUserNotificationsQuery', new get_user_notifications_1.GetUserNotificationsQueryHandler(notificationRepo));
 mediator.register('MarkNotificationReadCommand', new mark_notification_read_1.MarkNotificationReadCommandHandler(notificationRepo));

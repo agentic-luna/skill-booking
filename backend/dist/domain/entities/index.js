@@ -24,7 +24,6 @@ __exportStar(require("./boosted-event.entity"), exports);
 __exportStar(require("./booking.entity"), exports);
 __exportStar(require("./transaction-ledger.entity"), exports);
 __exportStar(require("./integration-config.entity"), exports);
-__exportStar(require("./message-template.entity"), exports);
 __exportStar(require("./platform-setting.entity"), exports);
 __exportStar(require("./notification-log.entity"), exports);
 __exportStar(require("./wishlist.entity"), exports);

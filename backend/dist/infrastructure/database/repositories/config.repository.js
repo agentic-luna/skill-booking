@@ -19,27 +19,6 @@ class PrismaConfigRepository {
             },
         });
     }
-    async findTemplates(filters) {
-        const whereClause = {};
-        if (filters) {
-            if (filters.triggerEvent) {
-                whereClause.triggerEvent = filters.triggerEvent;
-            }
-            if (filters.isActive !== undefined) {
-                whereClause.isActive = filters.isActive;
-            }
-        }
-        return prisma_1.prisma.messageTemplate.findMany({ where: whereClause });
-    }
-    async findTemplateById(id) {
-        return prisma_1.prisma.messageTemplate.findUnique({ where: { id } });
-    }
-    async updateTemplate(id, data) {
-        return prisma_1.prisma.messageTemplate.update({
-            where: { id },
-            data,
-        });
-    }
     async findPlatformSetting(key) {
         return prisma_1.prisma.platformSetting.findUnique({ where: { key } });
     }

@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TwilioSmsProvider = void 0;
 const client_1 = require("@prisma/client");
+const twilio_1 = __importDefault(require("twilio"));
 class TwilioSmsProvider {
     configRepo;
     cryptoService;
@@ -18,37 +22,24 @@ class TwilioSmsProvider {
                 const creds = this.cryptoService.decryptCredentials(config.credentials);
                 const { accountSid, authToken, fromNumber } = creds || {};
                 if (accountSid && authToken && fromNumber) {
-                    const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-                    const body = new URLSearchParams({
-                        To: to,
-                        From: fromNumber,
-                        Body: message,
+                    const client = (0, twilio_1.default)(accountSid, authToken);
+                    const result = await client.messages.create({
+                        to,
+                        from: fromNumber,
+                        body: message,
                     });
-                    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Basic ${auth}`,
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: body.toString(),
-                    });
-                    const data = await response.json();
-                    if (response.ok && data?.sid) {
-                        this.logger.info(`[TwilioSmsProvider] Real SMS sent to ${to} | SID: ${data.sid}`);
+                    if (result && result.sid) {
+                        this.logger.info(`[TwilioSmsProvider] Real SMS sent via official SDK to ${to} | SID: ${result.sid}`);
                         return {
                             success: true,
-                            messageId: data.sid,
+                            messageId: result.sid,
                         };
                     }
-                    this.logger.error('[TwilioSmsProvider] Twilio API request failed', {
-                        status: response.status,
-                        error: data,
-                    });
-                    return { success: false };
                 }
             }
             catch (e) {
-                this.logger.error('[TwilioSmsProvider] Error processing Twilio SMS send', { error: e });
+                this.logger.error('[TwilioSmsProvider] Error processing Twilio SMS send via official SDK', { error: e.message || e });
+                return { success: false };
             }
         }
         // Fallback to mock mode if config is inactive, missing or credentials incomplete
