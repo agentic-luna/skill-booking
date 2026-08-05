@@ -15,6 +15,9 @@ import { getIO } from '../../config/socket';
 import { ApiResponse } from '../common/api-response';
 import { BadRequestError } from '../common/errors';
 import { parsePaginationParams, buildPaginatedResponse } from '../common/pagination';
+import { NodeCryptoService } from '../../infrastructure/security/node.crypto';
+
+const cryptoService = new NodeCryptoService();
 import {
   generateEditRequestApprovedEmailTemplate,
   generateEditRequestApprovedWhatsAppTemplate,
@@ -190,6 +193,199 @@ export class AdminController {
     }
   }
 
+  static async getEventPayouts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { page, limit, skip } = parsePaginationParams(req.query, 10);
+      const payoutFilter = (req.query.payoutStatus as string) || 'ALL';
+      const eventStatusFilter = (req.query.eventStatus as string) || 'ALL';
+      const search = (req.query.search as string || '').toLowerCase().trim();
+
+      const events = await prisma.event.findMany({
+        orderBy: { startTime: 'desc' },
+        include: {
+          host: {
+            include: {
+              user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+              bankDetail: true,
+            },
+          },
+          bookings: {
+            include: {
+              transactionLedger: true,
+            },
+          },
+          commission: true,
+        },
+      });
+
+      const now = new Date();
+
+      const mappedEvents = events.map((event) => {
+        const hostUser = event.host?.user;
+        const bankDetail = event.host?.bankDetail;
+
+        let bank: any = null;
+        if (bankDetail) {
+          try {
+            bank = {
+              bankName: bankDetail.bankName,
+              accountHolderName: cryptoService.decrypt(bankDetail.accountHolderName),
+              accountNumber: cryptoService.decrypt(bankDetail.accountNumber),
+              ifscCode: cryptoService.decrypt(bankDetail.ifscCode),
+              upiId: bankDetail.upiId ? cryptoService.decrypt(bankDetail.upiId) : null,
+            };
+          } catch {
+            bank = {
+              bankName: bankDetail.bankName,
+              accountHolderName: bankDetail.accountHolderName,
+              accountNumber: bankDetail.accountNumber,
+              ifscCode: bankDetail.ifscCode,
+              upiId: bankDetail.upiId,
+            };
+          }
+        }
+
+        let totalBookings = 0;
+        let totalRevenue = 0;
+        let platformRevenue = 0;
+        let hostPayableAmount = 0;
+        let hasHeldLedgers = false;
+        let hasReleasedLedgers = false;
+
+        event.bookings.forEach((bk) => {
+          if (bk.status !== BookingStatus.CANCELED && bk.status !== BookingStatus.REFUNDED) {
+            totalBookings += bk.seatCount || 1;
+          }
+
+          bk.transactionLedger.forEach((ledger) => {
+            if (ledger.type === 'PAYMENT_CAPTURE') {
+              totalRevenue += Number(ledger.amountCaptured);
+              platformRevenue += Number(ledger.platformRevenue);
+              hostPayableAmount += Number(ledger.hostLiability);
+
+              if (ledger.status === 'HELD') {
+                hasHeldLedgers = true;
+              }
+              if (ledger.status === 'RELEASED_TO_HOST') {
+                hasReleasedLedgers = true;
+              }
+            }
+          });
+        });
+
+        const isCompleted = new Date(event.startTime) < now;
+        const payoutStatus = hasHeldLedgers ? 'PENDING' : hasReleasedLedgers ? 'RELEASED_TO_HOST' : 'PENDING';
+
+        return {
+          id: event.id,
+          eventId: event.id,
+          eventTitle: event.title,
+          posterUrl: event.posterUrl,
+          mode: event.mode,
+          startTime: event.startTime,
+          isCompleted,
+          eventStatus: isCompleted ? 'COMPLETED' : 'UPCOMING',
+          hostId: event.hostId,
+          hostUserId: hostUser?.id || '',
+          hostName: hostUser ? `${hostUser.firstName || ''} ${hostUser.lastName || ''}`.trim() : 'Instructor Host',
+          hostEmail: hostUser?.email || '',
+          hostPhone: hostUser?.phone || '',
+          kycStatus: event.host?.kycStatus || 'PENDING',
+          bankDetail: bank,
+          totalBookings,
+          totalRevenue,
+          platformRevenue,
+          hostPayableAmount,
+          payoutStatus,
+        };
+      });
+
+      let filtered = mappedEvents.filter((item) => {
+        if (payoutFilter !== 'ALL' && item.payoutStatus !== payoutFilter) return false;
+        if (eventStatusFilter !== 'ALL' && item.eventStatus !== eventStatusFilter) return false;
+        if (search) {
+          const matchTitle = item.eventTitle.toLowerCase().includes(search);
+          const matchHost = item.hostName.toLowerCase().includes(search);
+          const matchEmail = item.hostEmail.toLowerCase().includes(search);
+          if (!matchTitle && !matchHost && !matchEmail) return false;
+        }
+        return true;
+      });
+
+      const total = filtered.length;
+      const paginatedList = filtered.slice(skip, skip + limit);
+      const result = buildPaginatedResponse(paginatedList, total, page, limit);
+
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async payoutEvent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.params;
+      const { mode, manualRef } = req.body || {};
+
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: {
+          host: {
+            include: {
+              user: true,
+              bankDetail: true,
+            },
+          },
+          bookings: {
+            include: {
+              transactionLedger: true,
+            },
+          },
+        },
+      });
+
+      if (!event) {
+        throw new BadRequestError('Event not found');
+      }
+
+      const heldLedgers: any[] = [];
+      event.bookings.forEach((bk) => {
+        bk.transactionLedger.forEach((l) => {
+          if (l.type === 'PAYMENT_CAPTURE' && l.status === 'HELD') {
+            heldLedgers.push(l);
+          }
+        });
+      });
+
+      if (heldLedgers.length === 0) {
+        return ApiResponse.success(res, {
+          success: false,
+          message: 'No pending escrow payouts found for this event.',
+        });
+      }
+
+      const totalPayout = heldLedgers.reduce((acc, l) => acc + Number(l.hostLiability), 0);
+      const payoutId = manualRef?.trim() || `MANUAL-EVT-${Date.now().toString(36).toUpperCase()}`;
+
+      const ledgerIds = heldLedgers.map((l) => l.id);
+      await prisma.transactionLedger.updateMany({
+        where: { id: { in: ledgerIds } },
+        data: { status: 'RELEASED_TO_HOST' },
+      });
+
+      return ApiResponse.success(res, {
+        success: true,
+        amount: totalPayout,
+        payoutId,
+        transactionsPaid: ledgerIds.length,
+        eventTitle: event.title,
+        mode: mode === 'MANUAL' || manualRef ? 'MANUAL' : 'AUTOMATIC',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getPendingKycHosts(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await mediator.send(new GetPendingKycHostsQuery());
@@ -269,6 +465,8 @@ export class AdminController {
   static async approveRefundRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
+      const { mode, manualRef } = req.body || {};
+
       const refundRequest = await prisma.refundRequest.findUnique({
         where: { id },
         include: {
@@ -294,25 +492,44 @@ export class AdminController {
 
       const booking = refundRequest.booking;
       const event = booking.event;
-      const refundAmount = Number(refundRequest.refundAmount);
+      const refundAmount = Number(refundRequest.refundAmount) || Number(booking.totalAmount) || 0;
+
+      let refundTxnId = manualRef?.trim() || `MNL-REFUND-${Date.now().toString(36).toUpperCase()}`;
 
       if (refundAmount > 0) {
-        // Trigger payment gateway refund
         const ledgers = await ledgerRepo.findMany({
           bookingId: booking.id,
           type: LedgerTxnType.PAYMENT_CAPTURE,
         });
         const paymentLedger = ledgers.find((l) => l.status === LedgerStatus.HELD);
 
-        if (!paymentLedger) {
-          throw new BadRequestError('Held payment ledger record not found for this booking.');
-        }
+        if (mode === 'AUTOMATIC') {
+          if (!paymentLedger) {
+            return ApiResponse.success(res, {
+              success: false,
+              message: 'Held payment ledger record not found for automatic refund. Please process using Manual Refund.',
+              allowManualFallback: true,
+            });
+          }
 
-        const refundResult = await paymentGatewayProvider.initiateRefund(
-          paymentLedger.gatewayTxnId,
-          refundAmount,
-          { bookingId: booking.id, bookingRef: booking.bookingRef }
-        );
+          try {
+            const refundResult = await paymentGatewayProvider.initiateRefund(
+              paymentLedger.gatewayTxnId,
+              refundAmount,
+              { bookingId: booking.id, bookingRef: booking.bookingRef }
+            );
+
+            if (refundResult && refundResult.refundId) {
+              refundTxnId = refundResult.refundId;
+            }
+          } catch (err: any) {
+            return ApiResponse.success(res, {
+              success: false,
+              message: err.message || 'Razorpay Refund API error. You can process a Manual Refund instead.',
+              allowManualFallback: true,
+            });
+          }
+        }
 
         const commissionPct =
           event.commission?.commissionType === CommissionType.PERCENTAGE
@@ -325,7 +542,7 @@ export class AdminController {
         // Register REFUND ledger log
         await ledgerRepo.create({
           bookingId: booking.id,
-          gatewayTxnId: refundResult.refundId,
+          gatewayTxnId: refundTxnId,
           type: LedgerTxnType.REFUND,
           amountCaptured: -refundAmount,
           platformRevenue: -lostPlatformRevenue,
@@ -333,10 +550,11 @@ export class AdminController {
           status: LedgerStatus.REFUNDED_TO_CLIENT,
         });
 
-        // Update payment ledger status
-        await ledgerRepo.update(paymentLedger.id, {
-          status: LedgerStatus.REFUNDED_TO_CLIENT,
-        });
+        if (paymentLedger) {
+          await ledgerRepo.update(paymentLedger.id, {
+            status: LedgerStatus.REFUNDED_TO_CLIENT,
+          });
+        }
       }
 
       const [updatedRequest, updatedBooking] = await prisma.$transaction([
@@ -414,9 +632,11 @@ export class AdminController {
       }
 
       return ApiResponse.success(res, {
-        message: 'Refund request approved successfully',
+        success: true,
         refundRequest: updatedRequest,
         booking: updatedBooking,
+        refundTxnId,
+        mode: mode === 'MANUAL' || manualRef ? 'MANUAL' : 'AUTOMATIC',
       });
     } catch (error) {
       next(error);

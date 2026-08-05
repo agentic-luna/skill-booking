@@ -48,6 +48,8 @@ router.put('/edit-requests/:id/reject', requirePermission(SystemPermissions.ADMI
 
 // Escrows & Ledger
 router.get('/finance/ledger', requirePermission(SystemPermissions.ADMIN_LEDGER_READ) as any, AdminController.getFinanceLedger);
+router.get('/finance/event-payouts', requirePermission(SystemPermissions.ADMIN_LEDGER_READ) as any, AdminController.getEventPayouts as any);
+router.put('/finance/event-payouts/:eventId/payout', requirePermission(SystemPermissions.ADMIN_PAYOUT_RELEASE) as any, AdminController.payoutEvent as any);
 router.put('/finance/payouts/:hostId', requirePermission(SystemPermissions.ADMIN_PAYOUT_RELEASE) as any, AdminController.payoutHost);
 router.get('/finance/refund-requests', requirePermission(SystemPermissions.ADMIN_LEDGER_READ) as any, AdminController.getRefundRequests as any);
 router.put('/finance/refund-requests/:id/approve', requirePermission(SystemPermissions.ADMIN_PAYOUT_RELEASE) as any, AdminController.approveRefundRequest as any);

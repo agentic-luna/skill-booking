@@ -39,6 +39,8 @@ router.put('/edit-requests/:id/approve', (0, authorize_1.requirePermission)(syst
 router.put('/edit-requests/:id/reject', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_EVENTS_APPROVE), admin_controller_1.AdminController.rejectEditRequest);
 // Escrows & Ledger
 router.get('/finance/ledger', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getFinanceLedger);
+router.get('/finance/event-payouts', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getEventPayouts);
+router.put('/finance/event-payouts/:eventId/payout', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.payoutEvent);
 router.put('/finance/payouts/:hostId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.payoutHost);
 router.get('/finance/refund-requests', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_LEDGER_READ), admin_controller_1.AdminController.getRefundRequests);
 router.put('/finance/refund-requests/:id/approve', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.ADMIN_PAYOUT_RELEASE), admin_controller_1.AdminController.approveRefundRequest);

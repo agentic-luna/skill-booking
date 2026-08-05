@@ -181,7 +181,10 @@ export interface ApproveEventResult {
 
 export interface FinanceLedger {
   totalEscrowLiabilities: number;
+  totalEscrowLiability?: number;
   totalRealizedRevenue: number;
+  totalPlatformNetRevenue?: number;
+  totalGrossVolume?: number;
   totalRefunded: number;
   ledgerCount: number;
 }

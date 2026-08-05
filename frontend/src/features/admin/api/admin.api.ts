@@ -122,8 +122,31 @@ export const approveEditRequest = (id: string) =>
 export const rejectEditRequest = (id: string) =>
   request<ApiData<any>>(`/admin/edit-requests/${id}/reject`, { method: "PUT" }).then(r => r.data);
 
-export const approveRefundRequest = (refundId: string) =>
-  request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/approve`, { method: "PUT" }).then(r => r.data);
+export const approveRefundRequest = (
+  refundId: string,
+  mode: "AUTOMATIC" | "MANUAL" = "AUTOMATIC",
+  manualRef?: string
+) =>
+  request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/approve`, {
+    method: "PUT",
+    body: JSON.stringify({ mode, manualRef }),
+  }).then((r) => r.data);
+
+export const getEventPayouts = (params?: { page?: number; limit?: number; payoutStatus?: string; eventStatus?: string; search?: string }) => {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.payoutStatus) q.set("payoutStatus", params.payoutStatus);
+  if (params?.eventStatus) q.set("eventStatus", params.eventStatus);
+  if (params?.search) q.set("search", params.search);
+  return request<ApiData<any>>(`/admin/finance/event-payouts?${q.toString()}`).then((r) => r.data);
+};
+
+export const payoutEvent = (eventId: string, mode: "AUTOMATIC" | "MANUAL" = "MANUAL", manualRef?: string) =>
+  request<ApiData<any>>(`/admin/finance/event-payouts/${eventId}/payout`, {
+    method: "PUT",
+    body: JSON.stringify({ mode, manualRef }),
+  }).then((r) => r.data);
 
 export const declineRefundRequest = (refundId: string) =>
   request<ApiData<any>>(`/admin/finance/refund-requests/${refundId}/decline`, { method: "PUT" }).then(r => r.data);

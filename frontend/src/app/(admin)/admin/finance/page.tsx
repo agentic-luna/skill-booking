@@ -2,16 +2,15 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Wallet, RefreshCw, AlertCircle, Rocket } from "lucide-react";
+import { RefreshCw, Wallet, ShieldAlert, FileSpreadsheet, ArrowUpRight, ArrowDownLeft, Zap, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useAdminStore } from "@/features/admin/store/adminStore";
+import { useAlertStore } from "@/features/alerts/store/alertStore";
 
-import LedgerKPIs from "./_components/LedgerKPIs";
 import PayoutTable from "./_components/PayoutTable";
-import ConfirmPayoutModal from "./_components/ConfirmPayoutModal";
 import RefundRequestsTable from "./_components/RefundRequestsTable";
 import BoostPromotionsTable from "./_components/BoostPromotionsTable";
+import ConfirmPayoutModal from "./_components/ConfirmPayoutModal";
 
 function AdminFinanceContent() {
   const searchParams = useSearchParams();
@@ -21,16 +20,16 @@ function AdminFinanceContent() {
   const showAlert = useAlertStore((s) => s.showAlert);
   const {
     financeLedger,
-    hosts,
-    hostsPagination,
+    eventPayouts,
+    eventPayoutsPagination,
     boostRequests,
     boostsPagination,
     loading,
     error,
     fetchFinanceLedger,
-    fetchHosts,
+    fetchEventPayouts,
+    payoutEvent,
     fetchBoostRequests,
-    payoutHost,
   } = useAdminStore();
 
   // Tab state synced with URL query parameter (prevents refresh tab reset)
@@ -45,81 +44,70 @@ function AdminFinanceContent() {
   };
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [kycFilter, setKycFilter] = useState<string>("ALL");
-  const [selectedHost, setSelectedHost] = useState<any>(null);
+  const [eventStatusFilter, setEventStatusFilter] = useState<string>("ALL");
+  const [payoutStatusFilter, setPayoutStatusFilter] = useState<string>("ALL");
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isPayoutConfirmOpen, setIsPayoutConfirmOpen] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
 
   const syncAllData = () => {
     fetchFinanceLedger();
-    fetchHosts();
+    fetchEventPayouts({ page: 1, limit: 10, payoutStatus: payoutStatusFilter, eventStatus: eventStatusFilter, search: searchTerm });
     fetchBoostRequests();
   };
 
   useEffect(() => {
-    syncAllData();
-  }, [fetchFinanceLedger, fetchHosts, fetchBoostRequests]);
+    fetchFinanceLedger();
+    fetchEventPayouts({ page: 1, limit: 10, payoutStatus: payoutStatusFilter, eventStatus: eventStatusFilter, search: searchTerm });
+    fetchBoostRequests();
+  }, [fetchFinanceLedger, fetchEventPayouts, fetchBoostRequests, payoutStatusFilter, eventStatusFilter, searchTerm]);
 
-  const handlePayoutRelease = async (
-    hostId: string,
-    mode: "AUTOMATIC" | "MANUAL" = "AUTOMATIC",
+  const handleEventPayoutRelease = async (
+    eventId: string,
+    mode: "AUTOMATIC" | "MANUAL" = "MANUAL",
     manualRef?: string
   ) => {
     setPayoutLoading(true);
     try {
-      const result = await payoutHost(hostId, mode, manualRef);
+      const result = await payoutEvent(eventId, mode, manualRef);
       if (result.success) {
         const modeLabel = result.mode === "MANUAL" ? "Manual Transfer" : "Razorpay Transfer";
         showAlert(
-          "Payout Released",
-          `Escrow funds of ₹${result.amount || "N/A"} released to Host bank account via ${modeLabel} (Reference: ${result.payoutId || "N/A"}).`,
+          "Event Payout Released",
+          `Escrow funds of ₹${result.amount || "N/A"} released to Host bank account for workshop "${result.eventTitle || ""}" via ${modeLabel} (Reference: ${result.payoutId || "N/A"}).`,
           "success"
         );
         setIsPayoutConfirmOpen(false);
-        setSelectedHost(null);
+        setSelectedEvent(null);
       } else {
         showAlert(
           "Payout Unsuccessful",
-          result.message || "Razorpay Payout API failed. You can process a Manual Payout instead.",
+          result.message || "Could not disburse escrow funds for this event.",
           "warning"
         );
       }
     } catch (err: any) {
-      showAlert("Payout Error", err.message || "Failed to release payout.", "destructive");
+      showAlert("Payout Error", err.message || "Failed to disburse escrow funds for event", "destructive");
     } finally {
       setPayoutLoading(false);
     }
   };
 
   const handleApproveRefund = (clientName: string, amount: string) => {
-    showAlert(
-      "Refund Approved",
-      `Ticket payment of ₹${amount} has been successfully reversed to ${clientName}'s account.`,
-      "success"
-    );
+    showAlert("Refund Triggered", `Initiated refund of ${amount} INR for client ${clientName}.`, "success");
+    syncAllData();
   };
 
-  const filteredHosts = (hosts || []).filter((host) => {
-    if (kycFilter !== "ALL" && (host.hostProfile?.kycStatus || "PENDING") !== kycFilter) return false;
-
-    const fullName = `${host.firstName || ""} ${host.lastName || ""}`.toLowerCase();
-    const email = (host.email || "").toLowerCase();
-    const bankName = (host.hostProfile?.bankDetail?.bankName || "").toLowerCase();
-    const search = searchTerm.toLowerCase();
-
-    return fullName.includes(search) || email.includes(search) || bankName.includes(search);
-  });
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-4">
         <div className="space-y-2">
           <h1 className="text-4xl lg:text-5xl font-medium tracking-tight text-foreground leading-[1.1]">
-            <span className="inline-flex items-center justify-center bg-card shadow-sm border border-black/5 dark:border-white/5 rounded-full p-2 mx-1 align-middle"><Wallet className="w-6 h-6 text-foreground" /></span> Platform <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a0f212] to-emerald-400 font-bold drop-shadow-[0_0_15px_rgba(160,242,18,0.2)]">Ledger</span>
+            <span className="inline-flex items-center justify-center bg-card shadow-sm border border-black/5 dark:border-white/5 rounded-full p-2 mx-1 align-middle"><Wallet className="w-6 h-6 text-foreground" /></span> Platform <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a0f212] to-emerald-400 font-bold drop-shadow-[0_0_15px_rgba(160,242,18,0.2)]">Finance</span>
           </h1>
-          <p className="text-muted-foreground font-medium pl-2">Monitor platform financial statistics, refund liability, boost revenues, and release host escrow transfers.</p>
+          <p className="text-muted-foreground font-medium pl-2">Escrow disbursement ledger per workshop event, client refund demands, and boost revenue metrics.</p>
         </div>
         <Button 
           onClick={syncAllData}
@@ -133,45 +121,92 @@ function AdminFinanceContent() {
 
       {error && (
         <div className="p-3 text-xs font-medium text-destructive bg-destructive/10 rounded-xl border border-destructive/20 flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>Error sync: {error}</span>
+          <ShieldAlert className="h-4 w-4 shrink-0" />
+          <span>Error loading ledger metrics: {error}</span>
         </div>
       )}
 
-      {/* Ledger KPI Stats grid */}
-      <LedgerKPIs financeLedger={financeLedger} />
+      {/* Top Financial Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-card border border-black/5 dark:border-white/5 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-bold uppercase tracking-wider">Escrow Held Liability</span>
+            <div className="bg-amber-500/10 p-2 rounded-xl text-amber-500">
+              <ArrowDownLeft className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="text-2xl lg:text-3xl font-black text-foreground font-mono">
+              ₹{Number(financeLedger?.totalEscrowLiabilities ?? financeLedger?.totalEscrowLiability ?? 0).toLocaleString()} <span className="text-xs text-muted-foreground font-normal">INR</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">Pending escrow held for upcoming & completed events</p>
+          </div>
+        </div>
 
-      {/* Tabs list toggle switcher */}
-      <div className="flex bg-card p-1 rounded-full border border-black/5 dark:border-white/5 w-fit shadow-sm flex-wrap sm:flex-nowrap gap-1">
+        <div className="bg-card border border-black/5 dark:border-white/5 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-bold uppercase tracking-wider">Net Platform Revenue</span>
+            <div className="bg-[#a0f212]/10 p-2 rounded-xl text-[#a0f212]">
+              <ArrowUpRight className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="text-2xl lg:text-3xl font-black text-foreground font-mono">
+              ₹{Number(financeLedger?.totalRealizedRevenue ?? financeLedger?.totalPlatformNetRevenue ?? 0).toLocaleString()} <span className="text-xs text-muted-foreground font-normal">INR</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">Total platform commission earnings captured</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-black/5 dark:border-white/5 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-bold uppercase tracking-wider">Gross GMV Processed</span>
+            <div className="bg-blue-500/10 p-2 rounded-xl text-blue-500">
+              <FileSpreadsheet className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="text-2xl lg:text-3xl font-black text-foreground font-mono">
+              ₹{Number(financeLedger?.totalGrossVolume ?? ((financeLedger?.totalEscrowLiabilities ?? 0) + (financeLedger?.totalRealizedRevenue ?? 0))).toLocaleString()} <span className="text-xs text-muted-foreground font-normal">INR</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">Gross marketplace booking transactions volume</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Switcher */}
+      <div className="flex bg-muted/40 p-1.5 rounded-full border border-black/5 dark:border-white/5 w-fit shadow-sm">
         <button
           onClick={() => setActiveTab("payouts")}
-          className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-            activeTab === "payouts" 
-              ? "bg-[#0b0c01] text-white shadow-md" 
+          className={`px-6 py-2.5 rounded-full text-xs font-extrabold transition-all flex items-center gap-2 ${
+            activeTab === "payouts"
+              ? "bg-[#0b0c01] text-white shadow-md"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          Payout Disbursements
+          <Wallet className="h-3.5 w-3.5" /> Workshop Event Payouts
         </button>
+
         <button
           onClick={() => setActiveTab("refunds")}
-          className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-            activeTab === "refunds" 
-              ? "bg-[#0b0c01] text-white shadow-md" 
+          className={`px-6 py-2.5 rounded-full text-xs font-extrabold transition-all flex items-center gap-2 ${
+            activeTab === "refunds"
+              ? "bg-[#0b0c01] text-white shadow-md"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          Refund Requests
+          <ArrowDownLeft className="h-3.5 w-3.5 text-amber-500" /> Ticket Refund Demands
         </button>
+
         <button
           onClick={() => setActiveTab("boosts")}
-          className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === "boosts" 
-              ? "bg-[#0b0c01] text-white shadow-md" 
+          className={`px-6 py-2.5 rounded-full text-xs font-extrabold transition-all flex items-center gap-2 ${
+            activeTab === "boosts"
+              ? "bg-[#0b0c01] text-white shadow-md"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
-          <Rocket className="h-3.5 w-3.5 text-[#a0f212]" /> Boost Revenue & Hosts
+          <Zap className="h-3.5 w-3.5 text-[#a0f212]" /> Host Boost Promotions ({boostRequests?.length || 0})
         </button>
       </div>
 
@@ -179,19 +214,18 @@ function AdminFinanceContent() {
       {activeTab === "payouts" ? (
         <PayoutTable
           loading={loading}
-          filteredHosts={filteredHosts}
+          eventPayouts={eventPayouts}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          kycFilter={kycFilter}
-          onKycFilterChange={(val) => {
-            setKycFilter(val);
-            fetchHosts(val, 1, hostsPagination?.limit || 10);
-          }}
-          onSelectHost={setSelectedHost}
+          eventStatusFilter={eventStatusFilter}
+          onEventStatusFilterChange={setEventStatusFilter}
+          payoutStatusFilter={payoutStatusFilter}
+          onPayoutStatusFilterChange={setPayoutStatusFilter}
+          onSelectEvent={setSelectedEvent}
           onOpenConfirm={setIsPayoutConfirmOpen}
-          pagination={hostsPagination}
-          onPageChange={(page) => fetchHosts(kycFilter, page, hostsPagination?.limit || 10)}
-          onLimitChange={(limit) => fetchHosts(kycFilter, 1, limit)}
+          pagination={eventPayoutsPagination}
+          onPageChange={(page) => fetchEventPayouts({ page, limit: eventPayoutsPagination?.limit || 10, payoutStatus: payoutStatusFilter, eventStatus: eventStatusFilter, search: searchTerm })}
+          onLimitChange={(limit) => fetchEventPayouts({ page: 1, limit, payoutStatus: payoutStatusFilter, eventStatus: eventStatusFilter, search: searchTerm })}
         />
       ) : activeTab === "refunds" ? (
         <RefundRequestsTable onApproveRefund={handleApproveRefund} />
@@ -210,12 +244,12 @@ function AdminFinanceContent() {
       <ConfirmPayoutModal
         isOpen={isPayoutConfirmOpen}
         onOpenChange={setIsPayoutConfirmOpen}
-        selectedHost={selectedHost}
+        selectedEvent={selectedEvent}
         payoutLoading={payoutLoading}
-        onConfirm={handlePayoutRelease}
+        onConfirm={handleEventPayoutRelease}
         onCancel={() => {
           setIsPayoutConfirmOpen(false);
-          setSelectedHost(null);
+          setSelectedEvent(null);
         }}
       />
 
@@ -235,4 +269,3 @@ export default function FinancePayoutsPage() {
     </Suspense>
   );
 }
-

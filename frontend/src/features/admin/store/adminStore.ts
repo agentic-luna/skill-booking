@@ -54,16 +54,20 @@ interface AdminState {
 
   // Finance & Ledger
   financeLedger: FinanceLedger | null;
+  eventPayouts: any[];
+  eventPayoutsPagination: PaginationMeta | null;
   refundRequests: any[];
   refundsPagination: PaginationMeta | null;
   boostRequests: any[];
   boostsPagination: PaginationMeta | null;
   hostsPagination: PaginationMeta | null;
   fetchFinanceLedger: () => Promise<void>;
+  fetchEventPayouts: (params?: { page?: number; limit?: number; payoutStatus?: string; eventStatus?: string; search?: string }) => Promise<void>;
+  payoutEvent: (eventId: string, mode?: "AUTOMATIC" | "MANUAL", manualRef?: string) => Promise<any>;
   payoutHost: (hostId: string, mode?: "AUTOMATIC" | "MANUAL", manualRef?: string) => Promise<PayoutResult>;
   fetchRefundRequests: (page?: number, limit?: number) => Promise<void>;
   fetchBoostRequests: (page?: number, limit?: number) => Promise<void>;
-  approveRefund: (id: string) => Promise<any>;
+  approveRefund: (id: string, mode?: "AUTOMATIC" | "MANUAL", manualRef?: string) => Promise<any>;
   declineRefund: (id: string) => Promise<any>;
 
   // KYC & Host Review
@@ -210,10 +214,29 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   // ── Finance & Ledger ───────────────────────────────────────────────────
 
   financeLedger: null,
+  eventPayouts: [],
+  eventPayoutsPagination: null,
 
   fetchFinanceLedger: () => withLoading(set, async () => {
     const ledger = await api.getFinanceLedger();
     set({ financeLedger: ledger });
+  }),
+
+  fetchEventPayouts: (params) => withLoading(set, async () => {
+    const res: any = await api.getEventPayouts(params);
+    if (res && res.pagination) {
+      set({ eventPayouts: res.data || [], eventPayoutsPagination: res.pagination });
+    } else {
+      const items = Array.isArray(res) ? res : res?.data || [];
+      set({ eventPayouts: items, eventPayoutsPagination: null });
+    }
+  }),
+
+  payoutEvent: (eventId, mode, manualRef) => withLoading(set, async () => {
+    const result = await api.payoutEvent(eventId, mode, manualRef);
+    await get().fetchEventPayouts();
+    await get().fetchFinanceLedger();
+    return result;
   }),
 
   payoutHost: (hostId, mode, manualRef) => withLoading(set, async () => {
@@ -249,8 +272,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }
   }),
 
-  approveRefund: (id) => withLoading(set, async () => {
-    const result = await api.approveRefundRequest(id);
+  approveRefund: (id, mode, manualRef) => withLoading(set, async () => {
+    const result = await api.approveRefundRequest(id, mode, manualRef);
     await get().fetchRefundRequests();
     return result;
   }),
