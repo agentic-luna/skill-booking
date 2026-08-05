@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Sparkles, Menu, X, Search, LogOut, LayoutDashboard, UserCheck, Heart, BookmarkCheck, Bell, CheckCircle2, AlertTriangle, Ticket, XCircle, Wallet, CheckCheck, BellOff } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useClientStore } from "@/features/client/store/clientStore";
@@ -19,6 +19,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+function getNotificationMeta(notif: any) {
+  const event = notif.triggerEvent || "";
+  let icon = <Bell className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />;
+  let badgeBg = "bg-indigo-500/10 border-indigo-500/20";
+  let title = notif.subject || "Notification Alert";
+
+  if (event.includes("BOOKING_CONFIRMED") || event.includes("TICKET")) {
+    icon = <Ticket className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+    badgeBg = "bg-emerald-500/10 border-emerald-500/20";
+    if (!notif.subject) title = "Booking Confirmed";
+  } else if (event.includes("CANCEL") || event.includes("DECLINE") || event.includes("REJECT")) {
+    icon = <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />;
+    badgeBg = "bg-rose-500/10 border-rose-500/20";
+    if (!notif.subject) title = event.includes("CANCEL") ? "Booking Cancelled" : "Request Declined";
+  } else if (event.includes("APPROV") || event.includes("KYC_APPROVED")) {
+    icon = <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-[#a0f212]" />;
+    badgeBg = "bg-[#a0f212]/15 border-[#a0f212]/30";
+    if (!notif.subject) title = "Approval Update";
+  } else if (event.includes("PAYOUT") || event.includes("REFUND")) {
+    icon = <Wallet className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
+    badgeBg = "bg-amber-500/10 border-amber-500/20";
+    if (!notif.subject) title = event.includes("PAYOUT") ? "Payout Released" : "Refund Update";
+  }
+
+  const body = notif.content || notif.bodyContent || "";
+  const rawDate = notif.createdAt || notif.sentAt;
+  let timeAgo = "Just now";
+
+  if (rawDate) {
+    const diffMs = Date.now() - new Date(rawDate).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) timeAgo = "Just now";
+    else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+    else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+    else if (diffDays < 7) timeAgo = `${diffDays}d ago`;
+    else timeAgo = new Date(rawDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+  }
+
+  return { icon, badgeBg, title, body, timeAgo };
+}
 
 export default function Navbar() {
   const router = useRouter();
@@ -131,41 +175,93 @@ export default function Navbar() {
                           )}
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto rounded-xl">
-                        <DropdownMenuLabel className="font-bold text-xs flex justify-between items-center px-4 py-2.5">
-                          <span>Notifications Feed</span>
+                      <DropdownMenuContent align="end" className="w-84 sm:w-96 max-h-[30rem] overflow-hidden rounded-2xl p-0 bg-card/95 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-2xl animate-in fade-in-50 zoom-in-95">
+                        {/* Header */}
+                        <div className="px-4 py-3 bg-muted/30 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-full bg-[#a0f212]/10 border border-[#a0f212]/30 text-foreground">
+                              <Bell className="h-4 w-4 text-foreground" />
+                            </div>
+                            <span className="font-bold text-xs tracking-tight text-foreground">Notifications</span>
+                            {unreadNotificationsCount > 0 && (
+                              <span className="text-[10px] font-extrabold bg-[#a0f212] text-black px-2 py-0.5 rounded-full shadow-sm">
+                                {unreadNotificationsCount} unread
+                              </span>
+                            )}
+                          </div>
                           {unreadNotificationsCount > 0 && (
-                            <span className="text-[10px] text-primary bg-[#a0f212]/10 px-2 py-0.5 rounded-full">{unreadNotificationsCount} unread</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                notifications.filter(n => n.status !== "READ").forEach(n => readNotification(n.id));
+                              }}
+                              className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <CheckCheck className="h-3 w-3" />
+                              <span>Mark all read</span>
+                            </button>
                           )}
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {notifications.length > 0 ? (
-                          notifications.slice(0, 5).map((notif) => {
-                            const title = notif.subject || (notif.triggerEvent ? notif.triggerEvent.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()) : "Notification Alert");
-                            const body = notif.content || notif.bodyContent || "";
-                            const rawDate = notif.createdAt || notif.sentAt;
-                            const parsedDate = rawDate ? new Date(rawDate) : null;
-                            const formattedDate = parsedDate && !isNaN(parsedDate.getTime())
-                              ? parsedDate.toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                              : "Just now";
+                        </div>
 
-                            return (
-                              <DropdownMenuItem
-                                key={notif.id}
-                                className={`flex flex-col items-start gap-1 p-3 cursor-pointer text-xs ${notif.status !== "READ" ? "bg-[#a0f212]/10 font-semibold border-l-2 border-[#a0f212]" : ""}`}
-                                onClick={() => {
-                                  if (notif.status !== "READ") readNotification(notif.id);
-                                }}
-                              >
-                                <span className="font-bold text-foreground text-[11px]">{title}</span>
-                                {body && <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">{body}</p>}
-                                <span className="text-[9px] text-muted-foreground/60 font-medium">{formattedDate}</span>
-                              </DropdownMenuItem>
-                            );
-                          })
-                        ) : (
-                          <div className="p-4 text-center text-xs text-muted-foreground">No alerts in your feed.</div>
-                        )}
+                        {/* Notification Items List */}
+                        <div className="overflow-y-auto max-h-[22rem] divide-y divide-black/5 dark:divide-white/5 p-1">
+                          {notifications.length > 0 ? (
+                            notifications.slice(0, 8).map((notif) => {
+                              const { icon, badgeBg, title, body, timeAgo } = getNotificationMeta(notif);
+                              const isUnread = notif.status !== "READ";
+
+                              return (
+                                <div
+                                  key={notif.id}
+                                  onClick={() => {
+                                    if (isUnread) readNotification(notif.id);
+                                  }}
+                                  className={`group relative flex items-start gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer ${
+                                    isUnread
+                                      ? "bg-[#a0f212]/10 dark:bg-[#a0f212]/5 hover:bg-[#a0f212]/15"
+                                      : "hover:bg-muted/50 opacity-90"
+                                  }`}
+                                >
+                                  {/* Icon Circle */}
+                                  <div className={`shrink-0 p-2 rounded-xl border shadow-sm ${badgeBg}`}>
+                                    {icon}
+                                  </div>
+
+                                  {/* Content */}
+                                  <div className="flex-1 min-w-0 space-y-0.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className={`text-xs tracking-tight truncate ${isUnread ? "font-bold text-foreground" : "font-medium text-foreground/80"}`}>
+                                        {title}
+                                      </span>
+                                      <span className="text-[10px] font-medium text-muted-foreground/70 shrink-0">
+                                        {timeAgo}
+                                      </span>
+                                    </div>
+
+                                    {body && (
+                                      <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2 font-normal">
+                                        {body}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Unread Glowing Dot */}
+                                  {isUnread && (
+                                    <span className="shrink-0 h-2 w-2 rounded-full bg-[#a0f212] shadow-[0_0_8px_#a0f212] self-center animate-pulse" />
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="py-10 px-4 text-center space-y-2">
+                              <div className="inline-flex p-3 rounded-full bg-muted/50 border border-black/5 dark:border-white/5">
+                                <BellOff className="h-5 w-5 text-muted-foreground/60" />
+                              </div>
+                              <p className="text-xs font-bold text-foreground">You're all caught up!</p>
+                              <p className="text-[11px] text-muted-foreground">No new notifications in your feed right now.</p>
+                            </div>
+                          )}
+                        </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}

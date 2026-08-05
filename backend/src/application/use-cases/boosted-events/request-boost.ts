@@ -40,8 +40,8 @@ export class RequestBoostCommandHandler implements IRequestHandler<RequestBoostC
       throw new BadRequestError('Only approved events can be boosted.');
     }
 
-    if (event.startTime >= now) {
-      throw new BadRequestError('Only events with a start date less than current date can be boosted.');
+    if (event.startTime < now) {
+      throw new BadRequestError('Past events cannot be boosted. Only upcoming events can be boosted.');
     }
 
     // Check for existing active non-expired boost campaign
