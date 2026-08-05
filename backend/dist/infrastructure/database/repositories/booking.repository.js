@@ -131,14 +131,29 @@ class PrismaBookingRepository {
     }
     async create(data) {
         const { participants, ...bookingData } = data;
+        let participantRecords = Array.isArray(participants) && participants.length > 0 ? [...participants] : [];
+        // Auto-fill missing participant slots up to seatCount using client account details
+        if (participantRecords.length < data.seatCount) {
+            const clientUser = await prisma_1.prisma.user.findUnique({ where: { id: data.clientId } });
+            const clientName = clientUser ? `${clientUser.firstName || ''} ${clientUser.lastName || ''}`.trim() : 'Participant';
+            const clientEmail = clientUser?.email || '';
+            const clientMobile = clientUser?.phone || '';
+            while (participantRecords.length < data.seatCount) {
+                const isFirst = participantRecords.length === 0;
+                participantRecords.push({
+                    isPrimary: isFirst,
+                    fullName: isFirst ? clientName : `${clientName} (Participant #${participantRecords.length + 1})`,
+                    email: clientEmail,
+                    mobile: clientMobile,
+                });
+            }
+        }
         const createInput = {
             ...bookingData,
-        };
-        if (Array.isArray(participants) && participants.length > 0) {
-            createInput.participants = {
-                create: participants.map((p, idx) => ({
+            participants: {
+                create: participantRecords.map((p, idx) => ({
                     isPrimary: p.isPrimary !== undefined ? Boolean(p.isPrimary) : idx === 0,
-                    fullName: String(p.fullName || '').trim(),
+                    fullName: String(p.fullName || `Participant #${idx + 1}`).trim(),
                     email: String(p.email || '').trim(),
                     mobile: String(p.mobile || '').trim(),
                     dob: p.dob ? String(p.dob) : null,
@@ -147,8 +162,8 @@ class PrismaBookingRepository {
                     state: p.state ? String(p.state) : null,
                     country: p.country ? String(p.country) : 'India',
                 })),
-            };
-        }
+            },
+        };
         const created = await prisma_1.prisma.booking.create({
             data: createInput,
             include: { participants: true },

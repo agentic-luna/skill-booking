@@ -240,13 +240,21 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   const handleConfirmBooking = async (spotsCount: number) => {
     if (!program) return;
     setPaymentLoading(true);
+    const store = useBookingModalStore.getState();
+    const formattedParticipants = store.getFormattedParticipants();
+    const primary = store.primary;
+
     try {
       await startCheckout(
-        { eventId: program.id, seatCount: spotsCount },
         {
-          name: user?.name || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Guest",
-          email: user?.email || "",
-          phone: user?.phone || "",
+          eventId: program.id,
+          seatCount: spotsCount,
+          participants: formattedParticipants,
+        },
+        {
+          name: primary.fullName || user?.name || `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Guest",
+          email: primary.email || user?.email || "",
+          phone: primary.mobile || user?.phone || "",
         }
       );
     } catch {

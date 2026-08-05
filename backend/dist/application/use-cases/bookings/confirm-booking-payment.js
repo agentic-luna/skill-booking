@@ -163,7 +163,8 @@ class ConfirmBookingPaymentCommandHandler {
             if (fullBooking) {
                 const client = fullBooking.client;
                 const event = fullBooking.event;
-                const userName = `${client.firstName} ${client.lastName}`;
+                const primaryParticipant = fullBooking.participants?.find((p) => p.isPrimary) || fullBooking.participants?.[0];
+                const userName = primaryParticipant?.fullName || `${client.firstName} ${client.lastName}`;
                 const hostUser = event?.host?.user;
                 const trainerName = event?.trainerName || (hostUser ? `${hostUser.firstName} ${hostUser.lastName}` : 'Platform Host');
                 const venueInfo = event.mode === 'ONLINE' ? 'Online Live Stream' : (event.venueDetails?.address || 'Physical Venue');

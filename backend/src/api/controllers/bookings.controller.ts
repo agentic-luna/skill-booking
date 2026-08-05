@@ -203,7 +203,7 @@ export class BookingsController {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invalid Ticket - BookMySkill</title>
+  <title>Invalid Ticket - BookMyTraining</title>
   <style>
     body { font-family: -apple-system, sans-serif; background-color: #f3f4f6; color: #1f2937; text-align: center; padding: 40px 20px; }
     .card { background: white; max-width: 450px; margin: 0 auto; padding: 30px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-top: 5px solid #ef4444; }
@@ -215,9 +215,9 @@ export class BookingsController {
 <body>
   <div class="card">
     <h1>❌ Invalid Ticket</h1>
-    <p>We could not find any active booking record matching this Ticket ID in the BookMySkill database.</p>
-    <p>Please double-check the booking details or contact the help desk at support@bookmyskill.com.</p>
-    <div class="footer">BookMySkill Verification Engine</div>
+    <p>We could not find any active booking record matching this Ticket ID in the BookMyTraining database.</p>
+    <p>Please double-check the booking details or contact the help desk at support@bookmytraining.co.in.</p>
+    <div class="footer">BookMyTraining Verification Engine</div>
   </div>
 </body>
 </html>
@@ -231,6 +231,12 @@ export class BookingsController {
       const formattedDate = new Date(event.startTime).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       const formattedTime = new Date(event.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
+      const participantsList = Array.isArray(booking.participants) && booking.participants.length > 0
+        ? booking.participants
+        : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
+      const primaryAttendee = participantsList.find((p: any) => p.isPrimary) || participantsList[0];
+      const primaryName = (primaryAttendee?.fullName || `${client.firstName || ''} ${client.lastName || ''}`).trim().toUpperCase();
+
       const statusColor = booking.status === 'CONFIRMED' ? '#10b981' : '#b91c1c';
       const statusText = booking.status;
 
@@ -240,7 +246,7 @@ export class BookingsController {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ticket Verification - BookMySkill</title>
+  <title>Ticket Verification - BookMyTraining</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; color: #1f2937; margin: 0; padding: 20px; }
     .card { background: white; max-width: 500px; margin: 30px auto; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb; }
@@ -258,18 +264,35 @@ export class BookingsController {
     .info-value { font-size: 14px; font-weight: 700; color: #374151; }
     .venue-value { font-size: 13px; font-weight: 700; color: #374151; line-height: 1.4; }
     .footer { text-align: center; padding: 20px; font-size: 11px; color: #9ca3af; border-top: 1px solid #f3f4f6; background-color: #fafafa; font-weight: 600; }
+    .participant-card { background: #f9fafb; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #f3f4f6; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="header">
-      <p>🎫 BOOKMYSKILL VERIFICATION</p>
+      <p>🎫 BOOKMYTRAINING VERIFICATION</p>
       <h1>Ticket Verified</h1>
       <span class="status-badge" style="background-color: ${statusColor};">${statusText}</span>
     </div>
     <div class="content">
-      <h3 class="section-title">Ticket Holder</h3>
-      <div class="attendee-name">${(client.firstName + ' ' + client.lastName).toUpperCase()}</div>
+      <h3 class="section-title">Primary Ticket Holder</h3>
+      <div class="attendee-name">${primaryName}</div>
+
+      ${participantsList.length > 0 ? `
+        <h3 class="section-title">All Enrolled Participants (${participantsList.length})</h3>
+        <div style="margin-bottom: 20px;">
+          ${participantsList.map((p: any, idx: number) => `
+            <div class="participant-card">
+              <div style="font-weight: 800; font-size: 13px; color: #111827;">
+                ${idx + 1}. ${p.fullName} ${p.isPrimary ? '<span style="font-size: 9px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 6px;">PRIMARY</span>' : ''}
+              </div>
+              <div style="font-size: 11px; color: #6b7280; margin-top: 3px;">
+                ${p.email ? '📧 ' + p.email : ''} ${p.mobile ? ' • 📱 ' + p.mobile : ''} ${p.state ? ' • 📍 ' + p.state : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
       
       <h3 class="section-title">Workshop Details</h3>
       <div style="font-size: 17px; font-weight: 800; color: #1f2937; margin-bottom: 15px;">${event.title}</div>
@@ -307,7 +330,7 @@ export class BookingsController {
       </div>
     </div>
     <div class="footer">
-      BookMySkill Verification Engine © ${new Date().getFullYear()}
+      BookMyTraining Verification Engine © ${new Date().getFullYear()}
     </div>
   </div>
 </body>

@@ -80,19 +80,21 @@ export default function ParticipantDetailsModal({
                 <span>All Enrolled Participants ({selectedStudent.participants.length})</span>
                 <span className="text-[10px] text-muted-foreground font-normal">Seat Passes</span>
               </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                 {selectedStudent.participants.map((p: any, idx: number) => (
-                  <div key={idx} className="bg-card p-2.5 rounded-lg border border-black/5 flex flex-col gap-0.5 text-xs">
+                  <div key={idx} className="bg-card p-3 rounded-xl border border-black/5 flex flex-col gap-1 text-xs shadow-2xs">
                     <div className="flex items-center justify-between font-bold text-foreground">
-                      <span>{p.fullName}</span>
-                      <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-extrabold ${p.isPrimary ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                        {p.isPrimary ? "Primary" : `Participant #${idx + 1}`}
+                      <span className="text-sm">{p.fullName}</span>
+                      <span className={`text-[9px] uppercase px-2 py-0.5 rounded-md font-extrabold ${p.isPrimary ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted text-muted-foreground"}`}>
+                        {p.isPrimary ? "Primary Attendee" : `Participant #${idx + 1}`}
                       </span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5">
-                      {p.email && <span>📧 {p.email}</span>}
-                      {p.mobile && <span>📱 {p.mobile}</span>}
-                      {p.state && <span>📍 {p.state}</span>}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted-foreground pt-1 border-t border-border/20">
+                      {p.email && <div className="truncate">📧 <span className="text-foreground font-medium">{p.email}</span></div>}
+                      {p.mobile && <div className="truncate">📱 <span className="text-foreground font-medium font-mono">{p.mobile}</span></div>}
+                      {p.gender && <div className="capitalize">👤 Gender: <span className="text-foreground font-medium">{p.gender}</span></div>}
+                      {p.state && <div>📍 Location: <span className="text-foreground font-medium">{p.state}{p.city ? `, ${p.city}` : ''}</span></div>}
+                      {p.dob && <div>🎂 DOB: <span className="text-foreground font-medium">{p.dob}</span></div>}
                     </div>
                   </div>
                 ))}

@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 
 export class TicketGenerationService {
   /**
-   * Generates a beautifully formatted PDF Invoice (BookMySkill Green Theme)
+   * Generates a beautifully formatted PDF Invoice (BookMyTraining Green Theme)
    */
   async generateInvoicePdf(booking: any, hostHeader: string): Promise<Buffer> {
     return new Promise(async (resolve, reject) => {
@@ -17,15 +17,24 @@ export class TicketGenerationService {
 
         const client = booking.client || {};
         const event = booking.event || {};
-        const host = event.host?.user || {};
+        const hostProfile = event.host || {};
+        const host = hostProfile.user || {};
         const venueName = event.mode === 'ONLINE' ? 'Online Live Stream' : (event.venueDetails?.address || 'Physical Venue');
+
+        const participantsList = Array.isArray(booking.participants) && booking.participants.length > 0
+          ? booking.participants
+          : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
+        const primaryAttendee = participantsList.find((p: any) => p.isPrimary) || participantsList[0];
+        const primaryName = (primaryAttendee?.fullName || `${client.firstName || ''} ${client.lastName || ''}`).trim();
+        const primaryEmail = primaryAttendee?.email || client.email || '';
+        const primaryMobile = primaryAttendee?.mobile || client.phone || '';
 
         // Draw BookMySkill Premium Emerald Header Accent
         doc.rect(0, 0, 612, 15).fill('#064e3b');
 
         // Branding
         doc.moveDown(1);
-        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(22).text('BOOKMYSKILL', 50, 40);
+        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(22).text('BOOKMYTRAINING', 50, 40);
         doc.fillColor('#4b5563').font('Helvetica').fontSize(10).text('Live Workshops & Enterprise Skill-Training', 50, 65);
 
         // Invoice Text
@@ -39,79 +48,118 @@ export class TicketGenerationService {
         // 2 Column Layout (Billing vs Event Info)
         const colY = 125;
         
-        // Billing details
-        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('BILL TO:', 50, colY);
-        doc.fillColor('#1f2937').font('Helvetica-Bold').fontSize(10).text(`${client.firstName} ${client.lastName}`, 50, colY + 18);
+        // Billing details (Account Owner)
+        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(11).text('BILL TO:', 50, colY);
+        doc.fillColor('#1f2937').font('Helvetica-Bold').fontSize(10).text(`${client.firstName || ''} ${client.lastName || ''}`.trim(), 50, colY + 18);
         doc.font('Helvetica').fillColor('#4b5563').fontSize(9);
-        doc.text(`Email: ${client.email}`, 50, colY + 32);
-        doc.text(`Phone: ${client.phone}`, 50, colY + 44);
+        doc.text(`Email: ${client.email || ''}`, 50, colY + 32);
+        doc.text(`Phone: ${client.phone || ''}`, 50, colY + 44);
 
-        // Booking details
-        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('WORKSHOP DETAILS:', 300, colY);
+        // Workshop & Host details
+        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(11).text('WORKSHOP & HOST DETAILS:', 300, colY);
         doc.fillColor('#1f2937').font('Helvetica-Bold').fontSize(10).text(event.title, 300, colY + 18);
         doc.font('Helvetica').fillColor('#4b5563').fontSize(9);
-        doc.text(`Trainer: ${host.firstName || 'Platform'} ${host.lastName || 'Host'}`, 300, colY + 32);
-        doc.text(`Schedule: ${new Date(event.startTime).toLocaleString()}`, 300, colY + 44);
-        doc.text(`Venue: ${venueName}`, 300, colY + 56);
+        doc.text(`Host/Trainer: ${host.firstName || 'Platform'} ${host.lastName || 'Host'}`, 300, colY + 32);
+        
+        let currentRightY = colY + 44;
+        if (hostProfile.gstNumber) {
+          doc.text(`Host GSTIN: ${hostProfile.gstNumber}`, 300, currentRightY);
+          currentRightY += 12;
+        }
+        doc.text(`Schedule: ${new Date(event.startTime).toLocaleString()}`, 300, currentRightY);
+        currentRightY += 12;
+        doc.text(`Venue: ${venueName}`, 300, currentRightY);
 
         // Divider
-        doc.moveTo(50, 205).lineTo(562, 205).strokeColor('#e5e7eb').stroke();
+        const divider1Y = Math.max(205, currentRightY + 16);
+        doc.moveTo(50, divider1Y).lineTo(562, divider1Y).strokeColor('#e5e7eb').stroke();
 
         // Table Header
-        const tableY = 225;
+        const tableY = divider1Y + 15;
         doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(10);
         doc.text('Item Description', 50, tableY);
         doc.text('Quantity', 320, tableY, { width: 60, align: 'center' });
         doc.text('Unit Price', 400, tableY, { width: 80, align: 'right' });
         doc.text('Total (INR)', 490, tableY, { width: 72, align: 'right' });
 
-        // Table Row
-        const rowY = 245;
+        // Calculate platform fee & base price
+        const totalAmount = Number(booking.totalAmount);
+        const seatCount = Number(booking.seatCount) || 1;
+
+        const commType = booking.commissionType ?? event.commission?.commissionType;
+        const commValue = booking.platformValue !== null && booking.platformValue !== undefined
+          ? Number(booking.platformValue)
+          : (event.commission?.platformValue ? Number(event.commission.platformValue) : null);
+
+        let platformFeeAmount = 0;
+        if (commType && commValue !== null && commValue !== undefined) {
+          if (commType === 'PERCENTAGE') {
+            platformFeeAmount = (totalAmount * commValue) / 100;
+          } else {
+            platformFeeAmount = commValue;
+          }
+        }
+        const ticketBaseAmount = Math.max(0, totalAmount - platformFeeAmount);
+
+        // Table Rows
+        let rowY = tableY + 20;
         doc.fillColor('#1f2937').font('Helvetica').fontSize(9.5);
         doc.text(`Admission Ticket - ${event.title}`, 50, rowY, { width: 250 });
-        doc.text(String(booking.seatCount), 320, rowY, { width: 60, align: 'center' });
+        doc.text(String(seatCount), 320, rowY, { width: 60, align: 'center' });
         
-        const unitPrice = booking.totalAmount / booking.seatCount;
-        doc.text(`${unitPrice.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
-        doc.text(`${booking.totalAmount.toFixed(2)}`, 490, rowY, { width: 72, align: 'right' });
+        const unitTicketPrice = ticketBaseAmount / seatCount;
+        doc.text(`${unitTicketPrice.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
+        doc.text(`${ticketBaseAmount.toFixed(2)}`, 490, rowY, { width: 72, align: 'right' });
+
+        if (platformFeeAmount > 0) {
+          rowY += 18;
+          doc.text('Platform Convenience & Booking Service Fee', 50, rowY, { width: 250 });
+          doc.text('1', 320, rowY, { width: 60, align: 'center' });
+          doc.text(`${platformFeeAmount.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
+          doc.text(`${platformFeeAmount.toFixed(2)}`, 490, rowY, { width: 72, align: 'right' });
+        }
 
         // Divider
-        doc.moveTo(50, 275).lineTo(562, 275).strokeColor('#e5e7eb').stroke();
+        const divider2Y = rowY + 25;
+        doc.moveTo(50, divider2Y).lineTo(562, divider2Y).strokeColor('#e5e7eb').stroke();
 
         // Totals & Status
-        const summaryY = 295;
+        const summaryY = divider2Y + 15;
 
         // Payment status box
-        doc.roundedRect(50, summaryY, 150, 50, 8).strokeColor(booking.status === 'CONFIRMED' ? '#10b981' : '#ef4444').lineWidth(1.5).stroke();
+        doc.roundedRect(50, summaryY, 160, 52, 8).strokeColor(booking.status === 'CONFIRMED' ? '#10b981' : '#ef4444').lineWidth(1.5).stroke();
         doc.fillColor(booking.status === 'CONFIRMED' ? '#047857' : '#b91c1c').font('Helvetica-Bold').fontSize(11).text('PAYMENT STATUS', 65, summaryY + 12);
         doc.fontSize(13).text(booking.status, 65, summaryY + 28);
 
-        // Price calculations
-        doc.fillColor('#4b5563').font('Helvetica').fontSize(10).text('Subtotal:', 380, summaryY, { width: 100, align: 'right' });
-        doc.fillColor('#1f2937').font('Helvetica-Bold').text(`${booking.totalAmount.toFixed(2)} INR`, 490, summaryY, { width: 72, align: 'right' });
+        // Price calculations (Subtotal, Taxes, Total Amount & Paid Amount identical)
+        doc.fillColor('#4b5563').font('Helvetica').fontSize(10).text('Subtotal:', 360, summaryY, { width: 120, align: 'right' });
+        doc.fillColor('#1f2937').font('Helvetica-Bold').text(`${totalAmount.toFixed(2)} INR`, 490, summaryY, { width: 72, align: 'right' });
 
-        doc.fillColor('#4b5563').font('Helvetica').fontSize(10).text('Taxes & Fees:', 380, summaryY + 16, { width: 100, align: 'right' });
-        doc.fillColor('#1f2937').font('Helvetica-Bold').text('0.00 INR', 490, summaryY + 16, { width: 72, align: 'right' });
+        doc.fillColor('#4b5563').font('Helvetica').fontSize(10).text('Taxes & Fees (GST):', 360, summaryY + 16, { width: 120, align: 'right' });
+        doc.fillColor('#1f2937').font('Helvetica-Bold').text('0.00 INR (Inc.)', 490, summaryY + 16, { width: 72, align: 'right' });
 
-        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('Total Paid:', 380, summaryY + 36, { width: 100, align: 'right' });
-        doc.fillColor('#064e3b').text(`${booking.totalAmount.toFixed(2)} INR`, 490, summaryY + 36, { width: 72, align: 'right' });
+        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(11).text('Invoice Total Amount:', 340, summaryY + 36, { width: 140, align: 'right' });
+        doc.fillColor('#064e3b').text(`${totalAmount.toFixed(2)} INR`, 490, summaryY + 36, { width: 72, align: 'right' });
+
+        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(11).text('Total Paid Amount:', 340, summaryY + 54, { width: 140, align: 'right' });
+        doc.fillColor('#064e3b').text(`${totalAmount.toFixed(2)} INR`, 490, summaryY + 54, { width: 72, align: 'right' });
 
         // Divider
-        doc.moveTo(50, 365).lineTo(562, 365).strokeColor('#e5e7eb').lineWidth(1).stroke();
+        const divider3Y = summaryY + 80;
+        doc.moveTo(50, divider3Y).lineTo(562, divider3Y).strokeColor('#e5e7eb').lineWidth(1).stroke();
 
         // Verification QR Code section
-        const qrY = 385;
+        const qrY = divider3Y + 15;
         doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(11).text('INVOICE VERIFICATION', 50, qrY);
-        doc.fillColor('#6b7280').font('Helvetica').fontSize(8.5).text('Scan the QR code to verify the details and legitimacy of this transaction receipt online.', 50, qrY + 16, { width: 330 });
-        doc.text('BookMySkill Engine - Secure Cryptographic Signatures.', 50, qrY + 44);
+        doc.fillColor('#6b7280').font('Helvetica').fontSize(8.5).text('Scan the QR code to verify transaction authenticity & participant passes online.', 50, qrY + 16, { width: 330 });
+        doc.text('BookMyTraining Cryptographically Verified Digital Receipt.', 50, qrY + 44);
 
-        // Generate QR code buffer pointing to the absolute verification endpoint URL
         const verificationUrl = `http://${hostHeader}/api/v1/bookings/${booking.id}/verify`;
-        const qrBuffer = await QRCode.toBuffer(verificationUrl, { errorCorrectionLevel: 'M', margin: 1, width: 100 });
-        doc.image(qrBuffer, 462, qrY - 10, { width: 100, height: 100 });
+        const qrBuffer = await QRCode.toBuffer(verificationUrl, { errorCorrectionLevel: 'M', margin: 1, width: 90 });
+        doc.image(qrBuffer, 462, qrY - 10, { width: 90, height: 90 });
 
         // Footer note
-        doc.fillColor('#9ca3af').fontSize(8).text('If you have questions about this invoice, please contact support@bookmyskill.com.', 50, 520, { align: 'center' });
+        doc.fillColor('#9ca3af').fontSize(8).text('If you have questions about this invoice, please contact support@bookmytraining.co.in.', 50, 750, { align: 'center' });
 
         doc.end();
       } catch (err) {
@@ -121,7 +169,7 @@ export class TicketGenerationService {
   }
 
   /**
-   * Generates a premium green themed PDF Admission Ticket (BookMySkill Green Theme)
+   * Generates a premium green themed PDF Admission Ticket (BookMyTraining Green Theme)
    */
   async generateTicketPdf(booking: any, hostHeader: string): Promise<Buffer> {
     return new Promise(async (resolve, reject) => {
@@ -135,7 +183,8 @@ export class TicketGenerationService {
 
         const client = booking.client || {};
         const event = booking.event || {};
-        const host = event.host?.user || {};
+        const hostProfile = event.host || {};
+        const host = hostProfile.user || {};
         const venueName = event.mode === 'ONLINE' ? 'Online Live Stream' : (event.venueDetails?.address || 'Physical Venue');
         const formattedDate = new Date(event.startTime).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
         const formattedTime = new Date(event.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -146,7 +195,7 @@ export class TicketGenerationService {
         doc.rect(0, 0, 400, 180).fill(grad);
 
         // Header Content
-        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10).text('B O O K M Y S K I L L   A D M I S S I O N', 30, 25, { characterSpacing: 1.2 });
+        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10).text('B O O K M Y T R A I N I N G   A D M I S S I O N', 30, 25, { characterSpacing: 1.2 });
         doc.fontSize(20).text(event.title.toUpperCase(), 30, 50, { width: 340, lineGap: 4 });
         doc.font('Helvetica').fontSize(11).fillColor('#d1fae5').text(event.category?.toUpperCase() || 'WORKSHOP', 30, doc.y + 4);
 
@@ -177,7 +226,7 @@ export class TicketGenerationService {
         doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('ATTENDEE(S)', 30, cutY + 25);
         doc.fillColor('#111827').font('Helvetica-Bold').fontSize(16).text(attendeeDisplayName, 30, cutY + 42, { width: 340 });
         if (participantsList.length > 1) {
-          doc.fillColor('#4b5563').font('Helvetica').fontSize(8.5).text(`Group: ${participantNamesSummary}`, 30, cutY + 62, { width: 340 });
+          doc.fillColor('#4b5563').font('Helvetica').fontSize(8.5).text(`Group (${participantsList.length}): ${participantNamesSummary}`, 30, cutY + 62, { width: 340 });
         } else {
           doc.fillColor('#4b5563').font('Helvetica').fontSize(9.5).text('TICKET HOLDER / WORKSHOP ATTENDEE', 30, cutY + 62);
         }
@@ -211,7 +260,7 @@ export class TicketGenerationService {
         const qrBuffer = await QRCode.toBuffer(verificationUrl, { errorCorrectionLevel: 'H', margin: 1, width: 110, color: { dark: '#064e3b', light: '#ffffff' } });
         doc.image(qrBuffer, 145, qrCenterY, { width: 110, height: 110 });
 
-        // Ticket ID label vertical text or clean horizontal
+        // Ticket ID label
         doc.fillColor('#9ca3af').font('Helvetica').fontSize(8.5).text(`TICKET ID: ${booking.id}`, 0, 564, { align: 'center' });
 
         doc.end();
@@ -222,15 +271,23 @@ export class TicketGenerationService {
   }
 
   /**
-   * Generates a stunning vector SVG representation of the Admission Ticket card (BookMySkill Green Theme)
+   * Generates a stunning vector SVG representation of the Admission Ticket card (BookMyTraining Green Theme)
    */
   async generateTicketSvg(booking: any, hostHeader: string): Promise<string> {
     const client = booking.client || {};
     const event = booking.event || {};
-    const host = event.host?.user || {};
+    const hostProfile = event.host || {};
+    const host = hostProfile.user || {};
     const venueName = event.mode === 'ONLINE' ? 'Online Live Stream' : (event.venueDetails?.address || 'Physical Venue');
     const formattedDate = new Date(event.startTime).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
     const formattedTime = new Date(event.startTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+    const participantsList = Array.isArray(booking.participants) && booking.participants.length > 0
+      ? booking.participants
+      : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
+    const primaryAttendee = participantsList.find((p: any) => p.isPrimary) || participantsList[0];
+    const attendeeDisplayName = (primaryAttendee?.fullName || `${client.firstName} ${client.lastName}`).toUpperCase();
+    const participantNamesSummary = participantsList.map((p: any) => p.fullName).filter(Boolean).join(', ');
 
     // Generate QR code data URL (PNG format) with green pixels and white background for SVG embedding
     const verificationUrl = `http://${hostHeader}/api/v1/bookings/${booking.id}/verify`;
@@ -263,7 +320,7 @@ export class TicketGenerationService {
     <path d="M0 0 H400 V180 H0 Z" fill="url(#greenGrad)" />
 
     <!-- Header Text Content -->
-    <text x="30" y="35" fill="#d1fae5" font-size="9" font-weight="800" letter-spacing="1.2">B O O K M Y S K I L L   A D M I S S I O N</text>
+    <text x="30" y="35" fill="#d1fae5" font-size="9" font-weight="800" letter-spacing="1.2">B O O K M Y T R A I N I N G   A D M I S S I O N</text>
     <text x="30" y="70" fill="#ffffff" font-size="20" font-weight="900" width="340">${event.title.toUpperCase()}</text>
     <text x="30" y="145" fill="#a7f3d0" font-size="11" font-weight="700" letter-spacing="1">${(event.category || 'Workshop').toUpperCase()}</text>
 
@@ -275,9 +332,9 @@ export class TicketGenerationService {
     <circle cx="400" cy="180" r="10" fill="#f3f4f6" />
 
     <!-- Card details body -->
-    <text x="30" y="215" fill="#064e3b" font-size="11" font-weight="800" letter-spacing="0.5">ATTENDEE</text>
-    <text x="30" y="240" fill="#111827" font-size="18" font-weight="800">${(client.firstName + ' ' + client.lastName).toUpperCase()}</text>
-    <text x="30" y="258" fill="#6b7280" font-size="9.5" font-weight="600">TICKET HOLDER / WORKSHOP ATTENDEE</text>
+    <text x="30" y="215" fill="#064e3b" font-size="11" font-weight="800" letter-spacing="0.5">ATTENDEE(S)</text>
+    <text x="30" y="240" fill="#111827" font-size="18" font-weight="800">${attendeeDisplayName}</text>
+    <text x="30" y="258" fill="#6b7280" font-size="9.5" font-weight="600">${participantsList.length > 1 ? `Group (${participantsList.length}): ${participantNamesSummary}` : 'TICKET HOLDER / WORKSHOP ATTENDEE'}</text>
 
     <!-- Grid Column 1 -->
     <g transform="translate(30, 290)">
