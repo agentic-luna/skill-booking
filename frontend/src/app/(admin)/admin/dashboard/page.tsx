@@ -45,45 +45,60 @@ export default function AdminDashboard() {
     { name: "Refunded", amount: financeLedger?.totalRefunded || 0 }
   ];
 
-  // Match event titles to category
-  const getCategoryFromTitle = (title: string): string => {
+  // Match event titles or categories to the 4 HeroSection canonical categories
+  const getCategoryFromTitle = (title: string, categoryVal?: string): string => {
     const t = (title || "").toLowerCase();
-    if (t.includes("react") || t.includes("next") || t.includes("python") || t.includes("code") || t.includes("web") || t.includes("javascript") || t.includes("tech") || t.includes("develop") || t.includes("program")) return "Technology & Tech";
-    if (t.includes("design") || t.includes("ux") || t.includes("ui") || t.includes("figma") || t.includes("art") || t.includes("sketch")) return "Design & Creative";
-    if (t.includes("business") || t.includes("market") || t.includes("finance") || t.includes("sales") || t.includes("startup")) return "Business & Marketing";
-    if (t.includes("cook") || t.includes("bake") || t.includes("chef") || t.includes("food") || t.includes("culinary")) return "Culinary & Baking";
-    if (t.includes("fitness") || t.includes("yoga") || t.includes("workout") || t.includes("gym") || t.includes("wellness")) return "Fitness & Health";
-    if (t.includes("photo") || t.includes("camera") || t.includes("video") || t.includes("lens")) return "Photography";
-    return "Other Events";
+    const cat = (categoryVal || "").toLowerCase();
+
+    if (cat.includes("relationship") || t.includes("relationship") || t.includes("marriage") || t.includes("couple") || t.includes("intimacy") || t.includes("love")) {
+      return "Relationship";
+    }
+    if (cat.includes("business") || t.includes("business") || t.includes("leadership") || t.includes("sales") || t.includes("marketing") || t.includes("hr") || t.includes("operation") || t.includes("startup") || t.includes("scale")) {
+      return "Business";
+    }
+    if (cat.includes("trauma") || cat.includes("healing") || t.includes("trauma") || t.includes("healing") || t.includes("mindfulness") || t.includes("meditation") || t.includes("yoga") || t.includes("reiki") || t.includes("spiritual")) {
+      return "Trauma Healing";
+    }
+    return "Life Coaching";
   };
 
-  const categoryCounts: Record<string, number> = {};
+  const categoryCounts: Record<string, number> = {
+    "Life Coaching": 0,
+    "Relationship": 0,
+    "Business": 0,
+    "Trauma Healing": 0,
+  };
   let totalMatches = 0;
 
   (hosts || []).forEach((host) => {
     (host.hostProfile?.events || []).forEach((e) => {
-      const cat = getCategoryFromTitle(e.title);
+      const cat = getCategoryFromTitle(e.title, (e as any).category);
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
       totalMatches++;
     });
   });
 
-  // Convert to array, calculate and sort
-  const sortedCategories = Object.entries(categoryCounts)
-    .map(([name, count]) => {
-      const percentage = totalMatches > 0 ? Math.round((count / totalMatches) * 100) : 0;
-      return { name, count, percentage };
-    })
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  (eventQueue || []).forEach((e) => {
+    const cat = getCategoryFromTitle(e.title, (e as any).category);
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    totalMatches++;
+  });
 
-  const displaySectors = sortedCategories.map((c, i) => {
-    const colors = ["bg-blue-500", "bg-indigo-500", "bg-amber-500", "bg-emerald-500", "bg-pink-500"];
+  const categoryColorMap: Record<string, string> = {
+    "Life Coaching": "bg-amber-500",
+    "Relationship": "bg-rose-500",
+    "Business": "bg-blue-500",
+    "Trauma Healing": "bg-emerald-500",
+  };
+
+  const displaySectors = ["Life Coaching", "Relationship", "Business", "Trauma Healing"].map((name) => {
+    const count = categoryCounts[name] || 0;
+    const percentage = totalMatches > 0 ? Math.round((count / totalMatches) * 100) : 0;
     return {
-      name: c.name,
-      count: c.count,
-      percentage: c.percentage,
-      color: colors[i % colors.length]
+      name,
+      count,
+      percentage,
+      color: categoryColorMap[name] || "bg-primary",
     };
   });
 
