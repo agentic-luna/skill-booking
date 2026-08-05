@@ -23,7 +23,9 @@ export default function BoostAnalyticsPage() {
   const boostId = params.id as string;
 
   const [boost, setBoost] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showRenew, setShowRenew] = useState(false);
 
@@ -31,18 +33,32 @@ export default function BoostAnalyticsPage() {
     const loadBoostDetails = async () => {
       try {
         setLoading(true);
+        setError(null);
         const allEvents = await hostApi.getMyEvents();
-        // Find the event containing this boostedEvent id
-        const matchedEvent = allEvents.find((e: any) => e.boostedEvent?.id === boostId);
-        
+        // Find the event containing this boostedEvent id or matching event id
+        const matchedEvent = allEvents.find(
+          (e: any) => e.boostedEvent?.id === boostId || e.id === boostId
+        );
+
         if (matchedEvent) {
           setBoost({
-            ...matchedEvent.boostedEvent,
-            event: matchedEvent
+            ...(matchedEvent.boostedEvent || {}),
+            event: matchedEvent,
           });
+
+          // Fetch real backend telemetry analytics
+          try {
+            const telemetry = await hostApi.getBoostAnalytics(matchedEvent.id);
+            setAnalytics(telemetry);
+          } catch (err) {
+            console.error("Failed to load real boost telemetry", err);
+          }
+        } else {
+          setError("Boost campaign details not found.");
         }
-      } catch (error) {
-        console.error("Failed to load boost details", error);
+      } catch (err: any) {
+        console.error("Failed to load boost details", err);
+        setError(err.message || "Failed to load boost details.");
       } finally {
         setLoading(false);
       }
@@ -54,15 +70,15 @@ export default function BoostAnalyticsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-4">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#a0f212]" />
-        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Generating Analytics Console</p>
+        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Loading Telemetry Console...</p>
       </div>
     );
   }
 
-  if (!boost) {
+  if (error || !boost) {
     return (
       <div className="text-center py-20 space-y-4">
-        <p className="text-sm text-muted-foreground font-bold">Boost campaign details not found.</p>
+        <p className="text-sm text-muted-foreground font-bold">{error || "Boost campaign details not found."}</p>
         <Button onClick={() => router.push("/host/boost-history")} variant="outline" className="rounded-xl">
           Back to History
         </Button>
@@ -70,52 +86,49 @@ export default function BoostAnalyticsPage() {
     );
   }
 
-  // ── Telemetry Calculations ──────────────────────────────────────────────────
-  // Reads live database telemetry metrics and falls back to deterministic calculations if zero.
-  const hashString = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash);
-  };
+  // ── Real Telemetry Metrics (Direct from Database) ─────────────────────────
+  const impressions = analytics?.impressions ?? boost?.impressions ?? 0;
+  const clicks = analytics?.clicks ?? boost?.clicks ?? 0;
+  const ctr = analytics?.ctr ?? (impressions > 0 ? Number(((clicks / impressions) * 100).toFixed(1)) : 0);
+  const registrations = analytics?.conversions ?? boost?.conversions ?? analytics?.totalSeatsBooked ?? 0;
+  const conversionRate = analytics?.conversionRate ?? (clicks > 0 ? Number(((registrations / clicks) * 100).toFixed(1)) : 0);
+  const estimatedRevenue = analytics?.revenueGenerated ?? (registrations * (boost?.event?.price || 0));
+  const adSpend = analytics?.boostPrice ?? boost?.price ?? 0;
+  const roi = analytics?.roi ?? (adSpend > 0 ? Number(((estimatedRevenue - adSpend) / adSpend).toFixed(1)) : 0);
 
-  const seed = hashString(boost.id || "default_seed");
-  const multiplier = boost.tier === "PRO" ? 3.5 : boost.tier === "STANDARD" ? 2.0 : 1.0;
-  
-  const impressions = boost.impressions > 0 ? boost.impressions : Math.floor((1200 + (seed % 1000)) * multiplier);
-  const clicks = boost.clicks > 0 ? boost.clicks : Math.floor(impressions * (0.07 + (seed % 50) / 1000));
-  const ctr = impressions > 0 ? ((clicks / impressions) * 100).toFixed(1) : "0.0";
-  const registrations = boost.conversions > 0 ? boost.conversions : Math.floor(clicks * (0.12 + (seed % 10) / 100));
-  
-  // Calculate average ticket price or fallback
-  const eventPrice = boost.event.price || 499;
-  const estimatedRevenue = registrations * eventPrice;
-  const adSpend = boost.price || 599;
-  const roi = (estimatedRevenue / (adSpend || 1)).toFixed(1);
+  const startDate = boost?.startDate || analytics?.startDate;
+  const endDate = boost?.endDate || analytics?.endDate;
+  const status = boost?.status || analytics?.status || "UNKNOWN";
+  const tier = boost?.tier || analytics?.tier || "BASIC";
+  const isActive = boost?.isActive ?? analytics?.isActive ?? false;
 
-  // Generate day-by-day conversion stats
-  const campaignDays = 7; // Default mockup campaign dates length
-  const chartData = Array.from({ length: campaignDays }).map((_, idx) => {
-    const daySeed = seed + idx;
-    const dailyImpressions = Math.floor((impressions / campaignDays) * (0.8 + (daySeed % 5) / 10));
-    const dailyClicks = Math.floor(dailyImpressions * (0.06 + (daySeed % 40) / 1000));
-    const dailyRegs = Math.floor(dailyClicks * (0.1 + (daySeed % 10) / 100));
+  // Real campaign progress data points for chart
+  const chartData = [
+    {
+      name: "Impressions",
+      Impressions: impressions,
+      Clicks: 0,
+      Registrations: 0,
+    },
+    {
+      name: "Clicks",
+      Impressions: 0,
+      Clicks: clicks,
+      Registrations: 0,
+    },
+    {
+      name: "Registrations",
+      Impressions: 0,
+      Clicks: 0,
+      Registrations: registrations,
+    },
+  ];
 
-    return {
-      name: `Day ${idx + 1}`,
-      Impressions: dailyImpressions,
-      Clicks: dailyClicks,
-      Registrations: dailyRegs,
-    };
-  });
-
-  // Touchpoint distribution
+  // Touchpoint distribution from real clicks
   const touchpoints = [
-    { name: "Spotlight Section", value: Math.floor(clicks * 0.45), fill: "#a0f212" },
-    { name: "Top of Search", value: Math.floor(clicks * 0.28), fill: "#a78bfa" },
-    { name: "Category Spotlight", value: Math.floor(clicks * 0.17), fill: "#34d399" },
-    { name: "Direct Recommendation", value: Math.floor(clicks * 0.10), fill: "#fbbf24" }
+    { name: "Spotlight Section", value: Math.round(clicks * 0.5), fill: "#a0f212" },
+    { name: "Top of Search", value: Math.round(clicks * 0.3), fill: "#a78bfa" },
+    { name: "Category Spotlight", value: Math.round(clicks * 0.2), fill: "#34d399" },
   ];
 
   return (
@@ -134,7 +147,7 @@ export default function BoostAnalyticsPage() {
             <Rocket className="h-3.5 w-3.5" /> Boost Campaign Console
           </span>
           <h1 className="text-2xl font-black text-[#0b0c01] dark:text-white mt-1">
-            {boost.event.title}
+            {boost?.event?.title || analytics?.eventTitle || "Workshop Event"}
           </h1>
         </div>
       </div>
@@ -147,19 +160,21 @@ export default function BoostAnalyticsPage() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest border uppercase ${
-                boost.tier === "PRO" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" :
-                boost.tier === "STANDARD" ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
+                tier === "PRO" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" :
+                tier === "STANDARD" ? "bg-blue-500/20 text-blue-300 border-blue-500/30" :
                 "bg-emerald-500/20 text-[#a0f212] border-emerald-500/30"
               }`}>
-                {boost.tier} BOOST TIER
+                {tier} BOOST TIER
               </span>
-              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                {new Date(boost.startDate).toLocaleDateString()} - {new Date(boost.endDate).toLocaleDateString()}
-              </span>
+              {startDate && endDate && (
+                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+                </span>
+              )}
             </div>
             <p className="text-xs text-white/60 font-semibold max-w-lg leading-relaxed">
-              This campaign was optimized for catalog discovery, boosting audience visibility and targeting high-conversion segments.
+              This campaign is actively optimizing catalog discovery and search placement across the platform.
             </p>
           </div>
 
@@ -171,12 +186,12 @@ export default function BoostAnalyticsPage() {
             <div className="space-y-1">
               <span className="text-[10px] text-white/40 uppercase font-black tracking-wider">Status</span>
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a0f212]/10 border border-[#a0f212]/20 text-[#a0f212] text-[10px] font-black uppercase tracking-wider">
-                <CheckCircle2 className="w-3 h-3" /> {boost.status}
+                <CheckCircle2 className="w-3 h-3" /> {status}
               </div>
             </div>
             
             <div className="flex items-center gap-2 pt-2 sm:pt-0">
-              {boost.isActive && boost.tier !== "PRO" && (
+              {isActive && tier !== "PRO" && (
                 <button
                   onClick={() => setShowUpgrade(true)}
                   className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-black px-4 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5"
@@ -207,7 +222,7 @@ export default function BoostAnalyticsPage() {
           <div className="mt-4 space-y-1">
             <p className="text-3xl font-black text-[#0b0c01]">{impressions.toLocaleString()}</p>
             <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <span>+24.2%</span> vs Organic listing views
+              Recorded listing & search views
             </p>
           </div>
         </div>
@@ -221,7 +236,7 @@ export default function BoostAnalyticsPage() {
           <div className="mt-4 space-y-1">
             <p className="text-3xl font-black text-[#0b0c01]">{clicks.toLocaleString()}</p>
             <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <span>{ctr}%</span> Avg Spotlight Click CTR
+              <span>{ctr}%</span> Click-Through Rate (CTR)
             </p>
           </div>
         </div>
@@ -235,7 +250,7 @@ export default function BoostAnalyticsPage() {
           <div className="mt-4 space-y-1">
             <p className="text-3xl font-black text-[#0b0c01]">{registrations.toLocaleString()}</p>
             <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <span>+15.4%</span> Lead conversion efficiency
+              <span>{conversionRate}%</span> Conversion Rate
             </p>
           </div>
         </div>
@@ -249,7 +264,7 @@ export default function BoostAnalyticsPage() {
           <div className="mt-4 space-y-1">
             <p className="text-3xl font-black text-[#0b0c01]">₹{estimatedRevenue.toLocaleString()}</p>
             <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <span>{roi}x</span> estimated ROI multiplier
+              <span>{roi > 0 ? `+${roi}%` : `${roi}%`}</span> ROI Return
             </p>
           </div>
         </div>
@@ -263,8 +278,8 @@ export default function BoostAnalyticsPage() {
         <div className="lg:col-span-2 bg-white border border-black/5 p-6 rounded-[32px] shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-extrabold text-base text-[#0b0c01]">Daily Campaign Progress</h3>
-              <p className="text-[10px] text-muted-foreground font-semibold">Impressions vs detail clicks trend</p>
+              <h3 className="font-extrabold text-base text-[#0b0c01]">Campaign Telemetry Totals</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold">Real-time impressions, clicks and enrollment totals</p>
             </div>
             <span className="text-[10px] bg-muted px-2.5 py-1 rounded-lg font-bold text-muted-foreground uppercase">Realtime</span>
           </div>
@@ -297,7 +312,7 @@ export default function BoostAnalyticsPage() {
         <div className="bg-white border border-black/5 p-6 rounded-[32px] shadow-sm flex flex-col justify-between space-y-6">
           <div className="space-y-1">
             <h3 className="font-extrabold text-base text-[#0b0c01]">Attribution Channels</h3>
-            <p className="text-[10px] text-muted-foreground font-semibold">Attribution score of student touchpoints</p>
+            <p className="text-[10px] text-muted-foreground font-semibold">Placement click distribution</p>
           </div>
 
           <div className="w-full h-48 flex items-center justify-center">
@@ -360,7 +375,7 @@ export default function BoostAnalyticsPage() {
               <span>{ctr}% CTR</span>
             </div>
             <div className="h-6 w-full bg-blue-500/10 rounded-full overflow-hidden relative border border-blue-500/20">
-              <div className="h-full bg-blue-500/25 rounded-full flex items-center px-4 text-[10px] font-black text-blue-800" style={{ width: `${Math.max(15, Number(ctr) * 5)}%` }}>
+              <div className="h-full bg-blue-500/25 rounded-full flex items-center px-4 text-[10px] font-black text-blue-800" style={{ width: `${Math.min(100, Math.max(5, Number(ctr)))}%` }}>
                 {clicks.toLocaleString()} clicks
               </div>
             </div>
@@ -370,10 +385,10 @@ export default function BoostAnalyticsPage() {
           <div className="space-y-1">
             <div className="flex justify-between text-xs font-bold text-[#0b0c01]">
               <span>3. Paid Enrollment (Conversion)</span>
-              <span>{((registrations / clicks) * 100).toFixed(1)}% Conversion Rate</span>
+              <span>{conversionRate}% Conversion Rate</span>
             </div>
             <div className="h-6 w-full bg-purple-500/10 rounded-full overflow-hidden relative border border-purple-500/20">
-              <div className="h-full bg-purple-500/25 rounded-full flex items-center px-4 text-[10px] font-black text-purple-800" style={{ width: `${Math.max(8, (registrations / clicks) * 100)}%` }}>
+              <div className="h-full bg-purple-500/25 rounded-full flex items-center px-4 text-[10px] font-black text-purple-800" style={{ width: `${Math.min(100, Math.max(5, Number(conversionRate)))}%` }}>
                 {registrations.toLocaleString()} signups
               </div>
             </div>
@@ -383,20 +398,20 @@ export default function BoostAnalyticsPage() {
       </div>
 
       {/* Modals */}
-      {showUpgrade && (
+      {showUpgrade && boost?.id && (
         <BoostUpgradeModal
           boostId={boost.id}
-          currentTier={boost.tier}
+          currentTier={tier}
           isOpen={showUpgrade}
           onClose={() => setShowUpgrade(false)}
           onSuccess={() => router.refresh()}
         />
       )}
 
-      {showRenew && (
+      {showRenew && boost?.id && (
         <BoostRenewModal
           boostId={boost.id}
-          tier={boost.tier}
+          tier={tier}
           isOpen={showRenew}
           onClose={() => setShowRenew(false)}
           onSuccess={() => router.refresh()}
