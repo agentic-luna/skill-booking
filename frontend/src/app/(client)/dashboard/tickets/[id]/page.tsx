@@ -320,6 +320,46 @@ export default function SingleBookingDetailPage() {
                 )}
               </Card>
 
+              {/* Registered Participants Breakdown Card */}
+              <Card className="p-6 rounded-2xl border-border/50 shadow-sm bg-card space-y-4">
+                <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                  <h3 className="font-bold text-base text-foreground flex items-center gap-2">
+                    <Ticket className="h-4 w-4 text-primary" /> Enrolled Participants ({booking.participants?.length || booking.seatCount || 1})
+                  </h3>
+                  <span className="text-xs text-muted-foreground font-medium">Confirmed Passes</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {booking.participants && booking.participants.length > 0 ? (
+                    booking.participants.map((p: any, idx: number) => (
+                      <div key={idx} className="p-3.5 bg-muted/20 border border-border/40 rounded-xl space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-foreground truncate">{p.fullName}</span>
+                          <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                            p.isPrimary ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted text-muted-foreground"
+                          }`}>
+                            {p.isPrimary ? "Primary" : `Participant #${idx + 1}`}
+                          </span>
+                        </div>
+                        <div className="text-muted-foreground space-y-0.5 text-[11px]">
+                          {p.email && <div>📧 {p.email}</div>}
+                          {p.mobile && <div>📱 {p.mobile}</div>}
+                          {p.state && <div>📍 {p.state}{p.city ? `, ${p.city}` : ''}</div>}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3.5 bg-muted/20 border border-border/40 rounded-xl space-y-1.5 text-xs col-span-2">
+                      <div className="font-bold text-foreground">{user?.firstName} {user?.lastName}</div>
+                      <div className="text-muted-foreground text-[11px]">
+                        <div>📧 {user?.email}</div>
+                        <div>📱 {user?.phone}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+
               {/* Flipkart-inspired Help & Complaint Support Section */}
               <Card className="p-6 rounded-2xl border-border/50 shadow-sm bg-card space-y-6" id="help-section">
                 <div className="flex items-center justify-between border-b border-border/40 pb-4">

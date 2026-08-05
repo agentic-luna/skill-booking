@@ -17,10 +17,12 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 } from "@/components/ui/dialog";
 import { Program } from "@/constants/mockData";
+import { INDIAN_STATES } from "@/constants/states";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   useBookingModalStore, ParticipantDetail, PrimaryParticipant
 } from "@/features/client/store/bookingModalStore";
+import { primaryParticipantSchema, additionalParticipantSchema } from "@/features/client/validation/bookingValidation";
 
 interface BookingModalProps {
   open?: boolean;
@@ -125,15 +127,42 @@ export default function BookingModal(props: BookingModalProps) {
   const summary = calcSummary(activeProgram.price, store.qty, platformRate);
 
   const validatePrimary = () => {
-    const errs: Partial<Record<keyof PrimaryParticipant, string>> = {};
-    if (!store.primary.fullName.trim()) errs.fullName = "Full name is required";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.primary.email)) errs.email = "Valid email is required";
-    if (!/^\+?[\d\s-]{7,15}$/.test(store.primary.mobile)) errs.mobile = "Valid mobile number is required";
-    if (!store.primary.dob) errs.dob = "Date of birth is required";
-    if (!store.primary.gender) errs.gender = "Gender is required";
-    if (!store.primary.city.trim()) errs.city = "City is required";
-    store.setPrimaryErrors(errs);
-    return Object.keys(errs).length === 0;
+    // Primary participant validation with Zod
+    const primaryResult = primaryParticipantSchema.safeParse(store.primary);
+    const primaryErrs: Partial<Record<keyof PrimaryParticipant, string>> = {};
+
+    if (!primaryResult.success) {
+      for (const issue of primaryResult.error.issues) {
+        const path = issue.path[0] as keyof PrimaryParticipant;
+        if (path && !primaryErrs[path]) {
+          primaryErrs[path] = issue.message;
+        }
+      }
+    }
+    store.setPrimaryErrors(primaryErrs);
+
+    // Additional participants validation with Zod
+    const additionalErrs: Record<number, Partial<Record<keyof ParticipantDetail, string>>> = {};
+    let additionalsValid = true;
+
+    store.additionals.forEach((add, idx) => {
+      const addResult = additionalParticipantSchema.safeParse(add);
+      if (!addResult.success) {
+        additionalsValid = false;
+        const errObj: Partial<Record<keyof ParticipantDetail, string>> = {};
+        for (const issue of addResult.error.issues) {
+          const path = issue.path[0] as keyof ParticipantDetail;
+          if (path && !errObj[path]) {
+            errObj[path] = issue.message;
+          }
+        }
+        additionalErrs[idx] = errObj;
+      }
+    });
+
+    store.setAdditionalErrors(additionalErrs);
+
+    return primaryResult.success && additionalsValid;
   };
 
   const handleNext = () => {
@@ -152,7 +181,11 @@ export default function BookingModal(props: BookingModalProps) {
     store.setPaymentLoading(true);
     try {
       await startCheckout(
-        { eventId: activeProgram.id, seatCount: store.qty },
+        {
+          eventId: activeProgram.id,
+          seatCount: store.qty,
+          participants: store.getFormattedParticipants(),
+        },
         {
           name: store.primary.fullName || user?.firstName || "Guest",
           email: store.primary.email || user?.email || "",
@@ -300,11 +333,11 @@ export default function BookingModal(props: BookingModalProps) {
                   <div className="space-y-5">
                     <div>
                       <h3 className="font-bold text-sm text-foreground mb-1">Primary Participant Details</h3>
-                      <p className="text-[11px] text-muted-foreground">These details are auto-populated from your account session.</p>
+                      <p className="text-[11px] text-muted-foreground">Account session contact info is locked. Name and state are editable.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {/* Full Name */}
+                      {/* Full Name (Editable) */}
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold flex items-center gap-1.5"><UserIcon className="h-3 w-3 text-muted-foreground" /> Full Name *</Label>
                         <Input placeholder="e.g. Rohan Mehta" className="h-9 text-xs" value={store.primary.fullName}
@@ -312,19 +345,19 @@ export default function BookingModal(props: BookingModalProps) {
                         {store.primaryErrors.fullName && <p className="text-[10px] text-destructive">{store.primaryErrors.fullName}</p>}
                       </div>
 
-                      {/* Email */}
+                      {/* Email (Read-Only / Disabled) */}
                       <div className="space-y-1">
-                        <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="h-3 w-3 text-muted-foreground" /> Email Address *</Label>
-                        <Input type="email" placeholder="e.g. rohan@example.com" className="h-9 text-xs" value={store.primary.email}
-                          onChange={e => store.updatePrimaryField("email", e.target.value)} />
+                        <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="h-3 w-3 text-muted-foreground" /> Email Address (Locked)</Label>
+                        <Input type="email" disabled placeholder="e.g. rohan@example.com" className="h-9 text-xs bg-muted/50 cursor-not-allowed opacity-75" value={store.primary.email}
+                          readOnly title="Account email cannot be modified" />
                         {store.primaryErrors.email && <p className="text-[10px] text-destructive">{store.primaryErrors.email}</p>}
                       </div>
 
-                      {/* Mobile */}
+                      {/* Mobile (Read-Only / Disabled) */}
                       <div className="space-y-1">
-                        <Label className="text-xs font-semibold flex items-center gap-1.5"><Phone className="h-3 w-3 text-muted-foreground" /> Mobile Number *</Label>
-                        <Input type="tel" placeholder="e.g. +91 9876543210" className="h-9 text-xs" value={store.primary.mobile}
-                          onChange={e => store.updatePrimaryField("mobile", e.target.value)} />
+                        <Label className="text-xs font-semibold flex items-center gap-1.5"><Phone className="h-3 w-3 text-muted-foreground" /> Mobile Number (Locked)</Label>
+                        <Input type="tel" disabled placeholder="e.g. +91 9876543210" className="h-9 text-xs bg-muted/50 cursor-not-allowed opacity-75" value={store.primary.mobile}
+                          readOnly title="Account mobile number cannot be modified" />
                         {store.primaryErrors.mobile && <p className="text-[10px] text-destructive">{store.primaryErrors.mobile}</p>}
                       </div>
 
@@ -353,16 +386,22 @@ export default function BookingModal(props: BookingModalProps) {
                       {/* City */}
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold flex items-center gap-1.5"><MapPin className="h-3 w-3 text-muted-foreground" /> City *</Label>
-                        <Input placeholder="e.g. Mumbai" className="h-9 text-xs" value={store.primary.city}
+                        <Input placeholder="e.g. Kochi" className="h-9 text-xs" value={store.primary.city}
                           onChange={e => store.updatePrimaryField("city", e.target.value)} />
                         {store.primaryErrors.city && <p className="text-[10px] text-destructive">{store.primaryErrors.city}</p>}
                       </div>
 
-                      {/* State */}
+                      {/* State (Selectable Constants Dropdown) */}
                       <div className="space-y-1">
-                        <Label className="text-xs font-semibold flex items-center gap-1.5"><MapPin className="h-3 w-3 text-muted-foreground" /> State</Label>
-                        <Input placeholder="e.g. Maharashtra" className="h-9 text-xs" value={store.primary.state}
-                          onChange={e => store.updatePrimaryField("state", e.target.value)} />
+                        <Label className="text-xs font-semibold flex items-center gap-1.5"><MapPin className="h-3 w-3 text-muted-foreground" /> State *</Label>
+                        <select className="h-9 text-xs w-full border border-input rounded-md bg-background px-3 focus:outline-none focus:ring-2 focus:ring-ring"
+                          value={store.primary.state} onChange={e => store.updatePrimaryField("state", e.target.value)}>
+                          <option value="">Select State</option>
+                          {INDIAN_STATES.map((st) => (
+                            <option key={st} value={st}>{st}</option>
+                          ))}
+                        </select>
+                        {store.primaryErrors.state && <p className="text-[10px] text-destructive">{store.primaryErrors.state}</p>}
                       </div>
 
                       {/* Country */}
@@ -378,26 +417,60 @@ export default function BookingModal(props: BookingModalProps) {
                       <div className="space-y-4 pt-2">
                         <Separator />
                         <h4 className="font-bold text-xs text-foreground">Additional Participants ({store.qty - 1})</h4>
-                        {store.additionals.map((p, idx) => (
-                          <div key={idx} className="bg-muted/20 rounded-xl border p-3.5 space-y-3">
-                            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Participant #{idx + 2}</span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <Input placeholder="Full Name" className="h-8 text-xs" value={p.fullName}
-                                onChange={e => store.updateAdditionalField(idx, "fullName", e.target.value)} />
-                              <Input type="email" placeholder="Email" className="h-8 text-xs" value={p.email}
-                                onChange={e => store.updateAdditionalField(idx, "email", e.target.value)} />
-                              <Input type="tel" placeholder="Mobile" className="h-8 text-xs" value={p.mobile}
-                                onChange={e => store.updateAdditionalField(idx, "mobile", e.target.value)} />
-                              <select className="h-8 text-xs w-full border border-input rounded-md bg-background px-2"
-                                value={p.gender} onChange={e => store.updateAdditionalField(idx, "gender", e.target.value)}>
-                                <option value="">Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                              </select>
+                        {store.additionals.map((p, idx) => {
+                          const errs = store.additionalErrors[idx] || {};
+                          return (
+                            <div key={idx} className="bg-muted/20 rounded-xl border p-3.5 space-y-3">
+                              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Participant #{idx + 2}</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Full Name */}
+                                <div className="space-y-1">
+                                  <Input placeholder="Full Name *" className="h-8 text-xs" value={p.fullName}
+                                    onChange={e => store.updateAdditionalField(idx, "fullName", e.target.value)} />
+                                  {errs.fullName && <p className="text-[10px] text-destructive">{errs.fullName}</p>}
+                                </div>
+
+                                {/* Email */}
+                                <div className="space-y-1">
+                                  <Input type="email" placeholder="Email Address *" className="h-8 text-xs" value={p.email}
+                                    onChange={e => store.updateAdditionalField(idx, "email", e.target.value)} />
+                                  {errs.email && <p className="text-[10px] text-destructive">{errs.email}</p>}
+                                </div>
+
+                                {/* Mobile */}
+                                <div className="space-y-1">
+                                  <Input type="tel" placeholder="Mobile Number *" className="h-8 text-xs" value={p.mobile}
+                                    onChange={e => store.updateAdditionalField(idx, "mobile", e.target.value)} />
+                                  {errs.mobile && <p className="text-[10px] text-destructive">{errs.mobile}</p>}
+                                </div>
+
+                                {/* Gender */}
+                                <div className="space-y-1">
+                                  <select className="h-8 text-xs w-full border border-input rounded-md bg-background px-2"
+                                    value={p.gender} onChange={e => store.updateAdditionalField(idx, "gender", e.target.value)}>
+                                    <option value="">Select Gender *</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                  </select>
+                                  {errs.gender && <p className="text-[10px] text-destructive">{errs.gender}</p>}
+                                </div>
+
+                                {/* State Dropdown */}
+                                <div className="space-y-1 sm:col-span-2">
+                                  <select className="h-8 text-xs w-full border border-input rounded-md bg-background px-2"
+                                    value={p.state} onChange={e => store.updateAdditionalField(idx, "state", e.target.value)}>
+                                    <option value="">Select State *</option>
+                                    {INDIAN_STATES.map((st) => (
+                                      <option key={st} value={st}>{st}</option>
+                                    ))}
+                                  </select>
+                                  {errs.state && <p className="text-[10px] text-destructive">{errs.state}</p>}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>

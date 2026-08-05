@@ -68,6 +68,7 @@ class BookingsController {
             const booking = await prisma_1.prisma.booking.findUnique({
                 where: { id: bookingId },
                 include: {
+                    participants: true,
                     client: true,
                     event: {
                         include: {
@@ -105,6 +106,7 @@ class BookingsController {
             const booking = await prisma_1.prisma.booking.findUnique({
                 where: { id: bookingId },
                 include: {
+                    participants: true,
                     client: true,
                     event: {
                         include: {
@@ -149,6 +151,7 @@ class BookingsController {
             const booking = await prisma_1.prisma.booking.findUnique({
                 where: { id: bookingId },
                 include: {
+                    participants: true,
                     client: true,
                     event: {
                         include: {

@@ -8,12 +8,14 @@ class CheckoutCommand {
     eventId;
     seatCount;
     customAmount;
+    participants;
     __tag = 'CheckoutCommand';
-    constructor(clientId, eventId, seatCount, customAmount) {
+    constructor(clientId, eventId, seatCount, customAmount, participants) {
         this.clientId = clientId;
         this.eventId = eventId;
         this.seatCount = seatCount;
         this.customAmount = customAmount;
+        this.participants = participants;
     }
 }
 exports.CheckoutCommand = CheckoutCommand;
@@ -29,7 +31,7 @@ class CheckoutCommandHandler {
         this.commsService = commsService;
     }
     async handle(command) {
-        const { clientId, eventId, seatCount, customAmount } = command;
+        const { clientId, eventId, seatCount, customAmount, participants } = command;
         if (seatCount <= 0) {
             throw new errors_1.BadRequestError('Seat count must be greater than zero.');
         }
@@ -72,6 +74,7 @@ class CheckoutCommandHandler {
             status: client_1.BookingStatus.INITIATED,
             commissionType: event.commission?.commissionType || null,
             platformValue: event.commission?.platformValue ? Number(event.commission.platformValue) : null,
+            participants: participants || [],
         });
         // Invalidate event search caches
         await this.cacheService.delPattern('events:search:*');

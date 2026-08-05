@@ -21,6 +21,7 @@ export interface IBookingRepository {
     paymentMethod?: string | null;
     paymentGateway?: string | null;
     webhookProcessed?: boolean;
+    participants?: any[];
   }): Promise<Booking>;
   update(id: string, data: any): Promise<Booking>;
   updatePaymentDetails(bookingId: string, details: {

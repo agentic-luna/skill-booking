@@ -90,6 +90,7 @@ export class BookingsController {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
+          participants: true,
           client: true,
           event: {
             include: {
@@ -131,6 +132,7 @@ export class BookingsController {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
+          participants: true,
           client: true,
           event: {
             include: {
@@ -178,6 +180,7 @@ export class BookingsController {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
+          participants: true,
           client: true,
           event: {
             include: {

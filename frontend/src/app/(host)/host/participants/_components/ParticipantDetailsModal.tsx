@@ -51,7 +51,7 @@ export default function ParticipantDetailsModal({
           {/* Student Profile Header */}
           <div className="bg-card border border-black/5 dark:border-white/5 p-4 rounded-xl flex items-center space-x-4">
             <img
-              src={selectedStudent.avatarUrl}
+              src={selectedStudent.avatarUrl || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150"}
               alt={selectedStudent.name}
               className="h-14 w-14 rounded-full object-cover border border-border/20 shadow-xs shrink-0"
             />
@@ -72,6 +72,33 @@ export default function ParticipantDetailsModal({
               </span>
             </div>
           </div>
+
+          {/* All Participants List (Primary + Additional) */}
+          {selectedStudent.participants && selectedStudent.participants.length > 0 && (
+            <div className="bg-muted/30 border border-black/5 dark:border-white/5 p-4 rounded-xl space-y-3">
+              <div className="font-bold text-xs text-foreground uppercase tracking-wider flex justify-between items-center border-b border-black/5 dark:border-white/5 pb-2">
+                <span>All Enrolled Participants ({selectedStudent.participants.length})</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Seat Passes</span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {selectedStudent.participants.map((p: any, idx: number) => (
+                  <div key={idx} className="bg-card p-2.5 rounded-lg border border-black/5 flex flex-col gap-0.5 text-xs">
+                    <div className="flex items-center justify-between font-bold text-foreground">
+                      <span>{p.fullName}</span>
+                      <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-extrabold ${p.isPrimary ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                        {p.isPrimary ? "Primary" : `Participant #${idx + 1}`}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5">
+                      {p.email && <span>📧 {p.email}</span>}
+                      {p.mobile && <span>📱 {p.mobile}</span>}
+                      {p.state && <span>📍 {p.state}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Workshop Details Card */}
           <div className="bg-muted/20 border border-black/5 dark:border-white/5 p-4 rounded-xl space-y-2">

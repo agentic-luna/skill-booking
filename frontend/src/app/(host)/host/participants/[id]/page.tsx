@@ -26,6 +26,7 @@ interface StudentRosterItem {
   paid: number;
   date: string;
   status: "confirmed" | "completed" | "canceled" | "refunded" | "initiated";
+  participants?: any[];
   refundRequest?: {
     reason: string | null;
     status: "PENDING" | "APPROVED" | "DECLINED";
@@ -102,6 +103,7 @@ export default function ParticipantDetailPage() {
       paid: Number(b.totalAmount),
       date: new Date(b.createdAt).toLocaleDateString(),
       status: b.status.toLowerCase() as any,
+      participants: b.participants || [],
       refundRequest: b.refundRequest ? {
         reason: b.refundRequest.reason,
         status: b.refundRequest.status,

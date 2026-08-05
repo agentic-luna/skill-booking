@@ -19,6 +19,7 @@ export interface CreateOrderPayload {
   eventId: string;
   seatCount: number;
   customAmount?: number;
+  participants?: any[];
 }
 
 export interface RazorpayOrder {

@@ -166,10 +166,21 @@ export class TicketGenerationService {
         doc.circle(0, cutY, 12).fill('#f3f4f6');
         doc.circle(400, cutY, 12).fill('#f3f4f6');
 
+        const participantsList = Array.isArray(booking.participants) && booking.participants.length > 0
+          ? booking.participants
+          : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
+        const primaryAttendee = participantsList.find((p: any) => p.isPrimary) || participantsList[0];
+        const attendeeDisplayName = (primaryAttendee?.fullName || `${client.firstName} ${client.lastName}`).toUpperCase();
+        const participantNamesSummary = participantsList.map((p: any) => p.fullName).filter(Boolean).join(', ');
+
         // Ticket Details Body
-        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('ATTENDEE', 30, cutY + 25);
-        doc.fillColor('#111827').font('Helvetica-Bold').fontSize(18).text(`${client.firstName} ${client.lastName}`.toUpperCase(), 30, cutY + 42);
-        doc.fillColor('#4b5563').font('Helvetica').fontSize(10).text('TICKET HOLDER / WORKSHOP ATTENDEE', 30, cutY + 62);
+        doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('ATTENDEE(S)', 30, cutY + 25);
+        doc.fillColor('#111827').font('Helvetica-Bold').fontSize(16).text(attendeeDisplayName, 30, cutY + 42, { width: 340 });
+        if (participantsList.length > 1) {
+          doc.fillColor('#4b5563').font('Helvetica').fontSize(8.5).text(`Group: ${participantNamesSummary}`, 30, cutY + 62, { width: 340 });
+        } else {
+          doc.fillColor('#4b5563').font('Helvetica').fontSize(9.5).text('TICKET HOLDER / WORKSHOP ATTENDEE', 30, cutY + 62);
+        }
 
         // 2x2 Metadata Grid
         const gridY = cutY + 88;

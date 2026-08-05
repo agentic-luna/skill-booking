@@ -41,7 +41,7 @@ export class PaymentController {
     next: NextFunction
   ) {
     try {
-      const { eventId, seatCount, customAmount } = req.body;
+      const { eventId, seatCount, customAmount, participants } = req.body;
 
       if (!eventId || !seatCount) {
         throw new BadRequestError('eventId and seatCount are required.');
@@ -52,7 +52,8 @@ export class PaymentController {
           req.user!.id,
           eventId,
           Number(seatCount),
-          customAmount ? Number(customAmount) : undefined
+          customAmount ? Number(customAmount) : undefined,
+          Array.isArray(participants) ? participants : undefined
         )
       );
 

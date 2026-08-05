@@ -7,8 +7,9 @@ export interface ParticipantDetail {
   fullName: string;
   email: string;
   mobile: string;
-  age: string;
+  age?: string;
   gender: string;
+  state: string;
 }
 
 export interface PrimaryParticipant {
@@ -36,6 +37,7 @@ interface BookingModalState {
   notificationsAgreed: boolean;
   
   primaryErrors: Partial<Record<keyof PrimaryParticipant, string>>;
+  additionalErrors: Record<number, Partial<Record<keyof ParticipantDetail, string>>>;
   razorpayAlert: boolean;
   paymentLoading: boolean;
   paymentSuccess: boolean;
@@ -56,6 +58,8 @@ interface BookingModalState {
   setCancellationAgreed: (agreed: boolean) => void;
   setNotificationsAgreed: (agreed: boolean) => void;
   setPrimaryErrors: (errors: Partial<Record<keyof PrimaryParticipant, string>>) => void;
+  setAdditionalErrors: (errors: Record<number, Partial<Record<keyof ParticipantDetail, string>>>) => void;
+  getFormattedParticipants: () => any[];
   setRazorpayAlert: (open: boolean) => void;
   setPaymentLoading: (loading: boolean) => void;
   setPaymentSuccess: (success: boolean, ref?: string) => void;
@@ -89,6 +93,7 @@ export const useBookingModalStore = create<BookingModalState>()(
       notificationsAgreed: false,
 
       primaryErrors: {},
+      additionalErrors: {},
       razorpayAlert: false,
       paymentLoading: false,
       paymentSuccess: false,
@@ -121,6 +126,7 @@ export const useBookingModalStore = create<BookingModalState>()(
             cancellationAgreed: false,
             notificationsAgreed: false,
             primaryErrors: {},
+            additionalErrors: {},
             razorpayAlert: false,
             paymentLoading: false,
             paymentSuccess: false,
@@ -162,6 +168,7 @@ export const useBookingModalStore = create<BookingModalState>()(
             mobile: "",
             age: "",
             gender: "",
+            state: "",
           }));
           updatedAdditionals = [...updatedAdditionals, ...newEntries];
         } else if (updatedAdditionals.length > extra) {
@@ -188,7 +195,11 @@ export const useBookingModalStore = create<BookingModalState>()(
           if (updated[index]) {
             updated[index] = { ...updated[index], [field]: value };
           }
-          return { additionals: updated };
+          const updatedErrors = { ...state.additionalErrors };
+          if (updatedErrors[index]) {
+            updatedErrors[index] = { ...updatedErrors[index], [field]: undefined };
+          }
+          return { additionals: updated, additionalErrors: updatedErrors };
         });
       },
 
@@ -197,6 +208,34 @@ export const useBookingModalStore = create<BookingModalState>()(
       setNotificationsAgreed: (notificationsAgreed) => set({ notificationsAgreed }),
 
       setPrimaryErrors: (primaryErrors) => set({ primaryErrors }),
+      setAdditionalErrors: (additionalErrors) => set({ additionalErrors }),
+
+      getFormattedParticipants: () => {
+        const state = get();
+        const list = [
+          {
+            isPrimary: true,
+            fullName: state.primary.fullName,
+            email: state.primary.email,
+            mobile: state.primary.mobile,
+            dob: state.primary.dob,
+            gender: state.primary.gender,
+            city: state.primary.city,
+            state: state.primary.state,
+            country: state.primary.country,
+          },
+          ...state.additionals.map((a) => ({
+            isPrimary: false,
+            fullName: a.fullName,
+            email: a.email,
+            mobile: a.mobile,
+            gender: a.gender,
+            state: a.state,
+          })),
+        ];
+        return list;
+      },
+
       setRazorpayAlert: (razorpayAlert) => set({ razorpayAlert }),
       setPaymentLoading: (paymentLoading) => set({ paymentLoading }),
       
@@ -214,6 +253,7 @@ export const useBookingModalStore = create<BookingModalState>()(
           primary: initialPrimaryState,
           additionals: [],
           primaryErrors: {},
+          additionalErrors: {},
           razorpayAlert: false,
           paymentLoading: false,
           paymentSuccess: false,

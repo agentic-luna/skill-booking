@@ -12,7 +12,8 @@ export class CheckoutCommand implements IRequest<any> {
     public readonly clientId: string,
     public readonly eventId: string,
     public readonly seatCount: number,
-    public readonly customAmount?: number
+    public readonly customAmount?: number,
+    public readonly participants?: any[]
   ) {}
 }
 
@@ -25,7 +26,7 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
   ) {}
 
   async handle(command: CheckoutCommand): Promise<any> {
-    const { clientId, eventId, seatCount, customAmount } = command;
+    const { clientId, eventId, seatCount, customAmount, participants } = command;
 
     if (seatCount <= 0) {
       throw new BadRequestError('Seat count must be greater than zero.');
@@ -78,6 +79,7 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       status: BookingStatus.INITIATED,
       commissionType: event.commission?.commissionType || null,
       platformValue: event.commission?.platformValue ? Number(event.commission.platformValue) : null,
+      participants: participants || [],
     });
 
     // Invalidate event search caches

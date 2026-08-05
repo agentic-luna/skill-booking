@@ -218,6 +218,7 @@ export class UsersController {
           event: { hostId: hostProfile.id },
         },
         include: {
+          participants: true,
           event: true,
           client: true,
         },
@@ -235,6 +236,7 @@ export class UsersController {
       const bookings = await prisma.booking.findMany({
         where: { eventId },
         include: {
+          participants: true,
           client: true,
           event: true,
           refundRequest: true,

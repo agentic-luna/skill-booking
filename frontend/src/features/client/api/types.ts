@@ -85,6 +85,7 @@ export interface ClientBooking {
   status: BookingStatus;
   createdAt: string;
   event: ClientEvent;
+  participants?: any[];
   refundRequest?: {
     id: string;
     reason: string | null;
