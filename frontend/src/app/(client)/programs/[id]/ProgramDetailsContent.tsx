@@ -63,7 +63,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
     onSuccess: (result) => {
       setPaymentLoading(false);
       setProgram((prev) =>
-        prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - (result.booking.seatCount ?? 1)) } : prev
+        prev ? { ...prev, spotsLeft: Math.max(0, prev.spotsLeft - (result.booking?.seatCount ?? 1)) } : prev
       );
       setPaymentSuccess(true);
       showAlert(

@@ -189,7 +189,7 @@ export const useHostStore = create<HostState>((set) => ({
       set({ isLoading: false });
       return response;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to request boost';
+      const message = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to request boost';
       set({ error: message, isLoading: false });
       throw new Error(message);
     }

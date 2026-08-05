@@ -13,7 +13,7 @@ import { useAlertStore } from "@/features/alerts/store/alertStore";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/config";
-import { getRazorpayPublicKey } from "@/features/payment/api/paymentApi";
+import { useRazorpayCheckout } from "@/features/payment/hooks/useRazorpayCheckout";
 import PlacementPreviewModal from "@/components/host/PlacementPreviewModal";
 
 // ── Pricing Plan Configurations ─────────────────────────────────────────────
@@ -140,6 +140,16 @@ export default function BoostPricingPage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [showPlacementPreview, setShowPlacementPreview] = useState(false);
 
+  const { startCustomCheckout } = useRazorpayCheckout({
+    onSuccess: () => {
+      showAlert("Promotion Activated! 🚀", "Your event is now boosted and highlighted.", "success");
+      router.push("/host/boost-history");
+    },
+    onError: (msg) => {
+      showAlert("Checkout Failed", msg, "destructive");
+    },
+  });
+
   // Extract unique sorted days configuration dynamically from the database settings
   const dynamicDurations = boostPricing && Array.isArray(boostPricing) && boostPricing.length > 0
     ? Array.from(new Set(boostPricing.map((p: any) => Number(p.days)))).sort((a, b) => a - b).map(d => ({
@@ -163,20 +173,10 @@ export default function BoostPricingPage() {
     }
   }, [boostPricing]);
 
-  // Load events, pricing & Razorpay script
+  // Load events & pricing
   useEffect(() => {
     fetchMyEvents();
     fetchBoostPricing();
-
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
   }, [fetchMyEvents, fetchBoostPricing]);
 
   // Helper to dynamically extract plan price from DB configurations
@@ -224,51 +224,47 @@ export default function BoostPricingPage() {
     }
 
     setCheckoutLoading(tier);
+    let currentBoostId: string | null = null;
+
     try {
-      const response = await requestBoost(selectedEventId, selectedDuration, tier);
-      const { boostRequest, razorpayOrder } = response;
+      await startCustomCheckout({
+        createOrder: async () => {
+          const response = await requestBoost(selectedEventId, selectedDuration, tier);
+          const { boostRequest, razorpayOrder } = response;
 
-      if (!razorpayOrder) {
-        throw new Error("Failed to initialize transaction order.");
-      }
-
-      // Fetch dynamic active Razorpay Key ID
-      let activeKeyId = await getRazorpayPublicKey()
-      const options = {
-        key: activeKeyId,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        name: "BookMyTraining",
-        description: `Boost Plan: ${tier} (${selectedDuration} Days)`,
-        order_id: razorpayOrder.id,
-        handler: async function (res: any) {
-          try {
-            await verifyBoostPayment({
-              boostId: boostRequest.id,
-              razorpayPaymentId: res.razorpay_payment_id,
-              razorpayOrderId: res.razorpay_order_id,
-              razorpaySignature: res.razorpay_signature,
-            });
-            showAlert("Promotion Activated! 🚀", "Your event is now boosted and highlighted.", "success");
-            router.push("/host/boost-history");
-          } catch (err: any) {
-            showAlert("Verification Error", err.message || "Failed to confirm payment.", "destructive");
+          if (!razorpayOrder) {
+            throw new Error("Failed to initialize transaction order.");
           }
+
+          currentBoostId = boostRequest.id;
+
+          return {
+            razorpayOrder,
+            description: `Boost Plan: ${tier} (${selectedDuration} Days)`,
+            extraData: boostRequest,
+          };
         },
-        prefill: {
+        userInfo: {
           name: `${user?.firstName || ""} ${user?.lastName || ""}`.trim(),
           email: user?.email || "",
-          contact: user?.phone || "",
+          phone: user?.phone || "",
         },
-        theme: {
-          color: "#a0f212",
+        modalTitle: "BookMyTraining",
+        themeColor: "#a0f212",
+        verifyPayment: async (res) => {
+          if (!currentBoostId) {
+            throw new Error("Boost request ID missing.");
+          }
+          return await verifyBoostPayment({
+            boostId: currentBoostId,
+            razorpayPaymentId: res.razorpay_payment_id,
+            razorpayOrderId: res.razorpay_order_id,
+            razorpaySignature: res.razorpay_signature,
+          });
         },
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+      });
     } catch (err: any) {
-      showAlert("Checkout Failed", err.message || "Error starting checkout.", "destructive");
+      // Errors handled via hook onError callback
     } finally {
       setCheckoutLoading(null);
     }

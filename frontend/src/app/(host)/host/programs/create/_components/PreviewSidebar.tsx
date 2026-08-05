@@ -137,7 +137,7 @@ export default function PreviewSidebar({
                   <span className="flex items-center"><Ticket className="h-2.5 w-2.5 mr-1" /> {watchedMaxSpots || 0} spots</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border/30">
-                  <span className="text-sm font-extrabold text-foreground">${watchedPrice || 0}</span>
+                  <span className="text-sm font-extrabold text-foreground">₹{watchedPrice || 0}</span>
                   <span className="text-[9px] text-muted-foreground">Live Preview</span>
                 </div>
               </div>

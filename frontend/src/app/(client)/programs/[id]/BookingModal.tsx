@@ -87,7 +87,7 @@ export default function BookingModal(props: BookingModalProps) {
   const { startCheckout, isLoading: rzpLoading, isSuccess: rzpSuccess } = useRazorpayCheckout({
     onSuccess: (result) => {
       store.setPaymentLoading(false);
-      store.setPaymentSuccess(true, result.booking.bookingRef);
+      store.setPaymentSuccess(true, result.booking?.bookingRef);
       if (store.onSuccessCallback) store.onSuccessCallback();
     },
     onError: (msg) => {

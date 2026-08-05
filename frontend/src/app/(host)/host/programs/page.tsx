@@ -120,7 +120,7 @@ export default function HostProgramsPage() {
 
         {/* Footer Actions */}
         <div className="mt-auto pt-6 flex justify-between items-center border-t border-black/5">
-          <div className="text-2xl font-black text-[#0b0c01]">${prog.price}</div>
+          <div className="text-2xl font-black text-[#0b0c01]">₹{prog.price}</div>
           <div className="flex gap-2">
             <Link href={`/host/programs/${prog.id}/edit`}>
               <button className="w-10 h-10 rounded-full bg-gray-100 hover:bg-[#0b0c01] text-[#0b0c01] hover:text-white flex items-center justify-center transition-colors shadow-sm">
