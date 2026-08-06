@@ -20,6 +20,34 @@ function mapBooking(b) {
                 ...b.event.commission,
                 platformValue: Number(b.event.commission.platformValue),
             } : null,
+            instructor: b.event.instructor ? {
+                id: b.event.instructor.id,
+                name: b.event.instructor.name,
+                bio: b.event.instructor.bio,
+                photoUrl: b.event.instructor.photoUrl,
+                companyName: b.event.instructor.companyName,
+                facebook: b.event.instructor.facebook,
+                instagram: b.event.instructor.instagram,
+                linkedin: b.event.instructor.linkedin,
+            } : null,
+            venue: b.event.venue ? {
+                id: b.event.venue.id,
+                address: b.event.venue.address,
+                meetingLink: b.event.venue.meetingLink,
+            } : null,
+            venueDetails: (b.event.instructor || b.event.venue || b.event.venueDetails) ? {
+                address: b.event.venue?.address || '',
+                meetingLink: b.event.venue?.meetingLink || '',
+                district: b.event.venueDetails?.district || '',
+                endDate: b.event.venueDetails?.endDate || '',
+                instructorName: b.event.instructor?.name || '',
+                companyName: b.event.instructor?.companyName || '',
+                instructorBio: b.event.instructor?.bio || '',
+                instructorPhoto: b.event.instructor?.photoUrl || '',
+                instagram: b.event.instructor?.instagram || '',
+                linkedin: b.event.instructor?.linkedin || '',
+                facebook: b.event.instructor?.facebook || '',
+            } : b.event.venueDetails,
         } : undefined,
     };
 }
@@ -29,9 +57,12 @@ class PrismaBookingRepository {
             where: { id },
             include: {
                 participants: true,
+                client: true,
                 event: {
                     include: {
                         commission: true,
+                        venue: true,
+                        instructor: true,
                         host: {
                             include: {
                                 user: true,
@@ -53,6 +84,8 @@ class PrismaBookingRepository {
                 event: {
                     include: {
                         commission: true,
+                        venue: true,
+                        instructor: true,
                         host: {
                             include: {
                                 user: true,
@@ -75,6 +108,8 @@ class PrismaBookingRepository {
                 event: {
                     include: {
                         commission: true,
+                        venue: true,
+                        instructor: true,
                         host: {
                             include: {
                                 user: true,
@@ -97,6 +132,8 @@ class PrismaBookingRepository {
                 event: {
                     include: {
                         commission: true,
+                        venue: true,
+                        instructor: true,
                         host: {
                             include: {
                                 user: true,
@@ -115,6 +152,8 @@ class PrismaBookingRepository {
                 participants: true,
                 event: {
                     include: {
+                        venue: true,
+                        instructor: true,
                         host: {
                             include: {
                                 user: true,

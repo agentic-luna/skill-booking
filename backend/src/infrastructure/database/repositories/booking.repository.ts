@@ -19,6 +19,34 @@ function mapBooking(b: any): any {
         ...b.event.commission,
         platformValue: Number(b.event.commission.platformValue),
       } : null,
+      instructor: b.event.instructor ? {
+        id: b.event.instructor.id,
+        name: b.event.instructor.name,
+        bio: b.event.instructor.bio,
+        photoUrl: b.event.instructor.photoUrl,
+        companyName: b.event.instructor.companyName,
+        facebook: b.event.instructor.facebook,
+        instagram: b.event.instructor.instagram,
+        linkedin: b.event.instructor.linkedin,
+      } : null,
+      venue: b.event.venue ? {
+        id: b.event.venue.id,
+        address: b.event.venue.address,
+        meetingLink: b.event.venue.meetingLink,
+      } : null,
+      venueDetails: (b.event.instructor || b.event.venue || b.event.venueDetails) ? {
+        address: b.event.venue?.address || '',
+        meetingLink: b.event.venue?.meetingLink || '',
+        district: (b.event.venueDetails as any)?.district || '',
+        endDate: (b.event.venueDetails as any)?.endDate || '',
+        instructorName: b.event.instructor?.name || '',
+        companyName: b.event.instructor?.companyName || '',
+        instructorBio: b.event.instructor?.bio || '',
+        instructorPhoto: b.event.instructor?.photoUrl || '',
+        instagram: b.event.instructor?.instagram || '',
+        linkedin: b.event.instructor?.linkedin || '',
+        facebook: b.event.instructor?.facebook || '',
+      } : b.event.venueDetails,
     } : undefined,
   };
 }
@@ -29,9 +57,12 @@ export class PrismaBookingRepository implements IBookingRepository {
       where: { id },
       include: {
         participants: true,
+        client: true,
         event: {
           include: {
             commission: true,
+            venue: true,
+            instructor: true,
             host: {
               include: {
                 user: true,
@@ -54,6 +85,8 @@ export class PrismaBookingRepository implements IBookingRepository {
         event: {
           include: {
             commission: true,
+            venue: true,
+            instructor: true,
             host: {
               include: {
                 user: true,
@@ -76,6 +109,8 @@ export class PrismaBookingRepository implements IBookingRepository {
         event: {
           include: {
             commission: true,
+            venue: true,
+            instructor: true,
             host: {
               include: {
                 user: true,
@@ -98,6 +133,8 @@ export class PrismaBookingRepository implements IBookingRepository {
         event: {
           include: {
             commission: true,
+            venue: true,
+            instructor: true,
             host: {
               include: {
                 user: true,
@@ -117,6 +154,8 @@ export class PrismaBookingRepository implements IBookingRepository {
         participants: true,
         event: {
           include: {
+            venue: true,
+            instructor: true,
             host: {
               include: {
                 user: true,

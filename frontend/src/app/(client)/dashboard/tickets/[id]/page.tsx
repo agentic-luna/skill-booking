@@ -312,12 +312,173 @@ export default function SingleBookingDetailPage() {
                     <Button
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg"
-                      onClick={() => showAlert("Room Launch", "Launching live workshop stream...", "info")}
+                      onClick={() => {
+                        const meetingLink = event?.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink;
+                        if (meetingLink) {
+                          window.open(meetingLink, "_blank");
+                        } else {
+                          showAlert("Launch Class", "Live session link is not set yet. Please check back closer to the event start time.", "warning");
+                        }
+                      }}
                     >
                       <PlayCircle className="h-4 w-4 mr-1.5" /> Launch Live Class
                     </Button>
                   </div>
                 )}
+              </Card>
+
+              {/* Complete Event Details */}
+              <Card className="p-6 rounded-2xl border border-border/50 shadow-sm bg-card space-y-6">
+                <div>
+                  <h3 className="font-bold text-base text-foreground border-b border-border/40 pb-3 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" /> About this Event
+                  </h3>
+                  <div className="mt-3 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {event?.description || "No description available for this event."}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border/40 pt-4">
+                  <div>
+                    <span className="text-xs text-muted-foreground block font-semibold uppercase tracking-wider">Category</span>
+                    <span className="text-sm font-bold text-foreground capitalize">{event?.category?.replace(/-/g, ' ') || "General Skill"}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground block font-semibold uppercase tracking-wider">Duration</span>
+                    <span className="text-sm font-bold text-foreground">{event?.duration || `${event?.durationHours || 2} Hours`}</span>
+                  </div>
+                </div>
+
+                {/* Instructor Section */}
+                <div className="border-t border-border/40 pt-4 space-y-3">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Instructor Profile</h4>
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    {event?.venueDetails?.instructorPhoto ? (
+                      <img
+                        src={event.venueDetails.instructorPhoto}
+                        alt={event.venueDetails.instructorName || instructorName}
+                        className="w-16 h-16 rounded-full object-cover border border-border shadow-xs shrink-0"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-xl shrink-0">
+                        {(event?.venueDetails?.instructorName || instructorName).charAt(0)}
+                      </div>
+                    )}
+                    <div className="space-y-2 flex-1">
+                      <div>
+                        <div className="font-bold text-foreground text-base">
+                          {event?.venueDetails?.instructorName || instructorName}
+                        </div>
+                        {event?.venueDetails?.companyName && (
+                          <div className="text-xs text-muted-foreground font-medium">
+                            💼 {event.venueDetails.companyName}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {event?.venueDetails?.instructorBio || "No bio description available for the instructor."}
+                      </p>
+                      
+                      {/* Social handles */}
+                      {(event?.venueDetails?.instagram || event?.venueDetails?.linkedin || event?.venueDetails?.facebook) && (
+                        <div className="flex gap-3 pt-1">
+                          {event.venueDetails.linkedin && (
+                            <a
+                              href={event.venueDetails.linkedin.startsWith('http') ? event.venueDetails.linkedin : `https://linkedin.com/in/${event.venueDetails.linkedin}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium"
+                            >
+                              🔗 LinkedIn
+                            </a>
+                          )}
+                          {event.venueDetails.instagram && (
+                            <a
+                              href={event.venueDetails.instagram.startsWith('http') ? event.venueDetails.instagram : `https://instagram.com/${event.venueDetails.instagram}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-pink-600 hover:underline flex items-center gap-1 font-medium"
+                            >
+                              📸 Instagram
+                            </a>
+                          )}
+                          {event.venueDetails.facebook && (
+                            <a
+                              href={event.venueDetails.facebook.startsWith('http') ? event.venueDetails.facebook : `https://facebook.com/${event.venueDetails.facebook}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-blue-800 hover:underline flex items-center gap-1 font-medium"
+                            >
+                              👥 Facebook
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Venue Details Section */}
+                <div className="border-t border-border/40 pt-4 space-y-2">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Session Venue / Stream Details</h4>
+                  <div className="p-4 rounded-xl bg-muted/20 border border-border/30 text-xs space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-muted-foreground">Mode:</span>
+                      <span className="font-bold text-foreground">{isOnline ? "Online (Stream Link)" : "Offline (In Person)"}</span>
+                    </div>
+                    {isOnline ? (
+                      <>
+                        <div className="flex justify-between items-center gap-4">
+                          <span className="font-semibold text-muted-foreground shrink-0">Meeting Link:</span>
+                          <span className="font-mono text-primary truncate max-w-[200px] sm:max-w-md">
+                            {(event?.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink) || "Will be updated before session starts"}
+                          </span>
+                        </div>
+                        {(event?.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink) && (
+                          <div className="pt-1 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const link = event?.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink;
+                                if (link) {
+                                  navigator.clipboard.writeText(link);
+                                  showAlert("Copied", "Meeting link copied to clipboard!", "success");
+                                }
+                              }}
+                              className="text-[10px] h-7 px-2.5 rounded-lg"
+                            >
+                              Copy Link
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                const link = event?.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink;
+                                if (link) window.open(link, "_blank");
+                              }}
+                              className="text-[10px] h-7 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              Join Meeting
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="font-semibold text-muted-foreground">Address:</span>
+                          <span className="font-bold text-foreground text-right">{event?.venueDetails?.address || (event as any)?.venue?.address || "Venue Address Not Specified"}</span>
+                        </div>
+                        {event?.venueDetails?.district && (
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-muted-foreground">District/City:</span>
+                            <span className="font-bold text-foreground">{event.venueDetails.district}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </Card>
 
               {/* Registered Participants Breakdown Card */}

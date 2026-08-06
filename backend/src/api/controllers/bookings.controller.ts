@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import PDFDocument from 'pdfkit';
 import { prisma } from '../../config/prisma';
-import { mediator, ticketGenService } from '../di-container';
+import { mediator, ticketGenService, bookingRepo } from '../di-container';
 import { CheckoutCommand } from '../../application/use-cases/bookings/checkout';
 import { CancelBookingCommand } from '../../application/use-cases/bookings/cancel-booking';
 import { GetCancellationQuoteQuery } from '../../application/use-cases/bookings/get-cancellation-quote';
@@ -87,22 +87,7 @@ export class BookingsController {
   static async downloadInvoice(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { bookingId } = req.params;
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
-        include: {
-          participants: true,
-          client: true,
-          event: {
-            include: {
-              host: {
-                include: {
-                  user: true,
-                },
-              },
-            },
-          },
-        },
-      });
+      const booking = await bookingRepo.findById(bookingId);
 
       if (!booking) {
         throw new BadRequestError('Booking not found');
@@ -129,22 +114,7 @@ export class BookingsController {
       const { bookingId } = req.params;
       const format = req.query.format as string || 'pdf';
 
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
-        include: {
-          participants: true,
-          client: true,
-          event: {
-            include: {
-              host: {
-                include: {
-                  user: true,
-                },
-              },
-            },
-          },
-        },
-      });
+      const booking = await bookingRepo.findById(bookingId);
 
       if (!booking) {
         throw new BadRequestError('Booking not found');
@@ -177,22 +147,7 @@ export class BookingsController {
     try {
       const { bookingId } = req.params;
 
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
-        include: {
-          participants: true,
-          client: true,
-          event: {
-            include: {
-              host: {
-                include: {
-                  user: true,
-                },
-              },
-            },
-          },
-        },
-      });
+      const booking = await bookingRepo.findById(bookingId);
 
       res.setHeader('Content-Type', 'text/html');
 

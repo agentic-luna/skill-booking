@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsController = void 0;
-const prisma_1 = require("../../config/prisma");
 const di_container_1 = require("../di-container");
 const checkout_1 = require("../../application/use-cases/bookings/checkout");
 const cancel_booking_1 = require("../../application/use-cases/bookings/cancel-booking");
@@ -65,22 +64,7 @@ class BookingsController {
     static async downloadInvoice(req, res, next) {
         try {
             const { bookingId } = req.params;
-            const booking = await prisma_1.prisma.booking.findUnique({
-                where: { id: bookingId },
-                include: {
-                    participants: true,
-                    client: true,
-                    event: {
-                        include: {
-                            host: {
-                                include: {
-                                    user: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            });
+            const booking = await di_container_1.bookingRepo.findById(bookingId);
             if (!booking) {
                 throw new errors_1.BadRequestError('Booking not found');
             }
@@ -103,22 +87,7 @@ class BookingsController {
         try {
             const { bookingId } = req.params;
             const format = req.query.format || 'pdf';
-            const booking = await prisma_1.prisma.booking.findUnique({
-                where: { id: bookingId },
-                include: {
-                    participants: true,
-                    client: true,
-                    event: {
-                        include: {
-                            host: {
-                                include: {
-                                    user: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            });
+            const booking = await di_container_1.bookingRepo.findById(bookingId);
             if (!booking) {
                 throw new errors_1.BadRequestError('Booking not found');
             }
@@ -148,22 +117,7 @@ class BookingsController {
     static async verifyBooking(req, res, next) {
         try {
             const { bookingId } = req.params;
-            const booking = await prisma_1.prisma.booking.findUnique({
-                where: { id: bookingId },
-                include: {
-                    participants: true,
-                    client: true,
-                    event: {
-                        include: {
-                            host: {
-                                include: {
-                                    user: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            });
+            const booking = await di_container_1.bookingRepo.findById(bookingId);
             res.setHeader('Content-Type', 'text/html');
             if (!booking) {
                 return res.send(`
