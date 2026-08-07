@@ -84,13 +84,14 @@ export default function AuthBrandPanel() {
 
       {/* Logo */}
       <Link href="/" className="relative z-10 flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-xs border border-clay-shadow/40">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-graphite-ink">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20l-7-3-7 3V2z" />
+        <div className="bg-gradient-to-br from-[#a0f212] to-[#8ee00d] p-1.5 rounded-md shadow-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5 text-[#0b0c01]">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
           </svg>
         </div>
-        <span className="text-xl font-bold tracking-tight text-graphite-ink">BookMy<span className="text-charcoal-slate">Training</span></span>
+        <span className="text-xl font-extrabold tracking-tight text-graphite-ink">BookMy<span className="text-[#a0f212]">Training</span></span>
       </Link>
 
       {/* Hero copy */}

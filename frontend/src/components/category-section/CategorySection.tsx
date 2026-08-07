@@ -1,18 +1,37 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Compass, Heart, Briefcase, Flower2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { CategoryCard, CategoryItem } from "./CategoryCard";
 import { CATEGORIES } from "@/constants/categories";
-
-const categories: CategoryItem[] = CATEGORIES.map((cat) => ({
-  name: cat.label,
-  slug: cat.value,
-  icon: cat.icon,
-  count: 12,
-  color: "text-graphite-ink bg-linen-canvas border border-clay-shadow",
-}));
+import { getEvents } from "@/features/client/api/client.api";
 
 export default function CategorySection() {
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    getEvents().then((events) => {
+      const counts: Record<string, number> = {};
+      events.forEach((event) => {
+        if (event.category) {
+          counts[event.category] = (counts[event.category] || 0) + 1;
+        }
+      });
+      setCategoryCounts(counts);
+    }).catch((err) => {
+      console.warn("Failed to fetch category counts:", err);
+    });
+  }, []);
+
+  const categories: CategoryItem[] = CATEGORIES.map((cat) => ({
+    name: cat.label,
+    slug: cat.value,
+    icon: cat.icon,
+    count: categoryCounts[cat.value] || 0,
+    color: "text-graphite-ink bg-linen-canvas border border-clay-shadow",
+  }));
+
   return (
     <section className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">

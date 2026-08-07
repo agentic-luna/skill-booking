@@ -8,6 +8,7 @@ import {
   Users, IndianRupee, ArrowRight, Zap, Target, BarChart3, Clock 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import BackButton from "@/components/common/BackButton";
 
 export default function HostLandingPage() {
   const containerVariants = {
@@ -32,7 +33,11 @@ export default function HostLandingPage() {
         <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-[#a0f212]/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
+          <div className="mb-8">
+            <BackButton href="/" label="Back to Home" />
+          </div>
+          
+          <div className="flex flex-col lg:flex-row items-start justify-between gap-16">
             
             {/* Hero Left: Platform Value Proposition */}
             <div className="flex-1 space-y-8 max-w-2xl text-left">
