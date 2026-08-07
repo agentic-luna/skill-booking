@@ -28,33 +28,35 @@ export default function ProgramCard({ program }: ProgramCardProps) {
         {/* Elegant Glassmorphic Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         
-        {/* Premium Glass Category Badge */}
-        <div className="absolute top-4 left-4 flex gap-2 z-10">
-          <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-            {program.category || "General"}
-          </div>
-          {program.isBoosted && (
-            <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1">
-              <span>★</span> {program.boostTier === 'PRO' ? 'ULTRA PRO' : program.boostTier === 'STANDARD' ? 'PRO BOOST' : 'FEATURED'}
+        {/* Top Badges Container */}
+        <div className="absolute top-4 inset-x-4 flex justify-between items-start gap-2 z-10 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
+            <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+              {program.category || "General"}
             </div>
-          )}
-        </div>
+            {program.isBoosted && (
+              <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 shrink-0">
+                <span>★</span> {program.boostTier === 'PRO' ? 'ULTRA PRO' : program.boostTier === 'STANDARD' ? 'PRO BOOST' : 'FEATURED'}
+              </div>
+            )}
+          </div>
 
-        {/* Scarcity Tension Badge */}
-        <div className="absolute top-4 right-4 z-10">
-          {spotsLeft <= 0 ? (
-            <span className="bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
-              Sold Out
-            </span>
-          ) : spotsLeft <= 5 ? (
-            <span className="bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm flex items-center gap-1 animate-pulse">
-              <Flame className="h-3 w-3 fill-white" /> Only {spotsLeft} left!
-            </span>
-          ) : (
-            <span className="bg-[#0d1e17] border border-emerald-500/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
-              <Zap className="h-3 w-3 fill-[#a0f212]" /> {spotsLeft} slots left
-            </span>
-          )}
+          {/* Scarcity Tension Badge */}
+          <div className="shrink-0">
+            {spotsLeft <= 0 ? (
+              <span className="inline-flex items-center bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm gap-1">
+                Sold Out
+              </span>
+            ) : spotsLeft <= 5 ? (
+              <span className="inline-flex items-center bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm gap-1 animate-pulse">
+                <Flame className="h-3 w-3 fill-white" /> Only {spotsLeft} left!
+              </span>
+            ) : (
+              <span className="inline-flex items-center bg-[#0d1e17] border border-emerald-500/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm gap-1">
+                <Zap className="h-3 w-3 fill-[#a0f212]" /> {spotsLeft} slots left
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

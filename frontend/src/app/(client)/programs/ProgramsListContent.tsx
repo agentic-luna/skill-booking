@@ -587,33 +587,35 @@ export default function ProgramsListContent() {
                           {/* Elegant Glassmorphic Overlay Gradient */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                          {/* Premium Glass Badge */}
-                          <div className="absolute top-4 left-4 flex gap-2 z-10">
-                            <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-                              {prog.category || "General"}
-                            </div>
-                            {prog.boostedEvent && prog.boostedEvent.isActive && prog.boostedEvent.status === "ACTIVE" && (
-                              <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse">
-                                <span>★</span> FEATURED
+                          {/* Top Badges Container */}
+                          <div className="absolute top-4 inset-x-4 flex justify-between items-start gap-2 z-10 flex-wrap">
+                            <div className="flex gap-2 flex-wrap">
+                              <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+                                {prog.category || "General"}
                               </div>
-                            )}
-                          </div>
+                              {prog.boostedEvent && prog.boostedEvent.isActive && prog.boostedEvent.status === "ACTIVE" && (
+                                <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse shrink-0">
+                                  <span>★</span> FEATURED
+                                </div>
+                              )}
+                            </div>
 
-                          {/* Scarcity Tension Badge */}
-                          <div className="absolute top-4 right-4 z-10">
-                            {prog.availableSeats <= 0 ? (
-                              <span className="bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
-                                Sold Out
-                              </span>
-                            ) : prog.availableSeats <= 5 ? (
-                              <span className="bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse">
-                                🔥 Only {prog.availableSeats} left!
-                              </span>
-                            ) : (
-                              <span className="bg-[#0d1e17] border border-[#a0f212]/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
-                                ⚡ {prog.availableSeats} slots left
-                              </span>
-                            )}
+                            {/* Scarcity Tension Badge */}
+                            <div className="shrink-0">
+                              {prog.availableSeats <= 0 ? (
+                                <span className="inline-flex items-center bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                  Sold Out
+                                </span>
+                              ) : prog.availableSeats <= 5 ? (
+                                <span className="inline-flex items-center bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse">
+                                  🔥 Only {prog.availableSeats} left!
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center bg-[#0d1e17] border border-[#a0f212]/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                  ⚡ {prog.availableSeats} slots left
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -678,32 +680,35 @@ export default function ProgramsListContent() {
                               className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute top-4 left-4 flex gap-2 z-10">
-                              <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
-                                {prog.category || "General"}
-                              </div>
-                              {prog.boostedEvent && prog.boostedEvent.isActive && prog.boostedEvent.status === "ACTIVE" && (
-                                <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse">
-                                  <span>★</span> FEATURED
+                            {/* Top Badges Container */}
+                            <div className="absolute top-4 inset-x-4 flex justify-between items-start gap-2 z-10 flex-wrap">
+                              <div className="flex gap-2 flex-wrap">
+                                <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] px-3 py-1 rounded-full font-bold tracking-wide capitalize shadow-sm">
+                                  {prog.category || "General"}
                                 </div>
-                              )}
-                            </div>
+                                {prog.boostedEvent && prog.boostedEvent.isActive && prog.boostedEvent.status === "ACTIVE" && (
+                                  <div className="bg-[#a0f212] text-[#0b0c01] text-[9px] px-3 py-1 rounded-full font-black tracking-widest uppercase shadow-[0_0_12px_rgba(160,242,18,0.4)] flex items-center gap-1 animate-pulse shrink-0">
+                                    <span>★</span> FEATURED
+                                  </div>
+                                )}
+                              </div>
 
-                            {/* Scarcity Tension Badge */}
-                            <div className="absolute top-4 right-4 z-10">
-                              {prog.availableSeats <= 0 ? (
-                                <span className="bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
-                                  Sold Out
-                                </span>
-                              ) : prog.availableSeats <= 5 ? (
-                                <span className="bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse">
-                                  🔥 Only {prog.availableSeats} left!
-                                </span>
-                              ) : (
-                                <span className="bg-[#0d1e17] border border-[#a0f212]/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
-                                  ⚡ {prog.availableSeats} slots left
-                                </span>
-                              )}
+                              {/* Scarcity Tension Badge */}
+                              <div className="shrink-0">
+                                {prog.availableSeats <= 0 ? (
+                                  <span className="inline-flex items-center bg-red-600 border border-red-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                    Sold Out
+                                  </span>
+                                ) : prog.availableSeats <= 5 ? (
+                                  <span className="inline-flex items-center bg-orange-600 border border-orange-500/30 text-white text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm animate-pulse">
+                                    🔥 Only {prog.availableSeats} left!
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center bg-[#0d1e17] border border-[#a0f212]/30 text-[#a0f212] text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider shadow-sm">
+                                    ⚡ {prog.availableSeats} slots left
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <div className="flex-1 p-6 flex flex-col justify-between">

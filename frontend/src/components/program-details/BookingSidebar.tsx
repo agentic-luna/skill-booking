@@ -73,12 +73,12 @@ export default function BookingSidebar({
         </div>
         <div className="text-right">
           <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
+            className={`text-sm font-bold px-3 py-1 rounded-md shadow-sm border ${
               isFinished
-                ? "bg-destructive/10 text-destructive"
+                ? "bg-destructive/10 text-destructive border-destructive/20"
                 : spotsLeft <= 5
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-emerald-500/10 text-emerald-600"
+                  ? "bg-destructive/10 text-destructive border-destructive/30 animate-[pulse_0.8s_ease-in-out_infinite]"
+                  : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 animate-[pulse_1s_ease-in-out_infinite]"
             }`}
           >
             {isFinished ? "Unavailable" : spotsLeft === 0 ? "Fully Booked" : `${spotsLeft} spots left`}
@@ -135,7 +135,6 @@ export default function BookingSidebar({
         ) : (
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex flex-col gap-2 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
             <div className="flex gap-2.5 items-start">
-              <span className="text-base leading-none">⚡</span>
               <div className="space-y-0.5">
                 <p className="font-extrabold text-emerald-800 dark:text-emerald-300 leading-none">
                   High Demand Event

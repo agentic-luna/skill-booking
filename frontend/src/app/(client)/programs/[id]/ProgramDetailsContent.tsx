@@ -23,7 +23,7 @@ import AdvancedSearchBar from "@/components/hero-section/AdvancedSearchBar";
 import { mapEventToProgram } from "@/utils/mapEventToProgram";
 import ProgramVideoPlayer from "@/components/program-details/ProgramVideoPlayer";
 import ProgramHighlights from "@/components/program-details/ProgramHighlights";
-import { SponsoredBanner, FeaturedBadge, ProBoostBadge, UltraProBadge, FeaturedOrganizerBadge } from "@/components/common/BoostBadges";
+import { FeaturedBadge, ProBoostBadge, UltraProBadge, FeaturedOrganizerBadge } from "@/components/common/BoostBadges";
 import InstructorProfile from "@/components/program-details/InstructorProfile";
 import BookingSidebar from "@/components/program-details/BookingSidebar";
 import MobileBookingBar from "@/components/program-details/MobileBookingBar";
@@ -293,10 +293,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
 
             {/* Header info */}
             <div className="space-y-4">
-              {program.isBoosted && (
-                <SponsoredBanner tier={program.boostTier} />
-              )}
-
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="inline-block text-[10px] tracking-widest font-extrabold text-white bg-[#0b0c01] border border-[#a0f212]/20 px-3 py-1.5 rounded-full uppercase shadow-sm">
                   {program.category}
