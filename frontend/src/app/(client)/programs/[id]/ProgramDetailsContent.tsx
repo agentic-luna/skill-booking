@@ -44,6 +44,7 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const openClientAuthModal = useClientAuthModalStore((s) => s.openModal);
 
   const {
@@ -311,13 +312,46 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               </h1>
             </div>
 
-            {/* Core Banner Image */}
-            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-muted border">
-              <img
-                src={program.imageUrl}
-                alt={program.title}
-                className="object-cover w-full h-full animate-in fade-in duration-300"
-              />
+            {/* Core Banner Image & Gallery */}
+            <div className="space-y-3">
+              <div className="aspect-video w-full rounded-2xl overflow-hidden bg-muted border relative">
+                {program.images && program.images.length > 0 ? (
+                  <>
+                    <img
+                      src={[program.imageUrl, ...program.images.filter(i => i !== program.imageUrl)][activeImageIndex]}
+                      alt={program.title}
+                      className="object-cover w-full h-full animate-in fade-in duration-300"
+                    />
+                    <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg font-bold">
+                      {activeImageIndex + 1}/{1 + program.images.filter(i => i !== program.imageUrl).length}
+                    </div>
+                  </>
+                ) : (
+                  <img
+                    src={program.imageUrl}
+                    alt={program.title}
+                    className="object-cover w-full h-full animate-in fade-in duration-300"
+                  />
+                )}
+              </div>
+              
+              {/* Thumbnails */}
+              {program.images && program.images.filter(i => i !== program.imageUrl).length > 0 && (
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+                  {[program.imageUrl, ...program.images.filter(i => i !== program.imageUrl)].map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative w-20 h-14 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                        activeImageIndex === idx ? 'border-indigo-500 opacity-100 shadow-sm' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Embedded Videos */}

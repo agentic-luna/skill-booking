@@ -69,7 +69,13 @@ export default function BookingSidebar({
       <div className="flex justify-between items-end border-b pb-4">
         <div>
           <span className="text-xs text-muted-foreground">Registration Fee</span>
-          <div className="text-2xl font-extrabold text-foreground">₹{program.price}</div>
+          <div className="text-2xl font-extrabold text-foreground">
+            {program.ticketTypes && program.ticketTypes.length > 1 ? (
+              <span className="text-lg">Starting at ₹{program.price}</span>
+            ) : (
+              `₹${program.price}`
+            )}
+          </div>
         </div>
         <div className="text-right">
           <span

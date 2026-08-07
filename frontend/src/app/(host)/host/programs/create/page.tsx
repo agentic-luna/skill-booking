@@ -50,11 +50,12 @@ export default function CreateProgramPage() {
       category: "life-coaching",
       mode: "OFFLINE",
       price: 49,
+      maxSpots: 15,
+      ticketTypes: [{ name: "Basic", price: 49, totalSeats: 15 }],
       duration: "3 hours",
       date: new Date().toISOString().split("T")[0],
       endDate: "",
       time: "10:00",
-      maxSpots: 15,
       location: "",
       district: "",
       description: "",
@@ -74,9 +75,15 @@ export default function CreateProgramPage() {
   const watchedTitle = watch("title");
   const watchedPrice = watch("price");
   const watchedMaxSpots = watch("maxSpots");
+  const watchedTicketTypes = watch("ticketTypes");
   const watchedDuration = watch("duration");
   const watchedImageUrl = watch("imageUrl");
   const watchedAdditionalImages = watch("additionalImages");
+  
+  const watchedVideoUrl1 = watch("videoUrl1");
+  const watchedVideoUrl2 = watch("videoUrl2");
+  const watchedVideoUrl3 = watch("videoUrl3");
+  const watchedVideoUrls = [watchedVideoUrl1, watchedVideoUrl2, watchedVideoUrl3].filter(Boolean) as string[];
 
   useEffect(() => {
     if (templateId) {
@@ -98,10 +105,13 @@ export default function CreateProgramPage() {
             category: cat,
             mode: template.mode || "OFFLINE",
             price: template.price || 0,
+            maxSpots: template.totalSeats || 15,
+            ticketTypes: template.ticketTypes && template.ticketTypes.length > 0 
+              ? template.ticketTypes.map((tt: any) => ({ name: tt.name, price: Number(tt.price), totalSeats: tt.totalSeats }))
+              : [{ name: "Basic", price: template.price || 0, totalSeats: template.totalSeats || 15 }],
             duration: template.duration || "",
             date: template.startTime ? template.startTime.split("T")[0] : new Date().toISOString().split("T")[0],
             time: formattedTime,
-            maxSpots: template.totalSeats || 15,
             location: template.mode === "ONLINE" ? (template.venue?.meetingLink || "") : (template.venue?.address || ""),
             district: (template.venueDetails as any)?.district || "",
             endDate: (template.venueDetails as any)?.endDate || "",
@@ -151,8 +161,9 @@ export default function CreateProgramPage() {
           facebook: data.facebook?.trim() || null,
         },
         startTime,
-        totalSeats: Number(data.maxSpots),
-        price: Number(data.price),
+        ticketTypes: data.ticketTypes,
+        totalSeats: data.ticketTypes.reduce((acc, tt) => acc + Number(tt.totalSeats), 0),
+        price: Math.min(...data.ticketTypes.map(tt => Number(tt.price))),
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
@@ -242,7 +253,7 @@ export default function CreateProgramPage() {
               setValue={setValue}
               watch={watch}
             />
-            <PricingSection register={register} errors={errors} />
+            <PricingSection register={register} errors={errors} control={control} />
             <CoverImageSection register={register} errors={errors} control={control} />
             <InstructorSection register={register} errors={errors} />
             <VerificationSection register={register} errors={errors} />
@@ -253,9 +264,11 @@ export default function CreateProgramPage() {
             watchedTitle={watchedTitle}
             watchedPrice={watchedPrice}
             watchedMaxSpots={watchedMaxSpots}
+            watchedTicketTypes={watchedTicketTypes}
             watchedDuration={watchedDuration}
             watchedImageUrl={watchedImageUrl}
             watchedAdditionalImages={watchedAdditionalImages}
+            watchedVideoUrls={watchedVideoUrls}
             selectedCategory={selectedCategory}
             categoryMeta={categoryMeta}
             isSubmitting={isLoading}

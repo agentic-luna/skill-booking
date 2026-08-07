@@ -10,6 +10,7 @@ export interface ParticipantDetail {
   age?: string;
   gender: string;
   state: string;
+  ticketType?: { name: string; price: number };
 }
 
 export interface PrimaryParticipant {
@@ -21,6 +22,7 @@ export interface PrimaryParticipant {
   city: string;
   state: string;
   country: string;
+  ticketType?: { name: string; price: number };
 }
 
 interface BookingModalState {
@@ -28,6 +30,8 @@ interface BookingModalState {
   step: number;
   qty: number;
   program: Program | null;
+  selectedTicketName: string | null;
+  selectedTicketPrice: number | null;
   
   primary: PrimaryParticipant;
   additionals: ParticipantDetail[];
@@ -50,6 +54,7 @@ interface BookingModalState {
   closeBookingModal: () => void;
   setStep: (step: number) => void;
   setQty: (qty: number) => void;
+  setSelectedTicket: (name: string, price: number) => void;
   setPrimary: (primary: PrimaryParticipant) => void;
   updatePrimaryField: (field: keyof PrimaryParticipant, value: string) => void;
   setAdditionals: (additionals: ParticipantDetail[]) => void;
@@ -120,6 +125,9 @@ export const useBookingModalStore = create<BookingModalState>()(
               fullName: defaultName,
               email: defaultEmail,
               mobile: defaultMobile,
+              ticketType: program.ticketTypes && program.ticketTypes.length > 0 
+                ? { name: program.ticketTypes[0].name, price: program.ticketTypes[0].price } 
+                : undefined,
             },
             additionals: [],
             termsAgreed: false,
@@ -141,7 +149,6 @@ export const useBookingModalStore = create<BookingModalState>()(
             mobile: state.primary.mobile || defaultMobile,
           };
           set({
-            isOpen: true,
             program,
             primary: updatedPrimary,
             onSuccessCallback: onSuccess || null,
@@ -169,6 +176,9 @@ export const useBookingModalStore = create<BookingModalState>()(
             age: "",
             gender: "",
             state: "",
+            ticketType: get().program?.ticketTypes && get().program!.ticketTypes!.length > 0 
+              ? { name: get().program!.ticketTypes![0].name, price: get().program!.ticketTypes![0].price } 
+              : undefined,
           }));
           updatedAdditionals = [...updatedAdditionals, ...newEntries];
         } else if (updatedAdditionals.length > extra) {
@@ -176,6 +186,10 @@ export const useBookingModalStore = create<BookingModalState>()(
         }
 
         set({ qty, additionals: updatedAdditionals });
+      },
+
+      setSelectedTicket: (name, price) => {
+        // Obsolete, left for interface compliance if needed elsewhere, but does nothing globally now.
       },
 
       setPrimary: (primary) => set({ primary }),
@@ -223,6 +237,7 @@ export const useBookingModalStore = create<BookingModalState>()(
             city: state.primary.city,
             state: state.primary.state,
             country: state.primary.country,
+            ticketType: state.primary.ticketType,
           },
           ...state.additionals.map((a) => ({
             isPrimary: false,
@@ -231,6 +246,7 @@ export const useBookingModalStore = create<BookingModalState>()(
             mobile: a.mobile,
             gender: a.gender,
             state: a.state,
+            ticketType: a.ticketType,
           })),
         ];
         return list;
@@ -258,6 +274,8 @@ export const useBookingModalStore = create<BookingModalState>()(
           paymentLoading: false,
           paymentSuccess: false,
           bookingRef: null,
+          selectedTicketName: null,
+          selectedTicketPrice: null,
         });
       },
     }),
@@ -269,6 +287,8 @@ export const useBookingModalStore = create<BookingModalState>()(
         step: state.step,
         qty: state.qty,
         program: state.program,
+        selectedTicketName: state.selectedTicketName,
+        selectedTicketPrice: state.selectedTicketPrice,
         primary: state.primary,
         additionals: state.additionals,
         termsAgreed: state.termsAgreed,

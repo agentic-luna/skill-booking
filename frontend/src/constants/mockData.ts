@@ -25,6 +25,8 @@ export interface Program {
   hasTrendingSection?: boolean;
   hasFeaturedOrganizerBadge?: boolean;
   videoUrls?: string[];
+  images?: string[];
+  ticketTypes?: { name: string; price: number; totalSeats: number }[];
   mode?: "ONLINE" | "OFFLINE";
   hostId?: string;
   companyName?: string;

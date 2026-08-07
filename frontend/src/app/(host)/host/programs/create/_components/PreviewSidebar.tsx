@@ -19,9 +19,11 @@ interface PreviewSidebarProps {
   watchedTitle: string;
   watchedPrice: number;
   watchedMaxSpots: number;
+  watchedTicketTypes?: { price: number; totalSeats: number }[];
   watchedDuration: string;
   watchedImageUrl?: string;
   watchedAdditionalImages?: { url: string }[];
+  watchedVideoUrls?: string[];
   selectedCategory: string;
   categoryMeta: CategoryMeta | undefined;
   isSubmitting: boolean;
@@ -32,9 +34,11 @@ export default function PreviewSidebar({
   watchedTitle,
   watchedPrice,
   watchedMaxSpots,
+  watchedTicketTypes,
   watchedDuration,
   watchedImageUrl,
   watchedAdditionalImages,
+  watchedVideoUrls,
   selectedCategory,
   categoryMeta,
   isSubmitting,
@@ -47,6 +51,14 @@ export default function PreviewSidebar({
   const validAdditionalImages = watchedAdditionalImages?.filter(img => img.url.trim() !== "") || [];
   const allImages = watchedImageUrl ? [watchedImageUrl, ...validAdditionalImages.map(i => i.url)] : validAdditionalImages.map(i => i.url);
   const totalImages = allImages.length;
+
+  const totalSpots = watchedTicketTypes && watchedTicketTypes.length > 0
+    ? watchedTicketTypes.reduce((acc, tt) => acc + (Number(tt.totalSeats) || 0), 0)
+    : (watchedMaxSpots || 0);
+
+  const lowestPrice = watchedTicketTypes && watchedTicketTypes.length > 0
+    ? Math.min(...watchedTicketTypes.map(tt => Number(tt.price) || 0))
+    : (watchedPrice || 0);
 
   React.useEffect(() => {
     setImageError(false);
@@ -134,10 +146,12 @@ export default function PreviewSidebar({
                 </h4>
                 <div className="grid grid-cols-2 gap-1.5 text-[9px] text-muted-foreground">
                   <span className="flex items-center"><Clock className="h-2.5 w-2.5 mr-1" /> {watchedDuration || "—"}</span>
-                  <span className="flex items-center"><Ticket className="h-2.5 w-2.5 mr-1" /> {watchedMaxSpots || 0} spots</span>
+                  <span className="flex items-center"><Ticket className="h-2.5 w-2.5 mr-1" /> {totalSpots} spots</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border/30">
-                  <span className="text-sm font-extrabold text-foreground">₹{watchedPrice || 0}</span>
+                  <span className="text-sm font-extrabold text-foreground">
+                    {watchedTicketTypes && watchedTicketTypes.length > 1 ? "From " : ""}₹{lowestPrice}
+                  </span>
                   <span className="text-[9px] text-muted-foreground">Live Preview</span>
                 </div>
               </div>
@@ -225,14 +239,16 @@ export default function PreviewSidebar({
                     category: (values.category as any) || "technology",
                     rating: 4.8,
                     reviewsCount: 12,
-                    price: Number(values.price) || 0,
+                    price: lowestPrice,
                     duration: values.duration || "2 hours",
                     date: dateStr,
                     time: values.time ? `${values.time} IST` : "10:00 AM IST",
-                    spotsLeft: Number(values.maxSpots) || 10,
-                    maxSpots: Number(values.maxSpots) || 10,
+                    spotsLeft: totalSpots,
+                    maxSpots: totalSpots,
                     location: locationStr,
                     imageUrl: values.imageUrl || "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600",
+                    images: watchedAdditionalImages ? watchedAdditionalImages.map((img: { url: string }) => img.url).filter(Boolean) : [],
+                    videoUrls: watchedVideoUrls || [],
                     status: "approved",
                     featured: true,
                     mode: values.mode || "OFFLINE",

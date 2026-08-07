@@ -85,6 +85,9 @@ export default function EditProgramPage() {
           date: dateStr,
           endDate: details.venueDetails?.endDate || "",
           time: timeStr,
+          ticketTypes: details.ticketTypes?.length > 0 
+            ? details.ticketTypes 
+            : [{ name: "Basic", price: details.price ?? 0, totalSeats: details.totalSeats ?? 10 }],
           maxSpots: details.totalSeats || 10,
           location:
             typeof details.venueDetails === "string"
@@ -147,8 +150,9 @@ export default function EditProgramPage() {
           facebook: data.facebook?.trim() || null,
         },
         startTime,
-        totalSeats: Number(data.maxSpots),
-        price: Number(data.price),
+        ticketTypes: data.ticketTypes,
+        totalSeats: data.ticketTypes.reduce((acc, tt) => acc + Number(tt.totalSeats), 0),
+        price: Math.min(...data.ticketTypes.map(tt => Number(tt.price))),
         duration: data.duration.trim(),
         description: data.description.trim(),
         category: data.category,
@@ -350,7 +354,7 @@ export default function EditProgramPage() {
               setValue={setValue}
               watch={watch}
             />
-            <PricingSection register={register} errors={errors} />
+            <PricingSection register={register} errors={errors} control={control} />
             <CoverImageSection register={register} errors={errors} control={control} />
             <InstructorSection register={register} errors={errors} />
             <VerificationSection register={register} errors={errors} />

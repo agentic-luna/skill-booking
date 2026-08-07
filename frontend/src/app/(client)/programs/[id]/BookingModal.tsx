@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User as UserIcon, Mail, Phone, Calendar, MapPin, Globe, CreditCard,
-  CheckCircle2, Loader2, Plus, Minus, ChevronRight, ChevronLeft,
+  CheckCircle2, Loader2, Plus, Minus, ChevronRight, ChevronLeft, ChevronDown,
   Users, ShieldCheck, Ticket, AlertCircle, Receipt, X, BadgeCheck, Timer, Clock
 } from "lucide-react";
 import { useRazorpayCheckout } from "@/features/payment/hooks/useRazorpayCheckout";
@@ -38,13 +38,11 @@ interface BookingModalProps {
 const STEPS = [
   "Participants",
   "Primary Details",
-  "Payment",
-  "Confirm",
+  "Review & Pay",
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-function calcSummary(price: number, qty: number, platformRate: number) {
-  const programFee = price * qty;
+function calcSummary(programFee: number, platformRate: number) {
   const discount = 0;
   const platformFee = Math.round(programFee * platformRate * 100) / 100;
   const total = programFee - discount + platformFee;
@@ -124,7 +122,10 @@ export default function BookingModal(props: BookingModalProps) {
     ? Number(activeProgram.commission.platformValue) / 100
     : 0;
 
-  const summary = calcSummary(activeProgram.price, store.qty, platformRate);
+  const totalProgramFee = (store.primary.ticketType?.price ?? activeProgram.price) + 
+    store.additionals.reduce((acc, p) => acc + (p.ticketType?.price ?? activeProgram.price), 0);
+
+  const summary = calcSummary(totalProgramFee, platformRate);
 
   const validatePrimary = () => {
     // Primary participant validation with Zod
@@ -185,6 +186,7 @@ export default function BookingModal(props: BookingModalProps) {
           eventId: activeProgram.id,
           seatCount: store.qty,
           participants: store.getFormattedParticipants(),
+          customAmount: summary.total,
         },
         {
           name: store.primary.fullName || user?.firstName || "Guest",
@@ -283,6 +285,7 @@ export default function BookingModal(props: BookingModalProps) {
                 {/* ── STEP 0: Participants ── */}
                 {store.step === 0 && (
                   <div className="space-y-5">
+
                     <div>
                       <h3 className="font-bold text-sm text-foreground mb-1">Number of Participants</h3>
                       <p className="text-[11px] text-muted-foreground">Select how many seats you want to reserve.</p>
@@ -295,7 +298,7 @@ export default function BookingModal(props: BookingModalProps) {
                         </div>
                         <div>
                           <div className="font-bold text-sm text-foreground">Participants</div>
-                          <div className="text-[11px] text-muted-foreground">₹{activeProgram.price} per seat</div>
+                          <div className="text-[11px] text-muted-foreground">Multiple ticket tiers can be chosen next</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -317,14 +320,7 @@ export default function BookingModal(props: BookingModalProps) {
                       </div>
                     </div>
 
-                    {/* Quick Summary */}
-                    <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
-                      <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
-                      <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
-                      {summary.discount > 0 && <SummaryRow label="Discount" value={`-₹${summary.discount.toFixed(2)}`} accent />}
-                      <Separator />
-                      <SummaryRow label="Total Payable" value={`₹${summary.total.toFixed(2)}`} bold accent />
-                    </div>
+                    {/* Quick summary removed from Step 0 */}
                   </div>
                 )}
 
@@ -337,6 +333,30 @@ export default function BookingModal(props: BookingModalProps) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {/* Ticket Type (If applicable) */}
+                      {activeProgram.ticketTypes && activeProgram.ticketTypes.length > 0 && (
+                        <div className="space-y-1.5 sm:col-span-2 bg-muted/20 p-4 rounded-xl border-2 border-primary/30 shadow-sm relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+                          <Label className="text-xs font-extrabold text-foreground flex items-center gap-1.5 ml-2">Ticket Tier *</Label>
+                          <div className="ml-2 mt-1 relative">
+                            <select className="h-10 w-full appearance-none border border-input rounded-lg bg-background text-foreground px-4 font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer"
+                              value={store.primary.ticketType?.name || ""} 
+                              onChange={e => {
+                                const t = activeProgram.ticketTypes!.find(x => x.name === e.target.value);
+                                if (t) store.updatePrimaryField("ticketType", { name: t.name, price: t.price } as any);
+                              }}>
+                              <option value="" disabled>Select Ticket Tier</option>
+                              {activeProgram.ticketTypes.map(t => (
+                                <option key={t.name} value={t.name}>{t.name} - ₹{t.price}</option>
+                              ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                              <ChevronDown className="h-4 w-4" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Full Name (Editable) */}
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold flex items-center gap-1.5"><UserIcon className="h-3 w-3 text-muted-foreground" /> Full Name *</Label>
@@ -423,6 +443,30 @@ export default function BookingModal(props: BookingModalProps) {
                             <div key={idx} className="bg-muted/20 rounded-xl border p-3.5 space-y-3">
                               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Participant #{idx + 2}</span>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Ticket Type (If applicable) */}
+                                {activeProgram.ticketTypes && activeProgram.ticketTypes.length > 0 && (
+                                  <div className="space-y-1 sm:col-span-2 bg-muted/20 p-3 rounded-xl border-2 border-primary/30 mb-2 relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                                    <Label className="text-[10px] font-extrabold text-foreground ml-1.5 uppercase tracking-wider">Ticket Tier *</Label>
+                                    <div className="ml-1.5 relative mt-0.5">
+                                      <select className="h-9 w-full appearance-none border border-input rounded-md bg-background text-foreground px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer"
+                                        value={p.ticketType?.name || ""} 
+                                        onChange={e => {
+                                          const t = activeProgram.ticketTypes!.find(x => x.name === e.target.value);
+                                          if (t) store.updateAdditionalField(idx, "ticketType", { name: t.name, price: t.price } as any);
+                                        }}>
+                                        <option value="" disabled>Select Ticket Tier</option>
+                                        {activeProgram.ticketTypes.map(t => (
+                                          <option key={t.name} value={t.name}>{t.name} - ₹{t.price}</option>
+                                        ))}
+                                      </select>
+                                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                        <ChevronDown className="h-3.5 w-3.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Full Name */}
                                 <div className="space-y-1">
                                   <Input placeholder="Full Name *" className="h-8 text-xs" value={p.fullName}
@@ -476,39 +520,48 @@ export default function BookingModal(props: BookingModalProps) {
                   </div>
                 )}
 
-                {/* ── STEP 2: Payment Gateways & Agreements ── */}
+                {/* ── STEP 2: Review, Agreements & Pay ── */}
                 {store.step === 2 && (
                   <div className="space-y-5">
                     <div>
-                      <h3 className="font-bold text-sm text-foreground mb-1">Select Payment Gateway</h3>
-                      <p className="text-[11px] text-muted-foreground">Supports UPI Apps (Google Pay, PhonePe, Paytm, BHIM), Cards & Netbanking.</p>
+                      <h3 className="font-bold text-sm text-foreground mb-1">Review & Confirm Booking</h3>
+                      <p className="text-[11px] text-muted-foreground">Please double check your reservation details before making payment.</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Razorpay Card */}
-                      <button type="button" onClick={handleRazorpayClick}
-                        className="bg-card border-2 border-primary/40 hover:border-primary p-4 rounded-xl text-left transition-all relative overflow-hidden group shadow-sm">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="h-8 w-8 bg-blue-500/10 text-blue-500 rounded-lg flex items-center justify-center font-black text-xs">
-                            RZP
-                          </div>
-                          <span className="text-[9px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">Recommended</span>
-                        </div>
-                        <div className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">Razorpay Gateway</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">UPI, GPay, PhonePe, Cards, Netbanking</div>
-                      </button>
-
-                      {/* Cashfree / Stripe Placeholder */}
-                      <div className="bg-muted/30 border border-border/50 p-4 rounded-xl text-left opacity-60 relative">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="h-8 w-8 bg-purple-500/10 text-purple-500 rounded-lg flex items-center justify-center font-black text-xs">
-                            CF
-                          </div>
-                          <span className="text-[9px] bg-muted text-muted-foreground font-medium px-1.5 py-0.5 rounded">Secondary</span>
-                        </div>
-                        <div className="font-bold text-xs text-foreground">Cashfree / Stripe</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">Automated Gateway Backup</div>
+                    {/* Workshop */}
+                    <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workshop</div>
+                      <div className="font-bold text-sm text-foreground">{activeProgram?.title}</div>
+                      <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground">
+                        <span>📅 {activeProgram?.date}</span>
+                        <span>⏰ {activeProgram?.time}</span>
+                        <span>⏱ {activeProgram?.duration}</span>
+                        <span>📍 {activeProgram?.location?.split(",")[0]}</span>
                       </div>
+                      
+                      {/* Ticket Breakdown */}
+                      <div className="space-y-2 py-3 border-y border-border/40 mb-3">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground truncate mr-2">{store.primary.fullName || "Primary Participant"} <span className="font-bold text-foreground">({store.primary.ticketType?.name || 'Standard'})</span></span>
+                          <span className="font-medium shrink-0">₹{store.primary.ticketType?.price ?? activeProgram.price}</span>
+                        </div>
+                        {store.additionals.map((p, i) => (
+                          <div key={i} className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground truncate mr-2">{p.fullName || `Participant #${i + 2}`} <span className="font-bold text-foreground">({p.ticketType?.name || 'Standard'})</span></span>
+                            <span className="font-medium shrink-0">₹{p.ticketType?.price ?? activeProgram.price}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <SummaryRow label="Program Fee Total" value={`₹${summary.programFee.toFixed(2)}`} />
+                      <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
+                      <Separator />
+                      <SummaryRow label="Total Amount Due" value={`₹${summary.total.toFixed(2)}`} bold accent />
+                    </div>
+
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-500" />
+                      <span>Instant 100% Confirmation Guarantee with Instant Pass Delivery.</span>
                     </div>
 
                     {/* Terms Checkboxes */}
@@ -545,40 +598,9 @@ export default function BookingModal(props: BookingModalProps) {
                     {!canProceedToConfirm && (
                       <div className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg flex items-center gap-2 font-medium">
                         <AlertCircle className="h-4 w-4 shrink-0" />
-                        <span>Please accept the Terms of Service & Cancellation Policy to continue.</span>
+                        <span>Please accept the Terms of Service & Cancellation Policy to enable payment.</span>
                       </div>
                     )}
-                  </div>
-                )}
-
-                {/* ── STEP 3: Order Review & Final Confirmation ── */}
-                {store.step === 3 && (
-                  <div className="space-y-5">
-                    <div>
-                      <h3 className="font-bold text-sm text-foreground mb-1">Review & Confirm Booking</h3>
-                      <p className="text-[11px] text-muted-foreground">Please double check your reservation details before making payment.</p>
-                    </div>
-
-                    {/* Workshop */}
-                    <div className="bg-muted/20 rounded-xl border p-4 space-y-2.5">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workshop</div>
-                      <div className="font-bold text-sm text-foreground">{activeProgram?.title}</div>
-                      <div className="grid grid-cols-2 gap-1.5 text-[11px] text-muted-foreground">
-                        <span>📅 {activeProgram?.date}</span>
-                        <span>⏰ {activeProgram?.time}</span>
-                        <span>⏱ {activeProgram?.duration}</span>
-                        <span>📍 {activeProgram?.location?.split(",")[0]}</span>
-                      </div>
-                      <SummaryRow label="Program Fee" value={`₹${summary.programFee.toFixed(2)}`} />
-                      <SummaryRow label={`Platform Fee (${(platformRate * 100).toFixed(1)}%)`} value={`₹${summary.platformFee.toFixed(2)}`} />
-                      <Separator />
-                      <SummaryRow label="Total Amount Due" value={`₹${summary.total.toFixed(2)}`} bold accent />
-                    </div>
-
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-500" />
-                      <span>Instant 100% Confirmation Guarantee with Instant Pass Delivery.</span>
-                    </div>
                   </div>
                 )}
 
@@ -596,12 +618,12 @@ export default function BookingModal(props: BookingModalProps) {
                   </Button>
                 )}
 
-                {store.step < 3 ? (
-                  <Button size="sm" onClick={handleNext} disabled={store.step === 2 && !canProceedToConfirm} className="text-xs rounded-xl h-9 px-5 bg-primary text-primary-foreground font-bold hover:bg-primary/90">
+                {store.step < 2 ? (
+                  <Button size="sm" onClick={handleNext} className="text-xs rounded-xl h-9 px-5 bg-primary text-primary-foreground font-bold hover:bg-primary/90">
                     Continue <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={handleRazorpayClick} disabled={isPaymentLoading} className="text-xs rounded-xl h-9 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-md">
+                  <Button size="sm" onClick={handleRazorpayClick} disabled={isPaymentLoading || !canProceedToConfirm} className={`text-xs rounded-xl h-9 px-6 font-extrabold shadow-md transition-all ${!canProceedToConfirm ? 'bg-muted text-muted-foreground opacity-50 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}>
                     {isPaymentLoading ? (
                       <span className="flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-1.5" /> Processing...</span>
                     ) : (
