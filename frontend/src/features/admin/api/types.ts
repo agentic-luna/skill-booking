@@ -49,6 +49,7 @@ export interface MetaWaSetupPayload {
   accessToken: string;
   phoneNumberId: string;
   businessAccountId: string;
+  verifyToken?: string;
   isActive?: boolean;
 }
 

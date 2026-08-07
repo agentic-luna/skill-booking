@@ -13,7 +13,8 @@ export class SetupMetaWaCommand implements IRequest<any> {
     public readonly phoneNumberId: string,
     public readonly businessAccountId: string,
     public readonly isActive: boolean,
-    public readonly updatedBy: string
+    public readonly updatedBy: string,
+    public readonly verifyToken?: string
   ) {}
 }
 
@@ -25,7 +26,7 @@ export class SetupMetaWaCommandHandler implements IRequestHandler<SetupMetaWaCom
   ) {}
 
   async handle(command: SetupMetaWaCommand): Promise<any> {
-    const { environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy } = command;
+    const { environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy, verifyToken } = command;
     
     if (!environment || !Object.values(IntegrationEnvironment).includes(environment)) {
       throw new BadRequestError('Invalid environment. Expected TEST or LIVE');
@@ -38,7 +39,8 @@ export class SetupMetaWaCommandHandler implements IRequestHandler<SetupMetaWaCom
     const credentials = {
         accessToken,
         phoneNumberId,
-        businessAccountId
+        businessAccountId,
+        verifyToken: verifyToken || undefined,
     };
 
     const encrypted = this.cryptoService.encryptCredentials(credentials);

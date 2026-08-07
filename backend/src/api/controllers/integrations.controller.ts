@@ -44,14 +44,15 @@ export class IntegrationsController {
 
   static async setupMetaWa(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { environment, accessToken, phoneNumberId, businessAccountId, isActive } = req.body;
+      const { environment, accessToken, phoneNumberId, businessAccountId, isActive, verifyToken } = req.body;
       const result = await mediator.send(new SetupMetaWaCommand(
         environment,
         accessToken,
         phoneNumberId,
         businessAccountId,
         isActive ?? true,
-        req.user!.id
+        req.user!.id,
+        verifyToken
       ));
       return ApiResponse.success(res, result, 200, 'Meta WhatsApp configuration updated');
     } catch (error) {

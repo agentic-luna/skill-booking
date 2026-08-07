@@ -63,6 +63,8 @@ import { ConfirmBookingPaymentCommandHandler } from '../application/use-cases/bo
 import { GetCancellationQuoteQueryHandler } from '../application/use-cases/bookings/get-cancellation-quote';
 
 import { HandlePaymentWebhookCommandHandler } from '../application/use-cases/webhooks/handle-payment-webhook';
+import { VerifyWhatsAppWebhookQueryHandler } from '../application/use-cases/webhooks/verify-whatsapp-webhook';
+import { HandleWhatsAppWebhookCommandHandler } from '../application/use-cases/webhooks/handle-whatsapp-webhook';
 
 import { GetConfigsQueryHandler } from '../application/use-cases/admin/get-configs';
 import { UpdateConfigCommandHandler } from '../application/use-cases/admin/update-config';
@@ -175,6 +177,8 @@ mediator.register('GetCancellationQuoteQuery', new GetCancellationQuoteQueryHand
 
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService, boostedRepo));
+mediator.register('VerifyWhatsAppWebhookQuery', new VerifyWhatsAppWebhookQueryHandler(configRepo, cryptoService, logger));
+mediator.register('HandleWhatsAppWebhookCommand', new HandleWhatsAppWebhookCommandHandler(logger));
 
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new AdminLoginCommandHandler(userRepo, cacheService));

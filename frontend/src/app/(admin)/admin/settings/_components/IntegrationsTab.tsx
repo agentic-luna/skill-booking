@@ -14,7 +14,7 @@ const SERVICE_META: Record<ServiceName, { label: string; color: string; bg: stri
 const setupFields: Record<ServiceName, Array<{ key: string; label: string; type?: string }>> = {
   TWILIO:   [{ key: "accountSid", label: "Account SID" }, { key: "authToken", label: "Auth Token", type: "password" }, { key: "fromNumber", label: "From Number" }],
   SENDGRID: [{ key: "apiKey", label: "API Key", type: "password" }, { key: "fromEmail", label: "From Email" }, { key: "fromName", label: "From Name" }],
-  META_WA:  [{ key: "accessToken", label: "Access Token", type: "password" }, { key: "phoneNumberId", label: "Phone Number ID" }, { key: "businessAccountId", label: "Business Account ID" }],
+  META_WA:  [{ key: "accessToken", label: "Access Token", type: "password" }, { key: "phoneNumberId", label: "Phone Number ID" }, { key: "businessAccountId", label: "Business Account ID" }, { key: "verifyToken", label: "Webhook Verify Token", type: "password" }],
   RAZORPAY: [{ key: "keyId", label: "Key ID" }, { key: "keySecret", label: "Key Secret", type: "password" }, { key: "webhookSecret", label: "Webhook Secret", type: "password" }],
 };
 
@@ -48,7 +48,7 @@ export default function IntegrationsTab() {
       switch (setupMode) {
         case "TWILIO":   await setupTwilio({ environment: env, accountSid: form.accountSid, authToken: form.authToken, fromNumber: form.fromNumber }); break;
         case "SENDGRID": await setupSendgrid({ environment: env, apiKey: form.apiKey, fromEmail: form.fromEmail, fromName: form.fromName }); break;
-        case "META_WA":  await setupMetaWa({ environment: env, accessToken: form.accessToken, phoneNumberId: form.phoneNumberId, businessAccountId: form.businessAccountId }); break;
+        case "META_WA":  await setupMetaWa({ environment: env, accessToken: form.accessToken, phoneNumberId: form.phoneNumberId, businessAccountId: form.businessAccountId, verifyToken: form.verifyToken }); break;
         case "RAZORPAY": await setupRazorpay({ environment: env, keyId: form.keyId, keySecret: form.keySecret, webhookSecret: form.webhookSecret }); break;
       }
       showAlert("Integration Configured", `${SERVICE_META[setupMode].label} credentials saved.`, "success");
