@@ -262,8 +262,8 @@ export default function CreateProgramPage() {
           {/* Right: Sidebar */}
           <PreviewSidebar
             watchedTitle={watchedTitle}
-            watchedPrice={watchedPrice}
-            watchedMaxSpots={watchedMaxSpots}
+            watchedPrice={watchedPrice ?? 0}
+            watchedMaxSpots={watchedMaxSpots ?? 0}
             watchedTicketTypes={watchedTicketTypes}
             watchedDuration={watchedDuration}
             watchedImageUrl={watchedImageUrl}

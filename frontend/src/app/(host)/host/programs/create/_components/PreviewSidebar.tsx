@@ -17,8 +17,8 @@ import ProgramDetailsContent from "../../../../../(client)/programs/[id]/Program
 
 interface PreviewSidebarProps {
   watchedTitle: string;
-  watchedPrice: number;
-  watchedMaxSpots: number;
+  watchedPrice?: number;
+  watchedMaxSpots?: number;
   watchedTicketTypes?: { price: number; totalSeats: number }[];
   watchedDuration: string;
   watchedImageUrl?: string;

@@ -66,6 +66,7 @@ export interface CreateEventPayload {
   startTime: string; // ISO 8601
   totalSeats: number;
   price?: number;
+  ticketTypes?: { name: string; price: number; totalSeats: number }[];
   duration?: string;
   description?: string;
   category?: string;

@@ -17,6 +17,14 @@ export interface ClientHostProfile {
   user?: HostUserDetail;
 }
 
+export interface ClientTicketType {
+  id?: string;
+  name: string;
+  price: number;
+  totalSeats: number;
+  availableSeats?: number;
+}
+
 export interface ClientEvent {
   id: string;
   hostId: string;
@@ -45,6 +53,7 @@ export interface ClientEvent {
   createdAt: string;
   updatedAt: string;
   host?: ClientHostProfile;
+  ticketTypes?: ClientTicketType[];
   _count?: {
     likes?: number;
     bookings?: number;

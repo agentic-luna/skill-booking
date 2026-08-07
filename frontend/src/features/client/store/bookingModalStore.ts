@@ -89,6 +89,8 @@ export const useBookingModalStore = create<BookingModalState>()(
       step: 0,
       qty: 1,
       program: null,
+      selectedTicketName: null,
+      selectedTicketPrice: null,
 
       primary: initialPrimaryState,
       additionals: [],

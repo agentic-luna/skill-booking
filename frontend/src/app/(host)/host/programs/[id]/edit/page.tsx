@@ -85,7 +85,7 @@ export default function EditProgramPage() {
           date: dateStr,
           endDate: details.venueDetails?.endDate || "",
           time: timeStr,
-          ticketTypes: details.ticketTypes?.length > 0 
+          ticketTypes: (details.ticketTypes && details.ticketTypes.length > 0)
             ? details.ticketTypes 
             : [{ name: "Basic", price: details.price ?? 0, totalSeats: details.totalSeats ?? 10 }],
           maxSpots: details.totalSeats || 10,
