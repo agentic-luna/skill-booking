@@ -40,6 +40,11 @@ export class CreateEventCommand implements IRequest<any> {
       category?: string;
       keywords?: string[];
       videoUrls?: string[];
+      ticketTypes?: Array<{
+        name: string;
+        price: number;
+        totalSeats: number;
+      }>;
     }
   ) { }
 }
@@ -68,6 +73,44 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       throw new ForbiddenError('Cannot create events. Your KYC verification is ' + hostProfile.kycStatus + '. Please wait for admin approval.');
     }
 
+    // Validate ticket types if provided
+    if (data.ticketTypes && Array.isArray(data.ticketTypes) && data.ticketTypes.length > 0) {
+      if (data.ticketTypes.length > 10) {
+        throw new BadRequestError('An event can have a maximum of 10 ticket types.');
+      }
+
+      const namesSet = new Set<string>();
+      for (const tt of data.ticketTypes) {
+        if (!tt.name || typeof tt.name !== 'string' || tt.name.trim() === '') {
+          throw new BadRequestError('Ticket type name is required.');
+        }
+        if (tt.price === undefined || tt.price === null || Number(tt.price) < 0) {
+          throw new BadRequestError(`Invalid price for ticket type "${tt.name}". Price must be >= 0.`);
+        }
+        if (!tt.totalSeats || Number(tt.totalSeats) <= 0) {
+          throw new BadRequestError(`Invalid total seats for ticket type "${tt.name}". Total seats must be > 0.`);
+        }
+        const normalizedName = tt.name.trim().toLowerCase();
+        if (namesSet.has(normalizedName)) {
+          throw new BadRequestError(`Duplicate ticket type name "${tt.name}" is not allowed.`);
+        }
+        namesSet.add(normalizedName);
+      }
+    }
+
+    let totalSeats = Number(data.totalSeats) || 0;
+    let basePrice = data.price !== undefined ? Number(data.price) : undefined;
+
+    if (data.ticketTypes && Array.isArray(data.ticketTypes) && data.ticketTypes.length > 0) {
+      const sumSeats = data.ticketTypes.reduce((acc, tt) => acc + Number(tt.totalSeats || 0), 0);
+      if (!totalSeats || totalSeats <= 0) {
+        totalSeats = sumSeats;
+      }
+      if (basePrice === undefined) {
+        basePrice = Math.min(...data.ticketTypes.map(tt => Number(tt.price)));
+      }
+    }
+
     const durationHours = parseDurationToHours(data.duration);
 
     // Retrieve initial commission based on Platform Settings commissionRate
@@ -91,17 +134,22 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       venue: data.venue,
       instructor: data.instructor,
       startTime: new Date(data.startTime),
-      totalSeats: data.totalSeats,
-      availableSeats: data.totalSeats,
+      totalSeats: totalSeats,
+      availableSeats: totalSeats,
       status: EventStatus.PENDING,
       version: 1,
-      price: data.price,
+      price: basePrice,
       duration: data.duration,
       durationHours,
       description: data.description,
       category: data.category,
       keywords: data.keywords || [],
       videoUrls: data.videoUrls || [],
+      ticketTypes: data.ticketTypes ? data.ticketTypes.map(tt => ({
+        name: tt.name.trim(),
+        price: Number(tt.price),
+        totalSeats: Number(tt.totalSeats),
+      })) : undefined,
       venueDetails: {
         district: data.venue?.district || undefined,
         endDate: data.venue?.endDate || undefined,

@@ -12,6 +12,15 @@ function mapEvent(e: any): any {
     version: Number(e.version),
     commission: e.commission ? mapCommission(e.commission) : null,
     boostedEvent: e.boostedEvent || null,
+    ticketTypes: Array.isArray(e.ticketTypes)
+      ? e.ticketTypes.map((tt: any) => ({
+          ...tt,
+          price: Number(tt.price),
+          totalSeats: Number(tt.totalSeats),
+          bookedSeats: Number(tt.bookedSeats),
+          availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        }))
+      : [],
     instructor: e.instructor ? {
       id: e.instructor.id,
       name: e.instructor.name,
@@ -97,6 +106,7 @@ export class PrismaEventRepository implements IEventRepository {
         instructor: true,
         venue: true,
         boostedEvent: true,
+        ticketTypes: true,
       },
     });
     if (!e) return null;
@@ -255,6 +265,7 @@ export class PrismaEventRepository implements IEventRepository {
         instructor: true,
         venue: true,
         boostedEvent: true,
+        ticketTypes: true,
       },
       orderBy,
     });
@@ -329,6 +340,11 @@ export class PrismaEventRepository implements IEventRepository {
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;
+    ticketTypes?: Array<{
+      name: string;
+      price: number;
+      totalSeats: number;
+    }>;
   }): Promise<Event> {
     let instructorId: string | null = null;
     let venueId: string | null = null;
@@ -358,7 +374,7 @@ export class PrismaEventRepository implements IEventRepository {
       venueId = venue.id;
     }
 
-    const { venue, instructor, commissionType, platformValue, ...rest } = data;
+    const { venue, instructor, commissionType, platformValue, ticketTypes, ...rest } = data;
     const created = await prisma.event.create({
       data: {
         ...rest,
@@ -371,11 +387,20 @@ export class PrismaEventRepository implements IEventRepository {
             platformValue: platformValue || 0,
           }
         } : undefined,
+        ticketTypes: Array.isArray(ticketTypes) && ticketTypes.length > 0 ? {
+          create: ticketTypes.map(tt => ({
+            name: tt.name,
+            price: tt.price,
+            totalSeats: tt.totalSeats,
+            bookedSeats: 0,
+          }))
+        } : undefined,
       },
       include: {
         instructor: true,
         venue: true,
         commission: true,
+        ticketTypes: true,
         host: {
           select: {
             user: {
@@ -399,6 +424,7 @@ export class PrismaEventRepository implements IEventRepository {
         instructor: true,
         venue: true,
         commission: true,
+        ticketTypes: true,
         host: {
           select: {
             user: {
@@ -481,5 +507,102 @@ export class PrismaEventRepository implements IEventRepository {
       },
     });
     return mapEvent(updated);
+  }
+
+  async createTicketType(eventId: string, data: { name: string; price: number; totalSeats: number }): Promise<any> {
+    const created = await prisma.eventTicketType.create({
+      data: {
+        eventId,
+        name: data.name,
+        price: data.price,
+        totalSeats: data.totalSeats,
+        bookedSeats: 0,
+      },
+    });
+    return {
+      ...created,
+      price: Number(created.price),
+      totalSeats: Number(created.totalSeats),
+      bookedSeats: Number(created.bookedSeats),
+      availableSeats: Number(created.totalSeats) - Number(created.bookedSeats),
+    };
+  }
+
+  async findTicketTypesByEventId(eventId: string): Promise<any[]> {
+    const ticketTypes = await prisma.eventTicketType.findMany({
+      where: { eventId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return ticketTypes.map((tt) => ({
+      ...tt,
+      price: Number(tt.price),
+      totalSeats: Number(tt.totalSeats),
+      bookedSeats: Number(tt.bookedSeats),
+      availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+    }));
+  }
+
+  async findTicketTypeById(id: string): Promise<any> {
+    const tt = await prisma.eventTicketType.findUnique({
+      where: { id },
+    });
+    if (!tt) return null;
+    return {
+      ...tt,
+      price: Number(tt.price),
+      totalSeats: Number(tt.totalSeats),
+      bookedSeats: Number(tt.bookedSeats),
+      availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+    };
+  }
+
+  async findTicketTypeByEventIdAndName(eventId: string, name: string): Promise<any> {
+    const tt = await prisma.eventTicketType.findUnique({
+      where: {
+        eventId_name: {
+          eventId,
+          name,
+        },
+      },
+    });
+    if (!tt) return null;
+    return {
+      ...tt,
+      price: Number(tt.price),
+      totalSeats: Number(tt.totalSeats),
+      bookedSeats: Number(tt.bookedSeats),
+      availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+    };
+  }
+
+  async updateTicketType(id: string, data: { name?: string; price?: number; totalSeats?: number }): Promise<any> {
+    const updated = await prisma.eventTicketType.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.price !== undefined ? { price: data.price } : {}),
+        ...(data.totalSeats !== undefined ? { totalSeats: data.totalSeats } : {}),
+      },
+    });
+    return {
+      ...updated,
+      price: Number(updated.price),
+      totalSeats: Number(updated.totalSeats),
+      bookedSeats: Number(updated.bookedSeats),
+      availableSeats: Number(updated.totalSeats) - Number(updated.bookedSeats),
+    };
+  }
+
+  async deleteTicketType(id: string): Promise<any> {
+    const deleted = await prisma.eventTicketType.delete({
+      where: { id },
+    });
+    return deleted;
+  }
+
+  async countTicketTypesByEventId(eventId: string): Promise<number> {
+    return prisma.eventTicketType.count({
+      where: { eventId },
+    });
   }
 }

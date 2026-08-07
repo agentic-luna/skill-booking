@@ -68,7 +68,7 @@ export class EventsController {
 
   static async createEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls } = req.body;
+      const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls, ticketTypes } = req.body;
       const event = await mediator.send(new CreateEventCommand(req.user!.id, {
         title,
         posterUrl,
@@ -77,13 +77,14 @@ export class EventsController {
         venue,
         instructor,
         startTime,
-        totalSeats: Number(totalSeats),
+        totalSeats: totalSeats !== undefined && totalSeats !== null ? Number(totalSeats) : 0,
         price: price !== undefined ? Number(price) : undefined,
         duration: duration !== undefined ? String(duration) : undefined,
         description: description !== undefined ? String(description) : undefined,
         category: category !== undefined ? String(category) : undefined,
         keywords: Array.isArray(keywords) ? keywords : [],
         videoUrls: Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : []),
+        ticketTypes: Array.isArray(ticketTypes) ? ticketTypes : undefined,
       }));
       return ApiResponse.created(res, event);
     } catch (error) {
@@ -374,6 +375,315 @@ export class EventsController {
       });
 
       return ApiResponse.success(res, { message: 'Edit request submitted.', editRequest });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // --- Client-facing ticket types GET endpoint ---
+  static async getEventTicketTypes(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, eventId } = req.params;
+      const targetEventId = id || eventId;
+      const event = await prisma.event.findUnique({
+        where: { id: targetEventId },
+      });
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Event not found.' },
+        });
+      }
+
+      const ticketTypes = await prisma.eventTicketType.findMany({
+        where: { eventId: targetEventId },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      const result = ticketTypes.map((tt) => ({
+        id: tt.id,
+        eventId: tt.eventId,
+        name: tt.name,
+        price: Number(tt.price),
+        totalSeats: Number(tt.totalSeats),
+        bookedSeats: Number(tt.bookedSeats),
+        availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        createdAt: tt.createdAt,
+        updatedAt: tt.updatedAt,
+      }));
+
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // --- Host CRUD endpoints for Ticket Types ---
+  static async createTicketType(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.params;
+      const { name, price, totalSeats } = req.body;
+
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        throw new BadRequestError('Ticket type name is required.');
+      }
+      if (price === undefined || price === null || Number(price) < 0) {
+        throw new BadRequestError('Price must be greater than or equal to 0.');
+      }
+      if (!totalSeats || Number(totalSeats) <= 0) {
+        throw new BadRequestError('Total seats must be greater than 0.');
+      }
+
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Event not found.' },
+        });
+      }
+
+      if (event.hostId !== hostProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { message: 'Access denied. You do not own this event.' },
+        });
+      }
+
+      const count = await prisma.eventTicketType.count({
+        where: { eventId },
+      });
+      if (count >= 10) {
+        throw new BadRequestError('Maximum limit of 10 ticket types per event reached.');
+      }
+
+      const existingName = await prisma.eventTicketType.findUnique({
+        where: {
+          eventId_name: {
+            eventId,
+            name: name.trim(),
+          },
+        },
+      });
+      if (existingName) {
+        throw new BadRequestError(`Ticket type with name "${name.trim()}" already exists for this event.`);
+      }
+
+      const ticketType = await prisma.eventTicketType.create({
+        data: {
+          eventId,
+          name: name.trim(),
+          price: Number(price),
+          totalSeats: Number(totalSeats),
+          bookedSeats: 0,
+        },
+      });
+
+      return ApiResponse.created(res, {
+        ...ticketType,
+        price: Number(ticketType.price),
+        totalSeats: Number(ticketType.totalSeats),
+        bookedSeats: Number(ticketType.bookedSeats),
+        availableSeats: Number(ticketType.totalSeats) - Number(ticketType.bookedSeats),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getHostTicketTypes(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { eventId } = req.params;
+
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Event not found.' },
+        });
+      }
+
+      if (event.hostId !== hostProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { message: 'Access denied. You do not own this event.' },
+        });
+      }
+
+      const ticketTypes = await prisma.eventTicketType.findMany({
+        where: { eventId },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      const result = ticketTypes.map((tt) => ({
+        id: tt.id,
+        eventId: tt.eventId,
+        name: tt.name,
+        price: Number(tt.price),
+        totalSeats: Number(tt.totalSeats),
+        bookedSeats: Number(tt.bookedSeats),
+        availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        createdAt: tt.createdAt,
+        updatedAt: tt.updatedAt,
+      }));
+
+      return ApiResponse.success(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateTicketType(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { eventId, ticketTypeId } = req.params;
+      const { name, price, totalSeats } = req.body;
+
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Event not found.' },
+        });
+      }
+
+      if (event.hostId !== hostProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { message: 'Access denied. You do not own this event.' },
+        });
+      }
+
+      const existingTicketType = await prisma.eventTicketType.findFirst({
+        where: { id: ticketTypeId, eventId },
+      });
+      if (!existingTicketType) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Ticket type not found for this event.' },
+        });
+      }
+
+      if (price !== undefined && (price === null || Number(price) < 0)) {
+        throw new BadRequestError('Price must be greater than or equal to 0.');
+      }
+
+      if (totalSeats !== undefined) {
+        if (Number(totalSeats) <= 0) {
+          throw new BadRequestError('Total seats must be greater than 0.');
+        }
+        if (Number(totalSeats) < existingTicketType.bookedSeats) {
+          throw new BadRequestError(`Total seats (${totalSeats}) cannot be less than already booked seats (${existingTicketType.bookedSeats}).`);
+        }
+      }
+
+      if (name && typeof name === 'string' && name.trim() !== existingTicketType.name) {
+        const duplicate = await prisma.eventTicketType.findUnique({
+          where: {
+            eventId_name: {
+              eventId,
+              name: name.trim(),
+            },
+          },
+        });
+        if (duplicate) {
+          throw new BadRequestError(`Ticket type with name "${name.trim()}" already exists for this event.`);
+        }
+      }
+
+      const updated = await prisma.eventTicketType.update({
+        where: { id: ticketTypeId },
+        data: {
+          ...(name && typeof name === 'string' ? { name: name.trim() } : {}),
+          ...(price !== undefined ? { price: Number(price) } : {}),
+          ...(totalSeats !== undefined ? { totalSeats: Number(totalSeats) } : {}),
+        },
+      });
+
+      return ApiResponse.success(res, {
+        ...updated,
+        price: Number(updated.price),
+        totalSeats: Number(updated.totalSeats),
+        bookedSeats: Number(updated.bookedSeats),
+        availableSeats: Number(updated.totalSeats) - Number(updated.bookedSeats),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteTicketType(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { eventId, ticketTypeId } = req.params;
+
+      const hostProfile = await prisma.hostProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      if (!hostProfile) {
+        throw new BadRequestError('Host Profile not found.');
+      }
+
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Event not found.' },
+        });
+      }
+
+      if (event.hostId !== hostProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { message: 'Access denied. You do not own this event.' },
+        });
+      }
+
+      const existingTicketType = await prisma.eventTicketType.findFirst({
+        where: { id: ticketTypeId, eventId },
+      });
+      if (!existingTicketType) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Ticket type not found for this event.' },
+        });
+      }
+
+      if (existingTicketType.bookedSeats > 0) {
+        throw new BadRequestError('Cannot delete ticket type that already has booked seats.');
+      }
+
+      await prisma.eventTicketType.delete({
+        where: { id: ticketTypeId },
+      });
+
+      return ApiResponse.success(res, { message: 'Ticket type deleted successfully.' });
     } catch (error) {
       next(error);
     }

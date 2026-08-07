@@ -51,6 +51,11 @@ export interface IEventRepository {
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;
+    ticketTypes?: Array<{
+      name: string;
+      price: number;
+      totalSeats: number;
+    }>;
   }): Promise<Event>;
   update(id: string, data: any): Promise<Event>;
   findPendingEvents(): Promise<any[]>;
@@ -61,4 +66,13 @@ export interface IEventRepository {
   ): Promise<EventCommission>;
   decrementSeats(id: string, seatCount: number, currentVersion: number): Promise<boolean>;
   incrementSeats(id: string, seatCount: number): Promise<Event>;
+
+  // Ticket Types methods
+  createTicketType(eventId: string, data: { name: string; price: number; totalSeats: number }): Promise<any>;
+  findTicketTypesByEventId(eventId: string): Promise<any[]>;
+  findTicketTypeById(id: string): Promise<any>;
+  findTicketTypeByEventIdAndName(eventId: string, name: string): Promise<any>;
+  updateTicketType(id: string, data: { name?: string; price?: number; totalSeats?: number }): Promise<any>;
+  deleteTicketType(id: string): Promise<any>;
+  countTicketTypesByEventId(eventId: string): Promise<number>;
 }

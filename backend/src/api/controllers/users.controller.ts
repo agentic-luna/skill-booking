@@ -188,16 +188,36 @@ export class UsersController {
           createdAt: true,
           updatedAt: true,
           boostedEvent: true,
+          ticketTypes: {
+            select: {
+              id: true,
+              eventId: true,
+              name: true,
+              price: true,
+              totalSeats: true,
+              bookedSeats: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+            orderBy: { createdAt: 'asc' },
+          },
         },
         orderBy: { startTime: 'desc' },
       });
       // Serialize Decimal/BigInt fields to plain JS numbers for JSON
-      const serialized = events.map((e) => ({
+      const serialized = events.map((e: any) => ({
         ...e,
         price: e.price ? Number(e.price) : null,
         totalSeats: Number(e.totalSeats),
         availableSeats: Number(e.availableSeats),
         version: Number(e.version),
+        ticketTypes: Array.isArray(e.ticketTypes) ? e.ticketTypes.map((tt: any) => ({
+          ...tt,
+          price: Number(tt.price),
+          totalSeats: Number(tt.totalSeats),
+          bookedSeats: Number(tt.bookedSeats),
+          availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        })) : [],
       }));
       return ApiResponse.success(res, serialized);
     } catch (error) {

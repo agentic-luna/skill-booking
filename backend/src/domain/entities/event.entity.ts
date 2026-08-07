@@ -28,4 +28,5 @@ export interface Event {
   venueId?: string | null;
   instructor?: any;
   venue?: any;
+  ticketTypes?: any[];
 }

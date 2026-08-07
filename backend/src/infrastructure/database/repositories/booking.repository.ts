@@ -10,6 +10,21 @@ function mapBooking(b: any): any {
     totalAmount: Number(b.totalAmount),
     seatCount: Number(b.seatCount),
     platformValue: b.platformValue ? Number(b.platformValue) : null,
+    ticketType: b.ticketType ? {
+      ...b.ticketType,
+      price: Number(b.ticketType.price),
+      totalSeats: Number(b.ticketType.totalSeats),
+      bookedSeats: Number(b.ticketType.bookedSeats),
+    } : null,
+    participants: Array.isArray(b.participants) ? b.participants.map((p: any) => ({
+      ...p,
+      ticketType: p.ticketType ? {
+        ...p.ticketType,
+        price: Number(p.ticketType.price),
+        totalSeats: Number(p.ticketType.totalSeats),
+        bookedSeats: Number(p.ticketType.bookedSeats),
+      } : null,
+    })) : [],
     event: b.event ? {
       ...b.event,
       availableSeats: Number(b.event.availableSeats),
@@ -56,7 +71,10 @@ export class PrismaBookingRepository implements IBookingRepository {
     const b = await prisma.booking.findUnique({
       where: { id },
       include: {
-        participants: true,
+        ticketType: true,
+        participants: {
+          include: { ticketType: true },
+        },
         client: true,
         event: {
           include: {
@@ -80,7 +98,10 @@ export class PrismaBookingRepository implements IBookingRepository {
     const b = await prisma.booking.findFirst({
       where: { bookingRef },
       include: {
-        participants: true,
+        ticketType: true,
+        participants: {
+          include: { ticketType: true },
+        },
         client: true,
         event: {
           include: {
@@ -104,7 +125,10 @@ export class PrismaBookingRepository implements IBookingRepository {
     const b = await prisma.booking.findUnique({
       where: { razorpayOrderId },
       include: {
-        participants: true,
+        ticketType: true,
+        participants: {
+          include: { ticketType: true },
+        },
         client: true,
         event: {
           include: {
@@ -128,7 +152,10 @@ export class PrismaBookingRepository implements IBookingRepository {
     const b = await prisma.booking.findFirst({
       where: { razorpayPaymentId },
       include: {
-        participants: true,
+        ticketType: true,
+        participants: {
+          include: { ticketType: true },
+        },
         client: true,
         event: {
           include: {
@@ -151,7 +178,10 @@ export class PrismaBookingRepository implements IBookingRepository {
     const list = await prisma.booking.findMany({
       where: filters,
       include: {
-        participants: true,
+        ticketType: true,
+        participants: {
+          include: { ticketType: true },
+        },
         event: {
           include: {
             venue: true,

@@ -30,6 +30,13 @@ router.post('/events', requirePermission(SystemPermissions.HOST_EVENTS_CREATE) a
 router.post('/events/:id/request-edit', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.requestEdit as any);
 router.put('/events/:id', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.updateEvent as any);
 router.delete('/events/:id', requirePermission(SystemPermissions.HOST_EVENTS_DELETE) as any, EventsController.deleteEvent as any);
+
+// Ticket Types Host Management
+router.post('/events/:eventId/ticket-types', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.createTicketType as any);
+router.get('/events/:eventId/ticket-types', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.getHostTicketTypes as any);
+router.put('/events/:eventId/ticket-types/:ticketTypeId', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.updateTicketType as any);
+router.delete('/events/:eventId/ticket-types/:ticketTypeId', requirePermission(SystemPermissions.HOST_EVENTS_UPDATE) as any, EventsController.deleteTicketType as any);
+
 router.get('/dashboard', requirePermission(SystemPermissions.HOST_DASHBOARD_READ) as any, UsersController.getDashboard as any);
 
 export default router;
