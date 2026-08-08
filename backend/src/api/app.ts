@@ -9,7 +9,7 @@ import swaggerSpec from '../config/swagger-spec';
 import { prisma } from '../config/prisma';
 
 const app = express();
-
+  
 // Global Middleware
 app.use(helmet());
 app.use(cors());
