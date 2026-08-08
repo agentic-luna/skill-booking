@@ -84,7 +84,7 @@ export default function BookingModal(props: BookingModalProps) {
   const { user } = useAuthStore();
   const store = useBookingModalStore();
 
-  const { startCheckout, isLoading: rzpLoading, isSuccess: rzpSuccess } = useRazorpayCheckout({
+  const { startCheckout, isLoading: rzpLoading, isSuccess: rzpSuccess, error: rzpError } = useRazorpayCheckout({
     onSuccess: (result) => {
       store.setPaymentLoading(false);
       store.setPaymentSuccess(true, result.booking?.bookingRef);
@@ -343,7 +343,7 @@ export default function BookingModal(props: BookingModalProps) {
                               value={store.primary.ticketType?.name || ""} 
                               onChange={e => {
                                 const t = activeProgram.ticketTypes!.find(x => x.name === e.target.value);
-                                if (t) store.updatePrimaryField("ticketType", { name: t.name, price: t.price } as any);
+                                if (t) store.updatePrimaryField("ticketType", { id: (t as any).id, name: t.name, price: t.price } as any);
                               }}>
                               <option value="" disabled>Select Ticket Tier</option>
                               {activeProgram.ticketTypes.map(t => (
@@ -453,7 +453,7 @@ export default function BookingModal(props: BookingModalProps) {
                                         value={p.ticketType?.name || ""} 
                                         onChange={e => {
                                           const t = activeProgram.ticketTypes!.find(x => x.name === e.target.value);
-                                          if (t) store.updateAdditionalField(idx, "ticketType", { name: t.name, price: t.price } as any);
+                                          if (t) store.updateAdditionalField(idx, "ticketType", { id: (t as any).id, name: t.name, price: t.price } as any);
                                         }}>
                                         <option value="" disabled>Select Ticket Tier</option>
                                         {activeProgram.ticketTypes.map(t => (
@@ -594,6 +594,13 @@ export default function BookingModal(props: BookingModalProps) {
                         </span>
                       </label>
                     </div>
+
+                    {rzpError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2.5 text-xs font-semibold text-red-600 dark:text-red-400">
+                        <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+                        <span>{rzpError}</span>
+                      </div>
+                    )}
 
                     {!canProceedToConfirm && (
                       <div className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-lg flex items-center gap-2 font-medium">

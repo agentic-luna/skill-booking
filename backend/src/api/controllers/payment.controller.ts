@@ -41,20 +41,21 @@ export class PaymentController {
     next: NextFunction
   ) {
     try {
-      const { eventId, ticketTypeId, seatCount, customAmount, participants } = req.body;
+      const { eventId, ticketTypeId, seatCount, customAmount, participants, items } = req.body;
 
-      if (!eventId || !seatCount) {
-        throw new BadRequestError('eventId and seatCount are required.');
+      if (!eventId) {
+        throw new BadRequestError('eventId is required.');
       }
 
       const result = await mediator.send(
         new CheckoutCommand(
           req.user!.id,
           eventId,
-          Number(seatCount),
+          seatCount !== undefined && seatCount !== null ? Number(seatCount) : undefined,
           ticketTypeId ? String(ticketTypeId) : undefined,
-          customAmount ? Number(customAmount) : undefined,
-          Array.isArray(participants) ? participants : undefined
+          customAmount !== undefined && customAmount !== null ? Number(customAmount) : undefined,
+          Array.isArray(participants) ? participants : undefined,
+          Array.isArray(items) ? items : undefined
         )
       );
 

@@ -47,6 +47,7 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
     // 1. Gather all requested tickets and their participants
     let ticketsList: Array<{
       ticketTypeId: string | null;
+      ticketTypeName: string | null;
       fullName?: string;
       email?: string;
       mobile?: string;
@@ -58,22 +59,33 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       isPrimary?: boolean;
     }> = [];
 
+    const resolveTypeInfo = (obj: any) => {
+      const id = obj?.ticketTypeId || obj?.ticketType?.id || obj?.id || null;
+      const name = obj?.ticketTypeName || obj?.ticketType?.name || obj?.name || null;
+      return { id: id ? String(id) : null, name: name ? String(name) : null };
+    };
+
     if (Array.isArray(command.items) && command.items.length > 0) {
       for (const item of command.items) {
         const qty = Number(item.quantity) || 1;
         const itemParticipants = Array.isArray(item.participants) ? item.participants : [];
+        const itemType = resolveTypeInfo(item);
         for (let i = 0; i < qty; i++) {
           const p = itemParticipants[i] || {};
+          const pType = resolveTypeInfo(p);
           ticketsList.push({
-            ticketTypeId: item.ticketTypeId,
+            ticketTypeId: pType.id || itemType.id || command.ticketTypeId || null,
+            ticketTypeName: pType.name || itemType.name || null,
             ...p,
           });
         }
       }
     } else if (Array.isArray(command.participants) && command.participants.length > 0) {
       for (const p of command.participants) {
+        const pType = resolveTypeInfo(p);
         ticketsList.push({
-          ticketTypeId: p.ticketTypeId || command.ticketTypeId || null,
+          ticketTypeId: pType.id || command.ticketTypeId || null,
+          ticketTypeName: pType.name || null,
           ...p,
         });
       }
@@ -82,6 +94,7 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       for (let i = 0; i < count; i++) {
         ticketsList.push({
           ticketTypeId: command.ticketTypeId || null,
+          ticketTypeName: null,
         });
       }
     }
@@ -92,7 +105,40 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
 
     const totalSeatCount = ticketsList.length;
 
-    // 2. Group quantities per ticket type and fetch DB records
+    // 2. Fetch DB ticket types for this event and resolve types for all tickets
+    const dbTicketTypes = await prisma.eventTicketType.findMany({
+      where: { eventId: eventId },
+    });
+
+    const ticketTypeByUuid = new Map<string, any>();
+    const ticketTypeByName = new Map<string, any>();
+    for (const tt of dbTicketTypes) {
+      ticketTypeByUuid.set(tt.id, tt);
+      ticketTypeByName.set(tt.name.toLowerCase().trim(), tt);
+    }
+
+    for (const t of ticketsList) {
+      let matchedTt: any = null;
+      if (t.ticketTypeId && ticketTypeByUuid.has(t.ticketTypeId)) {
+        matchedTt = ticketTypeByUuid.get(t.ticketTypeId);
+      } else if (t.ticketTypeName && ticketTypeByName.has(t.ticketTypeName.toLowerCase().trim())) {
+        matchedTt = ticketTypeByName.get(t.ticketTypeName.toLowerCase().trim());
+      } else if (dbTicketTypes.length === 1) {
+        matchedTt = dbTicketTypes[0];
+      }
+
+      if (dbTicketTypes.length > 0 && !matchedTt) {
+        const typeLabel = t.ticketTypeName || t.ticketTypeId || 'Selected ticket type';
+        throw new NotFoundError(`Ticket type "${typeLabel}" was not found for this event.`);
+      }
+
+      if (matchedTt) {
+        t.ticketTypeId = matchedTt.id;
+        t.ticketTypeName = matchedTt.name;
+      }
+    }
+
+    // 3. Group quantities per ticket type and validate seat availability
     const qtyByTicketTypeId = new Map<string, number>();
     for (const t of ticketsList) {
       if (t.ticketTypeId) {
@@ -100,39 +146,29 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
       }
     }
 
-    const ticketTypesMap = new Map<string, any>();
-    if (qtyByTicketTypeId.size > 0) {
-      const dbTicketTypes = await prisma.eventTicketType.findMany({
-        where: {
-          id: { in: Array.from(qtyByTicketTypeId.keys()) },
-          eventId: eventId,
-        },
-      });
-
-      for (const tt of dbTicketTypes) {
-        ticketTypesMap.set(tt.id, tt);
-      }
-
-      for (const ttId of qtyByTicketTypeId.keys()) {
-        if (!ticketTypesMap.has(ttId)) {
-          throw new NotFoundError(`Ticket type ID "${ttId}" was not found for this event.`);
-        }
+    for (const [ttId, qty] of qtyByTicketTypeId.entries()) {
+      const tt = ticketTypeByUuid.get(ttId);
+      const available = Number(tt.totalSeats) - Number(tt.bookedSeats);
+      if (available <= 0 || qty > available) {
+        throw new BadRequestError(
+          `Type of Ticket "${tt.name}" is finished and no enteries there for this.`
+        );
       }
     }
 
-    // 3. Calculate total base price across all ticket items
+    // 4. Calculate total base price based on authoritative DB prices
     let calculatedBaseAmount = 0;
     if (qtyByTicketTypeId.size > 0) {
       for (const [ttId, qty] of qtyByTicketTypeId.entries()) {
-        const tt = ticketTypesMap.get(ttId);
+        const tt = ticketTypeByUuid.get(ttId);
         calculatedBaseAmount += qty * Number(tt.price);
       }
     } else {
       calculatedBaseAmount = totalSeatCount * (Number(event.price) || 0);
     }
 
-    const baseAmount = command.customAmount !== undefined ? command.customAmount : calculatedBaseAmount;
-    
+    const baseAmount = calculatedBaseAmount;
+
     // Calculate platform fee commission if defined
     let platformFee = 0;
     if (event.commission) {
@@ -141,16 +177,16 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
         platformFee = Math.round(baseAmount * (platformValue / 100) * 100) / 100;
       }
     }
-    
+
     const totalAmount = baseAmount + platformFee;
     const bookingRef = `BK-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
-    // 4. Wrap seat updates and booking creation in a single transaction
+    // 5. Wrap seat updates and booking creation in a single transaction
     const booking = await prisma.$transaction(async (tx) => {
-      // 4a. Perform atomic conditional UPDATE for each requested ticket type
+      // 5a. Perform atomic conditional UPDATE for each requested ticket type
       if (qtyByTicketTypeId.size > 0) {
         for (const [ttId, qty] of qtyByTicketTypeId.entries()) {
-          const tt = ticketTypesMap.get(ttId);
+          const tt = ticketTypeByUuid.get(ttId);
           const updatedCount = await tx.$executeRaw`
             UPDATE "event_ticket_types"
             SET "booked_seats" = "booked_seats" + ${qty},
@@ -162,7 +198,7 @@ export class CheckoutCommandHandler implements IRequestHandler<CheckoutCommand, 
 
           if (updatedCount === 0) {
             throw new ConflictError(
-              `Not enough seats remaining for ticket type "${tt.name}". Requested ${qty}, but only ${Number(tt.totalSeats) - Number(tt.bookedSeats)} available.`
+              `Type of Ticket "${tt.name}" is finished and no enteries there for this.`
             );
           }
         }
