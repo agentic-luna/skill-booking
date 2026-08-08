@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, HelpCircle, Users, GraduationCap, BookOpen, Languages, ClipboardList, Gift, Wrench, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -374,6 +374,117 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               </p>
             </div>
 
+            {/* Q&A Questionnaire Section */}
+            {program.whatIsThisProgram && (
+              <div className="space-y-6 pt-6 border-t border-border/60">
+                <div className="flex items-center space-x-2.5">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/40 p-2 rounded-xl">
+                    <HelpCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-foreground leading-tight">Program Q&A</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Learn more about this training session through standard questions.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+                  {/* 1. What Is This Program? */}
+                  <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                    <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                      <Info className="h-4.5 w-4.5" />
+                      <h4 className="text-[13px] font-extrabold uppercase tracking-wider">What Is This Program?</h4>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                      {program.whatIsThisProgram}
+                    </p>
+                  </div>
+
+                  {/* 2. Who Is This Training/Course For? */}
+                  <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                    <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                      <Users className="h-4.5 w-4.5" />
+                      <h4 className="text-[13px] font-extrabold uppercase tracking-wider">Who Is This Training For?</h4>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                      {program.whoIsThisFor}
+                    </p>
+                  </div>
+
+                  {/* 3. What Will You Learn? */}
+                  <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                    <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                      <GraduationCap className="h-4.5 w-4.5" />
+                      <h4 className="text-[13px] font-extrabold uppercase tracking-wider">What Will You Learn?</h4>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                      {program.whatWillYouLearn}
+                    </p>
+                  </div>
+
+                  {/* 4. What topics we will be teaching? */}
+                  <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                    <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                      <BookOpen className="h-4.5 w-4.5" />
+                      <h4 className="text-[13px] font-extrabold uppercase tracking-wider">Topics Covered</h4>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                      {program.topicsCovered}
+                    </p>
+                  </div>
+
+                  {/* 5. Medium of Language */}
+                  <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                    <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                      <Languages className="h-4.5 w-4.5" />
+                      <h4 className="text-[13px] font-extrabold uppercase tracking-wider">Medium of Language</h4>
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line font-semibold text-foreground">
+                      {program.mediumOfLanguage}
+                    </p>
+                  </div>
+
+                  {/* 6. Prerequisites */}
+                  {program.prerequisites && (
+                    <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                      <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                        <ClipboardList className="h-4.5 w-4.5" />
+                        <h4 className="text-[13px] font-extrabold uppercase tracking-wider">Prerequisites</h4>
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                        {program.prerequisites}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 7. Takeaways */}
+                  {program.takeaways && (
+                    <div className="bg-white dark:bg-card/50 p-5 rounded-2xl border border-border/50 shadow-xs hover:shadow-sm hover:border-border transition-all duration-300 space-y-3">
+                      <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                        <Gift className="h-4.5 w-4.5" />
+                        <h4 className="text-[13px] font-extrabold uppercase tracking-wider">Key Takeaways</h4>
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                        {program.takeaways}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 8. Tools Given */}
+                  {program.toolsGiven && (
+                    <div className="bg-gradient-to-br from-indigo-50/30 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/20 p-6 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/30 shadow-xs hover:shadow-sm transition-all duration-300 space-y-3 md:col-span-2">
+                      <div className="flex items-center space-x-2.5 text-indigo-700 dark:text-indigo-400">
+                        <Wrench className="h-5 w-5 animate-pulse" />
+                        <h4 className="text-sm font-extrabold uppercase tracking-wider">Tools & Resources You Will Get</h4>
+                      </div>
+                      <p className="text-foreground font-semibold text-sm leading-relaxed whitespace-pre-line">
+                        {program.toolsGiven}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Highlights (Rating & Location Map) */}
             <ProgramHighlights
               rating={program.rating}
@@ -393,19 +504,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               instagram={program.instagram}
               linkedin={program.linkedin}
               facebook={program.facebook}
-            />
-
-            <Separator />
-
-            {/* Verified Student Reviews List */}
-            <ProgramReviews
-              reviews={reviews}
-              reviewsTotalCount={reviewsTotalCount}
-              reviewsPage={reviewsPage}
-              setReviewsPage={setReviewsPage}
-              reviewsStats={reviewsStats}
-              selectedRating={selectedRating}
-              setSelectedRating={setSelectedRating}
             />
           </div>
 

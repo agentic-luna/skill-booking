@@ -39,6 +39,14 @@ export interface Program {
     platformValue: number;
   } | null;
   startTime?: string;
+  whatIsThisProgram?: string;
+  whoIsThisFor?: string;
+  whatWillYouLearn?: string;
+  topicsCovered?: string;
+  mediumOfLanguage?: string;
+  prerequisites?: string;
+  takeaways?: string;
+  toolsGiven?: string;
 }
 
 export const MOCK_PROGRAMS: Program[] = [

@@ -213,7 +213,11 @@ export default function PreviewSidebar({
         {/* Dialog for Client View Live Preview */}
         {watch && (
           <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-            <DialogContent className="max-w-5xl w-full h-[90vh] overflow-y-auto p-0 border-none bg-background rounded-2xl">
+            <DialogContent
+              className="max-w-5xl w-full h-[90vh] overflow-y-auto p-0 border-none bg-background rounded-2xl"
+              onPointerDownOutside={() => setPreviewOpen(false)}
+              onInteractOutside={() => setPreviewOpen(false)}
+            >
               <DialogHeader className="sr-only">
                 <DialogTitle>Client View Live Preview</DialogTitle>
               </DialogHeader>
@@ -228,17 +232,25 @@ export default function PreviewSidebar({
                   const previewProgram: Program = {
                     id: "preview",
                     title: values.title || "Workshop Title Preview",
-                    description: values.description || "Course description text goes here...",
-                    instructorName: values.instructorName || "Instructor Name",
+                    description: values.description || "",
+                    whatIsThisProgram: values.whatIsThisProgram || "",
+                    whoIsThisFor: values.whoIsThisFor || "",
+                    whatWillYouLearn: values.whatWillYouLearn || "",
+                    topicsCovered: values.topicsCovered || "",
+                    mediumOfLanguage: values.mediumOfLanguage || "",
+                    prerequisites: values.prerequisites || "",
+                    takeaways: values.takeaways || "",
+                    toolsGiven: values.toolsGiven || "",
+                    instructorName: values.instructorName || "",
                     instructorAvatar: values.instructorPhoto || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-                    instructorBio: values.instructorBio || "Bio of the instructor...",
+                    instructorBio: values.instructorBio || "",
                     instagram: values.instagram || "",
                     linkedin: values.linkedin || "",
                     facebook: values.facebook || "",
-                    companyName: values.companyName || "Training Masterclass Ltd.",
-                    category: (values.category as any) || "technology",
-                    rating: 4.8,
-                    reviewsCount: 12,
+                    companyName: values.companyName || "",
+                    category: (values.category as any) || "life-coaching",
+                    rating: 0,
+                    reviewsCount: 0,
                     price: lowestPrice,
                     duration: values.duration || "2 hours",
                     date: dateStr,
