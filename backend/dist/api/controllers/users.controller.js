@@ -176,6 +176,19 @@ class UsersController {
                     createdAt: true,
                     updatedAt: true,
                     boostedEvent: true,
+                    ticketTypes: {
+                        select: {
+                            id: true,
+                            eventId: true,
+                            name: true,
+                            price: true,
+                            totalSeats: true,
+                            bookedSeats: true,
+                            createdAt: true,
+                            updatedAt: true,
+                        },
+                        orderBy: { createdAt: 'asc' },
+                    },
                 },
                 orderBy: { startTime: 'desc' },
             });
@@ -186,6 +199,13 @@ class UsersController {
                 totalSeats: Number(e.totalSeats),
                 availableSeats: Number(e.availableSeats),
                 version: Number(e.version),
+                ticketTypes: Array.isArray(e.ticketTypes) ? e.ticketTypes.map((tt) => ({
+                    ...tt,
+                    price: Number(tt.price),
+                    totalSeats: Number(tt.totalSeats),
+                    bookedSeats: Number(tt.bookedSeats),
+                    availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+                })) : [],
             }));
             return api_response_1.ApiResponse.success(res, serialized);
         }

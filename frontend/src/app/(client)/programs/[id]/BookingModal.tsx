@@ -85,13 +85,23 @@ export default function BookingModal(props: BookingModalProps) {
   const store = useBookingModalStore();
 
   const { startCheckout, isLoading: rzpLoading, isSuccess: rzpSuccess, error: rzpError } = useRazorpayCheckout({
+    onOpen: () => {
+      // Close BookingModal so only the Razorpay checkout dialog is visible
+      if (props.onOpenChange) props.onOpenChange(false);
+      store.closeBookingModal();
+    },
     onSuccess: (result) => {
       store.setPaymentLoading(false);
       store.setPaymentSuccess(true, result.booking?.bookingRef);
       if (store.onSuccessCallback) store.onSuccessCallback();
+      // Redirect client to My Bookings page once Razorpay closes
+      router.push("/dashboard/tickets");
     },
     onError: (msg) => {
-      store.setPaymentLoading(false);
+      store.setPaymentLoading(false); 
+      // Re-open BookingModal so user sees error banner / retry option
+      if (props.onOpenChange) props.onOpenChange(true);
+      useBookingModalStore.setState({ isOpen: true });
     },
   });
 

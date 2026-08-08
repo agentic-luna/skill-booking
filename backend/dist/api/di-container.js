@@ -56,6 +56,8 @@ const get_my_bookings_1 = require("../application/use-cases/bookings/get-my-book
 const confirm_booking_payment_1 = require("../application/use-cases/bookings/confirm-booking-payment");
 const get_cancellation_quote_1 = require("../application/use-cases/bookings/get-cancellation-quote");
 const handle_payment_webhook_1 = require("../application/use-cases/webhooks/handle-payment-webhook");
+const verify_whatsapp_webhook_1 = require("../application/use-cases/webhooks/verify-whatsapp-webhook");
+const handle_whatsapp_webhook_1 = require("../application/use-cases/webhooks/handle-whatsapp-webhook");
 const get_configs_1 = require("../application/use-cases/admin/get-configs");
 const update_config_1 = require("../application/use-cases/admin/update-config");
 const broadcast_notification_1 = require("../application/use-cases/admin/broadcast-notification");
@@ -169,6 +171,8 @@ mediator.register('ConfirmBookingPaymentCommand', new confirm_booking_payment_1.
 mediator.register('GetCancellationQuoteQuery', new get_cancellation_quote_1.GetCancellationQuoteQueryHandler(bookingRepo, configRepo));
 // 8. Register Webhook handlers
 mediator.register('HandlePaymentWebhookCommand', new handle_payment_webhook_1.HandlePaymentWebhookCommandHandler(bookingRepo, ledgerRepo, configRepo, notificationRepo, queueService, cacheService, boostedRepo));
+mediator.register('VerifyWhatsAppWebhookQuery', new verify_whatsapp_webhook_1.VerifyWhatsAppWebhookQueryHandler(configRepo, cryptoService, logger));
+mediator.register('HandleWhatsAppWebhookCommand', new handle_whatsapp_webhook_1.HandleWhatsAppWebhookCommandHandler(logger));
 // 9. Register Admin handlers
 mediator.register('AdminLoginCommand', new admin_login_1.AdminLoginCommandHandler(userRepo, cacheService));
 mediator.register('GetPendingKycHostsQuery', new review_kyc_1.GetPendingKycHostsQueryHandler(userRepo, cryptoService));

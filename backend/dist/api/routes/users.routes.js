@@ -26,5 +26,10 @@ router.post('/events', (0, authorize_1.requirePermission)(system_permissions_1.S
 router.post('/events/:id/request-edit', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE), events_controller_1.EventsController.requestEdit);
 router.put('/events/:id', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE), events_controller_1.EventsController.updateEvent);
 router.delete('/events/:id', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_DELETE), events_controller_1.EventsController.deleteEvent);
+// Ticket Types Host Management
+router.post('/events/:eventId/ticket-types', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE), events_controller_1.EventsController.createTicketType);
+router.get('/events/:eventId/ticket-types', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE), events_controller_1.EventsController.getHostTicketTypes);
+router.put('/events/:eventId/ticket-types/:ticketTypeId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE), events_controller_1.EventsController.updateTicketType);
+router.delete('/events/:eventId/ticket-types/:ticketTypeId', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_EVENTS_UPDATE), events_controller_1.EventsController.deleteTicketType);
 router.get('/dashboard', (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.HOST_DASHBOARD_READ), users_controller_1.UsersController.getDashboard);
 exports.default = router;

@@ -72,6 +72,8 @@ export interface CustomCheckoutParams<TVerifyResult = any> {
 }
 
 interface UseRazorpayCheckoutOptions<T = any> {
+  /** Called when the Razorpay checkout SDK modal is opened. */
+  onOpen?: () => void;
   /** Called when the full checkout+verify cycle succeeds. */
   onSuccess?: (result: RazorpayCheckoutResult<T>) => void;
   /** Called when any step fails. */
@@ -152,10 +154,13 @@ export function useRazorpayCheckout<T = any>(opts: UseRazorpayCheckoutOptions<T>
             },
           },
         });
+        if (opts.onOpen) {
+          opts.onOpen();
+        }
         rzp.open();
       });
     },
-    []
+    [opts]
   );
 
   const startCheckout = useCallback(

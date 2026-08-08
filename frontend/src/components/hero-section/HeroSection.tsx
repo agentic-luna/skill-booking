@@ -148,13 +148,13 @@ export default function HeroSection() {
                 className="flex flex-col items-center justify-center p-5 bg-[#fafff0] rounded-[20px] text-center border border-[#a0f212]/20 shadow-sm hover:shadow-xl hover:shadow-[#a0f212]/10 transition-all cursor-default group"
               >
                 <div className="h-12 w-12 bg-[#a0f212]/20 text-[#6a9e08] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <CreditCard className="h-6 w-6" />
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
                 <h3 className="text-[15px] font-extrabold text-gray-900 mb-2 leading-tight">
-                  Book now, pay at the session
+                  Secure Instant Seat Confirmation
                 </h3>
                 <p className="text-[13px] text-gray-500 leading-relaxed px-1">
-                  FREE cancellation on most bookings and classes.
+                  Instant ticket delivery upon checkout with transparent refund policy.
                 </p>
               </motion.div>
 

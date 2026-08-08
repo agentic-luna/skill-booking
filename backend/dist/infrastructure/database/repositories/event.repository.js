@@ -13,6 +13,15 @@ function mapEvent(e) {
         version: Number(e.version),
         commission: e.commission ? mapCommission(e.commission) : null,
         boostedEvent: e.boostedEvent || null,
+        ticketTypes: Array.isArray(e.ticketTypes)
+            ? e.ticketTypes.map((tt) => ({
+                ...tt,
+                price: Number(tt.price),
+                totalSeats: Number(tt.totalSeats),
+                bookedSeats: Number(tt.bookedSeats),
+                availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+            }))
+            : [],
         instructor: e.instructor ? {
             id: e.instructor.id,
             name: e.instructor.name,
@@ -95,6 +104,7 @@ class PrismaEventRepository {
                 instructor: true,
                 venue: true,
                 boostedEvent: true,
+                ticketTypes: true,
             },
         });
         if (!e)
@@ -232,6 +242,7 @@ class PrismaEventRepository {
                 instructor: true,
                 venue: true,
                 boostedEvent: true,
+                ticketTypes: true,
             },
             orderBy,
         });
@@ -296,7 +307,7 @@ class PrismaEventRepository {
             });
             venueId = venue.id;
         }
-        const { venue, instructor, commissionType, platformValue, ...rest } = data;
+        const { venue, instructor, commissionType, platformValue, ticketTypes, ...rest } = data;
         const created = await prisma_1.prisma.event.create({
             data: {
                 ...rest,
@@ -309,11 +320,20 @@ class PrismaEventRepository {
                         platformValue: platformValue || 0,
                     }
                 } : undefined,
+                ticketTypes: Array.isArray(ticketTypes) && ticketTypes.length > 0 ? {
+                    create: ticketTypes.map(tt => ({
+                        name: tt.name,
+                        price: tt.price,
+                        totalSeats: tt.totalSeats,
+                        bookedSeats: 0,
+                    }))
+                } : undefined,
             },
             include: {
                 instructor: true,
                 venue: true,
                 commission: true,
+                ticketTypes: true,
                 host: {
                     select: {
                         user: {
@@ -336,6 +356,7 @@ class PrismaEventRepository {
                 instructor: true,
                 venue: true,
                 commission: true,
+                ticketTypes: true,
                 host: {
                     select: {
                         user: {
@@ -409,6 +430,98 @@ class PrismaEventRepository {
             },
         });
         return mapEvent(updated);
+    }
+    async createTicketType(eventId, data) {
+        const created = await prisma_1.prisma.eventTicketType.create({
+            data: {
+                eventId,
+                name: data.name,
+                price: data.price,
+                totalSeats: data.totalSeats,
+                bookedSeats: 0,
+            },
+        });
+        return {
+            ...created,
+            price: Number(created.price),
+            totalSeats: Number(created.totalSeats),
+            bookedSeats: Number(created.bookedSeats),
+            availableSeats: Number(created.totalSeats) - Number(created.bookedSeats),
+        };
+    }
+    async findTicketTypesByEventId(eventId) {
+        const ticketTypes = await prisma_1.prisma.eventTicketType.findMany({
+            where: { eventId },
+            orderBy: { createdAt: 'asc' },
+        });
+        return ticketTypes.map((tt) => ({
+            ...tt,
+            price: Number(tt.price),
+            totalSeats: Number(tt.totalSeats),
+            bookedSeats: Number(tt.bookedSeats),
+            availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        }));
+    }
+    async findTicketTypeById(id) {
+        const tt = await prisma_1.prisma.eventTicketType.findUnique({
+            where: { id },
+        });
+        if (!tt)
+            return null;
+        return {
+            ...tt,
+            price: Number(tt.price),
+            totalSeats: Number(tt.totalSeats),
+            bookedSeats: Number(tt.bookedSeats),
+            availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        };
+    }
+    async findTicketTypeByEventIdAndName(eventId, name) {
+        const tt = await prisma_1.prisma.eventTicketType.findUnique({
+            where: {
+                eventId_name: {
+                    eventId,
+                    name,
+                },
+            },
+        });
+        if (!tt)
+            return null;
+        return {
+            ...tt,
+            price: Number(tt.price),
+            totalSeats: Number(tt.totalSeats),
+            bookedSeats: Number(tt.bookedSeats),
+            availableSeats: Number(tt.totalSeats) - Number(tt.bookedSeats),
+        };
+    }
+    async updateTicketType(id, data) {
+        const updated = await prisma_1.prisma.eventTicketType.update({
+            where: { id },
+            data: {
+                ...(data.name !== undefined ? { name: data.name } : {}),
+                ...(data.price !== undefined ? { price: data.price } : {}),
+                ...(data.totalSeats !== undefined ? { totalSeats: data.totalSeats } : {}),
+            },
+        });
+        return {
+            ...updated,
+            price: Number(updated.price),
+            totalSeats: Number(updated.totalSeats),
+            bookedSeats: Number(updated.bookedSeats),
+            availableSeats: Number(updated.totalSeats) - Number(updated.bookedSeats),
+        };
+    }
+    async deleteTicketType(id) {
+        const deleted = await prisma_1.prisma.eventTicketType.delete({
+            where: { id },
+        });
+        return deleted;
+    }
+    async countTicketTypesByEventId(eventId) {
+        return prisma_1.prisma.eventTicketType.count({
+            where: { eventId },
+        });
     }
 }
 exports.PrismaEventRepository = PrismaEventRepository;

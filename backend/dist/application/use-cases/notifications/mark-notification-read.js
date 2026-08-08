@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarkNotificationReadCommandHandler = exports.MarkNotificationReadCommand = void 0;
 const errors_1 = require("../../common/errors");
+const client_1 = require("@prisma/client");
 class MarkNotificationReadCommand {
     id;
     userId;
@@ -23,11 +24,10 @@ class MarkNotificationReadCommandHandler {
         if (!log || log.userId !== userId) {
             throw new errors_1.NotFoundError('Notification log not found or access denied');
         }
-        return {
-            id,
-            status: 'READ_ACKNOWLEDGED',
-            success: true,
-        };
+        const updatedLog = await this.notificationRepo.update(id, {
+            status: client_1.NotificationStatus.READ,
+        });
+        return updatedLog;
     }
 }
 exports.MarkNotificationReadCommandHandler = MarkNotificationReadCommandHandler;

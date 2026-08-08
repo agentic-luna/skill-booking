@@ -131,6 +131,7 @@ enum NotificationStatus {
   PENDING
   SENT
   FAILED
+  READ
 }
 
 model User {

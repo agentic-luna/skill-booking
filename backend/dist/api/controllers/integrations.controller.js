@@ -30,8 +30,8 @@ class IntegrationsController {
     }
     static async setupMetaWa(req, res, next) {
         try {
-            const { environment, accessToken, phoneNumberId, businessAccountId, isActive } = req.body;
-            const result = await di_container_1.mediator.send(new setup_meta_wa_1.SetupMetaWaCommand(environment, accessToken, phoneNumberId, businessAccountId, isActive ?? true, req.user.id));
+            const { environment, accessToken, phoneNumberId, businessAccountId, isActive, verifyToken } = req.body;
+            const result = await di_container_1.mediator.send(new setup_meta_wa_1.SetupMetaWaCommand(environment, accessToken, phoneNumberId, businessAccountId, isActive ?? true, req.user.id, verifyToken));
             return api_response_1.ApiResponse.success(res, result, 200, 'Meta WhatsApp configuration updated');
         }
         catch (error) {

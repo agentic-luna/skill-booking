@@ -31,11 +31,11 @@ class PaymentController {
      */
     static async createOrder(req, res, next) {
         try {
-            const { eventId, seatCount, customAmount, participants } = req.body;
-            if (!eventId || !seatCount) {
-                throw new errors_1.BadRequestError('eventId and seatCount are required.');
+            const { eventId, ticketTypeId, seatCount, customAmount, participants, items } = req.body;
+            if (!eventId) {
+                throw new errors_1.BadRequestError('eventId is required.');
             }
-            const result = await di_container_1.mediator.send(new checkout_1.CheckoutCommand(req.user.id, eventId, Number(seatCount), customAmount ? Number(customAmount) : undefined, Array.isArray(participants) ? participants : undefined));
+            const result = await di_container_1.mediator.send(new checkout_1.CheckoutCommand(req.user.id, eventId, seatCount !== undefined && seatCount !== null ? Number(seatCount) : undefined, ticketTypeId ? String(ticketTypeId) : undefined, customAmount !== undefined && customAmount !== null ? Number(customAmount) : undefined, Array.isArray(participants) ? participants : undefined, Array.isArray(items) ? items : undefined));
             return api_response_1.ApiResponse.created(res, result, 'Razorpay order created successfully');
         }
         catch (error) {

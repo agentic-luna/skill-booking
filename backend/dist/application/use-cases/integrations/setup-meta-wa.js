@@ -10,14 +10,16 @@ class SetupMetaWaCommand {
     businessAccountId;
     isActive;
     updatedBy;
+    verifyToken;
     __tag = 'SetupMetaWaCommand';
-    constructor(environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy) {
+    constructor(environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy, verifyToken) {
         this.environment = environment;
         this.accessToken = accessToken;
         this.phoneNumberId = phoneNumberId;
         this.businessAccountId = businessAccountId;
         this.isActive = isActive;
         this.updatedBy = updatedBy;
+        this.verifyToken = verifyToken;
     }
 }
 exports.SetupMetaWaCommand = SetupMetaWaCommand;
@@ -31,7 +33,7 @@ class SetupMetaWaCommandHandler {
         this.cacheService = cacheService;
     }
     async handle(command) {
-        const { environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy } = command;
+        const { environment, accessToken, phoneNumberId, businessAccountId, isActive, updatedBy, verifyToken } = command;
         if (!environment || !Object.values(client_1.IntegrationEnvironment).includes(environment)) {
             throw new errors_1.BadRequestError('Invalid environment. Expected TEST or LIVE');
         }
@@ -41,7 +43,8 @@ class SetupMetaWaCommandHandler {
         const credentials = {
             accessToken,
             phoneNumberId,
-            businessAccountId
+            businessAccountId,
+            verifyToken: verifyToken || undefined,
         };
         const encrypted = this.cryptoService.encryptCredentials(credentials);
         const config = await this.configRepo.upsertIntegration(client_1.IntegrationService.META_WA, {

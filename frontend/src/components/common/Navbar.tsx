@@ -164,14 +164,21 @@ export default function Navbar() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-full relative transition-all duration-300 ${isScrolled || !isHome
+                          className={`rounded-full relative overflow-visible transition-all duration-300 ${isScrolled || !isHome
                             ? "text-graphite-ink hover:bg-black/5 hover:drop-shadow-sm"
                             : "text-white hover:bg-white/10 hover:text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]"
                             }`}
                         >
                           <Bell className="h-5 w-5" />
                           {unreadNotificationsCount > 0 && (
-                            <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse" />
+                            <>
+                              <span className="absolute top-0 right-0 -mt-1 -mr-1 h-4 w-4 rounded-full bg-[#a0f212] animate-ping opacity-80" />
+                              <span className="absolute top-0 right-0 -mt-1 -mr-1 h-4 w-4 rounded-full bg-[#a0f212] border-2 border-white dark:border-[#0b0c01] flex items-center justify-center shadow-[0_0_12px_#a0f212]">
+                                <span className="text-[10px] font-black text-[#0b0c01] leading-none">
+                                  {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                                </span>
+                              </span>
+                            </>
                           )}
                         </Button>
                       </DropdownMenuTrigger>

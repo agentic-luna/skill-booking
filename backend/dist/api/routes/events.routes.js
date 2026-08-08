@@ -9,5 +9,6 @@ const router = (0, express_1.Router)();
 router.get('/', events_controller_1.EventsController.getEvents);
 router.get('/liked', auth_1.authenticate, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_LIKES_MANAGE), events_controller_1.EventsController.getLikedEvents);
 router.get('/:id', events_controller_1.EventsController.getEventDetails);
+router.get('/:id/ticket-types', events_controller_1.EventsController.getEventTicketTypes);
 router.post('/:id/like', auth_1.authenticate, (0, authorize_1.requirePermission)(system_permissions_1.SystemPermissions.CLIENT_LIKES_MANAGE), events_controller_1.EventsController.toggleLike);
 exports.default = router;

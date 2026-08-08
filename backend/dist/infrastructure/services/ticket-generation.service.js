@@ -90,16 +90,43 @@ class TicketGenerationService {
                     }
                 }
                 const ticketBaseAmount = Math.max(0, totalAmount - platformFeeAmount);
+                // Group participants by ticket type for itemized invoice billing
+                const itemGroups = new Map();
+                for (const p of participantsList) {
+                    const tt = p.ticketType || booking.ticketType;
+                    const ttName = tt?.name || 'Standard Pass';
+                    const ttPrice = tt ? Number(tt.price) : (ticketBaseAmount / seatCount);
+                    const key = `${ttName}_${ttPrice}`;
+                    if (!itemGroups.has(key)) {
+                        itemGroups.set(key, { name: ttName, price: ttPrice, count: 0, names: [] });
+                    }
+                    const group = itemGroups.get(key);
+                    group.count += 1;
+                    if (p.fullName)
+                        group.names.push(p.fullName);
+                }
                 // Table Rows
                 let rowY = tableY + 20;
                 doc.fillColor('#1f2937').font('Helvetica').fontSize(9.5);
-                doc.text(`Admission Ticket - ${event.title}`, 50, rowY, { width: 250 });
-                doc.text(String(seatCount), 320, rowY, { width: 60, align: 'center' });
-                const unitTicketPrice = ticketBaseAmount / seatCount;
-                doc.text(`${unitTicketPrice.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
-                doc.text(`${ticketBaseAmount.toFixed(2)}`, 490, rowY, { width: 72, align: 'right' });
-                if (platformFeeAmount > 0) {
+                if (itemGroups.size > 0) {
+                    for (const group of itemGroups.values()) {
+                        const rowTotal = group.price * group.count;
+                        doc.text(`Ticket (${group.name}) - ${event.title}`, 50, rowY, { width: 250 });
+                        doc.text(String(group.count), 320, rowY, { width: 60, align: 'center' });
+                        doc.text(`${group.price.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
+                        doc.text(`${rowTotal.toFixed(2)}`, 490, rowY, { width: 72, align: 'right' });
+                        rowY += 18;
+                    }
+                }
+                else {
+                    doc.text(`Admission Ticket - ${event.title}`, 50, rowY, { width: 250 });
+                    doc.text(String(seatCount), 320, rowY, { width: 60, align: 'center' });
+                    const unitTicketPrice = ticketBaseAmount / seatCount;
+                    doc.text(`${unitTicketPrice.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
+                    doc.text(`${ticketBaseAmount.toFixed(2)}`, 490, rowY, { width: 72, align: 'right' });
                     rowY += 18;
+                }
+                if (platformFeeAmount > 0) {
                     doc.text('Platform Convenience & Booking Service Fee', 50, rowY, { width: 250 });
                     doc.text('1', 320, rowY, { width: 60, align: 'center' });
                     doc.text(`${platformFeeAmount.toFixed(2)}`, 400, rowY, { width: 80, align: 'right' });
@@ -167,8 +194,15 @@ class TicketGenerationService {
                 doc.rect(0, 0, 400, 180).fill(grad);
                 // Header Content
                 doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10).text('B O O K M Y T R A I N I N G   A D M I S S I O N', 30, 25, { characterSpacing: 1.2 });
-                doc.fontSize(20).text(event.title.toUpperCase(), 30, 50, { width: 340, lineGap: 4 });
-                doc.font('Helvetica').fontSize(11).fillColor('#d1fae5').text(event.category?.toUpperCase() || 'WORKSHOP', 30, doc.y + 4);
+                doc.fontSize(18).text(event.title.toUpperCase(), 30, 48, { width: 340, lineGap: 3 });
+                // Get primary attendee and ticket type summary
+                const participantsList = Array.isArray(booking.participants) && booking.participants.length > 0
+                    ? booking.participants
+                    : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
+                const primaryAttendee = participantsList.find((p) => p.isPrimary) || participantsList[0];
+                const primaryTicketType = primaryAttendee?.ticketType || booking.ticketType;
+                const primaryTicketName = primaryTicketType?.name ? `${primaryTicketType.name.toUpperCase()} (₹${Number(primaryTicketType.price).toFixed(2)})` : 'STANDARD TICKET';
+                doc.font('Helvetica-Bold').fontSize(10).fillColor('#a7f3d0').text(`TICKET TYPE: ${primaryTicketName}`, 30, 150);
                 // Draw Rounded Ticket Cutout Divider
                 const cutY = 180;
                 doc.rect(0, cutY, 400, 420).fill('#ffffff');
@@ -182,40 +216,41 @@ class TicketGenerationService {
                 // Circular ticket cutouts on edges
                 doc.circle(0, cutY, 12).fill('#f3f4f6');
                 doc.circle(400, cutY, 12).fill('#f3f4f6');
-                const participantsList = Array.isArray(booking.participants) && booking.participants.length > 0
-                    ? booking.participants
-                    : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
-                const primaryAttendee = participantsList.find((p) => p.isPrimary) || participantsList[0];
                 const attendeeDisplayName = (primaryAttendee?.fullName || `${client.firstName} ${client.lastName}`).toUpperCase();
-                const participantNamesSummary = participantsList.map((p) => p.fullName).filter(Boolean).join(', ');
+                // Group participant names with their ticket type for clear display
+                const participantSummaryLines = participantsList.map((p) => {
+                    const tt = p.ticketType || primaryTicketType;
+                    const ttLabel = tt?.name ? ` [${tt.name}]` : '';
+                    return `${p.fullName}${ttLabel}`;
+                }).join(', ');
                 // Ticket Details Body
-                doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(12).text('ATTENDEE(S)', 30, cutY + 25);
-                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(16).text(attendeeDisplayName, 30, cutY + 42, { width: 340 });
+                doc.fillColor('#064e3b').font('Helvetica-Bold').fontSize(11).text('TICKET HOLDER & PARTICIPANTS', 30, cutY + 20);
+                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(15).text(attendeeDisplayName, 30, cutY + 36, { width: 340 });
                 if (participantsList.length > 1) {
-                    doc.fillColor('#4b5563').font('Helvetica').fontSize(8.5).text(`Group (${participantsList.length}): ${participantNamesSummary}`, 30, cutY + 62, { width: 340 });
+                    doc.fillColor('#4b5563').font('Helvetica').fontSize(8.5).text(`Enrolled (${participantsList.length}): ${participantSummaryLines}`, 30, cutY + 54, { width: 340 });
                 }
                 else {
-                    doc.fillColor('#4b5563').font('Helvetica').fontSize(9.5).text('TICKET HOLDER / WORKSHOP ATTENDEE', 30, cutY + 62);
+                    doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text(`Client: ${client.firstName || ''} ${client.lastName || ''} | ${primaryTicketName}`, 30, cutY + 54);
                 }
                 // 2x2 Metadata Grid
-                const gridY = cutY + 88;
+                const gridY = cutY + 80;
                 // Col 1 Row 1
                 doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('DATE', 30, gridY);
-                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(12).text(formattedDate, 30, gridY + 14);
+                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(11.5).text(formattedDate, 30, gridY + 14);
                 // Col 2 Row 1
                 doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('TIME', 200, gridY);
-                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(12).text(formattedTime, 200, gridY + 14);
+                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(11.5).text(formattedTime, 200, gridY + 14);
                 // Col 1 Row 2
-                doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('TRAINER / INSTRUCTOR', 30, gridY + 44);
-                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(12).text(`${host.firstName || 'Platform'} ${host.lastName || 'Host'}`, 30, gridY + 58);
+                doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('INSTRUCTOR / HOST', 30, gridY + 40);
+                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(11).text(`${host.firstName || 'Platform'} ${host.lastName || 'Host'}`, 30, gridY + 54);
                 // Col 2 Row 2
-                doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('SEATS ALLOCATED', 200, gridY + 44);
-                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(12).text(`${booking.seatCount} SEAT(S)`, 200, gridY + 58);
+                doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('SEATS & TYPE', 200, gridY + 40);
+                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(11).text(`${booking.seatCount} SEAT(S) (${primaryTicketType?.name || 'Standard'})`, 200, gridY + 54, { width: 170 });
                 // Col 1 Row 3 (Venue)
-                doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('VENUE / MEETING ROOM', 30, gridY + 88);
-                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(10.5).text(venueName, 30, gridY + 102, { width: 340 });
+                doc.fillColor('#4b5563').font('Helvetica').fontSize(9).text('VENUE / MEETING ROOM', 30, gridY + 80);
+                doc.fillColor('#111827').font('Helvetica-Bold').fontSize(10).text(venueName, 30, gridY + 94, { width: 340 });
                 // QR Code centered at the bottom
-                const qrCenterY = gridY + 144;
+                const qrCenterY = gridY + 135;
                 const verificationUrl = `http://${hostHeader}/api/v1/bookings/${booking.id}/verify`;
                 const qrBuffer = await qrcode_1.default.toBuffer(verificationUrl, { errorCorrectionLevel: 'H', margin: 1, width: 110, color: { dark: '#064e3b', light: '#ffffff' } });
                 doc.image(qrBuffer, 145, qrCenterY, { width: 110, height: 110 });
@@ -243,8 +278,10 @@ class TicketGenerationService {
             ? booking.participants
             : [{ fullName: `${client.firstName || ''} ${client.lastName || ''}`.trim(), email: client.email, mobile: client.phone, isPrimary: true }];
         const primaryAttendee = participantsList.find((p) => p.isPrimary) || participantsList[0];
+        const primaryTicketType = primaryAttendee?.ticketType || booking.ticketType;
+        const ticketTypeName = primaryTicketType?.name ? `${primaryTicketType.name.toUpperCase()} (₹${Number(primaryTicketType.price).toFixed(2)})` : 'STANDARD TICKET';
         const attendeeDisplayName = (primaryAttendee?.fullName || `${client.firstName} ${client.lastName}`).toUpperCase();
-        const participantNamesSummary = participantsList.map((p) => p.fullName).filter(Boolean).join(', ');
+        const participantNamesSummary = participantsList.map((p) => `${p.fullName}${p.ticketType?.name ? ` (${p.ticketType.name})` : ''}`).filter(Boolean).join(', ');
         // Generate QR code data URL (PNG format) with green pixels and white background for SVG embedding
         const verificationUrl = `http://${hostHeader}/api/v1/bookings/${booking.id}/verify`;
         const qrDataUrl = await qrcode_1.default.toDataURL(verificationUrl, {
@@ -276,8 +313,8 @@ class TicketGenerationService {
 
     <!-- Header Text Content -->
     <text x="30" y="35" fill="#d1fae5" font-size="9" font-weight="800" letter-spacing="1.2">B O O K M Y T R A I N I N G   A D M I S S I O N</text>
-    <text x="30" y="70" fill="#ffffff" font-size="20" font-weight="900" width="340">${event.title.toUpperCase()}</text>
-    <text x="30" y="145" fill="#a7f3d0" font-size="11" font-weight="700" letter-spacing="1">${(event.category || 'Workshop').toUpperCase()}</text>
+    <text x="30" y="65" fill="#ffffff" font-size="18" font-weight="900" width="340">${event.title.toUpperCase()}</text>
+    <text x="30" y="145" fill="#a7f3d0" font-size="10.5" font-weight="800" letter-spacing="0.8">TICKET TYPE: ${ticketTypeName}</text>
 
     <!-- Ticket tear tear-line separator (dashed lines) -->
     <line x1="20" y1="180" x2="380" y2="180" stroke="#e5e7eb" stroke-width="2" stroke-dasharray="6,6" />
@@ -287,29 +324,29 @@ class TicketGenerationService {
     <circle cx="400" cy="180" r="10" fill="#f3f4f6" />
 
     <!-- Card details body -->
-    <text x="30" y="215" fill="#064e3b" font-size="11" font-weight="800" letter-spacing="0.5">ATTENDEE(S)</text>
-    <text x="30" y="240" fill="#111827" font-size="18" font-weight="800">${attendeeDisplayName}</text>
-    <text x="30" y="258" fill="#6b7280" font-size="9.5" font-weight="600">${participantsList.length > 1 ? `Group (${participantsList.length}): ${participantNamesSummary}` : 'TICKET HOLDER / WORKSHOP ATTENDEE'}</text>
+    <text x="30" y="212" fill="#064e3b" font-size="11" font-weight="800" letter-spacing="0.5">ATTENDEE(S) &amp; PASS TYPE</text>
+    <text x="30" y="235" fill="#111827" font-size="17" font-weight="800">${attendeeDisplayName}</text>
+    <text x="30" y="253" fill="#6b7280" font-size="9" font-weight="600">${participantsList.length > 1 ? `Enrolled (${participantsList.length}): ${participantNamesSummary}` : `TICKET: ${ticketTypeName}`}</text>
 
     <!-- Grid Column 1 -->
-    <g transform="translate(30, 290)">
+    <g transform="translate(30, 285)">
       <text x="0" y="0" fill="#6b7280" font-size="9" font-weight="600">DATE</text>
-      <text x="0" y="16" fill="#111827" font-size="12.5" font-weight="800">${formattedDate}</text>
+      <text x="0" y="16" fill="#111827" font-size="12" font-weight="800">${formattedDate}</text>
 
-      <text x="0" y="48" fill="#6b7280" font-size="9" font-weight="600">TRAINER / INSTRUCTOR</text>
-      <text x="0" y="64" fill="#111827" font-size="12.5" font-weight="800">${host.firstName || 'Platform'} ${host.lastName || 'Host'}</text>
+      <text x="0" y="46" fill="#6b7280" font-size="9" font-weight="600">TRAINER / INSTRUCTOR</text>
+      <text x="0" y="62" fill="#111827" font-size="12" font-weight="800">${host.firstName || 'Platform'} ${host.lastName || 'Host'}</text>
 
-      <text x="0" y="96" fill="#6b7280" font-size="9" font-weight="600">VENUE / MEETING ROOM</text>
-      <text x="0" y="112" fill="#111827" font-size="11" font-weight="800">${venueName}</text>
+      <text x="0" y="92" fill="#6b7280" font-size="9" font-weight="600">VENUE / MEETING ROOM</text>
+      <text x="0" y="108" fill="#111827" font-size="10.5" font-weight="800">${venueName}</text>
     </g>
 
     <!-- Grid Column 2 -->
-    <g transform="translate(210, 290)">
+    <g transform="translate(210, 285)">
       <text x="0" y="0" fill="#6b7280" font-size="9" font-weight="600">TIME</text>
-      <text x="0" y="16" fill="#111827" font-size="12.5" font-weight="800">${formattedTime}</text>
+      <text x="0" y="16" fill="#111827" font-size="12" font-weight="800">${formattedTime}</text>
 
-      <text x="0" y="48" fill="#6b7280" font-size="9" font-weight="600">SEATS ALLOCATED</text>
-      <text x="0" y="64" fill="#111827" font-size="12.5" font-weight="800">${booking.seatCount} SEAT(S)</text>
+      <text x="0" y="46" fill="#6b7280" font-size="9" font-weight="600">SEATS ALLOCATED</text>
+      <text x="0" y="62" fill="#111827" font-size="12" font-weight="800">${booking.seatCount} SEAT(S)</text>
     </g>
 
     <!-- Center QR Code placement (embedded base64 PNG) -->

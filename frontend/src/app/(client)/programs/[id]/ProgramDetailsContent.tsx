@@ -61,6 +61,11 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
   } = useClientStore();
 
   const { startCheckout, isLoading: rzpLoading } = useRazorpayCheckout({
+    onOpen: () => {
+      // Close the booking modal immediately when Razorpay checkout opens
+      setCheckoutOpen(false);
+      useBookingModalStore.getState().closeBookingModal();
+    },
     onSuccess: (result) => {
       setPaymentLoading(false);
       setProgram((prev) =>
@@ -72,10 +77,14 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
         `Your booking for "${program?.title}" has been confirmed. Check your email for details.`,
         "success"
       );
+      router.push("/dashboard/tickets");
     },
     onError: (msg) => {
       setPaymentLoading(false);
       showAlert("Payment Error", msg, "destructive");
+      // Re-open BookingModal if payment failed or was cancelled so user can try again
+      setCheckoutOpen(true);
+      useBookingModalStore.setState({ isOpen: true });
     },
   });
 

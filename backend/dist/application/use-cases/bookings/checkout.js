@@ -3,19 +3,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckoutCommandHandler = exports.CheckoutCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
+const prisma_1 = require("../../../config/prisma");
 class CheckoutCommand {
     clientId;
     eventId;
     seatCount;
+    ticketTypeId;
     customAmount;
     participants;
+    items;
     __tag = 'CheckoutCommand';
-    constructor(clientId, eventId, seatCount, customAmount, participants) {
+    constructor(clientId, eventId, seatCount, ticketTypeId, customAmount, participants, items) {
         this.clientId = clientId;
         this.eventId = eventId;
         this.seatCount = seatCount;
+        this.ticketTypeId = ticketTypeId;
         this.customAmount = customAmount;
         this.participants = participants;
+        this.items = items;
     }
 }
 exports.CheckoutCommand = CheckoutCommand;
@@ -31,10 +36,7 @@ class CheckoutCommandHandler {
         this.commsService = commsService;
     }
     async handle(command) {
-        const { clientId, eventId, seatCount, customAmount, participants } = command;
-        if (seatCount <= 0) {
-            throw new errors_1.BadRequestError('Seat count must be greater than zero.');
-        }
+        const { clientId, eventId } = command;
         const event = await this.eventRepo.findById(eventId);
         if (!event) {
             throw new errors_1.NotFoundError('Event not found');
@@ -42,19 +44,111 @@ class CheckoutCommandHandler {
         if (event.status !== client_1.EventStatus.APPROVED) {
             throw new errors_1.BadRequestError('Event booking is not open');
         }
-        if (event.startTime && event.startTime < new Date()) {
+        if (event.startTime && new Date(event.startTime) < new Date()) {
             throw new errors_1.BadRequestError('This event has already started/finished and cannot be booked.');
         }
-        if (event.availableSeats < seatCount) {
-            throw new errors_1.BadRequestError(`Insufficient seats available. Only ${event.availableSeats} seats remaining.`);
+        // 1. Gather all requested tickets and their participants
+        let ticketsList = [];
+        const resolveTypeInfo = (obj) => {
+            const id = obj?.ticketTypeId || obj?.ticketType?.id || obj?.id || null;
+            const name = obj?.ticketTypeName || obj?.ticketType?.name || obj?.name || null;
+            return { id: id ? String(id) : null, name: name ? String(name) : null };
+        };
+        if (Array.isArray(command.items) && command.items.length > 0) {
+            for (const item of command.items) {
+                const qty = Number(item.quantity) || 1;
+                const itemParticipants = Array.isArray(item.participants) ? item.participants : [];
+                const itemType = resolveTypeInfo(item);
+                for (let i = 0; i < qty; i++) {
+                    const p = itemParticipants[i] || {};
+                    const pType = resolveTypeInfo(p);
+                    ticketsList.push({
+                        ticketTypeId: pType.id || itemType.id || command.ticketTypeId || null,
+                        ticketTypeName: pType.name || itemType.name || null,
+                        ...p,
+                    });
+                }
+            }
         }
-        // Decrement seats using optimistic locking
-        const success = await this.eventRepo.decrementSeats(eventId, seatCount, event.version);
-        if (!success) {
-            throw new errors_1.ConflictError('Booking failed due to temporary ticket race conditions. Please retry.');
+        else if (Array.isArray(command.participants) && command.participants.length > 0) {
+            for (const p of command.participants) {
+                const pType = resolveTypeInfo(p);
+                ticketsList.push({
+                    ticketTypeId: pType.id || command.ticketTypeId || null,
+                    ticketTypeName: pType.name || null,
+                    ...p,
+                });
+            }
         }
-        const ticketPrice = event.price;
-        let baseAmount = customAmount || seatCount * ticketPrice;
+        else {
+            const count = Number(command.seatCount) || 1;
+            for (let i = 0; i < count; i++) {
+                ticketsList.push({
+                    ticketTypeId: command.ticketTypeId || null,
+                    ticketTypeName: null,
+                });
+            }
+        }
+        if (ticketsList.length === 0) {
+            throw new errors_1.BadRequestError('At least one seat must be booked.');
+        }
+        const totalSeatCount = ticketsList.length;
+        // 2. Fetch DB ticket types for this event and resolve types for all tickets
+        const dbTicketTypes = await prisma_1.prisma.eventTicketType.findMany({
+            where: { eventId: eventId },
+        });
+        const ticketTypeByUuid = new Map();
+        const ticketTypeByName = new Map();
+        for (const tt of dbTicketTypes) {
+            ticketTypeByUuid.set(tt.id, tt);
+            ticketTypeByName.set(tt.name.toLowerCase().trim(), tt);
+        }
+        for (const t of ticketsList) {
+            let matchedTt = null;
+            if (t.ticketTypeId && ticketTypeByUuid.has(t.ticketTypeId)) {
+                matchedTt = ticketTypeByUuid.get(t.ticketTypeId);
+            }
+            else if (t.ticketTypeName && ticketTypeByName.has(t.ticketTypeName.toLowerCase().trim())) {
+                matchedTt = ticketTypeByName.get(t.ticketTypeName.toLowerCase().trim());
+            }
+            else if (dbTicketTypes.length === 1) {
+                matchedTt = dbTicketTypes[0];
+            }
+            if (dbTicketTypes.length > 0 && !matchedTt) {
+                const typeLabel = t.ticketTypeName || t.ticketTypeId || 'Selected ticket type';
+                throw new errors_1.NotFoundError(`Ticket type "${typeLabel}" was not found for this event.`);
+            }
+            if (matchedTt) {
+                t.ticketTypeId = matchedTt.id;
+                t.ticketTypeName = matchedTt.name;
+            }
+        }
+        // 3. Group quantities per ticket type and validate seat availability
+        const qtyByTicketTypeId = new Map();
+        for (const t of ticketsList) {
+            if (t.ticketTypeId) {
+                qtyByTicketTypeId.set(t.ticketTypeId, (qtyByTicketTypeId.get(t.ticketTypeId) || 0) + 1);
+            }
+        }
+        for (const [ttId, qty] of qtyByTicketTypeId.entries()) {
+            const tt = ticketTypeByUuid.get(ttId);
+            const available = Number(tt.totalSeats) - Number(tt.bookedSeats);
+            if (available <= 0 || qty > available) {
+                throw new errors_1.BadRequestError(`Type of Ticket "${tt.name}" is finished and no enteries there for this.`);
+            }
+        }
+        // 4. Calculate total base price based on authoritative DB prices
+        let calculatedBaseAmount = 0;
+        if (qtyByTicketTypeId.size > 0) {
+            for (const [ttId, qty] of qtyByTicketTypeId.entries()) {
+                const tt = ticketTypeByUuid.get(ttId);
+                calculatedBaseAmount += qty * Number(tt.price);
+            }
+        }
+        else {
+            calculatedBaseAmount = totalSeatCount * (Number(event.price) || 0);
+        }
+        const baseAmount = calculatedBaseAmount;
         // Calculate platform fee commission if defined
         let platformFee = 0;
         if (event.commission) {
@@ -65,16 +159,79 @@ class CheckoutCommandHandler {
         }
         const totalAmount = baseAmount + platformFee;
         const bookingRef = `BK-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-        const booking = await this.bookingRepo.create({
-            bookingRef,
-            clientId,
-            eventId,
-            seatCount,
-            totalAmount,
-            status: client_1.BookingStatus.INITIATED,
-            commissionType: event.commission?.commissionType || null,
-            platformValue: event.commission?.platformValue ? Number(event.commission.platformValue) : null,
-            participants: participants || [],
+        // 5. Wrap seat updates and booking creation in a single transaction
+        const booking = await prisma_1.prisma.$transaction(async (tx) => {
+            // 5a. Perform atomic conditional UPDATE for each requested ticket type
+            if (qtyByTicketTypeId.size > 0) {
+                for (const [ttId, qty] of qtyByTicketTypeId.entries()) {
+                    const tt = ticketTypeByUuid.get(ttId);
+                    const updatedCount = await tx.$executeRaw `
+            UPDATE "event_ticket_types"
+            SET "booked_seats" = "booked_seats" + ${qty},
+                "updated_at" = NOW()
+            WHERE "id" = ${ttId}::uuid
+              AND "event_id" = ${eventId}::uuid
+              AND ("total_seats" - "booked_seats") >= ${qty}
+          `;
+                    if (updatedCount === 0) {
+                        throw new errors_1.ConflictError(`Type of Ticket "${tt.name}" is finished and no enteries there for this.`);
+                    }
+                }
+            }
+            // 4b. Perform atomic conditional UPDATE on overall event seats
+            const eventUpdatedCount = await tx.$executeRaw `
+        UPDATE "events"
+        SET "availableSeats" = "availableSeats" - ${totalSeatCount},
+            "version" = "version" + 1,
+            "updatedAt" = NOW()
+        WHERE "id" = ${eventId}::uuid
+          AND "availableSeats" >= ${totalSeatCount}
+      `;
+            if (eventUpdatedCount === 0) {
+                throw new errors_1.ConflictError(`Not enough seats available for event "${event.title}".`);
+            }
+            // 4c. Format participant records & associate each participant with their ticket type
+            const clientUser = await tx.user.findUnique({ where: { id: clientId } });
+            const clientName = clientUser ? `${clientUser.firstName || ''} ${clientUser.lastName || ''}`.trim() : 'Participant';
+            const clientEmail = clientUser?.email || '';
+            const clientMobile = clientUser?.phone || '';
+            const participantRecords = ticketsList.map((t, idx) => ({
+                ticketTypeId: t.ticketTypeId || (qtyByTicketTypeId.size === 1 ? Array.from(qtyByTicketTypeId.keys())[0] : null),
+                isPrimary: t.isPrimary !== undefined ? Boolean(t.isPrimary) : idx === 0,
+                fullName: String(t.fullName || (idx === 0 ? clientName : `${clientName} (Participant #${idx + 1})`)).trim(),
+                email: String(t.email || clientEmail).trim(),
+                mobile: String(t.mobile || clientMobile).trim(),
+                dob: t.dob ? String(t.dob) : null,
+                gender: t.gender ? String(t.gender) : null,
+                city: t.city ? String(t.city) : null,
+                state: t.state ? String(t.state) : null,
+                country: t.country ? String(t.country) : 'India',
+            }));
+            const primaryTicketTypeId = qtyByTicketTypeId.size === 1 ? Array.from(qtyByTicketTypeId.keys())[0] : null;
+            // 4d. Create booking record inside transaction
+            const newBooking = await tx.booking.create({
+                data: {
+                    bookingRef,
+                    clientId,
+                    eventId,
+                    ticketTypeId: primaryTicketTypeId,
+                    seatCount: totalSeatCount,
+                    totalAmount,
+                    status: client_1.BookingStatus.INITIATED,
+                    commissionType: event.commission?.commissionType || null,
+                    platformValue: event.commission?.platformValue ? Number(event.commission.platformValue) : null,
+                    participants: {
+                        create: participantRecords,
+                    },
+                },
+                include: {
+                    participants: {
+                        include: { ticketType: true },
+                    },
+                    ticketType: true,
+                },
+            });
+            return newBooking;
         });
         // Invalidate event search caches
         await this.cacheService.delPattern('events:search:*');

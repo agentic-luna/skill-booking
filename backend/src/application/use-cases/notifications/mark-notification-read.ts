@@ -2,6 +2,7 @@ import { INotificationRepository } from '../../../domain/repositories/notificati
 import { IRequest, IRequestHandler } from '../../common/mediator';
 
 import { NotFoundError } from '../../common/errors';
+import { NotificationStatus } from '@prisma/client';
 
 export class MarkNotificationReadCommand implements IRequest<any> {
   readonly __tag = 'MarkNotificationReadCommand';
@@ -22,10 +23,10 @@ export class MarkNotificationReadCommandHandler implements IRequestHandler<MarkN
       throw new NotFoundError('Notification log not found or access denied');
     }
 
-    return {
-      id,
-      status: 'READ_ACKNOWLEDGED',
-      success: true,
-    };
+    const updatedLog = await this.notificationRepo.update(id, {
+      status: NotificationStatus.READ,
+    });
+
+    return updatedLog;
   }
 }

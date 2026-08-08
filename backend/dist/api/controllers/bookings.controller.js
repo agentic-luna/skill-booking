@@ -12,8 +12,8 @@ const errors_1 = require("../common/errors");
 class BookingsController {
     static async checkout(req, res, next) {
         try {
-            const { eventId, seatCount, customAmount } = req.body;
-            const result = await di_container_1.mediator.send(new checkout_1.CheckoutCommand(req.user.id, eventId, Number(seatCount), customAmount ? Number(customAmount) : undefined));
+            const { eventId, ticketTypeId, seatCount, customAmount, participants, items } = req.body;
+            const result = await di_container_1.mediator.send(new checkout_1.CheckoutCommand(req.user.id, eventId, seatCount !== undefined && seatCount !== null ? Number(seatCount) : undefined, ticketTypeId ? String(ticketTypeId) : undefined, customAmount !== undefined && customAmount !== null ? Number(customAmount) : undefined, participants, items));
             return api_response_1.ApiResponse.success(res, result);
         }
         catch (error) {
@@ -200,16 +200,21 @@ class BookingsController {
       ${participantsList.length > 0 ? `
         <h3 class="section-title">All Enrolled Participants (${participantsList.length})</h3>
         <div style="margin-bottom: 20px;">
-          ${participantsList.map((p, idx) => `
-            <div class="participant-card">
-              <div style="font-weight: 800; font-size: 13px; color: #111827;">
-                ${idx + 1}. ${p.fullName} ${p.isPrimary ? '<span style="font-size: 9px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 6px;">PRIMARY</span>' : ''}
+          ${participantsList.map((p, idx) => {
+                const tt = p.ticketType || booking.ticketType;
+                const ttBadge = tt?.name ? `<span style="font-size: 10px; background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 6px; font-weight: 800; margin-left: 6px;">${tt.name} (₹${Number(tt.price).toFixed(2)})</span>` : '';
+                return `
+              <div class="participant-card">
+                <div style="font-weight: 800; font-size: 13px; color: #111827; display: flex; align-items: center; justify-content: space-between;">
+                  <span>${idx + 1}. ${p.fullName} ${p.isPrimary ? '<span style="font-size: 9px; background: #d1fae5; color: #047857; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 6px;">PRIMARY</span>' : ''}</span>
+                  ${ttBadge}
+                </div>
+                <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                  ${p.email ? '📧 ' + p.email : ''} ${p.mobile ? ' • 📱 ' + p.mobile : ''} ${p.state ? ' • 📍 ' + p.state : ''}
+                </div>
               </div>
-              <div style="font-size: 11px; color: #6b7280; margin-top: 3px;">
-                ${p.email ? '📧 ' + p.email : ''} ${p.mobile ? ' • 📱 ' + p.mobile : ''} ${p.state ? ' • 📍 ' + p.state : ''}
-              </div>
-            </div>
-          `).join('')}
+            `;
+            }).join('')}
         </div>
       ` : ''}
       
