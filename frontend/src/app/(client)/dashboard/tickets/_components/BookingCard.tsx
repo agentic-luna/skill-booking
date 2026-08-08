@@ -119,7 +119,7 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase ${statusColor}`}>
                   {booking.status}
                 </span>
-                {(booking.status === "CANCELED" || booking.status === "CANCELLED" || booking.status === "REFUNDED") && (
+                {(booking.status === "CANCELED" || booking.status === "CANCELLED" || booking.status === "REFUNDED" || event.status === "CANCELED" || event.status === "CANCELLED") && (
                   <RefundStatusBadge bookingId={booking.id} variant="badge" />
                 )}
               </div>
@@ -150,40 +150,37 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
         </div>
 
         {/* Right: Actions Container */}
-        <div className="flex items-center gap-2 flex-wrap md:flex-nowrap justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border/10 w-full md:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap md:flex-nowrap items-center gap-2.5 sm:gap-2 justify-end shrink-0 pt-3 md:pt-0 mt-3 md:mt-0 border-t md:border-t-0 border-border/10 w-full md:w-auto">
           {/* Details & Help Link */}
-          <Link href={`/dashboard/tickets/${booking.id}`}>
+          <Link href={`/dashboard/tickets/${booking.id}`} className="w-full sm:w-auto">
             <Button
-              variant="default"
               size="sm"
-              className="h-8 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+              className="w-full h-8 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs border-0"
             >
-              <HelpCircle className="h-3.5 w-3.5 mr-1" /> View Details
+              <HelpCircle className="h-3.5 w-3.5 mr-1 shrink-0" /> View Details
             </Button>
           </Link>
 
           <Button
-            variant="outline"
             size="sm"
-            className="h-8 text-xs font-semibold rounded-lg border-border/60 hover:bg-muted text-foreground"
+            className="w-full sm:w-auto h-8 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
             onClick={() => setExpanded(!expanded)}
           >
             {expanded ? (
               <>
-                <ChevronUp className="h-3.5 w-3.5 mr-1" /> Hide Info
+                <ChevronUp className="h-3.5 w-3.5 mr-1 shrink-0" /> Hide Info
               </>
             ) : (
               <>
-                <ChevronDown className="h-3.5 w-3.5 mr-1" /> Show Info
+                <ChevronDown className="h-3.5 w-3.5 mr-1 shrink-0" /> Show Info
               </>
             )}
           </Button>
 
           {/* Invoice */}
           <Button
-            variant="outline"
             size="sm"
-            className="h-8 text-xs rounded-lg"
+            className="w-full sm:w-auto h-8 text-xs font-semibold rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700"
             onClick={async () => {
               try {
                 const token = localStorage.getItem("bms_access_token");
@@ -209,15 +206,14 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
               }
             }}
           >
-            <FileText className="h-3.5 w-3.5 mr-1" /> Invoice
+            <FileText className="h-3.5 w-3.5 mr-1 shrink-0" /> Invoice
           </Button>
 
           {/* Ticket PDF */}
           {(booking.status === "CONFIRMED" || booking.status === "COMPLETED") && (
             <Button
-              variant="outline"
               size="sm"
-              className="h-8 text-xs rounded-lg border-primary/20 text-primary hover:bg-primary/5"
+              className="w-full sm:w-auto h-8 text-xs font-semibold rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
               onClick={async () => {
                 try {
                   const token = localStorage.getItem("bms_access_token");
@@ -243,69 +239,64 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
                 }
               }}
             >
-              <FileText className="h-3.5 w-3.5 mr-1" /> Pass (PDF)
+              <FileText className="h-3.5 w-3.5 mr-1 shrink-0" /> Pass (PDF)
             </Button>
           )}
 
           {/* Leave Review – completed or confirmed past events */}
           {(booking.status === "COMPLETED" || (booking.status === "CONFIRMED" && new Date(event.startTime).getTime() + (event.durationHours || 2) * 60 * 60 * 1000 < Date.now())) && (
             <Button
-              variant="outline"
               size="sm"
-              className="h-8 text-xs rounded-lg border-border bg-card hover:bg-accent text-foreground shadow-xs"
+              className="w-full sm:w-auto h-8 text-xs font-semibold rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
               onClick={() => onWriteReview(booking)}
             >
-              <Star className="h-3.5 w-3.5 mr-1 text-amber-500 fill-amber-500" /> Rate
+              <Star className="h-3.5 w-3.5 mr-1 text-amber-500 fill-amber-500 shrink-0" /> Rate
             </Button>
           )}
 
           {/* Confirmed-only actions */}
           {booking.status === "CONFIRMED" && (
-            <>
-              {/* Cancel */}
+            <Button
+              size="sm"
+              className="w-full sm:w-auto h-8 text-xs font-semibold rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+              onClick={() => onCancel(booking)}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1 shrink-0" /> Cancel
+            </Button>
+          )}
+
+          {/* Launch Class */}
+          {booking.status === "CONFIRMED" && isOnline && (
+            <div className="relative group w-full sm:w-auto col-span-2 sm:col-span-1 mt-4 sm:mt-0">
               <Button
-                variant="destructive"
                 size="sm"
-                className="h-8 text-xs rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive border-transparent"
-                onClick={() => onCancel(booking)}
+                disabled={!launchEnabled}
+                className={`w-full h-8 text-xs font-semibold rounded-lg transition-all border-0 ${
+                  launchEnabled
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/30"
+                    : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                }`}
+                onClick={() => {
+                  const meetingLink = event.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink;
+                  if (meetingLink) {
+                    window.open(meetingLink, "_blank");
+                  } else {
+                    showAlert("Launch Class", "Live session link is not set yet. Please check back closer to the event start time.", "warning");
+                  }
+                }}
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1" /> Cancel
+                <PlayCircle className="h-3.5 w-3.5 mr-1 shrink-0" />
+                Launch
               </Button>
 
-              {/* Launch Class */}
-              {isOnline && (
-                <div className="relative group">
-                  <Button
-                    size="sm"
-                    disabled={!launchEnabled}
-                    className={`h-8 text-xs rounded-lg transition-all ${
-                      launchEnabled
-                        ? "bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-600/30"
-                        : "opacity-60 cursor-not-allowed"
-                    }`}
-                    onClick={() => {
-                      const meetingLink = event.venueDetails?.meetingLink || (event as any)?.venue?.meetingLink;
-                      if (meetingLink) {
-                        window.open(meetingLink, "_blank");
-                      } else {
-                        showAlert("Launch Class", "Live session link is not set yet. Please check back closer to the event start time.", "warning");
-                      }
-                    }}
-                  >
-                    <PlayCircle className="h-3.5 w-3.5 mr-1" />
-                    Launch
-                  </Button>
-
-                  {/* Countdown locked badge */}
-                  {!launchEnabled && countdown && (
-                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-popover border border-border/40 text-foreground text-[9px] font-bold px-2 py-0.5 rounded-full shadow pointer-events-none flex items-center gap-1">
-                      <Timer className="h-2.5 w-2.5 text-amber-500" />
-                      Locked
-                    </span>
-                  )}
-                </div>
+              {/* Countdown locked badge */}
+              {!launchEnabled && countdown && (
+                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-popover border border-border/40 text-foreground text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow pointer-events-none flex items-center gap-1 z-10">
+                  <Timer className="h-3 w-3 text-amber-500" />
+                  Locked
+                </span>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PayoutHostCommandHandler = exports.PayoutHostCommand = void 0;
 const client_1 = require("@prisma/client");
 const errors_1 = require("../../common/errors");
+const prisma_1 = require("../../../config/prisma");
 const templates_1 = require("../../../constants/templates");
 class PayoutHostCommand {
     hostId;
@@ -91,12 +92,33 @@ class PayoutHostCommandHandler {
                 const hostUser = await this.userRepo.findById(hostId);
                 if (hostUser && this.notificationRepo && this.queueService) {
                     const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+                    // Resolve event titles for WhatsApp/Comms template
+                    let eventTitle = 'BookMyTraining Workshops';
+                    try {
+                        const firstLedger = ledgers[0];
+                        if (firstLedger) {
+                            const ledgerWithBooking = await prisma_1.prisma.transactionLedger.findUnique({
+                                where: { id: firstLedger.id },
+                                include: { booking: { include: { event: true } } }
+                            });
+                            if (ledgerWithBooking?.booking?.event?.title) {
+                                eventTitle = ledgerWithBooking.booking.event.title;
+                                if (ledgers.length > 1) {
+                                    eventTitle = `${eventTitle} & others`;
+                                }
+                            }
+                        }
+                    }
+                    catch (dbErr) {
+                        // Fail-safe to default if query fails
+                    }
                     const payoutData = {
                         hostName,
                         amount: totalPayout,
                         payoutId,
                         transactionsPaid: ledgerIds.length,
                         bankName: bankDetail.bankName,
+                        eventTitle,
                     };
                     const emailContent = (0, templates_1.generateHostPayoutEmailTemplate)(payoutData);
                     const whatsappContent = (0, templates_1.generateHostPayoutWhatsAppTemplate)(payoutData);

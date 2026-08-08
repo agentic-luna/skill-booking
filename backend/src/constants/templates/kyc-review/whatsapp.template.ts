@@ -1,23 +1,41 @@
 import { KycReviewTemplateData } from './email.template';
 
 export function generateKycApprovedWhatsAppTemplate(data: KycReviewTemplateData): string {
-  return `🎉 *KYC VERIFIED & APPROVED!*
+  const text = `🎉 *KYC VERIFIED & APPROVED!*
 
 Hi *${data.hostName}*, your Host KYC verification has been approved! 🚀
 
 You can now publish workshops, schedule live sessions, and receive earnings directly to your bank account.
 
 Welcome aboard BookMyTraining!`.trim();
+
+  return JSON.stringify({
+    text,
+    templateName: 'kyc_approved',
+    parameters: [
+      data.hostName
+    ]
+  });
 }
 
 export function generateKycRejectedWhatsAppTemplate(data: KycReviewTemplateData): string {
-  return `⚠️ *KYC VERIFICATION UPDATE*
+  const reasonText = data.rejectionReason || 'Documents provided were incomplete or invalid.';
+  const text = `⚠️ *KYC VERIFICATION UPDATE*
 
 Hi *${data.hostName}*, your KYC submission could not be approved.
 
-Reason: ${data.rejectionReason || 'Documents provided were incomplete or invalid.'}
+Reason: ${reasonText}
 
 Please log into your Host Dashboard to re-upload valid documents. Thank you!`.trim();
+
+  return JSON.stringify({
+    text,
+    templateName: 'kyc_rejected',
+    parameters: [
+      data.hostName,
+      reasonText
+    ]
+  });
 }
 
 export function generateKycApprovedInAppTemplate(data: KycReviewTemplateData): string {

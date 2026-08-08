@@ -1,6 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommunicationGateway = void 0;
+function getPlainTextMessage(body) {
+    try {
+        if (body.trim().startsWith('{')) {
+            const parsed = JSON.parse(body);
+            if (parsed && typeof parsed === 'object' && typeof parsed.text === 'string') {
+                return parsed.text;
+            }
+        }
+    }
+    catch { }
+    return body;
+}
 class CommunicationGateway {
     emailService;
     smsService;
@@ -17,7 +29,8 @@ class CommunicationGateway {
         return res.success;
     }
     async sendSMS(to, body) {
-        const res = await this.smsService.sendSms(to, body);
+        const plainText = getPlainTextMessage(body);
+        const res = await this.smsService.sendSms(to, plainText);
         return res.success;
     }
     async sendWhatsApp(to, body) {

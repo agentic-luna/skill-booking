@@ -7,6 +7,7 @@ import { ICryptoService } from '../../services/crypto.service';
 import { ICommunicationService } from '../../services/communication.service';
 import { NotFoundError, BadRequestError } from '../../common/errors';
 import { IRequest, IRequestHandler } from '../../common/mediator';
+import { prisma } from '../../../config/prisma';
 import {
   generateHostPayoutEmailTemplate,
   generateHostPayoutWhatsAppTemplate,
@@ -102,12 +103,34 @@ export class PayoutHostCommandHandler implements IRequestHandler<PayoutHostComma
         const hostUser = await this.userRepo.findById(hostId);
         if (hostUser && this.notificationRepo && this.queueService) {
           const hostName = `${hostUser.firstName} ${hostUser.lastName}`;
+
+          // Resolve event titles for WhatsApp/Comms template
+          let eventTitle = 'BookMyTraining Workshops';
+          try {
+            const firstLedger = ledgers[0];
+            if (firstLedger) {
+              const ledgerWithBooking = await prisma.transactionLedger.findUnique({
+                where: { id: firstLedger.id },
+                include: { booking: { include: { event: true } } }
+              });
+              if (ledgerWithBooking?.booking?.event?.title) {
+                eventTitle = ledgerWithBooking.booking.event.title;
+                if (ledgers.length > 1) {
+                  eventTitle = `${eventTitle} & others`;
+                }
+              }
+            }
+          } catch (dbErr) {
+            // Fail-safe to default if query fails
+          }
+
           const payoutData = {
             hostName,
             amount: totalPayout,
             payoutId,
             transactionsPaid: ledgerIds.length,
             bankName: bankDetail.bankName,
+            eventTitle,
           };
 
           const emailContent = generateHostPayoutEmailTemplate(payoutData);

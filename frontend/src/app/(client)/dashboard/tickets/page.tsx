@@ -78,9 +78,20 @@ export default function BookingsPage() {
     }
   };
 
-  const activeBookings = bookings.filter((b) => b.status === "CONFIRMED" || b.status === "PENDING");
-  const pastBookings = bookings.filter((b) =>
-    ["COMPLETED", "CANCELLED", "CANCELED", "REFUNDED"].includes(b.status)
+  const uniqueBookings = Array.from(new Map(bookings.map((b) => [b.id, b])).values());
+
+  const activeBookings = uniqueBookings.filter((b) => 
+    (b.status === "CONFIRMED" || b.status === "PENDING") && 
+    b.event?.status !== "CANCELED" && 
+    b.event?.status !== "CANCELLED" && 
+    b.event?.status !== "COMPLETED"
+  );
+  
+  const pastBookings = uniqueBookings.filter((b) =>
+    ["COMPLETED", "CANCELLED", "CANCELED", "REFUNDED"].includes(b.status) || 
+    b.event?.status === "CANCELED" || 
+    b.event?.status === "CANCELLED" || 
+    b.event?.status === "COMPLETED"
   );
 
   return (

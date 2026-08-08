@@ -4,6 +4,18 @@ import { SmsCommunicationService } from './comms/sms.communication';
 import { WhatsAppCommunicationService } from './comms/whatsapp.communication';
 import { IPaymentGatewayProvider } from './providers/payment-gateway.provider';
 
+function getPlainTextMessage(body: string): string {
+  try {
+    if (body.trim().startsWith('{')) {
+      const parsed = JSON.parse(body);
+      if (parsed && typeof parsed === 'object' && typeof parsed.text === 'string') {
+        return parsed.text;
+      }
+    }
+  } catch {}
+  return body;
+}
+
 export class CommunicationGateway implements ICommunicationService {
   constructor(
     private emailService: EmailCommunicationService,
@@ -18,7 +30,8 @@ export class CommunicationGateway implements ICommunicationService {
   }
 
   async sendSMS(to: string, body: string): Promise<boolean> {
-    const res = await this.smsService.sendSms(to, body);
+    const plainText = getPlainTextMessage(body);
+    const res = await this.smsService.sendSms(to, plainText);
     return res.success;
   }
 

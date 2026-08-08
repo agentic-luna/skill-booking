@@ -1,7 +1,7 @@
 import { TicketTemplateData } from './email.template';
 
 export function generateTicketWhatsAppTemplate(data: TicketTemplateData): string {
-  return `🎉 *BOOKING CONFIRMED & TICKET DELIVERED!*
+  const text = `🎉 *BOOKING CONFIRMED & TICKET DELIVERED!*
 
 Hi *${data.userName}*, your ticket for *${data.eventTitle}* is ready.
 
@@ -20,6 +20,23 @@ ${data.ticketDownloadUrl}
 ${data.verifyUrl}
 
 Thank you for choosing BookMyTraining! 🚀`.trim();
+
+  return JSON.stringify({
+    text,
+    templateName: 'booking_confirmation',
+    headerImage: data.ticketDownloadUrl,
+    parameters: [
+      data.userName,
+      data.eventTitle,
+      data.bookingRef,
+      data.eventTitle,
+      `${data.formattedDate} at ${data.formattedTime}`,
+      String(data.seatCount),
+      Number(data.totalAmount).toFixed(2),
+      data.venueInfo,
+      data.verifyUrl
+    ]
+  });
 }
 
 export function generateTicketInAppTemplate(data: TicketTemplateData): string {

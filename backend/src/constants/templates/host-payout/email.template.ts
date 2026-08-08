@@ -4,6 +4,7 @@ export interface HostPayoutTemplateData {
   payoutId: string;
   transactionsPaid: number;
   bankName: string;
+  eventTitle?: string;
 }
 
 export function generateHostPayoutEmailTemplate(data: HostPayoutTemplateData): string {

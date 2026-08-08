@@ -46,7 +46,58 @@ export default function RefundStatusBadge({
     );
   }
 
-  if (error || !data?.refundRequest) return null;
+  if (error || !data) return null;
+
+  if (!data.refundRequest) {
+    if (data.bookingStatus === "REFUNDED") {
+      const cfg = STATUS_CONFIG.APPROVED;
+      if (variant === "badge") {
+        return (
+          <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cfg.className}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+            Refunded
+          </span>
+        );
+      }
+      return (
+        <div className={`rounded-xl border p-3 space-y-2 ${cfg.className}`}>
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2 font-bold text-xs">
+               <CheckCircle2 className="h-4 w-4" /> Refunded
+             </div>
+             <button onClick={refetch} className="opacity-60 hover:opacity-100 transition-opacity">
+               <RefreshCw className="h-3.5 w-3.5" />
+             </button>
+           </div>
+           <p className="text-[10px] opacity-70 leading-snug">Your payment has been successfully refunded.</p>
+        </div>
+      );
+    }
+
+    // Default to processing if no explicit refund request exists but badge is rendered
+    const cfg = STATUS_CONFIG.PENDING;
+    if (variant === "badge") {
+      return (
+        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${cfg.className}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+          Processing Refund
+        </span>
+      );
+    }
+    return (
+      <div className={`rounded-xl border p-3 space-y-2 ${cfg.className}`}>
+         <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2 font-bold text-xs">
+             <Clock className="h-4 w-4" /> Processing Refund
+           </div>
+           <button onClick={refetch} className="opacity-60 hover:opacity-100 transition-opacity">
+             <RefreshCw className="h-3.5 w-3.5" />
+           </button>
+         </div>
+         <p className="text-[10px] opacity-70 leading-snug">Your refund is being processed automatically.</p>
+      </div>
+    );
+  }
 
   const { refundRequest } = data;
   const cfg = STATUS_CONFIG[refundRequest.status];
