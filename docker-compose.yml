@@ -1,9 +1,13 @@
 services:
+
+  # ==========================================
+  # BACKEND
+  # ==========================================
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      network: host
 
     container_name: backend
 
@@ -16,28 +20,51 @@ services:
       - ./backend/.env.docker
 
     depends_on:
-      redis:
-        condition: service_started
       db:
-        condition: service_started
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
     networks:
       - backend-network
 
+
+  # ==========================================
+  # POSTGRESQL
+  # ==========================================
+
   db:
     image: postgres:15-alpine
+
     container_name: postgres_db
+
     restart: unless-stopped
+
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: bookmyskill
+
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
+
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bookmyskill"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
     networks:
       - backend-network
+
+
+  # ==========================================
+  # REDIS
+  # ==========================================
 
   redis:
     image: redis:7-alpine
@@ -46,18 +73,36 @@ services:
 
     restart: unless-stopped
 
+    command: redis-server --appendonly yes
+
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
     volumes:
       - redis-data:/data
 
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
     networks:
       - backend-network
 
+
+  # ==========================================
+  # VOLUMES
+  # ==========================================
+
 volumes:
-  redis-data:
   postgres-data:
+  redis-data:
+
+
+  # ==========================================
+  # NETWORK
+  # ==========================================
 
 networks:
   backend-network:

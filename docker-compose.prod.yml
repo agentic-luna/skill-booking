@@ -1,9 +1,42 @@
-version: "3.9"
-
 services:
+
+  # ==========================================
+  # FRONTEND
+  # ==========================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    container_name: skill-booking-frontend
+
+    restart: unless-stopped
+
+    env_file:
+      - ./frontend/.env.docker
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    depends_on:
+      backend:
+        condition: service_started
+
+    networks:
+      - app-network
+
+
+  # ==========================================
+  # BACKEND
+  # ==========================================
+
   backend:
-    image: ghcr.io/agentic-luna/skill-booking-backend:latest
-    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: skill-booking-backend
 
     restart: unless-stopped
 
@@ -15,22 +48,29 @@ services:
 
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
+
       redis:
-        condition: service_started
+        condition: service_healthy
 
     networks:
-      - backend-network
+      - app-network
+
+
+  # ==========================================
+  # POSTGRESQL
+  # ==========================================
 
   db:
     image: postgres:15-alpine
-    container_name: postgres_db
+
+    container_name: skill-booking-postgres
 
     restart: unless-stopped
 
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: bookmyskill
 
     volumes:
@@ -39,12 +79,29 @@ services:
     expose:
       - "5432"
 
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d bookmyskill"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
     networks:
-      - backend-network
+      - app-network
+
+
+  # ==========================================
+  # REDIS
+  # ==========================================
 
   redis:
     image: redis:7-alpine
-    container_name: redis
+
+    container_name: skill-booking-redis
 
     restart: unless-stopped
 
@@ -56,13 +113,39 @@ services:
     expose:
       - "6379"
 
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "ping"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
     networks:
-      - backend-network
+      - app-network
+
+
+# ==========================================
+# PERSISTENT VOLUMES
+# ==========================================
 
 volumes:
+
   postgres-data:
+    driver: local
+
   redis-data:
+    driver: local
+
+
+# ==========================================
+# INTERNAL NETWORK
+# ==========================================
 
 networks:
-  backend-network:
+
+  app-network:
     driver: bridge
