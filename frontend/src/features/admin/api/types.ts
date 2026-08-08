@@ -126,7 +126,7 @@ export interface BroadcastResult {
 // ── Event Queue (Moderation) ─────────────────────────────────────────────
 
 export type EventMode = "ONLINE" | "OFFLINE";
-export type EventStatus = "PENDING" | "APPROVED" | "CANCELED";
+export type EventStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "CANCELED" | "CANCELLED" | "EDIT_MODE";
 export type CommissionType = "FIXED" | "PERCENTAGE";
 
 export interface PendingEvent {

@@ -1,7 +1,7 @@
 // ── Client Request/Response Types ────────────────────────────────────────
 
 export type EventMode = "ONLINE" | "OFFLINE";
-export type EventStatus = "PENDING" | "APPROVED" | "CANCELED";
+export type EventStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "CANCELED" | "CANCELLED" | "EDIT_MODE";
 export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELED" | "CANCELLED" | "COMPLETED" | "REFUNDED";
 
 export interface HostUserDetail {
