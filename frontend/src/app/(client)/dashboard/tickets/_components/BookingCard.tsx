@@ -47,14 +47,17 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
   const startTime = new Date(event.startTime);
   const isOnline = event.mode === "ONLINE";
 
-  const formattedDate = startTime.toLocaleDateString();
-  const formattedTime = startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const formattedDate = `${startTime.getDate().toString().padStart(2, '0')}-${startTime.toLocaleString('en-US', { month: 'short' })}-${startTime.getFullYear()}`;
+  const formattedTime = startTime.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
   const location = isOnline
     ? "Online Live Stream"
     : (event.venueDetails as any)?.address || "Physical Venue";
   const instructorName = event.host?.user
     ? `${event.host.user.firstName} ${event.host.user.lastName}`
     : "Platform Host";
+
+  const bookedDateObj = new Date(booking.createdAt);
+  const formattedBookedDate = `${bookedDateObj.getDate().toString().padStart(2, '0')}-${bookedDateObj.toLocaleString('en-US', { month: 'short' })}-${bookedDateObj.getFullYear()} ${bookedDateObj.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}`;
 
   // ── Live countdown state (only for online confirmed bookings) ──
   const [secondsLeft, setSecondsLeft] = useState<number>(() =>
@@ -132,11 +135,16 @@ export default function BookingCard({ booking, onCancel, onWriteReview }: Bookin
             </div>
 
             <div className="text-[11px] text-muted-foreground">
-              Host: <span className="font-medium text-foreground">{instructorName}</span>
-              <span className="mx-1.5">•</span>
-              Seats: <span className="font-bold text-foreground">{booking.seatCount}</span>
-              <span className="mx-1.5">•</span>
-              Paid: <span className="font-bold text-foreground font-mono">₹{booking.totalAmount ?? booking.amountPaid}</span>
+              <div className="mb-1">
+                Host: <span className="font-medium text-foreground">{instructorName}</span>
+                <span className="mx-1.5">•</span>
+                Seats: <span className="font-bold text-foreground">{booking.seatCount}</span>
+                <span className="mx-1.5">•</span>
+                Paid: <span className="font-bold text-foreground font-mono">₹{booking.totalAmount ?? (booking as any).amountPaid}</span>
+              </div>
+              <div>
+                Booked On: <span className="font-medium text-foreground">{formattedBookedDate}</span>
+              </div>
             </div>
           </div>
         </div>
