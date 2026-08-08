@@ -340,6 +340,7 @@ export class PrismaEventRepository implements IEventRepository {
     venueDetails?: any;
     commissionType?: CommissionType;
     platformValue?: number;
+    questionnaire?: any;
     ticketTypes?: Array<{
       name: string;
       price: number;

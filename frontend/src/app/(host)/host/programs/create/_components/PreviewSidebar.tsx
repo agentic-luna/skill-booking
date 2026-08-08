@@ -233,14 +233,6 @@ export default function PreviewSidebar({
                     id: "preview",
                     title: values.title || "Workshop Title Preview",
                     description: values.description || "",
-                    whatIsThisProgram: values.whatIsThisProgram || "",
-                    whoIsThisFor: values.whoIsThisFor || "",
-                    whatWillYouLearn: values.whatWillYouLearn || "",
-                    topicsCovered: values.topicsCovered || "",
-                    mediumOfLanguage: values.mediumOfLanguage || "",
-                    prerequisites: values.prerequisites || "",
-                    takeaways: values.takeaways || "",
-                    toolsGiven: values.toolsGiven || "",
                     instructorName: values.instructorName || "",
                     instructorAvatar: values.instructorPhoto || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
                     instructorBio: values.instructorBio || "",
@@ -264,6 +256,7 @@ export default function PreviewSidebar({
                     status: "approved",
                     featured: true,
                     mode: values.mode || "OFFLINE",
+                    questionnaire: values.questionnaire || null,
                   };
 
                   return <ProgramDetailsContent programId="preview" initialProgram={previewProgram} />;

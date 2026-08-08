@@ -40,6 +40,7 @@ export class CreateEventCommand implements IRequest<any> {
       category?: string;
       keywords?: string[];
       videoUrls?: string[];
+      questionnaire?: any;
       ticketTypes?: Array<{
         name: string;
         price: number;
@@ -145,6 +146,7 @@ export class CreateEventCommandHandler implements IRequestHandler<CreateEventCom
       category: data.category,
       keywords: data.keywords || [],
       videoUrls: data.videoUrls || [],
+      questionnaire: data.questionnaire,
       ticketTypes: data.ticketTypes ? data.ticketTypes.map(tt => ({
         name: tt.name.trim(),
         price: Number(tt.price),

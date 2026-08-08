@@ -13,6 +13,7 @@ export interface Event {
   posterUrl: string;
   mode: EventMode;
   venueDetails: any;
+  questionnaire?: any;
   startTime: Date;
   totalSeats: number;
   availableSeats: number;

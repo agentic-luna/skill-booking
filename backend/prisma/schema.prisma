@@ -269,6 +269,7 @@ model Event {
   category       String?     @default("life-coaching")
   keywords       String[]    @default([])
   videoUrls      String[]    @default([])
+  questionnaire  Json?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 

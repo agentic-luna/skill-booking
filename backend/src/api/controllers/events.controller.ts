@@ -68,7 +68,7 @@ export class EventsController {
 
   static async createEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls, ticketTypes } = req.body;
+      const { title, posterUrl, images, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls, ticketTypes, questionnaire } = req.body;
       const event = await mediator.send(new CreateEventCommand(req.user!.id, {
         title,
         posterUrl,
@@ -85,6 +85,7 @@ export class EventsController {
         keywords: Array.isArray(keywords) ? keywords : [],
         videoUrls: Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : []),
         ticketTypes: Array.isArray(ticketTypes) ? ticketTypes : undefined,
+        questionnaire,
       }));
       return ApiResponse.created(res, event);
     } catch (error) {
@@ -95,7 +96,7 @@ export class EventsController {
   static async updateEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls } = req.body;
+      const { title, posterUrl, mode, venue, instructor, startTime, totalSeats, price, duration, description, category, keywords, videoUrls, questionnaire } = req.body;
 
       // 1. Fetch host profile first to verify ownership
       const hostProfile = await prisma.hostProfile.findUnique({
@@ -206,6 +207,7 @@ export class EventsController {
           category: category !== undefined ? String(category) : event.category,
           keywords: keywords !== undefined ? (Array.isArray(keywords) ? keywords : []) : undefined,
           videoUrls: videoUrls !== undefined ? (Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : [])) : undefined,
+          questionnaire: questionnaire !== undefined ? questionnaire : event.questionnaire,
           instructorId,
           venueId,
           venueDetails: {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Clock, Ticket, MapPin, X, Check } from "lucide-react";
+import { Calendar, Clock, Ticket, MapPin, X, Check, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +18,8 @@ export default function ProgramDetailModal({
   onApprove,
   getVenueDetailsString
 }: ProgramDetailModalProps) {
+  const [openFaqIndex, setOpenFaqIndex] = React.useState<number | null>(0);
+
   if (!selectedProgram) return null;
 
   return (
@@ -105,6 +107,51 @@ export default function ProgramDetailModal({
               {selectedProgram.description || "No class syllabus details specified by host."}
             </div>
           </div>
+
+          {/* Questionnaire / FAQ Review */}
+          {(() => {
+            const questionnaire = selectedProgram.questionnaire;
+            const faqItems = questionnaire ? [
+              { q: "What Is This Program?", a: questionnaire.whatIsThisProgram },
+              { q: "Who Is This Training/Course For?", a: questionnaire.whoIsThisFor },
+              { q: "What Will You Learn?", a: questionnaire.whatWillYouLearn },
+              { q: "What topics we will be teaching?", a: questionnaire.whatTopics },
+              { q: "Medium of Language", a: questionnaire.mediumOfLanguage },
+              { q: "Prerequisites", a: questionnaire.prerequisites },
+              { q: "Takeaways", a: questionnaire.takeaways },
+              { q: "What tools you will be given?", a: questionnaire.toolsGiven },
+            ].filter(item => item.a && item.a.trim() !== "") : [];
+
+            if (faqItems.length === 0) return null;
+
+            return (
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase">Program Questionnaire (FAQ)</div>
+                <div className="space-y-2">
+                  {faqItems.map((item, idx) => {
+                    const isOpen = openFaqIndex === idx;
+                    return (
+                      <div key={idx} className="border rounded-xl bg-card overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                          className="w-full flex items-center justify-between px-4 py-2.5 text-left font-bold text-xs hover:bg-muted/50 transition-colors"
+                        >
+                          <span>{item.q}</span>
+                          <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                        </button>
+                        {isOpen && (
+                          <div className="px-4 py-3 border-t bg-muted/20 text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                            {item.a}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <DialogFooter className="border-t pt-4 gap-2 sm:gap-0">

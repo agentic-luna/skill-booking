@@ -1,10 +1,8 @@
 import { Program } from "@/constants/mockData";
-import { parseDescription } from "@/utils/parseDescription";
 
 export function mapEventToProgram(event: any): Program {
   const hostUser = event.host?.user;
   const isObj = typeof event.venueDetails === "object" && event.venueDetails !== null;
-  const parsed = parseDescription(event.description || "");
   
   const instructorName = (isObj && event.venueDetails.instructorName)
     ? event.venueDetails.instructorName
@@ -35,15 +33,7 @@ export function mapEventToProgram(event: any): Program {
     id: event.id,
     hostId: event.hostId,
     title: event.title,
-    description: parsed.description,
-    whatIsThisProgram: parsed.questionnaire?.whatIsThisProgram,
-    whoIsThisFor: parsed.questionnaire?.whoIsThisFor,
-    whatWillYouLearn: parsed.questionnaire?.whatWillYouLearn,
-    topicsCovered: parsed.questionnaire?.topicsCovered,
-    mediumOfLanguage: parsed.questionnaire?.mediumOfLanguage,
-    prerequisites: parsed.questionnaire?.prerequisites,
-    takeaways: parsed.questionnaire?.takeaways,
-    toolsGiven: parsed.questionnaire?.toolsGiven,
+    description: event.description || "",
     instructorName,
     instructorAvatar,
     instructorBio,
@@ -80,6 +70,7 @@ export function mapEventToProgram(event: any): Program {
     mode: event.mode,
     commission: event.commission,
     startTime: event.startTime,
+    questionnaire: event.questionnaire || null,
     isBoosted: event.boostedEvent?.status === 'ACTIVE' && event.boostedEvent?.isActive && ['BASIC', 'STANDARD', 'PRO'].includes(event.boostedEvent?.tier),
     boostTier: (event.boostedEvent?.tier || '').toUpperCase(),
     hasSearchPriority: ['STANDARD', 'PRO'].includes((event.boostedEvent?.tier || '').toUpperCase()),

@@ -13,7 +13,6 @@ import { getEventDetails } from "@/features/client/api/client.api";
 import { useAlertStore } from "@/features/alerts/store/alertStore";
 
 import { programSchema, ProgramFormValues, CATEGORIES } from "../../create/_components/program-schema";
-import { serializeDescription, parseDescription } from "@/utils/parseDescription";
 import BasicInfoSection from "../../create/_components/BasicInfoSection";
 import ScheduleSection from "../../create/_components/ScheduleSection";
 import PricingSection from "../../create/_components/PricingSection";
@@ -76,7 +75,6 @@ export default function EditProgramPage() {
         const rawMode = (details.mode || "OFFLINE").toUpperCase();
         const safeMode: "ONLINE" | "OFFLINE" = rawMode === "OFFLINE" ? "OFFLINE" : "ONLINE";
 
-        const parsedDesc = parseDescription(details.description || "");
         reset({
           title: details.title || "",
           category: (details.category as any) || "life-coaching",
@@ -96,15 +94,7 @@ export default function EditProgramPage() {
               ? details.venueDetails
               : details.venueDetails?.address || "",
           district: details.venueDetails?.district || "",
-          description: parsedDesc.description,
-          whatIsThisProgram: parsedDesc.questionnaire?.whatIsThisProgram || "",
-          whoIsThisFor: parsedDesc.questionnaire?.whoIsThisFor || "",
-          whatWillYouLearn: parsedDesc.questionnaire?.whatWillYouLearn || "",
-          topicsCovered: parsedDesc.questionnaire?.topicsCovered || "",
-          mediumOfLanguage: parsedDesc.questionnaire?.mediumOfLanguage || "",
-          prerequisites: parsedDesc.questionnaire?.prerequisites || "",
-          takeaways: parsedDesc.questionnaire?.takeaways || "",
-          toolsGiven: parsedDesc.questionnaire?.toolsGiven || "",
+          description: details.description || "",
           videoUrl1: details.videoUrls && details.videoUrls[0] ? details.videoUrls[0] : "",
           videoUrl2: details.videoUrls && details.videoUrls[1] ? details.videoUrls[1] : "",
           videoUrl3: details.videoUrls && details.videoUrls[2] ? details.videoUrls[2] : "",
@@ -121,6 +111,16 @@ export default function EditProgramPage() {
           facebook: details.venueDetails?.facebook || "",
           verifiedCorrect: false,
           acknowledgedPolicy: false,
+          questionnaire: {
+            whatIsThisProgram: details.questionnaire?.whatIsThisProgram || "",
+            whoIsThisFor: details.questionnaire?.whoIsThisFor || "",
+            whatWillYouLearn: details.questionnaire?.whatWillYouLearn || "",
+            whatTopics: details.questionnaire?.whatTopics || "",
+            mediumOfLanguage: details.questionnaire?.mediumOfLanguage || "English",
+            prerequisites: details.questionnaire?.prerequisites || "",
+            takeaways: details.questionnaire?.takeaways || "",
+            toolsGiven: details.questionnaire?.toolsGiven || "",
+          },
         });
       } catch (err: any) {
         showAlert("Error", err.message || "Failed to load program details.", "destructive");
@@ -164,19 +164,11 @@ export default function EditProgramPage() {
         totalSeats: data.ticketTypes.reduce((acc, tt) => acc + Number(tt.totalSeats), 0),
         price: Math.min(...data.ticketTypes.map(tt => Number(tt.price))),
         duration: data.duration.trim(),
-        description: serializeDescription(data.description.trim(), {
-          whatIsThisProgram: data.whatIsThisProgram,
-          whoIsThisFor: data.whoIsThisFor,
-          whatWillYouLearn: data.whatWillYouLearn,
-          topicsCovered: data.topicsCovered,
-          mediumOfLanguage: data.mediumOfLanguage,
-          prerequisites: data.prerequisites || "",
-          takeaways: data.takeaways || "",
-          toolsGiven: data.toolsGiven || "",
-        }),
+        description: data.description.trim(),
         category: data.category,
         keywords: data.keywords || [],
         videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter((url): url is string => Boolean(url)),
+        questionnaire: data.questionnaire,
       });
 
       showAlert("Program Updated", "Your changes have been saved successfully.", "success");

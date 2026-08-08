@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { useHostStore } from "@/features/host/store/hostStore";
 
 import { programSchema, ProgramFormValues, CATEGORIES } from "./_components/program-schema";
-import { serializeDescription, parseDescription } from "@/utils/parseDescription";
 import BasicInfoSection from "./_components/BasicInfoSection";
 import ScheduleSection from "./_components/ScheduleSection";
 import PricingSection from "./_components/PricingSection";
@@ -60,14 +59,6 @@ export default function CreateProgramPage() {
       location: "",
       district: "",
       description: "",
-      whatIsThisProgram: "",
-      whoIsThisFor: "",
-      whatWillYouLearn: "",
-      topicsCovered: "",
-      mediumOfLanguage: "",
-      prerequisites: "",
-      takeaways: "",
-      toolsGiven: "",
       imageUrl: "",
       instructorName: "",
       companyName: "",
@@ -78,6 +69,16 @@ export default function CreateProgramPage() {
       facebook: "",
       verifiedCorrect: false,
       acknowledgedPolicy: false,
+      questionnaire: {
+        whatIsThisProgram: "",
+        whoIsThisFor: "",
+        whatWillYouLearn: "",
+        whatTopics: "",
+        mediumOfLanguage: "English",
+        prerequisites: "",
+        takeaways: "",
+        toolsGiven: "",
+      },
     },
   });
 
@@ -109,7 +110,6 @@ export default function CreateProgramPage() {
             formattedTime = dateObj.toTimeString().substring(0, 5);
           }
           
-          const parsed = parseDescription(template.description || "");
           reset({
             title: template.title + " (Copy)",
             category: cat,
@@ -125,15 +125,7 @@ export default function CreateProgramPage() {
             location: template.mode === "ONLINE" ? (template.venue?.meetingLink || "") : (template.venue?.address || ""),
             district: (template.venueDetails as any)?.district || "",
             endDate: (template.venueDetails as any)?.endDate || "",
-            description: parsed.description,
-            whatIsThisProgram: parsed.questionnaire?.whatIsThisProgram || "",
-            whoIsThisFor: parsed.questionnaire?.whoIsThisFor || "",
-            whatWillYouLearn: parsed.questionnaire?.whatWillYouLearn || "",
-            topicsCovered: parsed.questionnaire?.topicsCovered || "",
-            mediumOfLanguage: parsed.questionnaire?.mediumOfLanguage || "",
-            prerequisites: parsed.questionnaire?.prerequisites || "",
-            takeaways: parsed.questionnaire?.takeaways || "",
-            toolsGiven: parsed.questionnaire?.toolsGiven || "",
+            description: template.description || "",
             imageUrl: template.posterUrl || "",
             instructorName: template.instructor?.name || "",
             companyName: template.instructor?.companyName || "",
@@ -183,19 +175,11 @@ export default function CreateProgramPage() {
         totalSeats: data.ticketTypes.reduce((acc, tt) => acc + Number(tt.totalSeats), 0),
         price: Math.min(...data.ticketTypes.map(tt => Number(tt.price))),
         duration: data.duration.trim(),
-        description: serializeDescription(data.description.trim(), {
-          whatIsThisProgram: data.whatIsThisProgram,
-          whoIsThisFor: data.whoIsThisFor,
-          whatWillYouLearn: data.whatWillYouLearn,
-          topicsCovered: data.topicsCovered,
-          mediumOfLanguage: data.mediumOfLanguage,
-          prerequisites: data.prerequisites || "",
-          takeaways: data.takeaways || "",
-          toolsGiven: data.toolsGiven || "",
-        }),
+        description: data.description.trim(),
         category: data.category,
         keywords: data.keywords || [],
         videoUrls: [data.videoUrl1, data.videoUrl2, data.videoUrl3].filter((url): url is string => Boolean(url)),
+        questionnaire: data.questionnaire,
       });
 
       setSubmitted(true);
