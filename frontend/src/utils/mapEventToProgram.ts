@@ -1,8 +1,10 @@
 import { Program } from "@/constants/mockData";
+import { parseDescription } from "@/utils/parseDescription";
 
 export function mapEventToProgram(event: any): Program {
   const hostUser = event.host?.user;
   const isObj = typeof event.venueDetails === "object" && event.venueDetails !== null;
+  const parsed = parseDescription(event.description || "");
   
   const instructorName = (isObj && event.venueDetails.instructorName)
     ? event.venueDetails.instructorName
@@ -33,7 +35,15 @@ export function mapEventToProgram(event: any): Program {
     id: event.id,
     hostId: event.hostId,
     title: event.title,
-    description: event.description || "",
+    description: parsed.description,
+    whatIsThisProgram: parsed.questionnaire?.whatIsThisProgram,
+    whoIsThisFor: parsed.questionnaire?.whoIsThisFor,
+    whatWillYouLearn: parsed.questionnaire?.whatWillYouLearn,
+    topicsCovered: parsed.questionnaire?.topicsCovered,
+    mediumOfLanguage: parsed.questionnaire?.mediumOfLanguage,
+    prerequisites: parsed.questionnaire?.prerequisites,
+    takeaways: parsed.questionnaire?.takeaways,
+    toolsGiven: parsed.questionnaire?.toolsGiven,
     instructorName,
     instructorAvatar,
     instructorBio,

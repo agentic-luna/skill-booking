@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import { FileText, Tag, Sparkles } from "lucide-react";
+import { FileText, Tag, Sparkles, HelpCircle, Users, GraduationCap, BookOpen, Languages, ClipboardList, Gift, Wrench, Info } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -166,6 +166,145 @@ export default function BasicInfoSection({
             }}
           />
           {errors.description && <p className="text-[12px] text-red-500 font-semibold">{errors.description.message}</p>}
+        </div>
+
+        {/* Program Q&A Questionnaire */}
+        <div className="border-t border-gray-100 pt-7 space-y-7">
+          <div className="bg-indigo-50/40 p-4.5 rounded-2xl border border-indigo-100/50">
+            <h3 className="text-[15px] font-extrabold text-gray-900 flex items-center gap-2">
+              <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                <HelpCircle className="h-4 w-4" />
+              </span>
+              <span>Program Q&A Questionnaire</span>
+            </h3>
+            <p className="text-[12px] text-gray-500 font-medium mt-1.5">Provide detailed questionnaire answers. Questions 1–5 are mandatory for publishing.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+            {/* 1. What Is This Program? */}
+            <div className="space-y-2.5">
+              <Label htmlFor="whatIsThisProgram" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <Info className="h-4 w-4 text-indigo-500" />
+                <span>1. What Is This Program? <span className="text-red-500">*</span></span>
+              </Label>
+              <textarea
+                id="whatIsThisProgram"
+                rows={3}
+                placeholder="e.g. A hands-on program designed to take you from basics to advanced skills..."
+                className="flex w-full rounded-xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] leading-relaxed placeholder:text-gray-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all shadow-sm resize-none"
+                {...register("whatIsThisProgram")}
+              />
+              {errors.whatIsThisProgram && <p className="text-[12px] text-red-500 font-semibold">{errors.whatIsThisProgram.message}</p>}
+            </div>
+
+            {/* 2. Who Is This Training/Course For? */}
+            <div className="space-y-2.5">
+              <Label htmlFor="whoIsThisFor" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <Users className="h-4 w-4 text-indigo-500" />
+                <span>2. Who Is This Training/Course For? <span className="text-red-500">*</span></span>
+              </Label>
+              <textarea
+                id="whoIsThisFor"
+                rows={3}
+                placeholder="e.g. Beginners, corporate professionals, or anyone looking to upskill..."
+                className="flex w-full rounded-xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] leading-relaxed placeholder:text-gray-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all shadow-sm resize-none"
+                {...register("whoIsThisFor")}
+              />
+              {errors.whoIsThisFor && <p className="text-[12px] text-red-500 font-semibold">{errors.whoIsThisFor.message}</p>}
+            </div>
+
+            {/* 3. What Will You Learn? */}
+            <div className="space-y-2.5">
+              <Label htmlFor="whatWillYouLearn" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <GraduationCap className="h-4 w-4 text-indigo-500" />
+                <span>3. What Will You Learn? <span className="text-red-500">*</span></span>
+              </Label>
+              <textarea
+                id="whatWillYouLearn"
+                rows={3}
+                placeholder="e.g. Modern web design, database routing, and deployment..."
+                className="flex w-full rounded-xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] leading-relaxed placeholder:text-gray-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all shadow-sm resize-none"
+                {...register("whatWillYouLearn")}
+              />
+              {errors.whatWillYouLearn && <p className="text-[12px] text-red-500 font-semibold">{errors.whatWillYouLearn.message}</p>}
+            </div>
+
+            {/* 4. What topics we will be teaching? */}
+            <div className="space-y-2.5">
+              <Label htmlFor="topicsCovered" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <BookOpen className="h-4 w-4 text-indigo-500" />
+                <span>4. What topics we will be teaching? <span className="text-red-500">*</span></span>
+              </Label>
+              <textarea
+                id="topicsCovered"
+                rows={3}
+                placeholder="e.g. Topic 1: Design foundations, Topic 2: Routing mechanics, Topic 3: Server actions..."
+                className="flex w-full rounded-xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] leading-relaxed placeholder:text-gray-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all shadow-sm resize-none"
+                {...register("topicsCovered")}
+              />
+              {errors.topicsCovered && <p className="text-[12px] text-red-500 font-semibold">{errors.topicsCovered.message}</p>}
+            </div>
+
+            {/* 5. Medium of Language */}
+            <div className="space-y-2.5">
+              <Label htmlFor="mediumOfLanguage" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <Languages className="h-4 w-4 text-indigo-500" />
+                <span>5. Medium of Language <span className="text-red-500">*</span></span>
+              </Label>
+              <Input
+                id="mediumOfLanguage"
+                placeholder="e.g. English, Malayalam, Tamil, Hindi etc."
+                className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm"
+                {...register("mediumOfLanguage")}
+              />
+              {errors.mediumOfLanguage && <p className="text-[12px] text-red-500 font-semibold">{errors.mediumOfLanguage.message}</p>}
+            </div>
+
+            {/* 6. Prerequisites */}
+            <div className="space-y-2.5">
+              <Label htmlFor="prerequisites" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <ClipboardList className="h-4 w-4 text-indigo-500" />
+                <span>6. Prerequisites (Optional)</span>
+              </Label>
+              <Input
+                id="prerequisites"
+                placeholder="e.g. Basic understanding of HTML, CSS, JavaScript"
+                className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm"
+                {...register("prerequisites")}
+              />
+              {errors.prerequisites && <p className="text-[12px] text-red-500 font-semibold">{errors.prerequisites.message}</p>}
+            </div>
+
+            {/* 7. Takeaways */}
+            <div className="space-y-2.5">
+              <Label htmlFor="takeaways" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <Gift className="h-4 w-4 text-indigo-500" />
+                <span>7. Takeaways (Optional)</span>
+              </Label>
+              <Input
+                id="takeaways"
+                placeholder="e.g. Course certificate, marketing templates, PDF resources..."
+                className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm"
+                {...register("takeaways")}
+              />
+              {errors.takeaways && <p className="text-[12px] text-red-500 font-semibold">{errors.takeaways.message}</p>}
+            </div>
+
+            {/* 8. Tools Given */}
+            <div className="space-y-2.5">
+              <Label htmlFor="toolsGiven" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
+                <Wrench className="h-4 w-4 text-indigo-500" />
+                <span>8. What tools you will be given? (Optional)</span>
+              </Label>
+              <Input
+                id="toolsGiven"
+                placeholder="e.g. 20 Spreadsheet templates, 1000 AI prompts etc."
+                className="h-11 text-[14px] bg-emerald-50/30 border-emerald-100 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all rounded-xl shadow-sm"
+                {...register("toolsGiven")}
+              />
+              {errors.toolsGiven && <p className="text-[12px] text-red-500 font-semibold">{errors.toolsGiven.message}</p>}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
