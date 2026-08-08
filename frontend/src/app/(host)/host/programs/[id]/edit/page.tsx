@@ -347,6 +347,7 @@ export default function EditProgramPage() {
               onCategoryChange={setSelectedCategory}
               categoryMeta={categoryMeta}
             />
+            <CoverImageSection register={register} errors={errors} control={control} setValue={setValue} />
             {/* Pass setValue + watch so ScheduleSection can control the mode toggle */}
             <ScheduleSection
               register={register}
@@ -355,8 +356,7 @@ export default function EditProgramPage() {
               watch={watch}
             />
             <PricingSection register={register} errors={errors} control={control} />
-            <CoverImageSection register={register} errors={errors} control={control} />
-            <InstructorSection register={register} errors={errors} />
+            <InstructorSection register={register} errors={errors} setValue={setValue} />
             <VerificationSection register={register} errors={errors} />
           </div>
 

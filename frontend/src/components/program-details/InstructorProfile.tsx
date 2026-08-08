@@ -34,16 +34,15 @@ export default function InstructorProfile({
           <div className="space-y-2">
             <div>
               <h3 className="font-bold text-sm text-foreground">{instructorName}</h3>
-              <span className="text-[10px] text-muted-foreground">{companyName}</span>
+              {companyName && (
+                <span className="text-[10px] text-muted-foreground">{companyName}</span>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-              {instructorBio}
-            </p>
-            <div className="flex items-center space-x-3 text-xs text-primary font-semibold">
-              <span>4.9★ Host Rating</span>
-              <span>•</span>
-              <span>{companyName}</span>
-            </div>
+            {instructorBio && (
+              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                {instructorBio}
+              </p>
+            )}
             {(instagram || linkedin || facebook) && (
               <div className="flex items-center gap-3.5 pt-2 mt-1 border-t border-border/30">
                 {instagram && (

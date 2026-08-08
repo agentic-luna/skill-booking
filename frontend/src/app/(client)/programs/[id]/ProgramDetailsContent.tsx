@@ -394,19 +394,6 @@ export default function ProgramDetailsContent({ programId, initialProgram }: Pro
               linkedin={program.linkedin}
               facebook={program.facebook}
             />
-
-            <Separator />
-
-            {/* Verified Student Reviews List */}
-            <ProgramReviews
-              reviews={reviews}
-              reviewsTotalCount={reviewsTotalCount}
-              reviewsPage={reviewsPage}
-              setReviewsPage={setReviewsPage}
-              reviewsStats={reviewsStats}
-              selectedRating={selectedRating}
-              setSelectedRating={setSelectedRating}
-            />
           </div>
 
           {/* Right Column (Ticket Registration Box) */}

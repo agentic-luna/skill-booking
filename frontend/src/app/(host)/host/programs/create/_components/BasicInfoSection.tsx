@@ -1,7 +1,8 @@
 "use client";
 
+import React, { useEffect, useRef } from "react";
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
-import { FileText, Tag, Sparkles, Youtube } from "lucide-react";
+import { FileText, Tag, Sparkles } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,25 @@ export default function BasicInfoSection({
   categoryMeta,
 }: BasicInfoSectionProps) {
   const selectedKeywords: string[] = watch ? (watch("keywords") || []) : [];
+
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const { ref: registerRef, onChange: onDescriptionChange, ...restDescription } = register("description");
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onDescriptionChange(e);
+    if (e.target) {
+      e.target.style.height = "auto";
+      e.target.style.height = `${e.target.scrollHeight}px`;
+    }
+  };
+
+  const watchedDescription = watch ? watch("description") : "";
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [watchedDescription]);
 
   const toggleKeyword = (kw: string) => {
     if (!setValue) return;
@@ -137,53 +157,15 @@ export default function BasicInfoSection({
             id="description"
             rows={4}
             placeholder="Outline the course details, learning objectives, prerequisites, and what students will walk away with..."
-            className="flex w-full rounded-xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] leading-relaxed ring-offset-background placeholder:text-gray-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md hover:shadow-emerald-900/5 resize-none disabled:cursor-not-allowed disabled:opacity-50"
-            {...register("description")}
+            className="flex w-full rounded-xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] leading-relaxed ring-offset-background placeholder:text-gray-400 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-600 hover:border-emerald-300 transition-all shadow-sm hover:shadow-md hover:shadow-emerald-900/5 resize-none disabled:cursor-not-allowed disabled:opacity-50 overflow-hidden"
+            {...restDescription}
+            onChange={handleInput}
+            ref={(el) => {
+              registerRef(el);
+              textareaRef.current = el;
+            }}
           />
           {errors.description && <p className="text-[12px] text-red-500 font-semibold">{errors.description.message}</p>}
-        </div>
-
-        {/* Video URL */}
-        <div className="space-y-2.5">
-          <Label htmlFor="videoUrl1" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
-            <Youtube size={16} className="text-red-500" />
-            <span>YouTube Video URL 1 (Optional)</span>
-          </Label>
-          <Input
-            id="videoUrl1"
-            placeholder="https://www.youtube.com/watch?v=..."
-            className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-            {...register("videoUrl1")}
-          />
-          {errors.videoUrl1 && <p className="text-[12px] text-red-500 font-semibold">{errors.videoUrl1.message}</p>}
-        </div>
-
-        <div className="space-y-2.5">
-          <Label htmlFor="videoUrl2" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
-            <Youtube size={16} className="text-red-500" />
-            <span>YouTube Video URL 2 (Optional)</span>
-          </Label>
-          <Input
-            id="videoUrl2"
-            placeholder="https://www.youtube.com/watch?v=..."
-            className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-            {...register("videoUrl2")}
-          />
-          {errors.videoUrl2 && <p className="text-[12px] text-red-500 font-semibold">{errors.videoUrl2.message}</p>}
-        </div>
-
-        <div className="space-y-2.5">
-          <Label htmlFor="videoUrl3" className="text-[13px] font-bold text-gray-700 flex items-center space-x-1.5">
-            <Youtube size={16} className="text-red-500" />
-            <span>YouTube Video URL 3 (Optional)</span>
-          </Label>
-          <Input
-            id="videoUrl3"
-            placeholder="https://www.youtube.com/watch?v=..."
-            className="h-11 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
-            {...register("videoUrl3")}
-          />
-          {errors.videoUrl3 && <p className="text-[12px] text-red-500 font-semibold">{errors.videoUrl3.message}</p>}
         </div>
       </CardContent>
     </Card>

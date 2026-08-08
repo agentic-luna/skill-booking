@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/constants/categories";
 
 const CATEGORY_IMAGES: Record<string, string> = {
-  "life-coaching": "/typesection/life-coaching.avif",
-  "relationship": "/typesection/relationship.avif",
-  "business": "/typesection/buisness.avif",
-  "trauma-healing": "/typesection/trauma-healing.avif",
+  "life-coaching": "/typesection/life-coaching.png",
+  "relationship": "/typesection/relationship.jpeg",
+  "business": "/typesection/buisness.jpeg",
+  "trauma-healing": "/typesection/trauma-healing.jpg",
 };
 
 export default function SearchTrainingByTypeSection() {

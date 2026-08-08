@@ -14,12 +14,12 @@ export function mapEventToProgram(event: any): Program {
     
   const instructorBio = (isObj && event.venueDetails.instructorBio)
     ? event.venueDetails.instructorBio
-    : "Sarah is a seasoned educational director with over 10 years of experience launching immersive programs. She focuses on hands-on practical teaching setups.";
+    : "";
 
   const instagram = (isObj && event.venueDetails.instagram) ? event.venueDetails.instagram : "";
   const linkedin = (isObj && event.venueDetails.linkedin) ? event.venueDetails.linkedin : "";
   const facebook = (isObj && event.venueDetails.facebook) ? event.venueDetails.facebook : "";
-  const companyName = (isObj && event.venueDetails.companyName) ? event.venueDetails.companyName : "Training Masterclass Ltd.";
+  const companyName = (isObj && event.venueDetails.companyName) ? event.venueDetails.companyName : "";
 
   const locationStr = event.mode === "ONLINE"
     ? "Online"
