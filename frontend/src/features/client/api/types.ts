@@ -54,6 +54,16 @@ export interface ClientEvent {
   updatedAt: string;
   host?: ClientHostProfile;
   ticketTypes?: ClientTicketType[];
+  questionnaire?: {
+    whatIsThisProgram?: string;
+    whoIsThisFor?: string;
+    whatWillYouLearn?: string;
+    whatTopics?: string;
+    mediumOfLanguage?: string;
+    prerequisites?: string;
+    takeaways?: string;
+    toolsGiven?: string;
+  } | null;
   _count?: {
     likes?: number;
     bookings?: number;
